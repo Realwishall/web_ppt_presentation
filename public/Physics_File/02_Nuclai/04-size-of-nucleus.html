@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 04 Size of Nucleus</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  h3{margin:0;font-size:clamp(20px,4vmin,44px);color:#fb923c}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .derive{display:flex;flex-direction:column;gap:1.9vmin}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.8vmin 2.4vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(15px,2.5vmin,26px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1vmin}
+  .qbox .q{font-size:clamp(20px,4vmin,44px);line-height:1.45}
+  .qbox .q math{font-size:1em}
+  .btn{border:0;border-radius:1.2vmin;padding:1.5vmin 2.8vmin;font:700 clamp(16px,2.8vmin,28px) system-ui;
+       color:#fff;background:linear-gradient(135deg,#f97316,#e11d48);cursor:pointer;min-height:44px;margin-top:1.6vmin}
+  .ans{visibility:hidden;margin-top:1.4vmin}
+  .ans.on{visibility:visible}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .ans{visibility:visible!important}
+    .btn,.no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title (slide 17) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclei · Part 5</div>
+    <h1>Size of Nucleus</h1>
+    <svg viewBox="0 0 400 70" style="width:min(60vmin,80%)" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40"  cy="35" r="5"  fill="#fdba74"/>
+      <circle cx="120" cy="35" r="10" fill="#fb923c"/>
+      <circle cx="215" cy="35" r="17" fill="#f97316"/>
+      <circle cx="330" cy="35" r="26" fill="#ea580c"/>
+    </svg>
+    <p class="sub step">Bigger A, bigger nucleus — but how exactly?</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Radius & density (slide 18) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Size of nucleus</h2>
+    <div class="cols">
+      <div class="col card">
+        <h3># For radius</h3>
+        <div class="derive" style="margin-top:1.4vmin">
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mi>R</mi><mo>=</mo></math></span>
+            <span class="step"><math displaystyle="true"><msub><mi>R</mi><mi>o</mi></msub><msup><mi>A</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></math></span>
+          </div>
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mi>R</mi><mo>=</mo><mn>1.2</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>15</mn></mrow></msup><mo>&#8290;</mo><msup><mi>A</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup><mtext>&#160;m</mtext></math></span>
+          </div>
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mfrac><msub><mi>R</mi><mn>1</mn></msub><msub><mi>R</mi><mn>2</mn></msub></mfrac><mo>=</mo></math></span>
+            <span class="step"><math displaystyle="true"><msup><mrow><mo>(</mo><mfrac><msub><mi>A</mi><mn>1</mn></msub><msub><mi>A</mi><mn>2</mn></msub></mfrac><mo>)</mo></mrow><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></math></span>
+          </div>
+        </div>
+      </div>
+      <div class="col card">
+        <h3># For density</h3>
+        <div class="derive" style="margin-top:1.4vmin">
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mi>ρ</mi><mo>=</mo><mfrac><mtext>mass</mtext><mtext>vol</mtext></mfrac></math></span>
+            <span class="step"><math displaystyle="true"><mo>∝</mo><mfrac><mi>A</mi><msup><mi>R</mi><mn>3</mn></msup></mfrac></math></span>
+          </div>
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mo>∝</mo><mfrac><mi>A</mi><msup><mrow><mo>(</mo><msup><mi>A</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>)</mo></mrow><mn>3</mn></msup></mfrac><mo>=</mo><mfrac><mi>A</mi><mi>A</mi></mfrac></math></span>
+          </div>
+          <div class="eq">
+            <span class="step"><math displaystyle="true"><mo>=</mo><mtext>Constant</mtext></math></span>
+            <span class="step"><span class="hl"><math displaystyle="true"><mo>≈</mo><mn>2.3</mn><mo>×</mo><msup><mn>10</mn><mn>17</mn></msup><mtext>&#160;kg/m&#179;</mtext></math></span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sub step">Density is <span class="hl">independent of A</span> — every nucleus is packed equally tight.</p>
+    <div class="hint no-print">R ∝ A^⅓ ⇒ volume ∝ A — nucleons behave like closely packed marbles</div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Questions (slide 19) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div style="display:flex;justify-content:space-between;gap:2vmin;align-items:flex-start;flex-wrap:wrap">
+      <h2>Questions</h2>
+      <div class="eq" style="font-size:clamp(15px,2.6vmin,28px);color:#fdba74">
+        <math><mi>R</mi><mo>=</mo><msub><mi>R</mi><mi>o</mi></msub><msup><mi>A</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></math>
+        &nbsp;·&nbsp;
+        <math><mi>ρ</mi><mo>=</mo><mtext>constant</mtext></math>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col qbox step">
+        <div class="qt">Question 1</div>
+        <div class="q">Find the ratio of <math><mi>R</mi></math> for
+          <math><mmultiscripts><mi>X</mi><mprescripts/><mn>1</mn><mn>1</mn></mmultiscripts></math> and
+          <math><mmultiscripts><mi>Y</mi><mprescripts/><mn>4</mn><mn>8</mn></mmultiscripts></math>.</div>
+        <button class="btn clickable" onclick="document.getElementById('a1').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a1">
+          <span class="hl"><math displaystyle="true">
+            <mfrac><msub><mi>R</mi><mi>x</mi></msub><msub><mi>R</mi><mi>y</mi></msub></mfrac><mo>=</mo>
+            <msup><mrow><mo>(</mo><mfrac><mn>1</mn><mn>8</mn></mfrac><mo>)</mo></mrow><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup>
+            <mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac>
+          </math></span>
+        </div>
+      </div>
+      <div class="col qbox step">
+        <div class="qt">Question 2</div>
+        <div class="q">What is the ratio of density for
+          <math><mmultiscripts><mtext>H</mtext><mprescripts/><mn>1</mn><mn>1</mn></mmultiscripts></math> as compared to
+          <math><mmultiscripts><mtext>U</mtext><mprescripts/><mn>92</mn><mn>235</mn></mmultiscripts></math>?</div>
+        <button class="btn clickable" onclick="document.getElementById('a2').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a2">
+          <span class="hl"><math displaystyle="true">
+            <mfrac><msub><mi>ρ</mi><mi>H</mi></msub><msub><mi>ρ</mi><mi>U</mi></msub></mfrac><mo>=</mo>
+            <mfrac><mn>1</mn><mn>1</mn></mfrac>
+          </math></span>
+          <span style="font-family:system-ui">&nbsp;— density doesn't care about A</span>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Work first, reveal after</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

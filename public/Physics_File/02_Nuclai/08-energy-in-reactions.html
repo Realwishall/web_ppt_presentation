@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 08 Energy in Reactions</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .red{color:#f87171;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1.2vmin;font-size:clamp(17px,3vmin,32px);color:#fb923c;font-weight:700;letter-spacing:.04em}
+  .derive{display:flex;flex-direction:column;gap:1.7vmin}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.8vmin 2.4vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(15px,2.5vmin,26px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1vmin}
+  .qbox .q{font-size:clamp(20px,4vmin,44px);line-height:1.45}
+  .fill{display:flex;flex-direction:column;gap:2vmin}
+  .frow{font-size:clamp(19px,3.8vmin,42px);line-height:1.4}
+  .blank{display:inline-block;min-width:7ch;border-bottom:.35vmin solid #fb923c;text-align:center;
+         color:#fbbf24;font-weight:700;padding:0 .4ch}
+  .notebadge{font-size:clamp(24px,5vmin,58px);font-weight:900;letter-spacing:.04em;color:#fbbf24}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title (slide 8) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclei · Part 10</div>
+    <h1>Question on Energy</h1>
+    <p class="sub step">Mass that disappears in a reaction comes out as energy — let's compute how much.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Finding energy emitted (slide 9) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Finding energy emitted in a reaction</h2>
+    <div class="cols" style="margin-top:1vmin">
+
+      <div class="col card">
+        <h3>Example 1 · in joules</h3>
+        <div class="derive">
+          <div class="eq"><math displaystyle="true"><mi>A</mi><mo>+</mo><mi>B</mi><mo>→</mo><mi>C</mi></math></div>
+          <div class="eq"><math displaystyle="true">
+            <msub><mi>m</mi><mi>a</mi></msub><mo>=</mo><mn>4</mn><mtext>g</mtext><mspace width="1.2em"/>
+            <msub><mi>m</mi><mi>b</mi></msub><mo>=</mo><mn>5</mn><mtext>g</mtext><mspace width="1.2em"/>
+            <msub><mi>m</mi><mi>c</mi></msub><mo>=</mo><mn>7</mn><mtext>g</mtext></math></div>
+          <div class="eq step"><math displaystyle="true"><mi>Δ</mi><mi>M</mi><mo>=</mo></math>
+            <span class="hl"><math displaystyle="true"><mn>2</mn><mtext>&#160;g</mtext></math></span></div>
+          <div class="eq step"><math displaystyle="true"><mi>E</mi><mo>=</mo><mi>Δ</mi><mi>M</mi><msup><mi>c</mi><mn>2</mn></msup></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>2</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>-</mo><mn>3</mn></mrow></msup><mo>×</mo><msup><mrow><mo>(</mo><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>8</mn></msup><mo>)</mo></mrow><mn>2</mn></msup></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo></math>
+            <span class="grn"><math displaystyle="true"><mn>18</mn><mo>×</mo><msup><mn>10</mn><mn>13</mn></msup><mtext>&#160;J</mtext></math></span></div>
+        </div>
+      </div>
+
+      <div class="col card">
+        <h3>Example 2 · in amu</h3>
+        <div class="derive">
+          <div class="eq"><math displaystyle="true"><mi>A</mi><mo>+</mo><mi>B</mi><mo>→</mo><mi>C</mi></math></div>
+          <div class="eq"><math displaystyle="true">
+            <msub><mi>m</mi><mi>a</mi></msub><mo>=</mo><mn>3</mn><mtext>amu</mtext><mspace width="1em"/>
+            <msub><mi>m</mi><mi>b</mi></msub><mo>=</mo><mn>5</mn><mtext>amu</mtext><mspace width="1em"/>
+            <msub><mi>m</mi><mi>c</mi></msub><mo>=</mo><mn>6</mn><mtext>amu</mtext></math></div>
+          <div class="eq step"><math displaystyle="true"><mi>Δ</mi><mi>M</mi><mo>=</mo></math>
+            <span class="hl"><math displaystyle="true"><mn>2</mn><mtext>&#160;amu</mtext></math></span></div>
+          <div class="eq step"><math displaystyle="true"><mi>E</mi><mo>=</mo><mn>2</mn><mo>×</mo><mn>931</mn><mtext>&#160;MeV</mtext></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo></math>
+            <span class="grn"><math displaystyle="true"><mn>1862</mn><mtext>&#160;MeV</mtext></math></span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="hint no-print">1 amu ↔ 931 MeV is the shortcut when masses are in amu</div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · BE to total energy relation (slide 10) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Binding energy &rarr; Total energy</h2>
+    <p class="sub step">Energy released in a reaction = <span class="hl">binding energy of products &minus; binding energy of reactants</span>.</p>
+    <div class="cols" style="margin-top:1vmin">
+      <div class="col card" style="flex:1.1 1 30ch">
+        <div class="derive">
+          <div class="eq"><math displaystyle="true"><mi>A</mi><mo>+</mo><mi>B</mi><mo>→</mo><mi>C</mi></math></div>
+          <div class="eq"><span style="font-family:system-ui">B.E. of A</span>&nbsp;<math><mo>=</mo></math>&nbsp;<span class="hl"><math><mn>13</mn><mtext>&#160;MeV</mtext></math></span></div>
+          <div class="eq"><span style="font-family:system-ui">B.E. of B</span>&nbsp;<math><mo>=</mo></math>&nbsp;<span class="hl"><math><mn>18</mn><mtext>&#160;MeV</mtext></math></span></div>
+          <div class="eq"><span style="font-family:system-ui">B.E. of C</span>&nbsp;<math><mo>=</mo></math>&nbsp;<span class="hl"><math><mn>26</mn><mtext>&#160;MeV</mtext></math></span></div>
+        </div>
+      </div>
+      <div class="col" style="flex:1.2 1 32ch">
+        <div class="derive">
+          <div class="eq step"><span style="font-family:system-ui">Released&nbsp;=</span>
+            <math displaystyle="true"><msub><mi>BE</mi><mi>C</mi></msub><mo>-</mo><mo>(</mo><msub><mi>BE</mi><mi>A</mi></msub><mo>+</mo><msub><mi>BE</mi><mi>B</mi></msub><mo>)</mo></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>26</mn><mo>-</mo><mo>(</mo><mn>13</mn><mo>+</mo><mn>18</mn><mo>)</mo></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo></math>
+            <span class="red"><math displaystyle="true"><mo>-</mo><mn>5</mn><mtext>&#160;MeV</mtext></math></span></div>
+          <div class="step" style="display:flex;gap:1.6vmin;align-items:baseline;margin-top:.6vmin">
+            <span class="notebadge" style="font-size:clamp(18px,3.4vmin,38px)">NOTE:</span>
+            <p class="sub" style="align-self:center">Negative &rarr; this reaction <span class="red">absorbs</span> energy, so it is <span class="red">not possible</span> on its own.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Ball analogy (slide 11) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Which ball has more energy?</h2>
+    <div class="cols" style="align-items:center">
+      <div class="col" style="flex:1.2 1 30ch;min-width:24ch">
+        <svg viewBox="0 0 400 260" style="width:100%;height:auto" aria-hidden="true">
+          <defs>
+            <radialGradient id="b1" cx="35%" cy="30%"><stop offset="0%" stop-color="#fed7aa"/><stop offset="100%" stop-color="#f97316"/></radialGradient>
+            <radialGradient id="b2" cx="35%" cy="30%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#38bdf8"/></radialGradient>
+          </defs>
+          <!-- energy well -->
+          <path d="M20 40 C 120 40, 150 230, 200 230 C 250 230, 280 40, 380 40"
+                fill="none" stroke="#64748b" stroke-width="3"/>
+          <!-- ground/reference dashed -->
+          <line x1="20" y1="40" x2="380" y2="40" stroke="#334155" stroke-width="2" stroke-dasharray="6 8"/>
+          <!-- ball 1 high on the wall -->
+          <circle cx="95" cy="98" r="22" fill="url(#b1)"/>
+          <text x="95" y="106" font-family="system-ui" font-size="22" font-weight="700" fill="#0a0710" text-anchor="middle">1</text>
+          <!-- ball 2 deep in the well -->
+          <circle cx="200" cy="208" r="22" fill="url(#b2)"/>
+          <text x="200" y="216" font-family="system-ui" font-size="22" font-weight="700" fill="#0a0710" text-anchor="middle">2</text>
+        </svg>
+      </div>
+      <div class="col" style="flex:1.4 1 34ch">
+        <div class="derive">
+          <div class="qbox">
+            <div class="q">Which ball has greater <span class="hl">energy</span>?</div>
+            <div class="eq step" style="margin-top:1vmin"><span class="grn">Ball 1</span>&nbsp;<span style="font-family:system-ui;color:#94a3b8;font-size:.72em">— higher up, less tightly held</span></div>
+          </div>
+          <div class="qbox">
+            <div class="q">Which ball has greater <span class="hl">binding energy</span>?</div>
+            <div class="eq step" style="margin-top:1vmin"><span class="grn">Ball 2</span>&nbsp;<span style="font-family:system-ui;color:#94a3b8;font-size:.72em">— deeper in the well, harder to pull out</span></div>
+          </div>
+          <p class="sub step"><span class="hl">More binding energy &rarr; lower total energy &rarr; more stable.</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Deeper in the well = more bound = more stable, even though it holds less energy</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · Stability fill-in-the-blanks (slide 12) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>What every reaction is doing</h2>
+    <div class="eq" style="margin-bottom:.5vmin"><math displaystyle="true"><mi>A</mi><mo>+</mo><mi>B</mi><mo>→</mo><mi>C</mi></math>
+      <span style="font-family:system-ui;color:#94a3b8;font-size:.7em">&nbsp;(with B.E. 13, 18 &rarr; 26 MeV)</span></div>
+    <div class="fill">
+      <div class="frow">This reaction is <span class="blank step">Not Possible</span></div>
+      <div class="frow">All reactions take place to <span class="blank step">Increase</span> stability</div>
+      <div class="frow">All reactions take place to <span class="blank step">Decrease</span> their stored energy</div>
+      <div class="frow">For stability to increase, binding energy should <span class="blank step">Also Increase</span></div>
+      <div class="frow">If binding energies of A, B, C are a, b, c, then released energy is
+        <span class="blank step" style="min-width:9ch"><math><mi>c</mi><mo>-</mo><mi>a</mi><mo>-</mo><mi>b</mi></math></span></div>
+    </div>
+    <div class="hint no-print">Reveal each answer one at a time with Next</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

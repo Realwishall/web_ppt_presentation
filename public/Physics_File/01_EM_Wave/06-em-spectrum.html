@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EM Wave — 06 The Electromagnetic Spectrum</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#060913;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(56,189,248,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(139,92,246,.08),transparent 60%),#060913}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#38bdf8;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:80ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .cols{display:flex;gap:3vmin;align-items:stretch;flex-wrap:wrap}
+  .col{flex:1 1 34ch;min-width:28ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .card h3{margin:0 0 .6vmin;font-size:clamp(20px,3.8vmin,42px)}
+  .card .range{font-size:clamp(15px,2.7vmin,28px);color:#7dd3fc;margin-bottom:1.2vmin;font-family:'Cambria Math',Cambria,serif;font-style:italic}
+  .card .lbl{font-size:clamp(13px,2.1vmin,20px);letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;font-weight:700;margin:1.2vmin 0 .4vmin}
+  .card p{margin:0;font-size:clamp(16px,3vmin,32px);color:#cbd5e1;line-height:1.45}
+  .fig svg{width:100%;height:auto;display:block}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  table{border-collapse:collapse;width:100%;font-size:clamp(14px,2.6vmin,27px)}
+  th{background:rgba(56,189,248,.14);color:#7dd3fc;text-align:left;padding:1.2vmin 1.4vmin;
+     border:1px solid rgba(148,163,184,.25);font-size:clamp(14px,2.6vmin,27px)}
+  td{padding:1.1vmin 1.4vmin;border:1px solid rgba(148,163,184,.2);color:#e2e8f0;line-height:1.35;vertical-align:top}
+  td.t{color:#fbbf24;font-weight:700;white-space:nowrap}
+  td.r{font-family:'Cambria Math',Cambria,serif;font-style:italic;white-space:nowrap}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">EM Waves · Part 5</div>
+    <h1>The Electromagnetic Spectrum</h1>
+    <p class="sub step">From kilometre-long radio waves to gamma rays smaller than a nucleus — one family, one speed.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Spectrum chart (slides 22–23) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>The spectrum</h2>
+    <div class="fig step">
+      <svg viewBox="0 0 900 330" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="vis" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ef4444"/><stop offset=".2" stop-color="#f97316"/>
+            <stop offset=".4" stop-color="#facc15"/><stop offset=".6" stop-color="#22c55e"/>
+            <stop offset=".8" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient>
+          <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        <!-- arrows -->
+        <line x1="450" y1="30" x2="880" y2="30" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#ar)"/>
+        <text x="660" y="20" fill="#94a3b8" font-size="19" text-anchor="middle">increasing frequency &#183; energy</text>
+        <line x1="450" y1="30" x2="20" y2="30" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#ar)"/>
+        <text x="235" y="20" fill="#94a3b8" font-size="19" text-anchor="middle">increasing wavelength</text>
+        <!-- main band -->
+        <g font-size="21" font-weight="700" text-anchor="middle">
+          <rect x="20"  y="60" width="150" height="70" fill="#475569"/><text x="95" y="103" fill="#fff">Radio</text>
+          <rect x="170" y="60" width="120" height="70" fill="#0e7490"/><text x="230" y="103" fill="#fff">Micro</text>
+          <rect x="290" y="60" width="140" height="70" fill="#b91c1c"/><text x="360" y="103" fill="#fff">Infrared</text>
+          <rect x="430" y="60" width="90"  height="70" fill="url(#vis)"/><text x="475" y="50" fill="#e2e8f0" font-size="17">Visible</text>
+          <rect x="520" y="60" width="130" height="70" fill="#6d28d9"/><text x="585" y="103" fill="#fff">UV</text>
+          <rect x="650" y="60" width="130" height="70" fill="#1d4ed8"/><text x="715" y="103" fill="#fff">X-rays</text>
+          <rect x="780" y="60" width="100" height="70" fill="#166534"/><text x="830" y="103" fill="#fff">Gamma</text>
+        </g>
+        <!-- wavelength boundaries -->
+        <g font-size="17" fill="#94a3b8" text-anchor="middle" font-style="italic" font-family="Cambria,serif">
+          <text x="170" y="155">0.1 m</text>
+          <text x="290" y="155">1 mm</text>
+          <text x="430" y="155">700 nm</text>
+          <text x="520" y="155">400 nm</text>
+          <text x="650" y="155">1 nm</text>
+          <text x="780" y="155">10&#8315;&#179; nm</text>
+        </g>
+        <!-- visible zoom -->
+        <path d="M430 130 L240 210 M520 130 L740 210" stroke="#64748b" stroke-dasharray="5 4" stroke-width="1.5"/>
+        <rect x="240" y="210" width="500" height="60" fill="url(#vis)" transform="scale(1,1)"/>
+        <g font-size="24" font-weight="800" fill="#0b0f19" text-anchor="middle">
+          <text x="275" y="249">R</text><text x="347" y="249">O</text><text x="419" y="249">Y</text>
+          <text x="491" y="249">G</text><text x="563" y="249">B</text><text x="635" y="249">I</text><text x="707" y="249">V</text>
+        </g>
+        <g font-size="18" fill="#94a3b8" text-anchor="middle" font-style="italic" font-family="Cambria,serif">
+          <text x="240" y="295">700 nm</text><text x="740" y="295">400 nm</text>
+          <text x="490" y="298" font-style="normal" font-family="system-ui">visible light</text>
+        </g>
+      </svg>
+    </div>
+    <p class="sub step">All travel at <math><mi>c</mi><mo>=</mo><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>8</mn></msup></math> m/s in vacuum — only
+      <math><mi>λ</mi></math> and <math><mi>f</mi></math> change:
+      <span class="hl"><math><mi>f</mi><mo>=</mo><mfrac><mi>c</mi><mi>λ</mi></mfrac></math></span></p>
+    <div class="hint no-print">Note: higher frequency → higher photon energy → more penetrating / more dangerous</div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Radio & Microwaves (slide 25) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Radio waves &amp; Microwaves</h2>
+    <div class="cols">
+      <div class="col card step">
+        <h3 style="color:#94a3b8">Radio waves</h3>
+        <div class="range">λ &gt; 0.1 m</div>
+        <div class="lbl">Production</div>
+        <p>Accelerated motion of charges in conducting wires (aerials).</p>
+        <div class="lbl">Uses</div>
+        <p>Radio and television communication. AM band: 530 kHz – 1710 kHz; FM band: 88 – 108 MHz; cellular phones use radio waves in the ultra-high-frequency (UHF) band.</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#22d3ee">Microwaves</h3>
+        <div class="range">0.1 m – 1 mm &nbsp;(GHz range)</div>
+        <div class="lbl">Production</div>
+        <p>Special vacuum tubes — klystrons, magnetrons and Gunn diodes.</p>
+        <div class="lbl">Uses</div>
+        <p>Radar systems for aircraft navigation and speed guns. Microwave ovens: frequency matched to the resonant frequency of water molecules, so food with water content heats up.</p>
+      </div>
+    </div>
+    <div class="hint no-print">NCERT §8.4.1 – 8.4.2, retyped for the board</div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Infrared & Visible (slide 26–27) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Infrared &amp; Visible light</h2>
+    <div class="cols">
+      <div class="col card step">
+        <h3 style="color:#f87171">Infrared waves</h3>
+        <div class="range">1 mm – 700 nm</div>
+        <div class="lbl">Production</div>
+        <p>Hot bodies and molecules (vibration of atoms and molecules). Often called <span class="hl">heat waves</span>.</p>
+        <div class="lbl">Uses / role</div>
+        <p>Maintains Earth's warmth via the <span class="hl">greenhouse effect</span> — CO₂, NH₃ and water vapour absorb infrared. Infrared lamps for physical therapy, TV remote controls, Earth satellites, night-vision devices.</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#facc15">Visible rays</h3>
+        <div class="range">700 nm – 400 nm &nbsp;(≈ 4×10¹⁴ – 7×10¹⁴ Hz)</div>
+        <div class="lbl">Production</div>
+        <p>Electrons in atoms emitting light when they jump from higher to lower energy levels.</p>
+        <div class="lbl">Uses / role</div>
+        <p>The part of the spectrum the human eye detects — our window to the world. Different animals sense different ranges (snakes detect infrared; many insects see ultraviolet).</p>
+      </div>
+    </div>
+    <div class="hint no-print">NCERT §8.4.3 – 8.4.4</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · UV, X-rays & Gamma (slides 27–28) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Ultraviolet, X-rays &amp; Gamma rays</h2>
+    <div class="cols">
+      <div class="col card step" style="min-width:24ch">
+        <h3 style="color:#a78bfa">Ultraviolet</h3>
+        <div class="range">400 nm – 1 nm</div>
+        <p>From the Sun, welding arcs and special lamps. Causes tanning; harmful in large doses — absorbed by the <span class="hl">ozone layer</span>. Used in LASIK eye surgery and germicidal (water-purifying) UV lamps.</p>
+      </div>
+      <div class="col card step" style="min-width:24ch">
+        <h3 style="color:#60a5fa">X-rays</h3>
+        <div class="range">1 nm – 10⁻³ nm</div>
+        <p>Produced by bombarding a metal target with high-energy electrons (X-ray tube). Medical diagnostics and cancer treatment. Damages living tissue — avoid unnecessary exposure.</p>
+      </div>
+      <div class="col card step" style="min-width:24ch">
+        <h3 style="color:#4ade80">Gamma rays</h3>
+        <div class="range">&lt; 10⁻³ nm &nbsp;(10⁻¹⁰ – 10⁻¹⁴ m)</div>
+        <p>Emitted in nuclear reactions and radioactive decay of nuclei. Highest frequency, most penetrating. Used in medicine to destroy cancer cells.</p>
+      </div>
+    </div>
+    <div class="hint no-print">NCERT §8.4.5 – 8.4.7</div>
+  </div>
+</section>
+
+<!-- ============ Page 6 · Summary table (slide 29, Table 8.1) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Different types of electromagnetic waves</h2>
+    <table>
+      <tr><th>Type</th><th>Wavelength range</th><th>Production</th><th>Detection</th></tr>
+      <tr class="step"><td class="t">Radio</td><td class="r">&gt; 0.1 m</td>
+        <td>Rapid acceleration and deceleration of electrons in aerials</td><td>Receiver's aerials</td></tr>
+      <tr class="step"><td class="t">Microwave</td><td class="r">0.1 m – 1 mm</td>
+        <td>Klystron valve or magnetron valve</td><td>Point contact diodes</td></tr>
+      <tr class="step"><td class="t">Infra-red</td><td class="r">1 mm – 700 nm</td>
+        <td>Vibration of atoms and molecules</td><td>Thermopiles, bolometer, infrared photographic film</td></tr>
+      <tr class="step"><td class="t">Light</td><td class="r">700 nm – 400 nm</td>
+        <td>Electrons in atoms emit light when they move from a higher to a lower energy level</td><td>The eye, photocells, photographic film</td></tr>
+      <tr class="step"><td class="t">Ultraviolet</td><td class="r">400 nm – 1 nm</td>
+        <td>Inner-shell electrons in atoms moving from one energy level to a lower level</td><td>Photocells, photographic film</td></tr>
+      <tr class="step"><td class="t">X-rays</td><td class="r">1 nm – 10⁻³ nm</td>
+        <td>X-ray tubes or inner-shell electrons</td><td>Photographic film, Geiger tubes, ionisation chamber</td></tr>
+      <tr class="step"><td class="t">Gamma rays</td><td class="r">&lt; 10⁻³ nm</td>
+        <td>Radioactive decay of the nucleus</td><td>Photographic film, Geiger tubes, ionisation chamber</td></tr>
+    </table>
+    <div class="hint no-print">NCERT Table 8.1 — each Next reveals one row</div>
+  </div>
+</section>
+
+<!-- ============ Page 7 · Homework (slide 24) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Before next class</div>
+    <h1>Home work</h1>
+    <p class="sub no-print" style="color:#475569">Write the assignment here in ink</p>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

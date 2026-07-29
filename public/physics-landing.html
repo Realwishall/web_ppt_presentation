@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physics · Class 11 &amp; 12 — LessonForge</title>
+<style>
+  html,body{height:100%;margin:0}
+  *{box-sizing:border-box}
+
+  /* ---------- Persistent background layers (siblings OUTSIDE .page) ---------- */
+  #bg{position:fixed;inset:0;z-index:0;display:block}          /* WebGL 3D canvas */
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none} /* CSS star-field fallback + always-on twinkle */
+  .orb{position:fixed;border-radius:50%;filter:blur(60px);opacity:.5;z-index:0;
+       animation:float 14s ease-in-out infinite}
+  .orb.a{width:44vmin;height:44vmin;left:-8vmin;top:-6vmin;
+         background:radial-gradient(circle at 30% 30%,#22d3ee,transparent 70%)}
+  .orb.b{width:52vmin;height:52vmin;right:-10vmin;bottom:-12vmin;animation-delay:-5s;
+         background:radial-gradient(circle at 60% 40%,#a855f7,transparent 70%)}
+  .orb.c{width:36vmin;height:36vmin;right:22vmin;top:-14vmin;animation-delay:-9s;
+         background:radial-gradient(circle at 50% 50%,#f43f5e,transparent 70%)}
+  @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(4vmin) scale(1.08)}}
+
+  /* ---------- Slide surface ---------- */
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        color:#eef2ff;font-family:system-ui,'Segoe UI',sans-serif;overflow:hidden;
+        background:radial-gradient(1300px 700px at 50% -20%,rgba(124,58,237,.18),transparent 60%),
+                   linear-gradient(180deg,#05060f 0%,#080a1a 60%,#05060f 100%)}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;
+        display:flex;flex-direction:column;justify-content:center;gap:3vmin;
+        padding:6vmin 8vmin}
+
+  /* ---------- Header / eyebrow ---------- */
+  .eyebrow{display:inline-flex;align-items:center;gap:1.2vmin;align-self:flex-start;
+           padding:1vmin 2.2vmin;border-radius:999px;font-weight:700;font-size:2vmin;
+           letter-spacing:.28em;text-transform:uppercase;color:#a5f3fc;
+           background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.35);
+           box-shadow:0 0 24px rgba(34,211,238,.15) inset}
+  .eyebrow .dot{width:1.3vmin;height:1.3vmin;border-radius:50%;background:#22d3ee;
+                box-shadow:0 0 12px #22d3ee;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+  h1{margin:0;line-height:1.02;font-size:clamp(36px,11vmin,150px);font-weight:900;
+     letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(100deg,#22d3ee 0%,#818cf8 45%,#e879f9 100%);
+           -webkit-background-clip:text;background-clip:text;color:transparent;
+           filter:drop-shadow(0 4px 30px rgba(129,140,248,.35))}
+  .sub{margin:0;font-size:clamp(18px,3.4vmin,42px);font-weight:600;color:#c7d2fe;
+       max-width:26ch}
+  .lede{margin:0;font-size:clamp(15px,2.4vmin,26px);line-height:1.55;color:#94a3b8;
+        max-width:60ch}
+
+  /* ---------- Class chips ---------- */
+  .classes{display:flex;flex-wrap:wrap;gap:2vmin;margin-top:.5vmin}
+  .chip{display:flex;align-items:center;gap:1.6vmin;padding:1.8vmin 3vmin;border-radius:2vmin;
+        background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+        border:1px solid rgba(148,163,184,.22);backdrop-filter:blur(6px)}
+  .chip .n{font-size:clamp(22px,5vmin,56px);font-weight:900;line-height:1;
+           background:linear-gradient(180deg,#e0e7ff,#818cf8);-webkit-background-clip:text;
+           background-clip:text;color:transparent}
+  .chip .t{display:flex;flex-direction:column;font-size:2vmin;color:#cbd5e1}
+  .chip .t b{font-size:2.6vmin;color:#f1f5f9;letter-spacing:.02em}
+
+  /* ---------- Stat / topic strip ---------- */
+  .strip{display:flex;flex-wrap:wrap;gap:1.4vmin;margin-top:1vmin}
+  .tag{padding:1vmin 2.2vmin;border-radius:999px;font-size:2vmin;font-weight:600;
+       color:#e2e8f0;border:1px solid rgba(148,163,184,.25);
+       background:rgba(99,102,241,.08)}
+
+  /* ---------- CTA ---------- */
+  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:2.4vmin;margin-top:2vmin}
+  .btn{border:0;border-radius:1.4vmin;padding:1.9vmin 3.6vmin;cursor:pointer;
+       font:800 clamp(15px,2.9vmin,26px) system-ui;color:#05060f;
+       background:linear-gradient(135deg,#22d3ee,#818cf8 55%,#e879f9);
+       box-shadow:0 10px 40px rgba(129,140,248,.4);transition:transform .15s,box-shadow .15s}
+  .btn:active{transform:translateY(2px)}
+  .btn.ghost{color:#e0e7ff;background:transparent;border:1px solid rgba(148,163,184,.4);
+             box-shadow:none}
+  .hint{font-size:1.9vmin;color:#64748b;letter-spacing:.04em}
+
+  /* footer brand line */
+  .brand{position:absolute;left:8vmin;bottom:4vmin;z-index:1;display:flex;align-items:center;
+          gap:1.4vmin;font-size:2vmin;color:#64748b;letter-spacing:.1em}
+  .brand svg{width:3.4vmin;height:3.4vmin}
+
+  /* entrance animation for standalone / on-screen (flattened in print) */
+  .reveal{opacity:0;transform:translateY(2.4vmin);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  .reveal.d1{animation-delay:.1s}.reveal.d2{animation-delay:.25s}.reveal.d3{animation-delay:.4s}
+  .reveal.d4{animation-delay:.55s}.reveal.d5{animation-delay:.7s}.reveal.d6{animation-delay:.85s}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  @media print{
+    #bg,#stars,.orb,.no-print{display:none!important}
+    .reveal{opacity:1!important;transform:none!important;animation:none!important}
+    .page{background:#05060f!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Persistent background siblings (OUTSIDE .page) ===== -->
+<canvas id="bg"></canvas>
+<div id="stars"></div>
+<div class="orb a"></div>
+<div class="orb b"></div>
+<div class="orb c"></div>
+
+<!-- ===== Single landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="eyebrow reveal d1"><span class="dot"></span>PhysicsWallah · LessonForge</span>
+
+    <h1 class="reveal d2">Physics<br><span class="grad">Class 11 &amp; 12</span></h1>
+
+    <p class="sub reveal d2">Every chapter. One interactive board.</p>
+
+    <p class="lede reveal d3">From Units &amp; Measurement to Semiconductor Devices — mechanics,
+      thermodynamics, waves, electromagnetism, optics and modern physics, taught live with
+      3D visuals you can draw over.</p>
+
+    <div class="classes reveal d4">
+      <div class="chip">
+        <span class="n">11</span>
+        <span class="t"><b>Class XI</b>Kinematics · Laws of Motion · Gravitation · Thermodynamics · Oscillations</span>
+      </div>
+      <div class="chip">
+        <span class="n">12</span>
+        <span class="t"><b>Class XII</b>Electrostatics · Current · Magnetism · Optics · Atoms &amp; Nuclei</span>
+      </div>
+    </div>
+
+    <div class="strip reveal d5">
+      <span class="tag">Mechanics</span>
+      <span class="tag">Thermodynamics</span>
+      <span class="tag">Waves &amp; Oscillations</span>
+      <span class="tag">Electromagnetism</span>
+      <span class="tag">Optics</span>
+      <span class="tag">Modern Physics</span>
+    </div>
+
+    <div class="cta-row reveal d6">
+      <button class="btn clickable no-print" onclick="pulseAtom()">Begin the journey ⚛</button>
+      <button class="btn ghost clickable no-print" onclick="cycleTheme()">Switch energy</button>
+      <span class="hint no-print">Tap · then press <b>Next</b> to move through the deck</span>
+    </div>
+  </div>
+
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.6">
+      <ellipse cx="12" cy="12" rx="10" ry="4.2"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/>
+      <circle cx="12" cy="12" r="1.8" fill="#e879f9" stroke="none"/>
+    </svg>
+    <span>LESSONFORGE · PHYSICS SERIES</span>
+  </div>
+</section>
+
+<!-- ===== Star-field fallback (pure CSS/JS, always visible; PDF-hidden) ===== -->
+<script>
+(function(){
+  // Build a lightweight twinkling star-field into #stars (works with no WebGL / no network).
+  try{
+    var s=document.getElementById('stars');
+    var n=90, html='';
+    for(var i=0;i<n;i++){
+      var x=Math.random()*100, y=Math.random()*100,
+          sz=(Math.random()*2+0.6).toFixed(2),
+          d=(Math.random()*4+2).toFixed(2), dl=(Math.random()*5).toFixed(2),
+          o=(Math.random()*0.6+0.2).toFixed(2);
+      html+='<i style="position:absolute;left:'+x+'%;top:'+y+'%;width:'+sz+'px;height:'+sz+'px;'+
+            'border-radius:50%;background:#dbeafe;opacity:'+o+';'+
+            'box-shadow:0 0 6px #93c5fd;animation:tw '+d+'s ease-in-out '+dl+'s infinite"></i>';
+    }
+    s.innerHTML=html;
+    var st=document.createElement('style');
+    st.textContent='@keyframes tw{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}';
+    document.head.appendChild(st);
+  }catch(e){}
+})();
+</script>
+
+<!-- ===== Three.js 3D atom background (enhances; gracefully degrades) ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var renderer, scene, camera, atom, raf, running=false;
+  var palette=[0x22d3ee,0x818cf8,0xe879f9,0xf43f5e], pIndex=0, boost=1;
+
+  function haveWebGL(){
+    try{var c=document.createElement('canvas');
+      return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));
+    }catch(e){return false;}
+  }
+
+  function init(){
+    if(typeof THREE==='undefined'||!haveWebGL()) return; // fallback star-field stays
+    var canvas=document.getElementById('bg');
+    if(!canvas) return;
+    var w=window.innerWidth||canvas.clientWidth, h=window.innerHeight||canvas.clientHeight;
+    if(!w||!h){requestAnimationFrame(init);return;}          // zero-size guard
+    try{
+      renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+      renderer.setSize(w,h,false);
+      scene=new THREE.Scene();
+      camera=new THREE.PerspectiveCamera(55,w/h,0.1,100);
+      camera.position.set(0,0,16);
+
+      atom=new THREE.Group();
+
+      // nucleus
+      var nucleus=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.6,1),
+        new THREE.MeshBasicMaterial({color:0xe879f9,wireframe:true,transparent:true,opacity:.85}));
+      atom.add(nucleus);
+      var glow=new THREE.Mesh(
+        new THREE.SphereGeometry(1.1,24,24),
+        new THREE.MeshBasicMaterial({color:0xf0abfc,transparent:true,opacity:.35}));
+      atom.add(glow);
+
+      // three electron orbits + electrons
+      var orbits=[], electrons=[];
+      var tilts=[[0,0,0],[Math.PI/3,0,Math.PI/6],[-Math.PI/3,0,-Math.PI/4]];
+      for(var i=0;i<3;i++){
+        var r=5+i*1.6;
+        var ring=new THREE.Mesh(
+          new THREE.TorusGeometry(r,0.045,10,120),
+          new THREE.MeshBasicMaterial({color:palette[i],transparent:true,opacity:.55}));
+        ring.rotation.set(tilts[i][0],tilts[i][1],tilts[i][2]);
+        atom.add(ring); orbits.push(ring);
+        var e=new THREE.Mesh(
+          new THREE.SphereGeometry(0.34,18,18),
+          new THREE.MeshBasicMaterial({color:palette[i]}));
+        atom.add(e); electrons.push({m:e,r:r,ring:ring,speed:0.9-i*0.22,phase:i*2.1});
+      }
+
+      // sparse particle dust
+      var pts=new THREE.BufferGeometry(), N=340, arr=new Float32Array(N*3);
+      for(var j=0;j<N*3;j++) arr[j]=(Math.random()-0.5)*46;
+      pts.setAttribute('position',new THREE.BufferAttribute(arr,3));
+      var dust=new THREE.Points(pts,new THREE.PointsMaterial({color:0x93c5fd,size:0.08,transparent:true,opacity:.6}));
+      scene.add(dust);
+
+      atom.position.x=5.5;  // shift right so text (left) keeps a calm dark area
+      scene.add(atom);
+
+      var t0=performance.now();
+      function frame(now){
+        var t=(now-t0)/1000;
+        atom.rotation.y=t*0.25; atom.rotation.x=Math.sin(t*0.3)*0.15;
+        nucleus.rotation.y=-t*0.6; nucleus.rotation.x=t*0.4;
+        glow.scale.setScalar(1+Math.sin(t*2)*0.06*boost);
+        for(var k=0;k<electrons.length;k++){
+          var el=electrons[k], a=t*el.speed*boost+el.phase;
+          var x=Math.cos(a)*el.r, z=Math.sin(a)*el.r;
+          var v=new THREE.Vector3(x,0,z).applyEuler(el.ring.rotation);
+          el.m.position.copy(v);
+        }
+        dust.rotation.y=t*0.02;
+        renderer.render(scene,camera);
+        raf=requestAnimationFrame(frame);
+      }
+      running=true; raf=requestAnimationFrame(frame);
+      window._atom={electrons:electrons,orbits:orbits,nucleus:nucleus,glow:glow};
+    }catch(e){ /* fail silently — star-field + orbs remain */ }
+  }
+
+  function resize(){
+    if(!renderer||!camera) return;
+    var w=window.innerWidth,h=window.innerHeight;
+    if(!w||!h) return;
+    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false);
+  }
+
+  // expose small click interactions used by the buttons
+  window.pulseAtom=function(){ boost=boost>1?1:2.4;
+    setTimeout(function(){boost=1;},1600); };
+  window.cycleTheme=function(){
+    if(!window._atom) return;
+    pIndex=(pIndex+1)%palette.length;
+    try{
+      window._atom.electrons.forEach(function(el,i){
+        var c=palette[(pIndex+i)%palette.length];
+        el.m.material.color.setHex(c); el.ring.material.color.setHex(c);
+      });
+      window._atom.nucleus.material.color.setHex(palette[pIndex]);
+    }catch(e){}
+  };
+
+  window.addEventListener('load',function(){ setTimeout(init,60); });
+  window.addEventListener('resize',resize);
+
+  // React to host slide changes (optional sync hook, rule 5)
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='lf-show'){ /* single slide — nothing to switch, keep animating */ }
+  });
+})();
+</script>
+
+<!-- ===== Standalone fallback controller (rule 6) — LAST ===== -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present → stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

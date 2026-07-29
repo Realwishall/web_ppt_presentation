@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Firebase admin key for seeding
+serviceAccountKey.json
+
+# PPT conversion pipeline scratch (rendered slide PNGs, extracted media).
+# plan.json and fragments/ are the durable artefacts — commit those explicitly.
+__pycache__/
+build/_smoke/
+build/*/slide-*.png
+build/*/media/
+build/*/*.html
+build/status.csv
+
+# Local split JSON / HTML data and extra files (excluded from version control)
+JSON_split_data/
+JSON_split_html/
+extra_fiels/

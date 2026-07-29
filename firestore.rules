@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------- helpers -------
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // The single hard-coded admin UID. Replace with your admin account's UID
+    // (must match VITE_ADMIN_UID used by the client).
+    function isAdmin() {
+      return isAuthenticated()
+        && request.auth.uid == 'MtT95vUrgUej48ztNTVV8NK3Bdm1';
+    }
+
+    // ------- authoring model: classes -> chapters -> folders -------
+    // Any signed-in teacher may read and author the whole content tree.
+    // (This is a single-institute authoring tool gated behind login; tighten
+    // to isAdmin() here if you later want author-only writes.)
+    match /classes/{classId}/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ------- master chapters (+ topics) — legacy -------
+    match /master_chapters/{chapterId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+
+      match /topics/{topicId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdmin();
+      }
+    }
+
+    // ------- batches -------
+    // Any signed-in user may read; signed-in teachers may create/manage
+    // batches from the dashboard.
+    match /batches/{batchId} {
+      allow read, write: if isAuthenticated();
+
+      match /{document=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // ------- default deny -------
+    // Anything not matched above is denied for everyone.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

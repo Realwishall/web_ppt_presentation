@@ -1,0 +1,117 @@
+<!-- Slide 11 — Reflecting type Telescope -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Reflecting type Telescope</h2>
+
+    <div class="split-6040">
+      <div class="figure-frame plain tall">
+        <svg viewBox="0 0 1380 680" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cassegrain reflecting telescope ray diagram">
+          <defs>
+            <marker id="rt-a" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#bff2a8"/>
+            </marker>
+          </defs>
+
+          <!-- scaffold: tube, mirrors, eyepiece stay visible -->
+          <g fill="#a7e08c" stroke="#5f9a49" stroke-width="2">
+            <rect x="75" y="100" width="505" height="24" rx="6"/>
+            <rect x="75" y="580" width="505" height="24" rx="6"/>
+            <rect x="650" y="284" width="620" height="14" rx="5"/>
+            <rect x="650" y="418" width="620" height="14" rx="5"/>
+          </g>
+
+          <!-- objective mirror: two arcs with a central hole -->
+          <g fill="none" stroke="#a7e08c" stroke-width="15" stroke-linecap="round">
+            <path d="M580,112 C648,196 664,258 664,292"/>
+            <path d="M580,592 C648,508 664,446 664,412"/>
+          </g>
+          <!-- silvered (back) face of the objective — light never reaches this side -->
+          <g stroke="#f2d024" stroke-width="3.5" stroke-linecap="round" opacity=".9">
+            <line x1="600" y1="125" x2="626" y2="121"/>
+            <line x1="624" y1="159" x2="650" y2="157"/>
+            <line x1="642" y1="190" x2="668" y2="190"/>
+            <line x1="655" y1="218" x2="681" y2="221"/>
+            <line x1="664" y1="243" x2="689" y2="248"/>
+            <line x1="669" y1="265" x2="694" y2="273"/>
+            <line x1="672" y1="284" x2="695" y2="295"/>
+            <line x1="600" y1="579" x2="626" y2="583"/>
+            <line x1="624" y1="545" x2="650" y2="547"/>
+            <line x1="642" y1="514" x2="668" y2="514"/>
+            <line x1="655" y1="486" x2="681" y2="483"/>
+            <line x1="664" y1="461" x2="689" y2="456"/>
+            <line x1="669" y1="439" x2="694" y2="431"/>
+            <line x1="672" y1="420" x2="695" y2="409"/>
+          </g>
+
+          <!-- secondary mirror -->
+          <path d="M450,248 C424,300 424,414 450,472" fill="none" stroke="#a7e08c" stroke-width="13" stroke-linecap="round"/>
+          <!-- silvered (back) face of the secondary -->
+          <g stroke="#f2d024" stroke-width="3.5" stroke-linecap="round" opacity=".9">
+            <line x1="438" y1="258" x2="417" y2="261"/>
+            <line x1="430" y1="287" x2="409" y2="294"/>
+            <line x1="425" y1="321" x2="405" y2="330"/>
+            <line x1="424" y1="358" x2="404" y2="368"/>
+            <line x1="425" y1="394" x2="407" y2="407"/>
+            <line x1="430" y1="429" x2="413" y2="444"/>
+            <line x1="438" y1="461" x2="423" y2="477"/>
+          </g>
+
+          <!-- eyepiece -->
+          <ellipse cx="1030" cy="352" rx="19" ry="76" fill="rgba(167,224,140,.18)" stroke="#a7e08c" stroke-width="5"/>
+
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="30" font-weight="700" fill="#f2d024">
+            <text x="712" y="152">Objective mirror</text>
+            <text x="56" y="352">Secondary mirror</text>
+            <text x="960" y="536">Eyepiece</text>
+          </g>
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="23" font-style="italic" fill="#f2d024">
+            <text x="712" y="186">silvered on the back</text>
+            <text x="316" y="646">silvered side</text>
+            <path d="M368,634 L412,486" stroke="#f2d024" stroke-width="2.5" fill="none"/>
+          </g>
+
+          <!-- step 1: parallel light from a distant star -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="150" y1="175" x2="612" y2="175" marker-end="url(#rt-a)"/>
+            <line x1="150" y1="525" x2="612" y2="525" marker-end="url(#rt-a)"/>
+          </g>
+
+          <!-- step 2: objective reflects the beam back to the secondary -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="612" y1="175" x2="452" y2="272" marker-end="url(#rt-a)"/>
+            <line x1="612" y1="525" x2="452" y2="440" marker-end="url(#rt-a)"/>
+          </g>
+
+          <!-- step 3: secondary sends it through the hole to the focus -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="452" y1="272" x2="905" y2="355" marker-end="url(#rt-a)"/>
+            <line x1="452" y1="440" x2="905" y2="355" marker-end="url(#rt-a)"/>
+            <circle cx="905" cy="355" r="8" fill="#f2d024" stroke="none"/>
+            <text x="838" y="330" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="26" fill="#f2d024" stroke="none">focus</text>
+          </g>
+
+          <!-- step 4: through the eyepiece to the eye -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <path d="M905,355 L1030,378 L1160,368"/>
+            <path d="M905,355 L1030,332 L1160,344"/>
+            <ellipse cx="1210" cy="356" rx="34" ry="24" stroke="#bff2a8" stroke-width="4"/>
+            <circle cx="1210" cy="356" r="10" fill="#bff2a8" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="center-y">
+        <div class="box-grid one">
+          <div class="info-box">
+            <h4 class="cell-heading">No chromatic aberration</h4>
+            <p class="step">A mirror reflects &#8212; it never disperses. All colours come to the same focus.</p>
+          </div>
+          <div class="info-box">
+            <h4 class="cell-heading">Can be made large</h4>
+            <p class="step">A mirror is supported over its whole back, so it can be built far bigger than any lens &#8212; and a bigger aperture means more light and better resolution.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 14 NCERT Points &amp; Nuclear Decay</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(26px,6.2vmin,68px)}
+  .kicker{font-size:clamp(15px,2.7vmin,28px);letter-spacing:.3em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:82ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .red{color:#f87171;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.5ch;row-gap:.5vmin}
+  .cols{display:flex;gap:3.2vmin;align-items:stretch;flex-wrap:wrap}
+  .col{flex:1 1 24ch;min-width:22ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1vmin;font-size:clamp(16px,2.8vmin,30px);color:#fb923c;font-weight:800;letter-spacing:.03em}
+  .claim{border-left:.6vmin solid #f87171;padding:1.6vmin 2.2vmin;background:rgba(248,113,113,.07);border-radius:0 1.4vmin 1.4vmin 0}
+  .reason{border-left:.6vmin solid #4ade80;padding:1.6vmin 2.2vmin;background:rgba(74,222,128,.07);border-radius:0 1.4vmin 1.4vmin 0}
+  .rt{font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:clamp(13px,2.2vmin,24px);margin-bottom:.7vmin}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.6vmin 2.2vmin;background:rgba(251,191,36,.06);border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(14px,2.4vmin,25px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1vmin}
+  .decaygrid{display:flex;gap:2.4vmin;flex-wrap:wrap;margin-top:1vmin}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · NCERT point 1 (slide 34) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">NCERT Extra Point · 1</div>
+    <div class="claim">
+      <div class="rt red">Common statement</div>
+      <p class="sub">"Mass&ndash;energy interconversion takes place only in nuclear reactions and never in chemical reactions."</p>
+      <p class="sub" style="margin-top:1vmin"><span class="red">Strictly speaking, this is incorrect.</span></p>
+    </div>
+    <div class="reason step">
+      <div class="rt grn">Reason</div>
+      <p class="sub">Energy and mass represent the <span class="hl">same physical quantity</span> — so mass changes in chemical reactions too, just far too tiny to notice.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 2 · NCERT point 2 (slide 35) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">NCERT Extra Point · 2</div>
+    <div class="claim" style="border-left-color:#38bdf8;background:rgba(56,189,248,.07)">
+      <div class="rt" style="color:#38bdf8">Observation</div>
+      <p class="sub">The binding energy <span class="hl">per nucleon</span> curve is <span class="hl">smooth and slowly varying</span> over most of the range.</p>
+    </div>
+    <div class="reason step">
+      <div class="rt grn">Reason</div>
+      <p class="sub">The nuclear force is <span class="hl">short range</span>, so each added nucleon interacts with roughly the <span class="hl">same number of neighbours</span> — the binding per nucleon stays nearly constant.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · NCERT point 3 (slide 36) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">NCERT Extra Point · 3</div>
+    <div class="claim" style="border-left-color:#c084fc;background:rgba(192,132,252,.07)">
+      <div class="rt" style="color:#c084fc">Observation</div>
+      <p class="sub">Binding energy shows <span class="hl">peaks</span> at nuclides like
+        <math displaystyle="true"><mmultiscripts><mi>He</mi><mprescripts/><mn>2</mn><mn>4</mn></mmultiscripts></math>,
+        <math displaystyle="true"><mmultiscripts><mi>O</mi><mprescripts/><mn>8</mn><mn>16</mn></mmultiscripts></math>, etc.</p>
+    </div>
+    <div class="reason step">
+      <div class="rt grn">Reason</div>
+      <p class="sub">These peaks are taken as evidence of an <span class="hl">atom-like shell structure</span> inside the nucleus — certain nucleon counts form especially stable, "closed" shells.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Nuclear decay types (slides 40-41) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Nuclear Decay</div>
+    <h2>The emitted particles</h2>
+    <div class="decaygrid">
+      <div class="col card step">
+        <h3 style="color:#fb923c">Alpha (&alpha;)</h3>
+        <div class="eq"><math displaystyle="true"><mmultiscripts><mi>He</mi><mprescripts/><mn>2</mn><mn>4</mn></mmultiscripts></math></div>
+        <p class="sub" style="font-size:.7em;color:#94a3b8;margin-top:.8vmin">A drops 4, Z drops 2</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#38bdf8">Beta minus (&beta;<sup>&minus;</sup>)</h3>
+        <div class="eq"><math displaystyle="true"><mmultiscripts><mi>e</mi><mprescripts/><mrow><mo>-</mo><mn>1</mn></mrow><mn>0</mn></mmultiscripts></math></div>
+        <p class="sub" style="font-size:.7em;color:#94a3b8;margin-top:.8vmin">A same, Z rises 1</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#4ade80">Beta plus (&beta;<sup>+</sup>)</h3>
+        <div class="eq"><math displaystyle="true"><mmultiscripts><mi>e</mi><mprescripts/><mn>1</mn><mn>0</mn></mmultiscripts></math></div>
+        <p class="sub" style="font-size:.7em;color:#94a3b8;margin-top:.8vmin">A same, Z drops 1</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#fbbf24">Gamma (&gamma;)</h3>
+        <div class="eq"><math displaystyle="true"><mi>&#947;</mi></math></div>
+        <p class="sub" style="font-size:.7em;color:#94a3b8;margin-top:.8vmin">A &amp; Z unchanged, energy only</p>
+      </div>
+    </div>
+    <div class="hint no-print">Alpha and beta change the nucleus; gamma just carries away energy</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · Decay problem (slides 42-43) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="eq"><math displaystyle="true">
+        <mmultiscripts><mi>X</mi><mprescripts/><mn>50</mn><mn>124</mn></mmultiscripts>
+        <mo>&#10230;</mo>
+        <mmultiscripts><mi>X</mi><mprescripts/><mn>43</mn><mn>104</mn></mmultiscripts></math></div>
+      <div class="sub" style="margin-top:1vmin">How many <span class="hl">&alpha;</span> and <span class="hl">&beta;<sup>&minus;</sup></span> particles are emitted?</div>
+    </div>
+    <div class="kicker step" style="margin-top:1vmin">Solution</div>
+    <div style="display:flex;flex-direction:column;gap:1.6vmin">
+      <div class="eq step"><span style="font-family:system-ui">Mass number:&nbsp;</span>
+        <math displaystyle="true"><mi>α</mi><mo>=</mo><mfrac><mrow><mn>124</mn><mo>-</mo><mn>104</mn></mrow><mn>4</mn></mfrac><mo>=</mo></math>
+        <span class="grn"><math><mn>5</mn><mtext>&#160;α</mtext></math></span></div>
+      <div class="eq step"><span style="font-family:system-ui">After 5 α, Z&nbsp;=&nbsp;</span>
+        <math displaystyle="true"><mn>50</mn><mo>-</mo><mn>2</mn><mo>×</mo><mn>5</mn><mo>=</mo><mn>40</mn></math></div>
+      <div class="eq step"><span style="font-family:system-ui">Need Z = 43, so&nbsp;</span>
+        <math displaystyle="true"><mn>43</mn><mo>-</mo><mn>40</mn><mo>=</mo></math>
+        <span class="grn"><math><mn>3</mn><mtext>&#160;β</mtext><mtext>&#8722;</mtext></math></span></div>
+      <div class="eq step" style="margin-top:.6vmin"><span class="hl" style="font-family:system-ui;font-weight:800">Answer: 5 α&nbsp;particles and 3 β&minus;&nbsp;particles</span></div>
+    </div>
+    <div class="hint no-print">Fix A first with alphas, then correct Z with betas</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

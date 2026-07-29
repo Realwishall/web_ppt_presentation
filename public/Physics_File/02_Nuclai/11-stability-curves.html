@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 11 Stability Curves</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:1.8vmin;padding:4vmin 6vmin}
+  h2{margin:0;font-size:clamp(26px,6.2vmin,68px)}
+  .kicker{font-size:clamp(15px,2.7vmin,28px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(18px,3.5vmin,40px);color:#cbd5e1;max-width:80ch;line-height:1.42;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .blu{color:#38bdf8;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .cols{display:flex;gap:3.5vmin;align-items:center;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:1.8vmin 2.4vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1vmin;font-size:clamp(15px,2.7vmin,28px);color:#fb923c;font-weight:700;letter-spacing:.04em}
+  .bullets{display:flex;flex-direction:column;gap:1.3vmin;margin:0;padding:0;list-style:none}
+  .bullets li{font-size:clamp(17px,3.2vmin,36px);line-height:1.38;padding-left:3vmin;position:relative}
+  .bullets li::before{content:"";position:absolute;left:0;top:.65em;width:1.3vmin;height:1.3vmin;border-radius:50%;background:#fb923c}
+  svg{width:100%;height:auto}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · N–Z stability curve (slide 19) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>The N&ndash;Z stability curve</h2>
+    <div class="cols">
+      <div class="col" style="flex:1.05 1 30ch;min-width:28ch">
+        <svg viewBox="0 0 440 340" aria-hidden="true">
+          <!-- axes -->
+          <line x1="55" y1="300" x2="425" y2="300" stroke="#475569" stroke-width="2"/>
+          <line x1="55" y1="300" x2="55" y2="20" stroke="#475569" stroke-width="2"/>
+          <text x="425" y="322" font-family="system-ui" font-size="16" fill="#94a3b8" text-anchor="end">Z (protons) →</text>
+          <text x="30" y="30" font-family="system-ui" font-size="16" fill="#94a3b8" text-anchor="middle" transform="rotate(-90 30 160)">N (neutrons) →</text>
+          <!-- N = Z reference line -->
+          <line x1="55" y1="300" x2="335" y2="20" stroke="#334155" stroke-width="2" stroke-dasharray="6 7"/>
+          <text x="322" y="40" font-family="system-ui" font-size="15" fill="#64748b" text-anchor="end">N = Z</text>
+          <!-- stability band: follows N=Z then bows up (more N) -->
+          <path d="M55 300 C 150 205, 210 150, 300 70 C 330 44, 355 32, 380 26"
+                fill="none" stroke="#4ade80" stroke-width="4"/>
+          <text x="250" y="120" font-family="system-ui" font-size="15" font-weight="700" fill="#4ade80" transform="rotate(-38 250 120)">stable nuclei</text>
+          <!-- regions -->
+          <text x="120" y="90" font-family="system-ui" font-size="16" font-weight="700" fill="#38bdf8" text-anchor="middle">Neutron rich</text>
+          <text x="300" y="285" font-family="system-ui" font-size="16" font-weight="700" fill="#f87171" text-anchor="middle">Neutron poor</text>
+        </svg>
+      </div>
+      <div class="col" style="flex:1.15 1 32ch">
+        <ul class="bullets">
+          <li class="step">Every nucleus on this curve is <span class="grn">stable</span></li>
+          <li class="step">Light nuclei sit near <span class="hl">N : Z &asymp; 1 : 1</span></li>
+          <li class="step">Heavy nuclei climb to <span class="hl">N : Z &asymp; 3 : 2</span> (neutron rich)</li>
+          <li class="step">Off the curve &rarr; tells the <span class="hl">type of instability</span> a nucleus has</li>
+        </ul>
+        <div class="card step" style="margin-top:1.8vmin">
+          <h3>Reason</h3>
+          <p class="sub" style="font-size:.82em">Nuclear force is <span class="hl">short range</span>, so heavy nuclei need <span class="hl">extra neutrons</span> to overcome the long-range proton&ndash;proton repulsion.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Binding energy per nucleon curve (slides 20-22) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Binding energy per nucleon</h2>
+    <div class="cols">
+      <div class="col" style="flex:1.2 1 34ch;min-width:30ch">
+        <svg viewBox="0 0 460 320" aria-hidden="true">
+          <!-- axes -->
+          <line x1="55" y1="280" x2="445" y2="280" stroke="#475569" stroke-width="2"/>
+          <line x1="55" y1="280" x2="55" y2="20" stroke="#475569" stroke-width="2"/>
+          <text x="445" y="303" font-family="system-ui" font-size="15" fill="#94a3b8" text-anchor="end">mass number A →</text>
+          <text x="28" y="30" font-family="system-ui" font-size="14" fill="#94a3b8" text-anchor="middle" transform="rotate(-90 28 150)">B.E./nucleon (MeV)</text>
+          <text x="46" y="70" font-family="system-ui" font-size="13" fill="#94a3b8" text-anchor="end">~8.8</text>
+          <!-- curve: fast rise, peak Fe-56, slow decline -->
+          <path d="M55 280 C 75 250, 95 130, 130 95 C 160 68, 190 62, 215 62 C 320 62, 380 92, 440 118"
+                fill="none" stroke="#fb923c" stroke-width="4"/>
+          <!-- Fe-56 peak -->
+          <line x1="150" y1="62" x2="150" y2="280" stroke="#334155" stroke-width="2" stroke-dasharray="5 6"/>
+          <circle cx="150" cy="62" r="6" fill="#4ade80"/>
+          <text x="150" y="48" font-family="system-ui" font-size="15" font-weight="700" fill="#4ade80" text-anchor="middle">Fe (56) — max</text>
+          <text x="150" y="298" font-family="system-ui" font-size="14" fill="#94a3b8" text-anchor="middle">56</text>
+          <!-- H at A=1, BE 0 -->
+          <circle cx="57" cy="280" r="5" fill="#f87171"/>
+          <text x="70" y="272" font-family="system-ui" font-size="13" fill="#f87171">H ≈ 0</text>
+          <!-- region labels -->
+          <text x="102" y="200" font-family="system-ui" font-size="14" font-weight="700" fill="#38bdf8" text-anchor="middle">below 56</text>
+          <text x="330" y="200" font-family="system-ui" font-size="14" font-weight="700" fill="#c084fc" text-anchor="middle">above 56</text>
+        </svg>
+      </div>
+      <div class="col" style="flex:1 1 28ch">
+        <ul class="bullets">
+          <li class="step"><span class="grn">Maximum for Fe (56)</span> &rarr; the most stable nucleus</li>
+          <li class="step">Hydrogen B.E. can be taken as <span class="hl">zero</span></li>
+          <li class="step"><span class="blu">Below 56</span>: light nuclei <span class="hl">fuse</span> to climb the curve</li>
+          <li class="step"><span style="color:#c084fc;font-weight:700">Above 56</span>: heavy nuclei <span class="hl">split</span> (fission) to climb the curve</li>
+        </ul>
+        <p class="sub step" style="margin-top:1.6vmin;font-size:.82em;color:#94a3b8">Both directions move toward the peak &rarr; higher B.E./nucleon &rarr; more stability, energy released.</p>
+      </div>
+    </div>
+    <div class="hint no-print">Everything in nature drifts toward the Fe-56 peak</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

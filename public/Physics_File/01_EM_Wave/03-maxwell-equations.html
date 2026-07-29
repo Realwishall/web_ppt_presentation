@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EM Wave — 03 Maxwell Equations</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#060913;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(56,189,248,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(139,92,246,.08),transparent 60%),#060913}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2.2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#38bdf8;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#94a3b8;max-width:75ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(23px,4.8vmin,56px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(38vmin,1fr));gap:2.6vmin;margin-top:1vmin}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.6vmin 3vmin;box-sizing:border-box;
+        display:flex;flex-direction:column;gap:1.4vmin}
+  .card .name{font-size:clamp(19px,3.6vmin,40px);color:#fbbf24;font-weight:700}
+  .card .mean{font-size:clamp(16px,2.9vmin,30px);color:#94a3b8;line-height:1.4}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title (slide 9) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">EM Waves · Part 2</div>
+    <h1>Maxwell Equations</h1>
+    <p class="sub step">Four equations — the complete rulebook of electricity and magnetism.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · The four equations (slide 10) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Maxwell Equations</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <mo movablelimits="false" style="font-size:1.25em">&#8750;</mo>
+            <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>·</mo>
+            <mi>d</mi><mover accent="true"><mi>s</mi><mo>&#8594;</mo></mover>
+            <mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mfrac><msub><mi>q</mi><mtext>in</mtext></msub><msub><mi>ε</mi><mi>o</mi></msub></mfrac>
+          </math></span>
+        </div>
+        <div class="step">
+          <div class="name">→ Gauss's law in electrostatics</div>
+          <div class="mean">Electric flux through a closed surface counts the charge inside.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <mo movablelimits="false" style="font-size:1.25em">&#8750;</mo>
+            <mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>·</mo>
+            <mi>d</mi><mover accent="true"><mi>s</mi><mo>&#8594;</mo></mover>
+            <mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true"><mn>0</mn></math></span>
+        </div>
+        <div class="step">
+          <div class="name">→ Gauss's law in magnetism</div>
+          <div class="mean">No magnetic monopoles — field lines always close on themselves.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <mo movablelimits="false" style="font-size:1.25em">&#8750;</mo>
+            <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>·</mo>
+            <mi>d</mi><mover accent="true"><mi>l</mi><mo>&#8594;</mo></mover>
+            <mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mo>−</mo>
+            <mfrac><mrow><mi>d</mi><msub><mi>φ</mi><mi>B</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac>
+          </math></span>
+        </div>
+        <div class="step">
+          <div class="name">→ Faraday's law</div>
+          <div class="mean">A changing magnetic flux creates a (rotational) electric field.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <mo movablelimits="false" style="font-size:1.25em">&#8750;</mo>
+            <mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>·</mo>
+            <mi>d</mi><mover accent="true"><mi>l</mi><mo>&#8594;</mo></mover>
+            <mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <msub><mi>μ</mi><mi>o</mi></msub>
+            <mrow><mo>[</mo><msub><mi>I</mi><mtext>in</mtext></msub><mo>+</mo><msub><mi>I</mi><mi>d</mi></msub><mo>]</mo></mrow>
+          </math></span>
+        </div>
+        <div class="step">
+        <div class="name">→ Ampère–Maxwell law</div>
+        <div class="mean">Currents <i>and</i> changing electric flux
+          (<math><msub><mi>I</mi><mi>d</mi></msub><mo>=</mo><msub><mi>ε</mi><mi>o</mi></msub><mfrac><mrow><mi>d</mi><msub><mi>φ</mi><mi>e</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></math>)
+          create magnetic fields.</div>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Last two together: changing B ↔ changing E — the seed of the EM wave</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

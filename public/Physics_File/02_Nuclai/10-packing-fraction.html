@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 10 Packing Fraction</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .cols{display:flex;gap:3.5vmin;align-items:center;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1.2vmin;font-size:clamp(16px,2.8vmin,30px);color:#fb923c;font-weight:700;letter-spacing:.04em}
+  .derive{display:flex;flex-direction:column;gap:1.7vmin}
+  .bullets{display:flex;flex-direction:column;gap:1.6vmin;margin:0;padding:0;list-style:none}
+  .bullets li{font-size:clamp(18px,3.5vmin,40px);line-height:1.4;padding-left:3.2vmin;position:relative}
+  .bullets li::before{content:"";position:absolute;left:0;top:.7em;width:1.4vmin;height:1.4vmin;border-radius:50%;background:#fb923c}
+  .notebadge{font-size:clamp(24px,5vmin,58px);font-weight:900;letter-spacing:.04em;color:#fbbf24}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Reference note (slide 16) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div style="display:flex;gap:2vmin;align-items:baseline">
+      <span class="notebadge">NOTE:</span>
+      <p class="sub">Standard reference values used in binding-energy problems.</p>
+    </div>
+    <div class="cols" style="margin-top:1.5vmin;align-items:stretch">
+      <div class="col card step">
+        <h3>Binding energy</h3>
+        <p class="sub" style="margin-bottom:1vmin">of hydrogen atom / single proton / single neutron</p>
+        <div class="eq"><math displaystyle="true"><mo>=</mo></math>&nbsp;<span class="grn"><math><mn>0</mn></math></span></div>
+      </div>
+      <div class="col card step">
+        <h3>Mass</h3>
+        <p class="sub" style="margin-bottom:1vmin">of hydrogen atom / single proton / single neutron</p>
+        <div class="eq"><math displaystyle="true"><mo>=</mo></math>&nbsp;<span class="grn"><math><mn>1</mn><mtext>&#160;amu</mtext></math></span></div>
+      </div>
+    </div>
+    <p class="sub step" style="margin-top:1.5vmin">A lone nucleon has nothing to bind to — so its binding energy is <span class="hl">zero</span> and its mass is taken as <span class="hl">1 amu</span>.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Packing fraction (slides 17-18) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Packing fraction</h2>
+    <div class="cols">
+      <div class="col" style="flex:1 1 26ch">
+        <div class="eq" style="margin-bottom:1.5vmin"><span style="font-family:system-ui;font-weight:700">Packing fraction&nbsp;=</span>&nbsp;
+          <span class="hl"><math displaystyle="true"><mfrac><mrow><mi>M</mi><mo>-</mo><mi>A</mi></mrow><mi>A</mi></mfrac></math></span></div>
+        <p class="sub" style="font-size:.72em;color:#94a3b8"><math><mi>M</mi></math> = actual atomic mass &nbsp;·&nbsp; <math><mi>A</mi></math> = mass number</p>
+        <ul class="bullets" style="margin-top:1.5vmin">
+          <li class="step">Zero for <span class="hl">C-12</span> (the amu is defined from it)</li>
+          <li class="step">Can be <span class="hl">positive, negative, or zero</span></li>
+          <li class="step"><span class="grn">Smaller</span> packing fraction &rarr; more <span class="grn">stable</span></li>
+        </ul>
+      </div>
+      <div class="col" style="flex:1.1 1 30ch;min-width:28ch">
+        <svg viewBox="0 0 420 300" style="width:100%;height:auto" aria-hidden="true">
+          <!-- axes -->
+          <line x1="55" y1="150" x2="405" y2="150" stroke="#475569" stroke-width="2"/>
+          <line x1="55" y1="30" x2="55" y2="285" stroke="#475569" stroke-width="2"/>
+          <!-- zero label -->
+          <text x="40" y="155" font-family="system-ui" font-size="15" fill="#94a3b8" text-anchor="end">0</text>
+          <text x="30" y="80" font-family="system-ui" font-size="14" fill="#94a3b8" text-anchor="middle" transform="rotate(-90 30 150)">packing fraction</text>
+          <text x="405" y="172" font-family="system-ui" font-size="15" fill="#94a3b8" text-anchor="end">mass number A →</text>
+          <!-- curve: high positive light, dips negative mid, rises heavy -->
+          <path d="M62 55 C 90 120, 110 148, 140 150 C 210 154, 250 210, 300 205 C 350 200, 385 175, 400 162"
+                fill="none" stroke="#fb923c" stroke-width="3.5"/>
+          <!-- C12 marker at zero crossing -->
+          <circle cx="140" cy="150" r="6" fill="#4ade80"/>
+          <text x="140" y="138" font-family="system-ui" font-size="15" font-weight="700" fill="#4ade80" text-anchor="middle">C-12</text>
+          <!-- most stable dip -->
+          <circle cx="300" cy="205" r="5" fill="#fbbf24"/>
+          <text x="300" y="230" font-family="system-ui" font-size="14" fill="#fbbf24" text-anchor="middle">most stable</text>
+        </svg>
+      </div>
+    </div>
+    <div class="hint no-print">Lower packing fraction means the nucleus is more tightly packed and stable</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

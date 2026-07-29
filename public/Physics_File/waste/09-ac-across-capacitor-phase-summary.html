@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AC — 09 AC Across a Capacitor &amp; Phase Summary</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#050a14;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(34,211,238,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(251,191,36,.07),transparent 60%),#050a14}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(30px,7.4vmin,84px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(24px,5.4vmin,58px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .blist{display:flex;flex-direction:column;gap:1.6vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.6vmin;align-items:baseline;font-size:clamp(17px,3.3vmin,36px);line-height:1.42}
+  .blist .dot{flex:0 0 auto;width:1.4vmin;height:1.4vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#22d3ee,#fbbf24)}
+  .blist .step{display:inline}
+  table{border-collapse:collapse;font-size:clamp(15px,2.7vmin,28px);width:100%;max-width:100vmin}
+  th{color:#22d3ee;text-align:left;padding:1vmin 1.6vmin 1vmin 0;font-weight:700;border-bottom:1px solid rgba(148,163,184,.3)}
+  td{padding:1vmin 1.6vmin 1vmin 0;color:#e2e8f0;border-bottom:1px solid rgba(148,163,184,.15)}
+  td.v{font-family:'Cambria Math',Cambria,serif;font-style:italic;color:#fbbf24}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{ .step{opacity:1!important;transform:none!important} .no-print{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Alternating Current · Part 9</div>
+    <h1>AC Across a Capacitor</h1>
+    <p class="sub step">The mirror image of the inductor — current now runs ahead of voltage.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Derivation ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>AC supply along C</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>Apply <math><mi>v</mi><mo>=</mo><msub><mi>V</mi><mn>0</mn></msub><mi>sin</mi><mi>ωt</mi></math> across a capacitor: charge <math><mi>q</mi><mo>=</mo><mi>Cv</mi><mo>=</mo><mi>C</mi><msub><mi>V</mi><mn>0</mn></msub><mi>sin</mi><mi>ωt</mi></math></span></li>
+      <li class="step"><span class="dot"></span><span>Current <math><mi>i</mi><mo>=</mo><mfrac><mi>dq</mi><mi>dt</mi></mfrac></math> gives <span class="step"><math><mi>i</mi><mo>=</mo><mfrac><msub><mi>V</mi><mn>0</mn></msub><mrow><mn>1</mn><mo>/</mo><mi>ωC</mi></mrow></mfrac><mi>sin</mi><mo>(</mo><mi>ωt</mi><mo>+</mo><mfrac><mi>π</mi><mn>2</mn></mfrac><mo>)</mo></math></span></span></li>
+      <li class="step"><span class="dot"></span><span>Current <span class="hl">leads</span> the voltage by <math><mi>π</mi><mo>/</mo><mn>2</mn></math> (90°)</span></li>
+      <li class="step"><span class="dot"></span><span>Define <span class="hl">capacitive reactance</span> <math><msub><mi>X</mi><mi>C</mi></msub><mo>=</mo><mn>1</mn><mo>/</mo><mi>ωC</mi></math> — "something like resistance" for a capacitor</span></li>
+      <li class="step"><span class="dot"></span><span><math><msub><mi>X</mi><mi>C</mi></msub></math> <span class="hl">decreases with frequency</span> — at DC (<math><mi>f</mi><mo>=</mo><mn>0</mn></math>), <math><msub><mi>X</mi><mi>C</mi></msub><mo>→</mo><mo>∞</mo></math>: a capacitor is a <span class="hl">perfect insulator</span> for DC (blocks it completely)</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Phase summary table ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Phase summary — R, L, C</h2>
+    <div class="card step">
+      <table>
+        <tr><th>Element</th><th>Reactance</th><th>Phase of current w.r.t. voltage</th></tr>
+        <tr class="step"><td>Resistor</td><td class="v">R</td><td>In phase (0°)</td></tr>
+        <tr class="step"><td>Inductor</td><td class="v">X<sub>L</sub> = ωL</td><td>Lags by 90°</td></tr>
+        <tr class="step"><td>Capacitor</td><td class="v">X<sub>C</sub> = 1/ωC</td><td>Leads by 90°</td></tr>
+      </table>
+    </div>
+    <div class="hint no-print">Mnemonic: <b>"CIVIL"</b> — in a Capacitor, I leads V; in an inductor, V leads I</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #070a13;
+  color: #e2e8f0;
+}
+
+/* Ambient app background: subtle indigo/violet glows over near-black. */
+.app-bg {
+  background:
+    radial-gradient(900px 500px at 15% -10%, rgba(99, 102, 241, 0.14), transparent 60%),
+    radial-gradient(800px 500px at 90% 0%, rgba(168, 85, 247, 0.10), transparent 60%),
+    radial-gradient(700px 600px at 50% 110%, rgba(34, 211, 238, 0.07), transparent 60%),
+    #070a13;
+}
+
+/* Frosted panel surface used across the dashboard. */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Thin, unobtrusive scrollbars for the app chrome. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+/* 16:9 surface for slide pages (player + editor preview). */
+.slide-surface {
+  aspect-ratio: 16 / 9;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-floaty {
+  animation: floaty 4s ease-in-out infinite;
+}

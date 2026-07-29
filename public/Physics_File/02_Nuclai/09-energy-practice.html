@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 09 Energy Emitted · Practice</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(26px,6.4vmin,70px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(19px,3.8vmin,42px);color:#cbd5e1;max-width:80ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .red{color:#f87171;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(21px,4.4vmin,52px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1.2vmin;font-size:clamp(16px,2.8vmin,30px);color:#fb923c;font-weight:700;letter-spacing:.04em}
+  .derive{display:flex;flex-direction:column;gap:1.5vmin}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.6vmin 2.2vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(14px,2.4vmin,25px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8vmin}
+  .given{display:flex;flex-direction:column;gap:.8vmin;font-size:clamp(17px,3.2vmin,36px);color:#e2e8f0}
+  .ansbadge{color:#4ade80;font-weight:800;font-size:1.05em}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Q with BE given (slide 13) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Find energy emitted · Q1</div>
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="eq" style="margin-bottom:1.2vmin"><math displaystyle="true"><mi>A</mi><mo>+</mo><mi>B</mi><mo>→</mo><mi>C</mi></math></div>
+      <div class="given">
+        <span>Binding energy of A <math><mo>=</mo><mn>13</mn></math> MeV</span>
+        <span>Binding energy of B <math><mo>=</mo><mn>11</mn></math> MeV</span>
+        <span>Binding energy of C <math><mo>=</mo><mn>26</mn></math> MeV</span>
+      </div>
+    </div>
+    <div class="kicker step" style="margin-top:1vmin">Solution</div>
+    <div class="derive">
+      <div class="eq step"><span style="font-family:system-ui">Energy&nbsp;=&nbsp;</span>
+        <math displaystyle="true"><msub><mi>BE</mi><mi>C</mi></msub><mo>-</mo><mo>(</mo><msub><mi>BE</mi><mi>A</mi></msub><mo>+</mo><msub><mi>BE</mi><mi>B</mi></msub><mo>)</mo></math></div>
+      <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>26</mn><mo>-</mo><mo>(</mo><mn>13</mn><mo>+</mo><mn>11</mn><mo>)</mo></math></div>
+      <div class="eq step"><math displaystyle="true"><mo>=</mo></math>
+        <span class="ansbadge"><math displaystyle="true"><mn>2</mn><mtext>&#160;MeV</mtext></math></span>
+        <span style="font-family:system-ui;color:#94a3b8;font-size:.7em">&nbsp;released &rarr; reaction possible</span></div>
+    </div>
+    <div class="hint no-print">Products more tightly bound than reactants → energy comes out</div>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Per-nucleon BE + reference method (slide 14) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Find energy emitted · Q2</div>
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="eq" style="margin-bottom:1.2vmin"><math displaystyle="true">
+        <mmultiscripts><mi>X</mi><mprescripts/><mn>2</mn><mn>5</mn></mmultiscripts><mo>+</mo>
+        <mmultiscripts><mi>Y</mi><mprescripts/><mn>3</mn><mn>8</mn></mmultiscripts><mo>→</mo>
+        <mmultiscripts><mi>Z</mi><mprescripts/><mn>5</mn><mn>13</mn></mmultiscripts></math></div>
+      <div class="given">
+        <span>B.E. per nucleon of X <math><mo>=</mo><mn>7.2</mn></math> MeV</span>
+        <span>B.E. per nucleon of Y <math><mo>=</mo><mn>7.5</mn></math> MeV</span>
+        <span>B.E. per nucleon of Z <math><mo>=</mo><mn>8</mn></math> MeV</span>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="kicker step" style="margin-top:.5vmin">Solution</div>
+        <div class="derive">
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>13</mn><mo>×</mo><mn>8</mn><mo>-</mo><mo>(</mo><mn>8</mn><mo>×</mo><mn>7.5</mn><mo>+</mo><mn>5</mn><mo>×</mo><mn>7.2</mn><mo>)</mo></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>104</mn><mo>-</mo><mn>96</mn><mo>=</mo></math>
+            <span class="ansbadge"><math><mn>8</mn><mtext>&#160;MeV</mtext></math></span></div>
+        </div>
+      </div>
+      <div class="col card">
+        <h3>Or with reference 7.2 MeV</h3>
+        <div class="derive">
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>13</mn><mo>×</mo><mn>0.8</mn><mo>-</mo><mo>(</mo><mn>8</mn><mo>×</mo><mn>0.3</mn><mo>+</mo><mn>5</mn><mo>×</mo><mn>0</mn><mo>)</mo></math></div>
+          <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>10.4</mn><mo>-</mo><mn>2.4</mn><mo>=</mo></math>
+            <span class="ansbadge"><math><mn>8</mn><mtext>&#160;MeV</mtext></math></span></div>
+          <p class="sub step" style="font-size:.72em;color:#94a3b8">Subtract 7.2 from each per-nucleon value — same answer, smaller numbers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Practice with per-nucleon BE (slide 15a) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Find energy emitted · Q3</div>
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="eq" style="margin-bottom:1.2vmin"><math displaystyle="true">
+        <mmultiscripts><mi>X</mi><mprescripts/><mn>2</mn><mn>5</mn></mmultiscripts><mo>+</mo>
+        <mmultiscripts><mi>Y</mi><mprescripts/><mn>3</mn><mn>8</mn></mmultiscripts><mo>→</mo>
+        <mn>2</mn><mmultiscripts><mi>Z</mi><mprescripts/><mn>2</mn><mn>6</mn></mmultiscripts><mo>+</mo><mi>p</mi></math></div>
+      <div class="given">
+        <span><math><msub><mi>E</mi><mi>bn</mi></msub></math> of X <math><mo>=</mo><mn>7.2</mn></math> MeV</span>
+        <span><math><msub><mi>E</mi><mi>bn</mi></msub></math> of Y <math><mo>=</mo><mn>7.5</mn></math> MeV</span>
+        <span><math><msub><mi>E</mi><mi>bn</mi></msub></math> of Z <math><mo>=</mo><mn>8.5</mn></math> MeV</span>
+      </div>
+    </div>
+    <div class="kicker step" style="margin-top:1vmin">Solution</div>
+    <div class="derive">
+      <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>2</mn><mo>×</mo><mo>(</mo><mn>6</mn><mo>×</mo><mn>8.5</mn><mo>)</mo><mo>-</mo><mo>(</mo><mn>8</mn><mo>×</mo><mn>7.5</mn><mo>+</mo><mn>5</mn><mo>×</mo><mn>7.2</mn><mo>)</mo></math></div>
+      <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>102</mn><mo>-</mo><mn>96</mn><mo>=</mo></math>
+        <span class="ansbadge"><math><mn>6</mn><mtext>&#160;MeV</mtext></math></span></div>
+    </div>
+    <div class="hint no-print">Two Z nuclei form — count each one's binding energy (proton BE = 0)</div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Practice with amu masses (slide 15b) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Find energy emitted · Q4</div>
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="eq" style="margin-bottom:1.2vmin"><math displaystyle="true">
+        <mmultiscripts><mi>X</mi><mprescripts/><mn>2</mn><mn>5</mn></mmultiscripts><mo>+</mo>
+        <mmultiscripts><mi>Y</mi><mprescripts/><mn>3</mn><mn>8</mn></mmultiscripts><mo>→</mo>
+        <mn>2</mn><mmultiscripts><mi>Z</mi><mprescripts/><mn>2</mn><mn>6</mn></mmultiscripts><mo>+</mo><mi>p</mi></math></div>
+      <div class="given">
+        <span>mass of X <math><mo>=</mo><mn>5.5</mn></math> amu</span>
+        <span>mass of Y <math><mo>=</mo><mn>9</mn></math> amu</span>
+        <span>mass of Z atom <math><mo>=</mo><mn>6.5</mn></math> amu</span>
+      </div>
+    </div>
+    <div class="kicker step" style="margin-top:1vmin">Solution</div>
+    <div class="derive">
+      <div class="eq step"><span style="font-family:system-ui">E&nbsp;=&nbsp;</span>
+        <math displaystyle="true"><mo>(</mo><msub><mi>m</mi><mtext>react</mtext></msub><mo>-</mo><msub><mi>m</mi><mtext>prod</mtext></msub><mo>)</mo><mo>×</mo><mn>931</mn></math></div>
+      <div class="eq step"><math displaystyle="true"><mo>=</mo><mo>(</mo><mn>5.5</mn><mo>+</mo><mn>9</mn><mo>-</mo><mn>13</mn><mo>-</mo><mn>1</mn><mo>)</mo><mo>×</mo><mn>931</mn></math></div>
+      <div class="eq step"><math displaystyle="true"><mo>=</mo><mn>0.5</mn><mo>×</mo><mn>931</mn><mo>=</mo></math>
+        <span class="ansbadge"><math><mn>465.5</mn><mtext>&#160;MeV</mtext></math></span></div>
+      <div class="eq step" style="font-size:.7em;color:#94a3b8"><span style="font-family:system-ui">products&#160;=&#160;2&#215;6.5&#160;+&#160;1&#160;=&#160;13&#160;+&#160;1&#160;amu</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

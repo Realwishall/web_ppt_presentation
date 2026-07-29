@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 12 Radioactivity &amp; Fission</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:1.8vmin;padding:4vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(26px,6.2vmin,68px)}
+  .kicker{font-size:clamp(15px,2.7vmin,28px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(19px,3.7vmin,42px);color:#cbd5e1;max-width:80ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .blu{color:#38bdf8;font-weight:700}
+  .red{color:#f87171;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .cols{display:flex;gap:3.2vmin;align-items:stretch;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1.2vmin;font-size:clamp(17px,3.1vmin,34px);font-weight:800;letter-spacing:.03em}
+  .bullets{display:flex;flex-direction:column;gap:1.2vmin;margin:0;padding:0;list-style:none}
+  .bullets li{font-size:clamp(16px,3vmin,34px);line-height:1.38;padding-left:2.8vmin;position:relative}
+  .bullets li::before{content:"";position:absolute;left:0;top:.65em;width:1.2vmin;height:1.2vmin;border-radius:50%;background:currentColor;opacity:.6}
+  svg{width:100%;height:auto}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Radioactivity (slides 23-24) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclei · Part 14</div>
+    <h1>Radioactivity</h1>
+    <p class="sub step" style="margin-top:1vmin">The property of matter where an <span class="hl">unstable atom spontaneously releases energy and particles</span> (radiation) to become more stable.</p>
+    <p class="sub step" style="font-size:.82em;color:#94a3b8">The radioactive material is the substance itself — solid, liquid, or gas — that contains these unstable atoms and emits the radiation.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Chain reaction (slides 25-26) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Chain reaction</h2>
+    <div class="cols" style="align-items:center">
+      <div class="col" style="flex:1 1 26ch;min-width:24ch">
+        <svg viewBox="0 0 360 260" aria-hidden="true">
+          <defs><radialGradient id="n" cx="35%" cy="30%"><stop offset="0%" stop-color="#fed7aa"/><stop offset="100%" stop-color="#f97316"/></radialGradient></defs>
+          <!-- gen 0 -->
+          <circle cx="40" cy="130" r="16" fill="url(#n)"/>
+          <!-- links -->
+          <line x1="56" y1="130" x2="150" y2="70" stroke="#64748b" stroke-width="2"/>
+          <line x1="56" y1="130" x2="150" y2="190" stroke="#64748b" stroke-width="2"/>
+          <!-- gen 1 -->
+          <circle cx="165" cy="70" r="14" fill="url(#n)"/>
+          <circle cx="165" cy="190" r="14" fill="url(#n)"/>
+          <line x1="179" y1="70" x2="300" y2="35" stroke="#64748b" stroke-width="2"/>
+          <line x1="179" y1="70" x2="300" y2="105" stroke="#64748b" stroke-width="2"/>
+          <line x1="179" y1="190" x2="300" y2="155" stroke="#64748b" stroke-width="2"/>
+          <line x1="179" y1="190" x2="300" y2="225" stroke="#64748b" stroke-width="2"/>
+          <!-- gen 2 -->
+          <circle cx="315" cy="35" r="12" fill="url(#n)"/>
+          <circle cx="315" cy="105" r="12" fill="url(#n)"/>
+          <circle cx="315" cy="155" r="12" fill="url(#n)"/>
+          <circle cx="315" cy="225" r="12" fill="url(#n)"/>
+        </svg>
+      </div>
+      <div class="col" style="flex:1.2 1 32ch">
+        <div class="card step" style="margin-bottom:1.6vmin">
+          <h3 style="color:#fb923c">Reproduction factor&nbsp;<math><mi>k</mi></math></h3>
+          <div class="eq" style="font-size:clamp(18px,3.4vmin,38px)"><math displaystyle="true"><mi>k</mi><mo>=</mo><mfrac><mtext>neutrons produced</mtext><mtext>neutrons used up</mtext></mfrac></math></div>
+          <p class="sub" style="font-size:.72em;color:#94a3b8;margin-top:1vmin"><math><mi>k</mi><mo>=</mo><mn>1</mn></math> steady · <math><mi>k</mi><mo>&gt;</mo><mn>1</mn></math> grows · <math><mi>k</mi><mo>&lt;</mo><mn>1</mn></math> dies out</p>
+        </div>
+        <div class="card step">
+          <h3 style="color:#4ade80">Energy released from one atom</h3>
+          <p class="sub" style="font-size:.82em">A single fission frees a large burst of energy — one neutron triggers the next, and the reaction cascades.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Fission vs Fusion (slide 28) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2 style="text-align:center">Fission <span style="color:#fb923c">VS</span> Fusion</h2>
+    <div class="cols" style="margin-top:1vmin">
+      <div class="col card step" style="border-color:rgba(56,189,248,.35)">
+        <h3 style="color:#38bdf8">Nuclear Fission</h3>
+        <ul class="bullets" style="color:#bae6fd">
+          <li>A <span class="hl">heavy</span> nucleus <span class="hl">splits</span> into lighter ones</li>
+          <li>Happens for nuclei <span class="hl">above A = 56</span></li>
+          <li>Releases neutrons &rarr; <span class="hl">chain reaction</span></li>
+          <li>Used in current nuclear reactors</li>
+        </ul>
+      </div>
+      <div class="col card step" style="border-color:rgba(251,146,60,.35)">
+        <h3 style="color:#fb923c">Nuclear Fusion</h3>
+        <ul class="bullets" style="color:#fed7aa">
+          <li><span class="hl">Light</span> nuclei <span class="hl">combine</span> into a heavier one</li>
+          <li>Happens for nuclei <span class="hl">below A = 56</span></li>
+          <li>Releases <span class="hl">more energy per nucleon</span></li>
+          <li>Needs very high temperature (powers the Sun)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub step" style="text-align:center;margin-top:1vmin;font-size:.82em;color:#94a3b8">Both climb toward the Fe-56 peak &rarr; both release energy.</p>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Inside a fission reactor (slide 29) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Inside a fission reactor</h2>
+    <p class="sub step">Fission emits <span class="hl">more than one neutron</span>, and these are <span class="hl">fast</span>. To run safely we must control their number and speed.</p>
+    <div class="cols" style="margin-top:1vmin">
+      <div class="col card step">
+        <h3 style="color:#f87171">Control rods</h3>
+        <p class="sub" style="font-size:.85em">Rods of <span class="hl">Cadmium</span> <span class="red">absorb</span> the extra neutrons — keeping the reaction from running away.</p>
+      </div>
+      <div class="col card step">
+        <h3 style="color:#38bdf8">Moderator</h3>
+        <p class="sub" style="font-size:.85em">Fast neutrons collide with a <span class="hl">moderator</span> to <span class="blu">slow down</span> (fast &rarr; slow). Moderators are <span class="hl">light or heavy mass</span> materials (e.g. water, graphite, heavy water).</p>
+      </div>
+    </div>
+    <div class="hint no-print">Control rods manage how many neutrons; moderators manage how fast</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

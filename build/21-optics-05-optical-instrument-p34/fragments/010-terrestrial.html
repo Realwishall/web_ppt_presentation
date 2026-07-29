@@ -1,0 +1,91 @@
+<!-- Slide 10 — Terrestrial Telescope -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Terrestrial Telescope</h2>
+
+    <div class="split-6040">
+      <div class="figure-frame plain tall">
+        <svg viewBox="0 0 1300 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Terrestrial telescope ray diagram">
+          <defs>
+            <marker id="ar-y" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#f2d024"/>
+            </marker>
+            <marker id="ar-c" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#38bdf8"/>
+            </marker>
+            <marker id="ar-g" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#22c55e"/>
+            </marker>
+          </defs>
+
+          <!-- scaffold: axis + the three lenses stay visible -->
+          <line x1="30" y1="250" x2="1270" y2="250" stroke="#94a3b8" stroke-width="2" stroke-dasharray="12 10"/>
+
+          <g fill="rgba(56,189,248,.16)" stroke="#38bdf8" stroke-width="4">
+            <path d="M200,90 Q244,250 200,410 Q156,250 200,90 Z"/>
+            <path d="M600,150 Q632,250 600,350 Q568,250 600,150 Z"/>
+            <path d="M930,165 Q959,250 930,335 Q901,250 930,165 Z"/>
+          </g>
+
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#f2d024" text-anchor="middle">
+            <text x="200" y="462">Objective</text>
+            <text x="600" y="462">Erecting lens</text>
+            <text x="930" y="462">Eyepiece</text>
+          </g>
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">
+            <text x="200" y="490">long focal length</text>
+            <text x="600" y="490">only inverts</text>
+            <text x="930" y="490">short focal length</text>
+          </g>
+
+          <!-- step 1: parallel beam from a distant object -->
+          <g class="step" stroke="#f2d024" stroke-width="3.5" fill="none">
+            <line x1="40" y1="90" x2="200" y2="150" marker-end="url(#ar-y)"/>
+            <line x1="40" y1="190" x2="200" y2="250" marker-end="url(#ar-y)"/>
+            <line x1="40" y1="290" x2="200" y2="350" marker-end="url(#ar-y)"/>
+          </g>
+
+          <!-- step 2: objective converges to the first real image -->
+          <g class="step" stroke="#f2d024" stroke-width="3.5" fill="none">
+            <line x1="200" y1="150" x2="460" y2="347"/>
+            <line x1="200" y1="250" x2="460" y2="347"/>
+            <line x1="200" y1="350" x2="460" y2="347"/>
+          </g>
+
+          <!-- step 3: I1 -->
+          <g class="step">
+            <line x1="460" y1="250" x2="460" y2="352" stroke="#f2d024" stroke-width="6" marker-end="url(#ar-y)"/>
+            <text x="474" y="392" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#f2d024">I</text>
+            <text x="487" y="399" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#f2d024">1</text>
+          </g>
+
+          <!-- step 4: erecting lens re-inverts -->
+          <g class="step" stroke="#38bdf8" stroke-width="3.5" fill="none">
+            <path d="M460,347 L600,347 L740,153"/>
+            <path d="M460,347 L600,250 L740,153"/>
+            <path d="M460,347 L600,153 L740,153"/>
+          </g>
+
+          <!-- step 5: I2 -->
+          <g class="step">
+            <line x1="740" y1="250" x2="740" y2="148" stroke="#38bdf8" stroke-width="6" marker-end="url(#ar-c)"/>
+            <text x="754" y="132" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#38bdf8">I</text>
+            <text x="767" y="139" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#38bdf8">2</text>
+          </g>
+
+          <!-- step 6: eyepiece sends the beam out parallel -->
+          <g class="step" stroke="#22c55e" stroke-width="3.5" fill="none">
+            <path d="M740,153 L930,153 L1180,281" marker-end="url(#ar-g)"/>
+            <path d="M740,153 L930,250 L1180,378" marker-end="url(#ar-g)"/>
+            <ellipse cx="1232" cy="330" rx="34" ry="24" fill="none" stroke="#22c55e" stroke-width="3.5"/>
+            <circle cx="1232" cy="330" r="10" fill="#22c55e" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="center-y">
+        <div class="step"><span class="eq big" data-tex="L=f_0+4f+f_e"></span></div>
+      </div>
+    </div>
+  </div>
+</section>

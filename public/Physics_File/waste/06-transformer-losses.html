@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AC — 06 Transformer Losses</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#050a14;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(34,211,238,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(251,191,36,.07),transparent 60%),#050a14}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(32px,7.6vmin,86px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(24px,5.2vmin,56px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .cols{display:flex;gap:2.4vmin;align-items:stretch;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box;height:100%}
+  .card .t{font-weight:700;font-size:clamp(17px,3vmin,28px);color:#22d3ee;margin-bottom:1vmin}
+  .row{display:flex;gap:1vmin;margin-bottom:.9vmin;font-size:clamp(15px,2.5vmin,23px);line-height:1.4}
+  .row b{flex:0 0 auto;color:#fbbf24;min-width:6ch}
+  .blist{display:flex;flex-direction:column;gap:1.6vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.6vmin;align-items:baseline;font-size:clamp(17px,3vmin,32px);line-height:1.4}
+  .blist .dot{flex:0 0 auto;width:1.4vmin;height:1.4vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#22d3ee,#fbbf24)}
+  .blist .step{display:inline}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{ .step{opacity:1!important;transform:none!important} .no-print{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Alternating Current · Part 6</div>
+    <h1>Transformer Losses</h1>
+    <p class="sub step">No real transformer hits 100% efficiency — here's where the energy actually goes.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Flux leakage + copper loss ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Flux leakage &amp; copper loss</h2>
+    <div class="cols">
+      <div class="col card step">
+        <div class="t">Flux leakage</div>
+        <div class="row"><b>Issue:</b><span>Not all of the flux created by the primary links the secondary coil — some "leaks" into the surrounding air</span></div>
+        <div class="row"><b>Fix:</b><span>Wind primary and secondary tightly, one on top of the other, on the same core limb</span></div>
+      </div>
+      <div class="col card step">
+        <div class="t">Copper loss</div>
+        <div class="row"><b>Issue:</b><span>Heating effect (<math><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></math>) in the resistance of the copper windings</span></div>
+        <div class="row"><b>Fix:</b><span>Use thick wire / material of low resistance for the windings</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Iron losses ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Iron losses (in the core)</h2>
+    <div class="cols">
+      <div class="col card step">
+        <div class="t">Eddy current loss</div>
+        <div class="row"><b>Issue:</b><span>The changing flux induces circulating (eddy) currents within the solid iron core itself, heating it up</span></div>
+        <div class="row"><b>Fix:</b><span>Use a <span class="hl">laminated core</span> — thin iron sheets insulated from each other, which breaks up the eddy current loops</span></div>
+      </div>
+      <div class="col card step">
+        <div class="t">Hysteresis loss</div>
+        <div class="row"><b>Issue:</b><span>Energy is lost repeatedly magnetising and demagnetising the core every cycle — this is also the source of a transformer's <span class="hl">humming noise</span></span></div>
+        <div class="row"><b>Fix:</b><span>Use a core of <span class="hl">soft iron</span>, which has a narrow hysteresis loop and so loses less energy per cycle</span></div>
+      </div>
+    </div>
+    <div class="hint no-print">Both are called "iron losses" because they happen inside the core, regardless of load</div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Summary ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Summary — four loss mechanisms</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span><b>Flux leakage</b> — fixed by tight, close winding</span></li>
+      <li class="step"><span class="dot"></span><span><b>Copper loss</b> — fixed by low-resistance windings</span></li>
+      <li class="step"><span class="dot"></span><span><b>Eddy current loss</b> — fixed by a laminated core</span></li>
+      <li class="step"><span class="dot"></span><span><b>Hysteresis loss</b> — fixed by a soft-iron core</span></li>
+    </ul>
+    <div class="hint no-print">Together these keep real transformers around 95–99% efficient, not 100%</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

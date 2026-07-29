@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AC — 16 Problem-Solving Strategy, RC &amp; RL Circuits</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#050a14;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(34,211,238,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(251,191,36,.07),transparent 60%),#050a14}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(26px,6vmin,70px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(22px,4.8vmin,52px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .cols{display:flex;gap:3vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .blist{display:flex;flex-direction:column;gap:1.4vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.4vmin;align-items:baseline;font-size:clamp(16px,2.9vmin,30px);line-height:1.4}
+  .blist .dot{flex:0 0 auto;width:1.3vmin;height:1.3vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#22d3ee,#fbbf24)}
+  .blist .step{display:inline}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .card .t{font-weight:700;font-size:clamp(17px,3vmin,28px);color:#22d3ee;margin-bottom:1vmin}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{ .step{opacity:1!important;transform:none!important} .no-print{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Alternating Current · Part 16</div>
+    <h1>Solving AC Numericals — Strategy</h1>
+    <p class="sub step">A short checklist, plus the two simpler two-element circuits: RC and RL.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Strategy checklist ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Before you touch a formula</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>First identify the <span class="hl">type of supply</span> — AC or DC?</span></li>
+      <li class="step"><span class="dot"></span><span>A cell or battery is always a <span class="hl">DC source</span> — its frequency is <span class="hl">zero</span></span></li>
+      <li class="step"><span class="dot"></span><span>A capacitor is a <span class="hl">perfect insulator for DC</span> — it blocks DC completely once fully charged</span></li>
+      <li class="step"><span class="dot"></span><span>All AC meters read the <span class="hl">RMS value</span>; a DC instrument will not respond correctly to an AC supply</span></li>
+      <li class="step"><span class="dot"></span><span>If a data value is simply given with no label, assume it's <span class="hl">RMS</span> — not peak</span></li>
+      <li class="step"><span class="dot"></span><span>If the frequency changes in a problem, remember to <span class="hl">recompute X_L and X_C</span> — they are not constants</span></li>
+      <li class="step"><span class="dot"></span><span>Remember: <b>Hz</b> is the unit of frequency <math><mi>f</mi></math>, not of angular frequency <math><mi>ω</mi></math> (which is in rad/s)</span></li>
+      <li class="step"><span class="dot"></span><span>All the phasor formulas here are for <span class="hl">amplitude/RMS values</span>, not instantaneous ones — for instantaneous values, just use plain KCL/KVL addition</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Page 3 · RC and RL circuits ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>RC and RL circuits (no third element)</h2>
+    <div class="cols">
+      <div class="col card step">
+        <div class="t">RC circuit</div>
+        <p style="font-size:clamp(15px,2.6vmin,24px);line-height:1.5;margin:0">
+          <math><mi>Z</mi><mo>=</mo><msqrt><msup><mi>R</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>X</mi><mi>C</mi><mn>2</mn></msubsup></msqrt></math><br>
+          Current <span class="hl">leads</span> voltage by some angle <math><mi>φ</mi></math> between 0° and 90°,
+          <math><mi>tan</mi><mi>φ</mi><mo>=</mo><msub><mi>X</mi><mi>C</mi></msub><mo>/</mo><mi>R</mi></math>
+        </p>
+      </div>
+      <div class="col card step">
+        <div class="t">RL circuit</div>
+        <p style="font-size:clamp(15px,2.6vmin,24px);line-height:1.5;margin:0">
+          <math><mi>Z</mi><mo>=</mo><msqrt><msup><mi>R</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>X</mi><mi>L</mi><mn>2</mn></msubsup></msqrt></math><br>
+          Current <span class="hl">lags</span> voltage by some angle <math><mi>φ</mi></math> between 0° and 90°,
+          <math><mi>tan</mi><mi>φ</mi><mo>=</mo><msub><mi>X</mi><mi>L</mi></msub><mo>/</mo><mi>R</mi></math>
+        </p>
+      </div>
+    </div>
+    <div class="hint no-print">Both are just the RLC formulas with one reactance term dropped</div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · RL under AC vs DC ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>RL circuit — AC supply vs DC supply</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>Under a <span class="hl">DC</span> supply (steady state, <math><mi>f</mi><mo>=</mo><mn>0</mn></math>): <math><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><mi>ωL</mi><mo>=</mo><mn>0</mn></math> — the inductor behaves like a <span class="hl">plain wire</span>; current is limited by <math><mi>R</mi></math> alone: <math><mi>I</mi><mo>=</mo><mi>V</mi><mo>/</mo><mi>R</mi></math></span></li>
+      <li class="step"><span class="dot"></span><span>Under an <span class="hl">AC</span> supply: the inductor offers reactance <math><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><mi>ωL</mi></math>, which <span class="hl">grows with frequency</span> — it impedes current more as frequency rises</span></li>
+      <li class="step"><span class="dot"></span><span>So the same coil that's "invisible" on DC becomes an active current-limiter on AC — this coil, used purely for its reactance with negligible resistance, is called a <b>choke coil</b></span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

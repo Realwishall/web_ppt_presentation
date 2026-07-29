@@ -1,0 +1,366 @@
+/* ============================================================================
+   LessonForge deck-base.css  —  canonical design system for converted decks
+   ----------------------------------------------------------------------------
+   Extracted and generalised from `01 - Physical world - Bearable.html`, the one
+   deck in the corpus that is a true HTML rebuild (22 KB, 14 pages, 97 steps,
+   real tables, zero embedded slide images).
+
+   This file is INLINED into every generated deck by tools/build-deck.mjs.
+   Deck authors never write CSS. If a slide needs something that isn't here,
+   the component gets added HERE and documented in docs/components.md — never
+   as inline styles in a deck.
+
+   Compliance notes (see public/deck-authoring-prompt.md):
+     rule 1  — nothing here hides .page (no display:none / opacity:0 / visibility)
+     rule 8  — .page is a bare full-height surface; all layout lives on .wrap
+     rule 9  — dark stage, presentation-scale type via clamp()
+     rule 10 — vmin/clamp everywhere; no fixed px for anything that must scale
+     rule 11 — @media print block at the bottom; nothing depends on JS
+     rule 17 — Calibri stack; equations in Cambria Math; NO logo/brand styles
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+:root{
+  /* stage */
+  --bg-body:      #05060a;
+  --bg-stage:     #0a0b0f;
+
+  /* ink */
+  --ink:          #f1f5f9;   /* primary text            */
+  --sub:          #cbd5e1;   /* secondary / explanatory */
+  --muted:        #94a3b8;   /* notes, captions         */
+
+  /* accents — yellow is the heading/label colour throughout */
+  --yellow:       #f2d024;
+  --accent:       #6366f1;
+  --accent2:      #8b5cf6;
+  --blue:         #4472c4;   /* table header fill (matches Office theme) */
+  --green:        #22c55e;
+  --red:          #ef4444;
+  --cyan:         #38bdf8;
+
+  /* surfaces */
+  --card-bg:      rgba(255,255,255,.03);
+  --card-border:  rgba(255,255,255,.14);
+  --rule:         rgba(255,255,255,.08);
+
+  /* type scale — presentation scale, NOT web scale (rule 9) */
+  --fs-title:     clamp(36px, 8.6vmin, 98px);
+  --fs-h2:        clamp(26px, 5.6vmin, 60px);
+  --fs-h3:        clamp(22px, 4.4vmin, 46px);
+  --fs-body:      clamp(19px, 3.3vmin, 38px);
+  --fs-small:     clamp(17px, 2.8vmin, 32px);
+  --fs-note:      clamp(16px, 2.6vmin, 28px);
+  --fs-eq:        clamp(20px, 3.9vmin, 44px);
+  --fs-th:        clamp(16px, 2.4vmin, 26px);
+  --fs-td:        clamp(15px, 2.3vmin, 25px);
+
+  /* fonts (rule 17) */
+  --font-ui:      Calibri, Candara, 'Segoe UI', system-ui, sans-serif;
+  --font-math:    'Cambria Math', Cambria, Georgia, serif;
+
+  /* rhythm */
+  --gap:          2.2vmin;
+  --pad-y:        9vmin;
+  --pad-x:        7.5vmin;
+}
+
+html,body{height:100%;margin:0}
+body{background:var(--bg-body);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+
+/* --------------------------------------------- persistent layers (rule 1) --
+   Siblings of .page — the host only toggles .page, never these.             */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:
+      radial-gradient(1100px 650px at 12% -12%, rgba(255,255,255,.035), transparent 60%),
+      radial-gradient(900px 600px at 105% 105%, rgba(99,102,241,.06), transparent 60%),
+      var(--bg-stage);}
+#bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+
+.kicker-tag{position:fixed;left:2.8vmin;top:2.8vmin;z-index:5;color:var(--sub);
+    font-size:1.7vmin;letter-spacing:.08em;text-transform:uppercase;opacity:.55;
+    pointer-events:none}
+
+/* ------------------------------------------------------- page + wrappers --
+   rule 8: .page is forced to display:block by the host, so NO flex here.    */
+.page{position:relative;z-index:1;height:100%;box-sizing:border-box;color:var(--ink)}
+
+.wrap{height:100%;box-sizing:border-box;overflow:auto;
+      padding:var(--pad-y) var(--pad-x) 6vmin;
+      display:flex;flex-direction:column;gap:var(--gap)}
+.wrap.center{align-items:center;justify-content:center;text-align:center}
+.wrap.tight{gap:1.2vmin}
+.wrap.dense{padding:6vmin 5vmin 4vmin;gap:1.4vmin}   /* heavy tables/derivations */
+
+/* The host controls the hidden→shown transition with !important. Never set
+   opacity/visibility on .step yourself (rule 4).                            */
+.step{opacity:1}
+
+/* ------------------------------------------------------------- headings --- */
+h1.title       {margin:0;font-size:var(--fs-title);color:#fff;font-weight:700;line-height:1.1}
+h2.heading     {margin:0 0 1vmin;font-size:var(--fs-h2);color:var(--yellow);font-weight:700;line-height:1.15}
+h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--yellow);font-weight:700}
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--yellow);font-weight:700}
+h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
+
+.inline-lead{color:var(--ink);font-weight:400;font-size:var(--fs-body);margin-left:1.2vmin}
+.paren      {font-size:.55em;font-weight:400;color:var(--sub)}   /* "(contd.)" */
+
+/* ----------------------------------------------------------------- text --- */
+p{margin:0;font-size:var(--fs-body);line-height:1.45;color:var(--ink)}
+.sub    {color:var(--sub)}
+.note   {color:var(--sub);font-style:italic;font-size:var(--fs-note)}
+.caption{color:var(--muted);font-size:var(--fs-note)}
+.example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
+.example b{color:var(--ink);font-style:normal}
+.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.5}
+
+/* -------------------------------------------------------------- layouts --- */
+.two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
+.split-6040{display:grid;grid-template-columns:3fr 2fr;gap:4vmin;margin-top:1vmin}
+.split-4060{display:grid;grid-template-columns:2fr 3fr;gap:4vmin;margin-top:1vmin}
+.grid3     {display:grid;grid-template-columns:repeat(3,1fr);gap:3vmin;margin-top:.5vmin}
+.grid4     {display:grid;grid-template-columns:repeat(4,1fr);gap:2.4vmin;margin-top:.5vmin}
+.col p     {margin-bottom:1.2vmin}
+.cell p    {font-size:var(--fs-small);color:var(--sub)}
+.stack     {display:flex;flex-direction:column;gap:1.4vmin}
+.row       {display:flex;flex-wrap:wrap;align-items:center;gap:2vmin}
+
+/* -------------------------------------------- glossary / definition list --
+   rule 17: the LABEL is never a .step — only the definition steps in.       */
+.glossary{display:flex;flex-direction:column;gap:2.4vmin;margin-top:1vmin}
+.g-row{display:grid;grid-template-columns:24vmin 1fr;gap:2vmin;align-items:start}
+.g-row.wide{grid-template-columns:34vmin 1fr}
+.label{color:var(--yellow);font-weight:700;font-size:var(--fs-body)}
+.g-row .sub-list{margin-top:.6vmin;display:flex;flex-direction:column;gap:.3vmin}
+.g-row .sub-list span{display:block;font-size:var(--fs-small);color:var(--sub);padding-left:2vmin}
+
+/* -------------------------------------------------------------- bullets --- */
+ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.4vmin}
+ul.bullets li{position:relative;padding-left:2.6vmin;font-size:var(--fs-body);line-height:1.4}
+ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--yellow);font-size:.7em}
+ul.bullets.box   li:before{content:"\2b1c";color:var(--yellow);font-size:.6em;top:.15em}
+ul.bullets.arrow li:before{content:"\27a4";color:var(--yellow);font-size:.7em}
+ul.bullets.dot   li:before{content:"\2022";color:var(--yellow);font-size:1em;top:-.05em}
+ul.bullets.tight{gap:.8vmin}
+ul.bullets.small li{font-size:var(--fs-small)}
+ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
+
+/* ------------------------------------------------------------------ Q&A --
+   rule 17: question always visible, answer stepped.                         */
+.qa{margin-bottom:1.6vmin}
+.qa .q{color:var(--yellow);font-weight:700;font-size:clamp(18px,2.9vmin,32px)}
+.qa .a{margin-top:.5vmin;padding-left:2.4vmin;color:var(--sub);font-size:clamp(17px,2.7vmin,30px)}
+
+/* -------------------------------------------------------------- surfaces --- */
+.card{background:var(--card-bg);border:.14vmin solid var(--card-border);
+      border-radius:1.2vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+.callout{border-left:.45vmin solid var(--accent);background:rgba(99,102,241,.08);
+         padding:1.4vmin 2vmin;border-radius:.6vmin;font-size:var(--fs-small)}
+.callout--note{border-left-color:var(--cyan);background:rgba(56,189,248,.08)}
+.callout--warn{border-left-color:var(--red);background:rgba(239,68,68,.08)}
+.callout--tip {border-left-color:var(--green);background:rgba(34,197,94,.08)}
+.callout .callout-label{display:block;color:var(--yellow);font-weight:700;margin-bottom:.4vmin}
+
+/* --------------------------------------------------------------- tables ---
+   rule 17: .step goes on each data <td>, NEVER on the <tr>, and the first
+   column (td.prop) stays unstepped so it reads as a row header.             */
+table.data{border-collapse:collapse;width:100%;margin-top:1vmin}
+table.data th{background:var(--blue);color:var(--yellow);font-weight:700;text-align:left;
+      padding:1.2vmin 1.4vmin;font-size:var(--fs-th);border:1px solid rgba(255,255,255,.15)}
+table.data td{padding:1.3vmin 1.4vmin;font-size:var(--fs-td);
+      border-bottom:1px solid var(--rule);vertical-align:top}
+table.data td.prop{color:var(--yellow);font-weight:700}
+table.data td.num{text-align:right;font-family:var(--font-math)}
+table.data.compact th{padding:.8vmin 1vmin}
+table.data.compact td{padding:.8vmin 1vmin}
+table.data.center td{text-align:center}
+.ok{color:var(--green);font-weight:900}
+.no{color:var(--red);font-weight:900}
+
+/* ------------------------------------------------------------ equations ---
+   Two mechanisms, both script-free so they survive PDF export (rule 11):
+     1. .eq / .frac / .radical  — hand-built markup for inline symbol math
+     2. MathML emitted by tools/build-deck.mjs from LaTeX in the slide plan   */
+.eq{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:var(--fs-eq);
+    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em}
+.eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
+.eq-note{font-style:italic;color:var(--sub);font-size:var(--fs-note)}
+.eq.small{font-size:var(--fs-small)}
+.eq.big  {font-size:clamp(24px,5vmin,56px)}
+
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
+      margin:0 .18em;line-height:1.15}
+.frac .num{border-bottom:.09em solid currentColor;padding:0 .18em .06em}
+.frac .den{padding:.06em .18em 0}
+
+.radical{display:inline-flex;align-items:flex-start}
+.radical .sym{font-size:1.25em;line-height:.9;margin-right:-.06em}
+.radical .content{border-top:.09em solid currentColor;padding:0 .16em}
+
+.vec{position:relative;display:inline-block}
+.vec:after{content:"\2192";position:absolute;left:0;right:0;top:-.62em;
+           font-size:.72em;text-align:center;font-style:normal}
+
+/* MathML rendered at build time — inherit the deck's math font */
+math{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink)}
+math[display="block"]{display:block;margin:.8vmin 0}
+.eq math{font-size:inherit}
+
+/* ------------------------------------------------- annotated highlights ---
+   For "A rod of [length] [4][m]" style examples, where parts of an expression
+   are colour-coded to the terms defined below them. Colour is the mapping, so
+   each mark must pair with a .label of the same hue.                         */
+.mark-quantity,.mark-number,.mark-unit{
+  padding:.06em .3em;border-radius:.3em;font-style:normal}
+.mark-quantity{background:rgba(180,83,9,.55);color:#fff}       /* physical quantity */
+.mark-number  {background:rgba(34,197,94,.35);color:#fff}      /* numerical part    */
+.mark-unit    {background:rgba(148,163,184,.40);color:#fff}    /* unit              */
+
+.label.for-quantity{color:#fbbf24}
+.label.for-number  {color:var(--green)}
+.label.for-unit    {color:#cbd5e1}
+
+/* --------------------------------------------------- derivation / steps --- */
+.derivation{display:flex;flex-direction:column;gap:1.2vmin}
+.derivation .line{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink);
+                  display:flex;align-items:baseline;gap:.5em}
+.derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
+                       font-size:var(--fs-note)}
+.result{display:inline-block;border:.18vmin solid var(--yellow);border-radius:.8vmin;
+        padding:.8vmin 1.6vmin;color:var(--yellow);font-family:var(--font-math);
+        font-size:var(--fs-eq);font-weight:700}
+
+/* ------------------------------------------------------- worked example --- */
+.worked{display:flex;flex-direction:column;gap:1.4vmin}
+.worked .given   {color:var(--sub);font-size:var(--fs-small)}
+.worked .asked   {color:var(--yellow);font-weight:700;font-size:var(--fs-small)}
+.worked .solution{display:flex;flex-direction:column;gap:1vmin}
+
+/* -------------------------------------------------------------- figures ---
+   Inline <svg> lives inside .figure-frame; the frame owns the sizing so the
+   SVG only needs a viewBox (never fixed width/height).                      */
+.figure-frame{display:flex;align-items:center;justify-content:center;
+              background:var(--card-bg);border:.12vmin solid var(--card-border);
+              border-radius:1.2vmin;padding:2vmin;box-sizing:border-box;min-height:0}
+.figure-frame svg{width:100%;height:auto;max-height:52vh;color:var(--ink)}
+.figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:.6vmin}
+.figure-frame.plain{background:none;border:0;padding:0}
+.figure-frame.tall svg,.figure-frame.tall img{max-height:64vh}
+.fig-caption{margin-top:.8vmin;text-align:center;color:var(--muted);font-size:var(--fs-note)}
+
+/* ------------------------------------------------------------ questions ---
+   Only .option carries .clickable (rule 3): ≥44px, stable position.         */
+.options{display:flex;flex-direction:column;gap:1.4vmin;margin-top:1vmin}
+.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
+.option{border:.14vmin solid rgba(255,255,255,.25);border-radius:1vmin;
+        padding:1.4vmin 2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        min-height:44px;box-sizing:border-box;background:rgba(255,255,255,.02);
+        transition:border-color .25s,background .25s}
+/* An option paired with an aside (the formula that disqualifies it, a ✓/✗).
+   Two cells so the option text and its aside can be separate reveals. */
+.option-row{display:grid;grid-template-columns:minmax(0,1fr) auto;
+            gap:2.4vmin;align-items:center}
+.option-row .option{margin:0}
+.option.picked {border-color:var(--accent2);background:rgba(139,92,246,.12)}
+.option.correct{border-color:var(--green);background:rgba(34,197,94,.12)}
+.option.wrong  {border-color:var(--red);background:rgba(239,68,68,.10)}
+.opt-badge{display:inline-block;min-width:2.4vmin;margin-right:1vmin;
+           color:var(--yellow);font-weight:700}
+.answer-box{margin-top:1vmin;padding:1.4vmin 2vmin;border-left:.35vmin solid var(--green);
+            background:rgba(34,197,94,.08);font-size:clamp(17px,2.8vmin,32px)}
+.answer-box .ok{margin-right:.6vmin}
+.answer-box i{color:var(--sub)}
+
+/* ------------------------------------------------- focus boxes (reveals) ---
+   "One idea per box, and the box holds the floor while you teach it."
+   The box itself is NOT a .step — its label stays visible (rule 17) and the
+   explanation inside it is what reveals. tools/build-deck.mjs ships an observer
+   that runs each box through its own three-beat cycle:
+
+     press 1   box grows to 120%, every other box dims back
+     press 2…  its content appears, one line per press, inside the big box
+     press N   box settles back to 100%, dimming clears
+     press N+1 the next box starts its own cycle
+
+   Grow and shrink are each their OWN press — build-deck.mjs injects a zero-size
+   sentinel .step at each end of the box to make that so. Nothing is on a timer,
+   so the box stays big for exactly as long as the teacher is on it.
+   The transform lives on the BOX, never on the .step, because the host owns
+   .step opacity and transform with !important.                               */
+.box-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.2vmin;margin-top:1vmin}
+.box-grid.three{grid-template-columns:repeat(3,1fr)}
+.box-grid.one  {grid-template-columns:1fr}
+.info-box{position:relative;background:var(--card-bg);
+          border:.16vmin solid var(--card-border);border-left:.5vmin solid var(--yellow);
+          border-radius:1.2vmin;padding:1.6vmin 2vmin;box-sizing:border-box;
+          will-change:transform;
+          /* a touch of overshoot, so "the box opened" reads as its own beat
+             even when the teacher presses Next quickly */
+          transition:transform .45s cubic-bezier(.34,1.36,.5,1),opacity .4s ease,
+                     box-shadow .4s ease,border-color .4s ease,background .4s ease}
+.info-box h4.cell-heading{margin:0 0 .4vmin}
+.info-box p{font-size:var(--fs-small);color:var(--sub)}
+
+/* Grow INWARD, so a 120% box never pushes past the slide's padding: the outer
+   column pins its outer edge, a lone column grows from its centre.           */
+.box-grid > .info-box{transform-origin:center center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(odd) {transform-origin:left center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(even){transform-origin:right center}
+.box-grid.three > .info-box:nth-child(3n+1){transform-origin:left center}
+.box-grid.three > .info-box:nth-child(3n)  {transform-origin:right center}
+
+.page.has-focus .info-box{opacity:.5}          /* only once a box holds the floor */
+/* The enlarged box overlaps its neighbours, so its background must be nearly
+   solid — at card transparency the text underneath bleeds through and the two
+   sets of words mix. Just enough translucency to read as a raised panel.     */
+.page.has-focus .info-box.is-active,
+.info-box.is-active{
+  opacity:1;transform:scale(1.2);z-index:5;border-color:var(--yellow);
+  background:rgba(17,21,33,.94);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 0 0 .2vmin rgba(242,208,36,.35),0 2vmin 6vmin rgba(0,0,0,.6);
+}
+/* Zero-size sentinel steps injected by tools/build-deck.mjs: one before the
+   box's content and one after it, so "grow" and "shrink" are each their own
+   press. Never display:none — the fx observer needs an offsetParent to test. */
+.box-zoom{display:block;width:0;height:0;margin:0;padding:0;border:0;overflow:hidden}
+
+/* ---------------------------------------------------------------- video ---
+   16:9 embed. Scripts are stripped in PDF export (rule 11) and the classroom
+   may be offline, so every video MUST carry a .video-fallback with the URL and
+   the in/out points — that is what prints and what the teacher reads if the
+   embed refuses to load.                                                     */
+.video-frame{position:relative;width:100%;max-width:158vh;aspect-ratio:16/9;margin:0 auto;
+             border-radius:1.2vmin;overflow:hidden;background:#000;
+             border:.16vmin solid var(--card-border)}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-fallback{margin-top:1.2vmin;text-align:center;color:var(--sub);font-size:var(--fs-note)}
+.video-fallback .url{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;
+                     color:var(--cyan);word-break:break-all}
+.video-fallback .cue{color:var(--yellow);font-weight:700}
+
+/* ------------------------------------------------------------- utilities --- */
+.center-y{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          height:100%;gap:2vmin;text-align:center}
+
+/* --------------------------------------------------------------- button --- */
+.btn{border:0;border-radius:1vmin;padding:1.2vmin 2.2vmin;
+     font:700 2.4vmin var(--font-ui);color:#fff;min-height:44px;
+     background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer}
+
+/* ------------------------------------------------------- print / export ---
+   rule 11: all steps flat, on-screen chrome gone, dark stage preserved.     */
+@media print{
+  .step{opacity:1!important;transform:none!important;visibility:visible!important}
+  #bg,.kicker-tag,.no-print{display:none!important}
+  body{background:var(--bg-stage)}
+  .wrap{overflow:visible}
+  .figure-frame svg,.figure-frame img{max-height:60vh}
+  .info-box{transform:none!important;opacity:1!important;box-shadow:none!important;
+            background:var(--card-bg)!important;backdrop-filter:none!important}
+  .page.has-focus .info-box{opacity:1!important}
+  .box-zoom{display:none!important}
+  .video-frame{display:none!important}
+  .video-fallback{font-size:var(--fs-small)}
+}

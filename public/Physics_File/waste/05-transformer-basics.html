@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AC — 05 Transformer Basics</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#050a14;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(34,211,238,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(251,191,36,.07),transparent 60%),#050a14}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(32px,7.6vmin,86px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(26px,5.6vmin,60px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(20px,4.2vmin,48px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .blist{display:flex;flex-direction:column;gap:1.8vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.8vmin;align-items:baseline;font-size:clamp(18px,3.4vmin,36px);line-height:1.45}
+  .blist .dot{flex:0 0 auto;width:1.5vmin;height:1.5vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#22d3ee,#fbbf24)}
+  .blist .step{display:inline}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.6vmin 2.2vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(14px,2.1vmin,22px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.6vmin}
+  .qbox .q{font-size:clamp(16px,2.8vmin,30px);line-height:1.4}
+  .btn{border:0;border-radius:1.2vmin;padding:1.1vmin 2.2vmin;font:700 clamp(15px,2.5vmin,26px) system-ui;
+       color:#0b0f19;background:linear-gradient(135deg,#22d3ee,#38bdf8);cursor:pointer;min-height:44px;margin-top:1.1vmin}
+  .ans{visibility:hidden;margin-top:1vmin;font-size:clamp(15px,2.4vmin,24px)}
+  .ans.on{visibility:visible}
+  .fig svg{width:100%;height:auto;display:block}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{ .step{opacity:1!important;transform:none!important} .ans{visibility:visible!important} .btn,.no-print{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Alternating Current · Part 5</div>
+    <h1>The Transformer</h1>
+    <p class="sub step">A device that changes AC voltage and current, purely using a changing magnetic flux.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Why we need it (transmission loss) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Why not just send 220 V down the line?</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>A consumer wants <span class="hl">220 V, 10 A</span> — but the transmission line has resistance, so some voltage is lost as heat: <math><mi>ΔV</mi><mo>=</mo><mi>IR</mi></math></span></li>
+      <li class="step"><span class="dot"></span><span>Example: plant creates <span class="hl">320 V</span> at 10 A, but only <span class="hl">220 V</span> reaches the consumer — <span class="hl">100 V is lost</span> in the wire</span></li>
+      <li class="step"><span class="dot"></span><span>Power lost is <math><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></math> — since it depends on <math><msup><mi>I</mi><mn>2</mn></msup></math>, the fix is to transmit at <span class="hl">high voltage, low current</span>, then step the voltage back down near the consumer</span></li>
+      <li class="step"><span class="dot"></span><span>Sending the same power as <math><mi>V</mi><mo>=</mo><mn>22000</mn></math> V, <math><mi>I</mi><mo>=</mo><mn>0.1</mn></math> A means far less <math><msup><mi>I</mi><mn>2</mn></msup><mi>R</mi></math> loss for the same wire</span></li>
+    </ul>
+    <div class="hint no-print">This is the whole reason transformers exist in a power grid</div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Ideal transformer equations ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>The ideal transformer</h2>
+    <div class="cols">
+      <div class="col fig card step" style="max-width:52vmin">
+        <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="130" y="20" width="18" height="120" fill="#334155"/>
+          <g stroke="#22d3ee" stroke-width="2.4" fill="none">
+            <path d="M60 30 q0 12 15 12 t0 24 t0 24 t0 24 t0 24 t0 12"/>
+          </g>
+          <g stroke="#fbbf24" stroke-width="2.4" fill="none">
+            <path d="M158 26 q22 0 22 14 t-22 14 t22 14 t-22 14 t22 14 t-22 14 t22 14"/>
+          </g>
+          <text x="30" y="20" fill="#22d3ee" font-size="13" font-family="system-ui">Primary (N₁)</text>
+          <text x="188" y="20" fill="#fbbf24" font-size="13" font-family="system-ui">Secondary (N₂)</text>
+        </svg>
+      </div>
+      <div class="col">
+        <ul class="blist">
+          <li class="step"><span class="dot"></span><span><b>Step-up</b>: <math><msub><mi>N</mi><mn>2</mn></msub><mo>&gt;</mo><msub><mi>N</mi><mn>1</mn></msub></math> → raises voltage, lowers current</span></li>
+          <li class="step"><span class="dot"></span><span><b>Step-down</b>: <math><msub><mi>N</mi><mn>2</mn></msub><mo>&lt;</mo><msub><mi>N</mi><mn>1</mn></msub></math> → lowers voltage, raises current</span></li>
+          <li class="step"><span class="dot"></span><span>Flux per turn is the <span class="hl">same</span> in primary and secondary (they share the same core) →
+            <span class="step"><math><mfrac><msub><mi>V</mi><mn>2</mn></msub><msub><mi>V</mi><mn>1</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>N</mi><mn>2</mn></msub><msub><mi>N</mi><mn>1</mn></msub></mfrac></math></span> — true <b>even if efficiency isn't 100%</b></span></li>
+          <li class="step"><span class="dot"></span><span>If <span class="hl">no energy loss</span> (ideal, η = 100%):
+            <span class="step"><math><mfrac><msub><mi>V</mi><mn>2</mn></msub><msub><mi>V</mi><mn>1</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>N</mi><mn>2</mn></msub><msub><mi>N</mi><mn>1</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>I</mi><mn>1</mn></msub><msub><mi>I</mi><mn>2</mn></msub></mfrac></math></span></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Worked examples ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Worked examples</h2>
+    <div class="cols">
+      <div class="col qbox step">
+        <div class="qt">Question</div>
+        <div class="q">Primary 100 turns, secondary 20 turns, input 220 V AC. Find output voltage.</div>
+        <button class="btn clickable" onclick="document.getElementById('a1').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans" id="a1"><span class="hl"><math><msub><mi>V</mi><mn>2</mn></msub><mo>=</mo><mn>220</mn><mo>×</mo><mfrac><mn>20</mn><mn>100</mn></mfrac><mo>=</mo><mn>44</mn></math> V</span></div>
+      </div>
+      <div class="col qbox step">
+        <div class="qt">Question</div>
+        <div class="q">Same transformer, but supply is <b>DC</b>. What happens?</div>
+        <button class="btn clickable" onclick="document.getElementById('a2').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans" id="a2"><span class="hl">It will not work</span> — DC gives a constant flux, so <math><mi>dΦ</mi><mo>/</mo><mi>dt</mi><mo>=</mo><mn>0</mn></math> and no emf is induced in the secondary.</div>
+      </div>
+    </div>
+    <div class="hint no-print">A transformer only ever works with a changing (AC) supply</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · Frequency & efficiency facts ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Quick facts</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>Output <span class="hl">frequency = input frequency</span> — a transformer never changes frequency, only amplitude</span></li>
+      <li class="step"><span class="dot"></span><span>Transformers have <span class="hl">very high efficiency</span> (~95–99%) because they have <span class="hl">no moving parts</span> — losses are only electrical/magnetic, not mechanical friction</span></li>
+    </ul>
+    <div class="hint no-print">Compare with a motor/generator, which does have moving parts and frictional loss</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

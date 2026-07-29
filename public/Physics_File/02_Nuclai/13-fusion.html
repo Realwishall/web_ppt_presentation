@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 13 Nuclear Fusion</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:1.8vmin;padding:4vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(26px,6.2vmin,68px)}
+  .kicker{font-size:clamp(15px,2.7vmin,28px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(19px,3.7vmin,42px);color:#cbd5e1;max-width:80ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .grn{color:#4ade80;font-weight:700}
+  .blu{color:#38bdf8;font-weight:700}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .cols{display:flex;gap:3.2vmin;align-items:center;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .card h3{margin:0 0 1vmin;font-size:clamp(16px,2.9vmin,32px);color:#fb923c;font-weight:700;letter-spacing:.03em}
+  .bullets{display:flex;flex-direction:column;gap:1.3vmin;margin:0;padding:0;list-style:none}
+  .bullets li{font-size:clamp(17px,3.2vmin,36px);line-height:1.4;padding-left:3vmin;position:relative}
+  .bullets li::before{content:"";position:absolute;left:0;top:.65em;width:1.3vmin;height:1.3vmin;border-radius:50%;background:#fb923c}
+  .big{font-size:clamp(30px,8vmin,90px);font-weight:900;color:#4ade80;letter-spacing:.02em}
+  svg{width:100%;height:auto}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Fission & fusion on the curve (slides 30-31) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Why both release energy</h2>
+    <div class="cols">
+      <div class="col" style="flex:1.2 1 34ch;min-width:30ch">
+        <svg viewBox="0 0 460 300" aria-hidden="true">
+          <line x1="55" y1="260" x2="445" y2="260" stroke="#475569" stroke-width="2"/>
+          <line x1="55" y1="260" x2="55" y2="20" stroke="#475569" stroke-width="2"/>
+          <text x="445" y="283" font-family="system-ui" font-size="15" fill="#94a3b8" text-anchor="end">mass number A →</text>
+          <text x="28" y="30" font-family="system-ui" font-size="13" fill="#94a3b8" text-anchor="middle" transform="rotate(-90 28 140)">B.E./nucleon</text>
+          <path d="M55 260 C 75 232, 95 110, 130 78 C 160 54, 190 50, 215 50 C 320 50, 380 82, 440 108"
+                fill="none" stroke="#fb923c" stroke-width="4"/>
+          <line x1="150" y1="50" x2="150" y2="260" stroke="#334155" stroke-width="2" stroke-dasharray="5 6"/>
+          <circle cx="150" cy="50" r="6" fill="#4ade80"/>
+          <text x="150" y="38" font-family="system-ui" font-size="14" font-weight="700" fill="#4ade80" text-anchor="middle">Fe (56)</text>
+          <!-- fusion arrow (below 56, moving right/up) -->
+          <path d="M85 175 L 132 95" stroke="#fbbf24" stroke-width="3" marker-end="url(#a)"/>
+          <text x="82" y="195" font-family="system-ui" font-size="14" font-weight="700" fill="#fbbf24">fusion →</text>
+          <!-- fission arrow (above 56, moving left/up) -->
+          <path d="M360 92 L 200 55" stroke="#38bdf8" stroke-width="3" marker-end="url(#a)"/>
+          <text x="330" y="112" font-family="system-ui" font-size="14" font-weight="700" fill="#38bdf8">← fission</text>
+          <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#e2e8f0"/></marker></defs>
+        </svg>
+      </div>
+      <div class="col" style="flex:1 1 28ch">
+        <ul class="bullets">
+          <li class="step"><span class="hl">Maximum for Fe (56)</span> — most stable</li>
+          <li class="step"><span class="blu">Above 56</span>: heavy nuclei split (fission)</li>
+          <li class="step"><span class="hl">Below 56</span>: light nuclei fuse (fusion)</li>
+          <li class="step">Hydrogen B.E. taken as <span class="hl">zero</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="hint no-print">Every process moves toward higher binding energy per nucleon</div>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Fusion energy (slide 32) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclear Fusion</div>
+    <div class="eq" style="justify-content:center"><math displaystyle="true">
+      <mn>4</mn><mspace width="0.3em"/><mmultiscripts><mi>H</mi><mprescripts/><mn>1</mn><mn>1</mn></mmultiscripts>
+      <mo>→</mo>
+      <mmultiscripts><mi>He</mi><mprescripts/><mn>2</mn><mn>4</mn></mmultiscripts>
+      <mo>+</mo><mtext>energy</mtext></math></div>
+    <p class="sub step" style="margin-top:1vmin">Fusing light nuclei into helium releases</p>
+    <div class="big step">26.7 MeV</div>
+    <p class="sub step" style="font-size:.82em;color:#94a3b8">This is the reaction that powers the Sun and stars.</p>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Fusion challenges (slide 33) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Why fusion is hard</h2>
+    <ul class="bullets" style="margin-top:1vmin">
+      <li class="step">Nuclei must overcome the <span class="hl">Coulomb barrier</span> — their positive charges repel strongly.</li>
+      <li class="step">That needs enormous energy, supplied by <span class="hl">very high temperature</span>.</li>
+      <li class="step">So far <span class="hl">no device</span> achieves a controlled, net-positive fusion reaction — including <span class="blu">tokamak</span> and <span class="blu">ICF</span> (inertial confinement).</li>
+    </ul>
+    <div class="hint no-print">Getting more energy out than we put in is the open challenge of fusion power</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

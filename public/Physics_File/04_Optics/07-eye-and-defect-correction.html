@@ -1,0 +1,1230 @@
+<!-- 
+================================================================================
+HOW TO EDIT THIS PRESENTATION SLIDE DECK
+================================================================================
+1. REVEAL ENGINE & STEPS:
+   - Add `data-step="n"` to any HTML element or SVG element to make it reveal on step `n` of a slide.
+   - Add `data-anim="up|left|right|zoom|fade|draw"` to control the reveal animation:
+     * `up`: Slides up into view with fade-in.
+     * `left` / `right`: Slides in from left or right with fade-in.
+     * `zoom`: Scales up smoothly with fade-in.
+     * `fade`: Simple opacity transition.
+     * `draw`: Animates SVG stroke-dashoffset so rays and paths draw themselves!
+   - Add `data-delay="0.12"` to add a stagger delay (in seconds).
+
+2. MATH DELIMITERS:
+   - Inline Math: `$ \theta = \frac{h}{D} $` or `$ f = -x $`
+   - Display Math: `$$ \frac{1}{f} = \frac{1}{v} - \frac{1}{u} $$`
+   - NOTE FOR TABLES: Inside `<td>` and `<th>` cells, use `\frac{a}{b}`, NEVER `\dfrac{a}{b}`
+     (to prevent row height inflation).
+
+3. OPTICAL DIAGRAMS & MIRROR-HATCHING CONVENTION:
+   - Every ray diagram is calculated numerically using the thin lens equation 1/f = 1/v - 1/u.
+   - Mirrored/Reflecting surfaces use SVG `<pattern id="hatch">` for diagonal hatching lines.
+   - Diverging / Virtual construction rays use `stroke-dasharray="4 4"`.
+   - Real light rays use solid lines with directional arrows (`marker-end="url(#arrow)"`).
+
+4. SPOTLIGHT SYSTEM:
+   - As steps reveal, the active step element receives `.spotlight` (~10% scale boost, bright border).
+   - Neighboring cards in side-by-side grids receive `.dimmed` (scaled to 0.92, reduced opacity).
+================================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optics — Eye & Defect Correction (JEE Physics)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- KaTeX CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       RESET & BASE STYLES
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000000;
+      color: #f0f0f5;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================================================
+       STAGE CONTAINER & ASPECT RATIO STRETCH
+       ========================================================================== */
+    #stage-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+    }
+
+    .stage {
+      position: absolute;
+      width: 1280px;
+      height: 720px;
+      background: #09090e;
+      border: 1px solid #1a1a26;
+      overflow: hidden;
+      transform-origin: center center;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+    }
+
+    /* ==========================================================================
+       SLIDE STRUCTURE
+       ========================================================================== */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: 720px;
+      padding: 40px 48px 50px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(30px);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .slide.prev {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    /* ==========================================================================
+       HEADER & TYPOGRAPHY
+       ========================================================================== */
+    .slide-header {
+      width: 100%;
+      height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #1e1e2f;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    h1.fit-heading, h2.fit-heading {
+      white-space: nowrap;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .slide-title-large {
+      font-size: 65px;
+    }
+
+    .slide-title-section {
+      font-size: 45px;
+    }
+
+    /* ==========================================================================
+       GRID & CARDS
+       ========================================================================== */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .card {
+      background: rgba(18, 18, 28, 0.85);
+      border: 1px solid #2a2a3e;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, opacity 0.3s, box-shadow 0.3s;
+      transform-origin: center center;
+    }
+
+    .card-header {
+      font-size: 20px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+    }
+
+    .card-body {
+      font-size: 19px;
+      line-height: 1.5;
+      color: #d1d5db;
+    }
+
+    .card-body p {
+      margin-bottom: 8px;
+    }
+
+    .card-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Formula highlight box */
+    .formula-box {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1.5px solid #38bdf8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      margin-top: 8px;
+      font-size: 20px;
+    }
+
+    .formula-box.alert {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: #f43f5e;
+    }
+
+    .formula-box.success {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+    }
+
+    /* Mono labels */
+    .mono {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    /* ==========================================================================
+       SPOTLIGHT & ANIMATION STATES
+       ========================================================================== */
+    [data-step] {
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    [data-anim="up"] { transform: translateY(20px); }
+    [data-anim="left"] { transform: translateX(-20px); }
+    [data-anim="right"] { transform: translateX(20px); }
+    [data-anim="zoom"] { transform: scale(0.92); }
+    [data-anim="fade"] { transform: none; }
+    [data-anim="draw"] { opacity: 1; } /* Drawn via JS stroke-dashoffset */
+
+    [data-step].step-visible {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+
+    /* Spotlight effect: active step block grows ~10%, siblings dim to 0.92 */
+    .card.spotlight {
+      transform: scale(1.06) !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.35) !important;
+      z-index: 10;
+    }
+
+    .card.dimmed {
+      transform: scale(0.93) !important;
+      opacity: 0.55 !important;
+    }
+
+    /* ==========================================================================
+       TABLEreveal STYLES
+       ========================================================================== */
+    .table-container {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: rgba(15, 15, 24, 0.9);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #2a2a3e;
+    }
+
+    .table-container th, .table-container td {
+      font-size: 18px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #1e1e2f;
+      border-right: 1px solid #1e1e2f;
+    }
+
+    .table-container th {
+      background: rgba(30, 41, 59, 0.8);
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    .table-container tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-container td:last-child, .table-container th:last-child {
+      border-right: none;
+    }
+
+    .table-container td[data-step].spotlight {
+      background: rgba(56, 189, 248, 0.25) !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       FOOTER & CHROME
+       ========================================================================== */
+    .slide-footer {
+      height: 35px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #1a1a28;
+      padding-top: 8px;
+      margin-top: 10px;
+    }
+
+    .footer-title {
+      font-size: 14px;
+      color: #64748b;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .footer-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .progress-bar-bg {
+      width: 180px;
+      height: 4px;
+      background: #1e1e2f;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      transition: width 0.3s ease;
+    }
+
+    /* ==========================================================================
+       SVG DIAGRAM STYLING
+       ========================================================================== */
+    .diagram-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .ray-real {
+      stroke: #38bdf8;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    .ray-virtual {
+      stroke: #f43f5e;
+      stroke-width: 2;
+      stroke-dasharray: 5 5;
+      fill: none;
+    }
+
+    .optical-axis {
+      stroke: #475569;
+      stroke-width: 1.5;
+      stroke-dasharray: 4 4;
+    }
+
+    .eye-sclera {
+      fill: #0f172a;
+      stroke: #94a3b8;
+      stroke-width: 2.5;
+    }
+
+    .eye-lens {
+      fill: rgba(56, 189, 248, 0.25);
+      stroke: #38bdf8;
+      stroke-width: 2;
+    }
+
+    .spectacle-lens-concave {
+      fill: rgba(168, 85, 247, 0.2);
+      stroke: #a855f7;
+      stroke-width: 2.5;
+    }
+
+    .spectacle-lens-convex {
+      fill: rgba(34, 197, 94, 0.2);
+      stroke: #22c55e;
+      stroke-width: 2.5;
+    }
+
+    .retina-spot {
+      fill: #f43f5e;
+    }
+
+    .label-text {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      fill: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="stage-container">
+  <div class="stage" id="stage">
+
+    <!-- SVG Definitions for Markers & Hatching -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+        </marker>
+        <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+        </marker>
+        <pattern id="mirror-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#475569" stroke-width="1.5" />
+        </pattern>
+      </defs>
+    </svg>
+
+    <!-- ======================================================================
+         SLIDE 1: EYE OPTICS & ACCOMMODATION
+         ====================================================================== -->
+    <div class="slide active" id="slide-1" data-total-steps="7">
+      <div class="slide-header">
+        <div class="header-tag">Slide 01 // Optics Basics</div>
+        <h1 class="fit-heading slide-title-large" data-max-font-size="65">HUMAN EYE &amp; ACCOMMODATION</h1>
+      </div>
+
+      <div class="grid-3" style="margin-bottom: 12px;">
+        <!-- Card 1 -->
+        <div class="card" data-step="1" data-anim="up">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8 v8 M8 12 h8"/></svg>
+            Anatomy &amp; Parameters
+          </div>
+          <div class="card-body">
+            <p>• <strong>Crystalline Lens:</strong> Flexible biconvex lens ($f \approx 2.27\text{ cm}$ to $2.50\text{ cm}$).</p>
+            <p>• <strong>Retina:</strong> Fixed image distance screen ($v = 2.5\text{ cm}$).</p>
+            <p>• <strong>Visual Angle ($\theta$):</strong> Angle subtended by object at eye ($\theta = \frac{h}{D}$).</p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card" data-step="2" data-anim="up">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Far Point (Relaxed Eye)
+          </div>
+          <div class="card-body">
+            <p>• <strong>Distance:</strong> $D_{\text{far}} = \infty$ (Infinite for normal eye).</p>
+            <p>• <strong>Ciliary Muscles:</strong> Fully relaxed (Flattest lens curvature).</p>
+            <p>• <strong>Max Focal Length:</strong> $f_{\text{max}} = 2.50\text{ cm}$.</p>
+            <div class="formula-box">
+              $P_{\text{min}} = +40\text{ D} \quad (\text{Min Magnification})$
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card" data-step="3" data-anim="up">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Near Point (Strained Eye)
+          </div>
+          <div class="card-body">
+            <p>• <strong>Distance:</strong> $d = 25\text{ cm}$ (Least Distance of Distinct Vision $D$).</p>
+            <p>• <strong>Ciliary Muscles:</strong> Fully contracted (Bulging lens curvature).</p>
+            <p>• <strong>Min Focal Length:</strong> $f_{\text{min}} = \frac{25}{11} \approx 2.27\text{ cm}$.</p>
+            <div class="formula-box alert">
+              $P_{\text{max}} = +44\text{ D} \quad (\text{Max Magnification})$
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagram Container -->
+      <div class="card" style="height: 240px; padding: 12px 20px;" data-step="4" data-anim="zoom">
+        <div class="mono" style="margin-bottom: 4px;">OPTICAL RAY SCHEMATIC // NORMAL EYE FOCUSING</div>
+        <svg class="diagram-svg" viewBox="0 0 1180 200">
+          <line x1="50" y1="100" x2="1130" y2="100" class="optical-axis" />
+          
+          <!-- Eye Sclera & Lens -->
+          <path d="M 850 30 C 970 30, 1020 60, 1020 100 C 1020 140, 970 170, 850 170 Z" class="eye-sclera" />
+          <ellipse cx="860" cy="100" rx="14" ry="45" class="eye-lens" />
+          
+          <!-- Retina Line -->
+          <line x1="1010" y1="45" x2="1010" y2="155" stroke="#f43f5e" stroke-width="3" />
+          <circle cx="1010" cy="100" r="5" class="retina-spot" />
+          <text x="1018" y="105" class="label-text" fill="#f43f5e">Retina (v = 2.5cm)</text>
+          
+          <!-- Parallel Rays (Far Point) -->
+          <g data-step="5" data-anim="draw">
+            <line x1="80" y1="60" x2="860" y2="60" class="ray-real" marker-end="url(#arrow)" />
+            <line x1="80" y1="140" x2="860" y2="140" class="ray-real" marker-end="url(#arrow)" />
+            <line x1="860" y1="60" x2="1010" y2="100" class="ray-real" />
+            <line x1="860" y1="140" x2="1010" y2="100" class="ray-real" />
+            <text x="100" y="52" class="label-text">Parallel Rays from u = -∞</text>
+          </g>
+
+          <!-- Diverging Rays (Near Point) -->
+          <g data-step="6" data-anim="draw">
+            <circle cx="350" cy="100" r="4" fill="#38bdf8" />
+            <text x="330" y="125" class="label-text">Near Point N (25cm)</text>
+            <line x1="350" y1="100" x2="860" y2="70" stroke="#818cf8" stroke-width="2" marker-end="url(#arrow)" />
+            <line x1="350" y1="100" x2="860" y2="130" stroke="#818cf8" stroke-width="2" marker-end="url(#arrow)" />
+            <line x1="860" y1="70" x2="1010" y2="100" stroke="#818cf8" stroke-width="2" />
+            <line x1="860" y1="130" x2="1010" y2="100" stroke="#818cf8" stroke-width="2" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-1"></div></div>
+          <div class="page-indicator">01 / 06</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SLIDE 2: MYOPIA (SHORT-SIGHTEDNESS) & DEFECT ANALYSIS
+         ====================================================================== -->
+    <div class="slide" id="slide-2" data-total-steps="6">
+      <div class="slide-header">
+        <div class="header-tag">Slide 02 // Defect Analysis</div>
+        <h2 class="fit-heading slide-title-section" data-max-font-size="45">MYOPIA (SHORT-SIGHTEDNESS): FAR POINT SHIFT</h2>
+      </div>
+
+      <div class="grid-2">
+        <!-- Diagram Column (Rule: Diagrams reveal first) -->
+        <div class="card" style="justify-content: space-between;" data-step="1" data-anim="zoom">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Myopic Ray Paths (Numerical Trace)
+          </div>
+          
+          <svg class="diagram-svg" viewBox="0 0 550 360" style="height: 380px;">
+            <line x1="20" y1="100" x2="530" y2="100" class="optical-axis" />
+            <line x1="20" y1="280" x2="530" y2="280" class="optical-axis" />
+            
+            <!-- (A) Defective Eye (Parallel Rays Focus In Front) -->
+            <g data-step="2" data-anim="draw">
+              <text x="20" y="30" class="label-text" fill="#f43f5e">(A) Object at u = -∞ (Focuses in front of retina)</text>
+              <path d="M 380 40 C 480 40, 520 65, 520 100 C 520 135, 480 160, 380 160 Z" class="eye-sclera" />
+              <ellipse cx="390" cy="100" rx="10" ry="38" class="eye-lens" />
+              <line x1="510" y1="50" x2="510" y2="150" stroke="#64748b" stroke-width="2" />
+              
+              <!-- Rays meeting at x = 460 (in front of retina at 510) -->
+              <line x1="30" y1="65" x2="390" y2="65" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="30" y1="135" x2="390" y2="135" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="390" y1="65" x2="460" y2="100" class="ray-real" />
+              <line x1="390" y1="135" x2="460" y2="100" class="ray-real" />
+              <circle cx="460" cy="100" r="4" fill="#f43f5e" />
+              <text x="440" y="125" class="label-text" fill="#f43f5e">Blur focus</text>
+            </g>
+
+            <!-- (B) Object at Defective Far Point F -->
+            <g data-step="3" data-anim="draw">
+              <text x="20" y="210" class="label-text" fill="#22c55e">(B) Object at Defective Far Point F (x = 250cm)</text>
+              <path d="M 380 220 C 480 220, 520 245, 520 280 C 520 315, 480 340, 380 340 Z" class="eye-sclera" />
+              <ellipse cx="390" cy="280" rx="10" ry="38" class="eye-lens" />
+              <line x1="510" y1="230" x2="510" y2="330" stroke="#f43f5e" stroke-width="2.5" />
+              
+              <!-- Rays from Far Point F at x = 120 -->
+              <circle cx="120" cy="280" r="5" fill="#38bdf8" />
+              <text x="105" y="305" class="label-text" fill="#38bdf8">F (x = 250cm)</text>
+              <line x1="120" y1="280" x2="390" y2="250" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="120" y1="280" x2="390" y2="310" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="390" y1="250" x2="510" y2="280" class="ray-real" />
+              <line x1="390" y1="310" x2="510" y2="280" class="ray-real" />
+              <circle cx="510" cy="280" r="4" fill="#22c55e" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Text / Derivation Column -->
+        <div class="card" data-step="4" data-anim="right">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Physics Derivation &amp; Correction
+          </div>
+          <div class="card-body">
+            <p><strong>Defect Cause:</strong> Eyeball too long or eye lens curvature too sharp ($P_{\text{eye}}$ too high).</p>
+            <p><strong>Far Point Condition:</strong> Far point reduces from $\infty$ to finite distance $x$ (e.g., $x = 250\text{ cm}$).</p>
+
+            <div style="margin-top: 10px;" data-step="5" data-anim="up">
+              <p><strong>Derivation (Proof before Formula):</strong></p>
+              <p>1. We want a lens that forms a virtual image of $u = -\infty$ at $v = -x$.</p>
+              <p>2. Thin Lens Equation: $$ \frac{1}{f} = \frac{1}{v} - \frac{1}{u} $$</p>
+              <p>3. Substituting values: $$ \frac{1}{f} = \frac{1}{-x} - \frac{1}{-\infty} = -\frac{1}{x} $$</p>
+            </div>
+
+            <div class="formula-box alert" data-step="6" data-anim="zoom">
+              Corrective Focal Length: $f = -x$<br>
+              Power: $P = -\frac{1}{x \text{ (in m)}} \quad (\text{Concave / Diverging Lens})$
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-2"></div></div>
+          <div class="page-indicator">02 / 06</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SLIDE 3: HYPERMETROPIA (LONG-SIGHTEDNESS) & DEFECT ANALYSIS
+         ====================================================================== -->
+    <div class="slide" id="slide-3" data-total-steps="6">
+      <div class="slide-header">
+        <div class="header-tag">Slide 03 // Defect Analysis</div>
+        <h2 class="fit-heading slide-title-section" data-max-font-size="45">HYPERMETROPIA: NEAR POINT SHIFT</h2>
+      </div>
+
+      <div class="grid-2">
+        <!-- Diagram Column (Draws first) -->
+        <div class="card" style="justify-content: space-between;" data-step="1" data-anim="zoom">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Hypermetropic Ray Paths
+          </div>
+
+          <svg class="diagram-svg" viewBox="0 0 550 360" style="height: 380px;">
+            <line x1="20" y1="100" x2="530" y2="100" class="optical-axis" />
+            <line x1="20" y1="280" x2="530" y2="280" class="optical-axis" />
+
+            <!-- (A) Object at Normal Near Point N (25cm) -> Focuses Behind Retina -->
+            <g data-step="2" data-anim="draw">
+              <text x="20" y="30" class="label-text" fill="#f43f5e">(A) Object at N (25cm) -> Focuses BEHIND Retina</text>
+              <path d="M 380 40 C 480 40, 520 65, 520 100 C 520 135, 480 160, 380 160 Z" class="eye-sclera" />
+              <ellipse cx="390" cy="100" rx="10" ry="38" class="eye-lens" />
+              <line x1="510" y1="50" x2="510" y2="150" stroke="#f43f5e" stroke-width="2" />
+              
+              <circle cx="200" cy="100" r="4" fill="#38bdf8" />
+              <text x="180" y="125" class="label-text">N (25cm)</text>
+              <line x1="200" y1="100" x2="390" y2="65" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="200" y1="100" x2="390" y2="135" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="390" y1="65" x2="540" y2="100" class="ray-real" />
+              <line x1="390" y1="135" x2="540" y2="100" class="ray-real" />
+              <circle cx="540" cy="100" r="4" fill="#f43f5e" />
+              <text x="460" y="125" class="label-text" fill="#f43f5e">Behind Retina</text>
+            </g>
+
+            <!-- (B) Object at Defective Near Point N' (50cm) -->
+            <g data-step="3" data-anim="draw">
+              <text x="20" y="210" class="label-text" fill="#22c55e">(B) Object at Defective Near Point N' (50cm)</text>
+              <path d="M 380 220 C 480 220, 520 245, 520 280 C 520 315, 480 340, 380 340 Z" class="eye-sclera" />
+              <ellipse cx="390" cy="280" rx="10" ry="38" class="eye-lens" />
+              <line x1="510" y1="230" x2="510" y2="330" stroke="#22c55e" stroke-width="2.5" />
+              
+              <circle cx="100" cy="280" r="5" fill="#38bdf8" />
+              <text x="80" y="305" class="label-text">N' (50cm)</text>
+              <line x1="100" y1="280" x2="390" y2="250" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="100" y1="280" x2="390" y2="310" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="390" y1="250" x2="510" y2="280" class="ray-real" />
+              <line x1="390" y1="310" x2="510" y2="280" class="ray-real" />
+              <circle cx="510" cy="280" r="4" fill="#22c55e" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Text / Derivation Column -->
+        <div class="card" data-step="4" data-anim="right">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Physics Derivation &amp; Formula
+          </div>
+          <div class="card-body">
+            <p><strong>Defect Cause:</strong> Eyeball too short or eye lens focal length too long ($P_{\text{eye}}$ too weak).</p>
+            <p><strong>Near Point Condition:</strong> Near point shifts from $d = 25\text{ cm}$ to a larger distance $D'$ (e.g., $D' = 50\text{ cm}$).</p>
+
+            <div style="margin-top: 8px;" data-step="5" data-anim="up">
+              <p><strong>Derivation (Proof before Formula):</strong></p>
+              <p>1. Object placed at normal near point $u = -d = -25\text{ cm}$.</p>
+              <p>2. Spectacle lens must form virtual image at defective near point $v = -D' = -50\text{ cm}$.</p>
+              <p>3. Apply Thin Lens Equation: $$ \frac{1}{f} = \frac{1}{-D'} - \frac{1}{-d} = \frac{1}{d} - \frac{1}{D'} = \frac{D' - d}{d \cdot D'} $$</p>
+            </div>
+
+            <div class="formula-box success" data-step="6" data-anim="zoom">
+              Focal Length: $f = \frac{d \cdot D'}{D' - d} > 0$<br>
+              Power: $P = \frac{D' - d}{d \cdot D'} \quad (\text{Convex / Converging Lens})$
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-3"></div></div>
+          <div class="page-indicator">03 / 06</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SLIDE 4: HYPERMETROPIA CORRECTION & RAY PATH
+         ====================================================================== -->
+    <div class="slide" id="slide-4" data-total-steps="5">
+      <div class="slide-header">
+        <div class="header-tag">Slide 04 // Complete Correction</div>
+        <h2 class="fit-heading slide-title-section" data-max-font-size="45">HYPERMETROPIA: CORRECTION WITH CONVEX LENS</h2>
+      </div>
+
+      <div class="grid-2">
+        <!-- Complete Ray Tracing Diagram (Draws first) -->
+        <div class="card" data-step="1" data-anim="zoom">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            Corrected Optics (Numerical: d=25cm, D'=50cm, f=+50cm)
+          </div>
+
+          <svg class="diagram-svg" viewBox="0 0 550 360" style="height: 380px;">
+            <line x1="20" y1="180" x2="530" y2="180" class="optical-axis" />
+            
+            <!-- Eye Assembly -->
+            <path d="M 380 120 C 480 120, 520 145, 520 180 C 520 215, 480 240, 380 240 Z" class="eye-sclera" />
+            <ellipse cx="390" cy="180" rx="10" ry="38" class="eye-lens" />
+            <line x1="510" y1="130" x2="510" y2="230" stroke="#f43f5e" stroke-width="2.5" />
+            
+            <!-- Convex Spectacle Lens -->
+            <g data-step="2" data-anim="draw">
+              <path d="M 270 120 C 282 145, 282 215, 270 240 C 258 215, 258 145, 270 120 Z" class="spectacle-lens-convex" />
+              <text x="245" y="110" class="label-text" fill="#22c55e">Convex Lens (f = +50cm)</text>
+            </g>
+
+            <!-- Points N (25cm) & N' (50cm) -->
+            <circle cx="190" cy="180" r="4" fill="#38bdf8" />
+            <text x="175" y="205" class="label-text" fill="#38bdf8">N (25cm)</text>
+            
+            <circle cx="80" cy="180" r="4" fill="#818cf8" />
+            <text x="65" y="205" class="label-text" fill="#818cf8">N' (50cm)</text>
+
+            <!-- Real Rays from N to Convex Lens -->
+            <g data-step="3" data-anim="draw">
+              <line x1="190" y1="180" x2="270" y2="140" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="190" y1="180" x2="270" y2="220" class="ray-real" marker-end="url(#arrow)" />
+            </g>
+
+            <!-- Virtual Diverging Extension backwards to N' -->
+            <g data-step="4" data-anim="draw">
+              <line x1="270" y1="140" x2="80" y2="180" class="ray-virtual" />
+              <line x1="270" y1="220" x2="80" y2="180" class="ray-virtual" />
+              
+              <!-- Refracted Rays from Convex Lens into Eye -->
+              <line x1="270" y1="140" x2="390" y2="152" class="ray-real" />
+              <line x1="270" y1="220" x2="390" y2="208" class="ray-real" />
+              
+              <!-- Final Rays onto Retina -->
+              <line x1="390" y1="152" x2="510" y2="180" class="ray-real" />
+              <line x1="390" y1="208" x2="510" y2="180" class="ray-real" />
+              <circle cx="510" cy="180" r="4" fill="#22c55e" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Explanation Cards -->
+        <div class="card" data-step="5" data-anim="right">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Spectacle Correction Mechanism
+          </div>
+          <div class="card-body">
+            <p>• <strong>Action:</strong> The convex spectacle lens converges the strongly diverging rays coming from object at $N(25\text{ cm})$.</p>
+            <p>• <strong>Virtual Image Formation:</strong> The rays appear to originate from the eye's actual near point $N'(50\text{ cm})$.</p>
+            <p>• <strong>Eye Focusing:</strong> The eye lens easily focuses these less-divergent rays sharply onto the retina.</p>
+            
+            <div class="formula-box success" style="margin-top: 16px;">
+              Worked Example ($d=25\text{cm}, D'=50\text{cm}$):<br>
+              $$ f = \frac{25 \times 50}{50 - 25} = +50\text{ cm} = +0.5\text{ m} $$
+              $$ P = +\frac{1}{0.5\text{ m}} = +2.0\text{ D} $$
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-4"></div></div>
+          <div class="page-indicator">04 / 06</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SLIDE 5: MYOPIA CORRECTION & RAY PATH
+         ====================================================================== -->
+    <div class="slide" id="slide-5" data-total-steps="5">
+      <div class="slide-header">
+        <div class="header-tag">Slide 05 // Complete Correction</div>
+        <h2 class="fit-heading slide-title-section" data-max-font-size="45">MYOPIA: CORRECTION WITH CONCAVE LENS</h2>
+      </div>
+
+      <div class="grid-2">
+        <!-- Complete Ray Tracing Diagram (Draws first) -->
+        <div class="card" data-step="1" data-anim="zoom">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            Corrected Optics (Numerical: x=250cm, f=-250cm, P=-0.4D)
+          </div>
+
+          <svg class="diagram-svg" viewBox="0 0 550 360" style="height: 380px;">
+            <line x1="20" y1="180" x2="530" y2="180" class="optical-axis" />
+            
+            <!-- Eye Assembly -->
+            <path d="M 380 120 C 480 120, 520 145, 520 180 C 520 215, 480 240, 380 240 Z" class="eye-sclera" />
+            <ellipse cx="390" cy="180" rx="10" ry="38" class="eye-lens" />
+            <line x1="510" y1="130" x2="510" y2="230" stroke="#22c55e" stroke-width="2.5" />
+            
+            <!-- Concave Spectacle Lens -->
+            <g data-step="2" data-anim="draw">
+              <path d="M 260 120 C 272 155, 272 205, 260 240 L 275 240 C 265 205, 265 155, 275 120 Z" class="spectacle-lens-concave" />
+              <text x="235" y="110" class="label-text" fill="#a855f7">Concave Lens (f = -x)</text>
+            </g>
+
+            <!-- Far Point F (250cm) -->
+            <circle cx="120" cy="180" r="4" fill="#38bdf8" />
+            <text x="105" y="205" class="label-text" fill="#38bdf8">F (x = 250cm)</text>
+
+            <!-- Parallel Rays from u = -infinity -->
+            <g data-step="3" data-anim="draw">
+              <line x1="30" y1="140" x2="265" y2="140" class="ray-real" marker-end="url(#arrow)" />
+              <line x1="30" y1="220" x2="265" y2="220" class="ray-real" marker-end="url(#arrow)" />
+            </g>
+
+            <!-- Virtual Divergence Traced Back to F -->
+            <g data-step="4" data-anim="draw">
+              <line x1="265" y1="140" x2="120" y2="180" class="ray-virtual" />
+              <line x1="265" y1="220" x2="120" y2="180" class="ray-virtual" />
+              
+              <!-- Diverged Rays from Concave Lens into Eye Lens -->
+              <line x1="265" y1="140" x2="390" y2="152" class="ray-real" />
+              <line x1="265" y1="220" x2="390" y2="208" class="ray-real" />
+              
+              <!-- Refraction onto Retina -->
+              <line x1="390" y1="152" x2="510" y2="180" class="ray-real" />
+              <line x1="390" y1="208" x2="510" y2="180" class="ray-real" />
+              <circle cx="510" cy="180" r="4" fill="#22c55e" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Explanation Cards -->
+        <div class="card" data-step="5" data-anim="right">
+          <div class="card-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Spectacle Correction Mechanism
+          </div>
+          <div class="card-body">
+            <p>• <strong>Action:</strong> Concave spectacle lens diverges parallel rays coming from distant objects ($u = -\infty$).</p>
+            <p>• <strong>Virtual Image:</strong> Divergent rays appear to originate from the myopic eye's far point $F(x)$.</p>
+            <p>• <strong>Sharp Focus:</strong> Since the eye can focus rays coming from $F$, the final image forms precisely on the retina.</p>
+            
+            <div class="formula-box alert" style="margin-top: 16px;">
+              Worked Numerical ($x = 250\text{ cm} = 2.5\text{ m}$):<br>
+              $$ f = -x = -2.5\text{ m} $$
+              $$ P = \frac{1}{-2.5\text{ m}} = -0.4\text{ D} $$
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-5"></div></div>
+          <div class="page-indicator">05 / 06</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SLIDE 6: MASTER SUMMARY & COMPARISON MATRIX
+         ====================================================================== -->
+    <div class="slide" id="slide-6" data-total-steps="22">
+      <div class="slide-header">
+        <div class="header-tag">Slide 06 // Summary Table</div>
+        <h2 class="fit-heading slide-title-section" data-max-font-size="45">EYE DEFECTS &amp; CORRECTIONS: MASTER COMPARISON</h2>
+      </div>
+
+      <!-- Cell-by-Cell Reading Order Revealed Table -->
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th data-step="1" data-anim="fade">Parameter / Defect</th>
+            <th data-step="2" data-anim="fade">Normal Eye</th>
+            <th data-step="3" data-anim="fade">Myopia (Short Sighted)</th>
+            <th data-step="4" data-anim="fade">Hypermetropia (Long Sighted)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-step="5" data-anim="fade"><strong>Image Position</strong></td>
+            <td data-step="6" data-anim="fade">On Retina</td>
+            <td data-step="7" data-anim="fade">In Front of Retina</td>
+            <td data-step="8" data-anim="fade">Behind Retina</td>
+          </tr>
+          <tr>
+            <td data-step="9" data-anim="fade"><strong>Far Point</strong></td>
+            <td data-step="10" data-anim="fade">$\infty$ (Infinity)</td>
+            <td data-step="11" data-anim="fade">Reduced to $x < \infty$</td>
+            <td data-step="12" data-anim="fade">Normal ($\infty$)</td>
+          </tr>
+          <tr>
+            <td data-step="13" data-anim="fade"><strong>Near Point</strong></td>
+            <td data-step="14" data-anim="fade">$d = 25\text{ cm}$</td>
+            <td data-step="15" data-anim="fade">Normal ($25\text{ cm}$)</td>
+            <td data-step="16" data-anim="fade">Increased to $D' > 25\text{ cm}$</td>
+          </tr>
+          <tr>
+            <td data-step="17" data-anim="fade"><strong>Correction Lens</strong></td>
+            <td data-step="18" data-anim="fade">None</td>
+            <td data-step="19" data-anim="fade">Concave (Diverging)</td>
+            <td data-step="20" data-anim="fade">Convex (Converging)</td>
+          </tr>
+          <tr>
+            <td data-step="21" data-anim="fade"><strong>Focal Length &amp; Power</strong></td>
+            <td data-step="22" data-anim="fade">$P_{\text{range}} = 40 \text{ to } 44\text{ D}$</td>
+            <td data-step="22" data-anim="fade">$f = -x, \quad P = -\frac{1}{x}$</td>
+            <td data-step="22" data-anim="fade">$f = \frac{d \cdot D'}{D' - d}, \quad P = \frac{D' - d}{d \cdot D'}$</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Exam Key Takeaways -->
+      <div class="card" style="margin-top: 12px; padding: 14px 20px;">
+        <div class="card-header" style="font-size: 18px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          JEE Key Exam Takeaways &amp; Lens Separations
+        </div>
+        <div class="card-body" style="font-size: 17px;">
+          <p>• <strong>Lens Distance Correction:</strong> If spectacle lens is placed at distance $d_g$ from the eye, effective distance becomes $(x - d_g)$ for Myopia and $(D' - d_g)$ for Hypermetropia.</p>
+          <p>• <strong>Presbyopia:</strong> Aging defect where near point increases due to weak ciliary muscles; corrected using Bifocal Lenses (upper concave, lower convex).</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="footer-title">PhysicsBoard // Chapter 28: Optics &amp; Optical Instruments</div>
+        <div class="footer-controls">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-6"></div></div>
+          <div class="page-indicator">06 / 06</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==========================================================================
+     PRESENTATION ENGINE SCRIPT
+     ========================================================================== -->
+<script>
+  (function() {
+    let currentSlideIndex = 0;
+    let currentStep = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+
+    // Scaling Stage Container Edge-to-Edge without scrollbars
+    function scaleStage() {
+      const stage = document.getElementById('stage');
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      const scaleX = windowWidth / 1280;
+      const scaleY = windowHeight / 720;
+
+      stage.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
+      stage.style.top = '50%';
+      stage.style.left = '50%';
+    }
+
+    // Auto Heading Font Fitting Routine
+    function fitHeadings() {
+      document.querySelectorAll('.fit-heading').forEach(el => {
+        const headerContainer = el.closest('.slide-header') || el.parentElement;
+        if (!headerContainer) return;
+        const tag = headerContainer.querySelector('.header-tag');
+        const tagW = tag ? tag.offsetWidth + 32 : 0;
+        const maxW = headerContainer.clientWidth - tagW - 24;
+        let fontSize = parseFloat(el.getAttribute('data-max-font-size') || '50');
+        el.style.fontSize = fontSize + 'px';
+        while (el.scrollWidth > maxW && fontSize > 16) {
+          fontSize -= 1;
+          el.style.fontSize = fontSize + 'px';
+        }
+      });
+    }
+
+    // Setup SVG Path Lengths for 'draw' animation
+    function initSVGAnimations(slideEl) {
+      slideEl.querySelectorAll('[data-anim="draw"]').forEach(group => {
+        group.querySelectorAll('line, path, opacity').forEach(path => {
+          if (typeof path.getTotalLength === 'function') {
+            const length = path.getTotalLength();
+            path.style.strokeDasharray = length;
+            path.style.strokeDashoffset = length;
+            path.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+          }
+        });
+      });
+    }
+
+    function triggerSVGDraw(el) {
+      el.querySelectorAll('line, path').forEach(path => {
+        if (typeof path.getTotalLength === 'function') {
+          path.style.strokeDashoffset = '0';
+        }
+      });
+    }
+
+    function resetSVGDraw(el) {
+      el.querySelectorAll('line, path').forEach(path => {
+        if (typeof path.getTotalLength === 'function') {
+          const length = path.getTotalLength();
+          path.style.strokeDashoffset = length;
+        }
+      });
+    }
+
+    // Update Steps & Spotlight State
+    function updateSteps() {
+      const slide = slides[currentSlideIndex];
+      const maxSteps = parseInt(slide.getAttribute('data-total-steps') || '0', 10);
+      const stepElements = slide.querySelectorAll('[data-step]');
+
+      stepElements.forEach(el => {
+        const stepNum = parseInt(el.getAttribute('data-step'), 10);
+        const animType = el.getAttribute('data-anim');
+
+        if (stepNum <= currentStep) {
+          el.classList.add('step-visible');
+          if (animType === 'draw') {
+            triggerSVGDraw(el);
+          }
+        } else {
+          el.classList.remove('step-visible');
+          if (animType === 'draw') {
+            resetSVGDraw(el);
+          }
+        }
+
+        // Spotlight & Dimming Handling
+        if (stepNum === currentStep && currentStep > 0) {
+          el.classList.add('spotlight');
+          el.classList.remove('dimmed');
+
+          // Dim siblings in same grid container
+          const parentGrid = el.closest('.grid-2, .grid-3');
+          if (parentGrid) {
+            parentGrid.querySelectorAll('.card').forEach(sibling => {
+              if (sibling !== el && sibling.classList.contains('step-visible')) {
+                sibling.classList.add('dimmed');
+                sibling.classList.remove('spotlight');
+              }
+            });
+          }
+        } else {
+          el.classList.remove('spotlight');
+          if (stepNum < currentStep) {
+            el.classList.remove('dimmed');
+          }
+        }
+      });
+
+      // Update Progress Bar
+      const progressBar = document.getElementById(`progress-${currentSlideIndex + 1}`);
+      if (progressBar) {
+        const pct = maxSteps > 0 ? (currentStep / maxSteps) * 100 : 100;
+        progressBar.style.width = `${pct}%`;
+      }
+    }
+
+    // Go to specific slide
+    function goToSlide(index) {
+      if (index < 0 || index >= totalSlides) return;
+      
+      slides.forEach((slide, idx) => {
+        slide.classList.remove('active', 'prev');
+        if (idx === index) {
+          slide.classList.add('active');
+        } else if (idx < index) {
+          slide.classList.add('prev');
+        }
+      });
+
+      currentSlideIndex = index;
+      currentStep = 0;
+      initSVGAnimations(slides[currentSlideIndex]);
+      updateSteps();
+      fitHeadings();
+    }
+
+    // Step Forward & Backward logic
+    function stepForward() {
+      const slide = slides[currentSlideIndex];
+      const maxSteps = parseInt(slide.getAttribute('data-total-steps') || '0', 10);
+
+      if (currentStep < maxSteps) {
+        currentStep++;
+        updateSteps();
+      } else if (currentSlideIndex < totalSlides - 1) {
+        goToSlide(currentSlideIndex + 1);
+      }
+    }
+
+    function stepBackward() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateSteps();
+      } else if (currentSlideIndex > 0) {
+        goToSlide(currentSlideIndex - 1);
+        const prevSlide = slides[currentSlideIndex];
+        currentStep = parseInt(prevSlide.getAttribute('data-total-steps') || '0', 10);
+        updateSteps();
+      }
+    }
+
+    // Keyboard Controller
+    window.addEventListener('keydown', e => {
+      switch(e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ':
+        case 'PageDown':
+        case 'Enter':
+          e.preventDefault();
+          stepForward();
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'Backspace':
+        case 'PageUp':
+          e.preventDefault();
+          stepBackward();
+          break;
+        case 'Home':
+          e.preventDefault();
+          goToSlide(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          goToSlide(totalSlides - 1);
+          break;
+        default:
+          if (e.key >= '0' && e.key <= '9') {
+            const num = parseInt(e.key, 10);
+            if (num === 0) goToSlide(totalSlides - 1);
+            else if (num <= totalSlides) goToSlide(num - 1);
+          }
+      }
+    });
+
+    // Initialize Auto KaTeX Rendering
+    window.addEventListener('DOMContentLoaded', () => {
+      scaleStage();
+      slides.forEach(slide => initSVGAnimations(slide));
+      goToSlide(0);
+
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+
+      setTimeout(fitHeadings, 200);
+    });
+
+    window.addEventListener('resize', () => {
+      scaleStage();
+      fitHeadings();
+    });
+
+  })();
+</script>
+
+</body>
+</html>

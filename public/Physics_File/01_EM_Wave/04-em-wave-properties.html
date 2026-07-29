@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EM Wave — 04 Maxwell Wave Theory &amp; Properties</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#060913;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(56,189,248,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(139,92,246,.08),transparent 60%),#060913}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  h3{margin:0;font-size:clamp(20px,4vmin,44px);color:#38bdf8}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#38bdf8;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:75ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .blist .step{display:inline}
+  .note{color:#94a3b8;font-size:.55em;font-family:system-ui}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .blist{display:flex;flex-direction:column;gap:2vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.8vmin;align-items:baseline;font-size:clamp(20px,4.2vmin,46px);line-height:1.4}
+  .blist .dot{flex:0 0 auto;width:1.5vmin;height:1.5vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#38bdf8,#8b5cf6)}
+  .derive{display:flex;flex-direction:column;gap:1.9vmin}
+  .derive .eq{padding-left:2.6vmin}
+  /* reference chip */
+  .chip{align-self:flex-start;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);
+        border-radius:1.2vmin;padding:1.2vmin 1.8vmin;color:#7dd3fc;line-height:1.7;
+        font-size:clamp(15px,2.7vmin,28px)}
+  .chip math{font-size:1em}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.8vmin 2.4vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(15px,2.5vmin,26px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1vmin}
+  .qbox .q{font-size:clamp(20px,4vmin,44px);line-height:1.45}
+  .qbox .q math{font-size:1em}
+  .btn{border:0;border-radius:1.2vmin;padding:1.5vmin 2.8vmin;font:700 clamp(16px,2.8vmin,28px) system-ui;
+       color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);cursor:pointer;min-height:44px;margin-top:1.6vmin}
+  .ans{visibility:hidden;margin-top:1.4vmin}
+  .ans.on{visibility:visible}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  .toprow{display:flex;justify-content:space-between;gap:2vmin;align-items:flex-start;flex-wrap:wrap}
+  .wave-view{overflow:hidden}
+  @keyframes travel{from{transform:translateX(-220px)}to{transform:translateX(0)}}
+  .travel{animation:travel 2.6s linear infinite}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .ans{visibility:visible!important}
+    .btn,.no-print{display:none!important}
+    .travel{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title (slide 11) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">EM Waves · Part 3</div>
+    <h1>Maxwell Wave Theory</h1>
+    <p class="sub step">Changing <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover></math> makes <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover></math>, changing <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover></math> makes <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover></math> — together they fly.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · The EM wave (slide 12) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Maxwell wave theory</h2>
+    <div class="cols" style="align-items:center">
+      <div class="col" style="max-width:62vmin">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+          <defs><marker id="ah4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker></defs>
+          <line x1="20" y1="130" x2="640" y2="130" stroke="#475569" stroke-width="2" marker-end="url(#ah4)"/>
+          <text x="650" y="122" fill="#94a3b8" font-size="20" font-style="italic" font-family="Cambria,serif">x</text>
+          <text x="612" y="158" fill="#e2e8f0" font-size="17" font-style="italic" font-family="Cambria,serif">v&#8407; = E&#8407;×B&#8407;</text>
+          <svg x="20" y="0" width="600" height="260" viewBox="0 0 600 260" class="wave-view">
+            <g class="travel">
+              <g transform="translate(0,130) scale(1,-0.42)" opacity="0.9">
+                <path d="M0 0 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0"
+                      fill="none" stroke="#fb7185" stroke-width="3" transform="skewX(-38)"/>
+              </g>
+              <path d="M0 130 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0 q55 -170 110 0 q55 170 110 0"
+                    fill="none" stroke="#38bdf8" stroke-width="3.5"/>
+            </g>
+          </svg>
+          <text x="60" y="34" fill="#38bdf8" font-size="24" font-weight="700" font-style="italic" font-family="Cambria,serif">E&#8407; (ĵ)</text>
+          <text x="120" y="210" fill="#fb7185" font-size="24" font-weight="700" font-style="italic" font-family="Cambria,serif">B&#8407; (k̂)</text>
+        </svg>
+      </div>
+      <div class="col">
+        <div class="derive">
+          <div class="eq">
+            <span class="step"><math displaystyle="true">
+              <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>=</mo>
+            </math></span>
+            <span class="step"><math displaystyle="true">
+              <msub><mi>E</mi><mi>o</mi></msub><mo>&#8290;</mo><mi>sin</mi>
+              <mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo>
+              <mover accent="true"><mi>j</mi><mo>^</mo></mover>
+            </math></span>
+          </div>
+          <div class="eq">
+            <span class="step"><math displaystyle="true">
+              <mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>=</mo>
+            </math></span>
+            <span class="step"><math displaystyle="true">
+              <msub><mi>B</mi><mi>o</mi></msub><mo>&#8290;</mo><mi>sin</mi>
+              <mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo>
+              <mover accent="true"><mi>k</mi><mo>^</mo></mover>
+            </math></span>
+          </div>
+          <div class="eq step"><span class="hl">⟹ an EM wave travelling along +x</span></div>
+        </div>
+        <p class="sub step" style="margin-top:2vmin">Both fields oscillate <b>in phase</b>, in mutually perpendicular planes, feeding each other as they travel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Properties of sin + direction & phase (slide 13) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="toprow">
+      <h2>All basic properties of sin</h2>
+      <div class="chip">
+        <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>E</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>j</mi><mo>^</mo></mover></math><br>
+        <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>B</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>k</mi><mo>^</mo></mover></math>
+      </div>
+    </div>
+    <div class="card" style="align-self:flex-start">
+      <div class="derive">
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <msub><mi>E</mi><mtext>rms</mtext></msub><mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mfrac><msub><mi>E</mi><mi>o</mi></msub><msqrt><mn>2</mn></msqrt></mfrac>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mo>;</mo><mspace width="1em"/>
+            <msub><mi>E</mi><mtext>avg</mtext></msub><mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true"><mn>0</mn></math></span>
+        </div>
+        <div class="eq">
+          <span class="step"><math displaystyle="true">
+            <msub><mi>B</mi><mtext>rms</mtext></msub><mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mfrac><msub><mi>B</mi><mi>o</mi></msub><msqrt><mn>2</mn></msqrt></mfrac>
+          </math></span>
+          <span class="step"><math displaystyle="true">
+            <mo>;</mo><mspace width="1em"/>
+            <msub><mi>B</mi><mtext>avg</mtext></msub><mo>=</mo>
+          </math></span>
+          <span class="step"><math displaystyle="true"><mn>0</mn></math></span>
+        </div>
+      </div>
+    </div>
+    <h3 style="margin-top:1vmin">Direction and phase</h3>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>Direction of EM wave &nbsp;=&nbsp;
+        <span class="step hl">along <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>×</mo><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover></math></span></span></li>
+      <li class="step"><span class="dot"></span><span>E and B phase difference &nbsp;=&nbsp;<span class="step"> 0 &nbsp;→&nbsp; <b>same phase</b></span></span></li>
+      <li class="step"><span class="dot"></span><span>Direction of <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover></math> and <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover></math> &nbsp;=&nbsp;<span class="step"><b>perpendicular planes</b></span></span></li>
+    </ul>
+    <div class="hint no-print">Peaks together, zeros together — but at right angles</div>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Direction questions (slide 14) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="toprow">
+      <h2>Find the direction</h2>
+      <div class="chip">
+        <math><mover accent="true"><mi>v</mi><mo>&#8594;</mo></mover><mo>∥</mo><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>×</mo><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover></math>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col qbox step">
+        <div class="qt">Question 1</div>
+        <div class="q">Electric field is in <math><mo>+</mo><mi>z</mi></math> direction and magnetic field is in <math><mo>−</mo><mi>x</mi></math> direction. Find the direction of the EM wave.</div>
+        <div class="eq" style="margin-top:1.6vmin">
+          <math>
+            <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>+</mo><mi>z</mi><mo>,</mo><mspace width=".8em"/>
+            <mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>−</mo><mi>x</mi><mo>,</mo><mspace width=".8em"/>
+            <mover accent="true"><mi>v</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>?</mo>
+          </math>
+        </div>
+        <button class="btn clickable" onclick="document.getElementById('a41').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a41">
+          <span class="hl"><math>
+            <mover accent="true"><mi>v</mi><mo>&#8594;</mo></mover><mo>∥</mo>
+            <mover accent="true"><mi>z</mi><mo>^</mo></mover><mo>×</mo>
+            <mo>(</mo><mo>−</mo><mover accent="true"><mi>x</mi><mo>^</mo></mover><mo>)</mo>
+            <mo>=</mo><mo>−</mo><mover accent="true"><mi>y</mi><mo>^</mo></mover>
+          </math> &nbsp;⇒ wave along −y</span>
+        </div>
+      </div>
+      <div class="col qbox step">
+        <div class="qt">Question 2</div>
+        <div class="q">If <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>=</mo><mo>−</mo><mn>12</mn><mo>&#8290;</mo><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>+</mo><mi>k</mi><mi>z</mi><mo>)</mo><mover accent="true"><mi>j</mi><mo>^</mo></mover></math>, find the direction of the electric field.</div>
+        <div class="eq" style="margin-top:1.6vmin">
+          <math>
+            <mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>−</mo><mi>y</mi><mo>,</mo><mspace width=".8em"/>
+            <mover accent="true"><mi>v</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>−</mo><mi>z</mi><mo>,</mo><mspace width=".8em"/>
+            <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>→</mo><mo>?</mo>
+          </math>
+        </div>
+        <button class="btn clickable" onclick="document.getElementById('a42').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a42">
+          <span class="hl"><math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover></math> along +x: &nbsp;<math>
+            <mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>=</mo><mn>12</mn><mi>c</mi><mo>&#8290;</mo>
+            <mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>+</mo><mi>k</mi><mi>z</mi><mo>)</mo>
+            <mover accent="true"><mi>i</mi><mo>^</mo></mover>
+          </math></span>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Work it on the board first, then tap Reveal</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · Energy discussion (slide 15) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="toprow">
+      <h2>Energy discussion</h2>
+      <div class="chip">
+        <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>E</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>j</mi><mo>^</mo></mover></math><br>
+        <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>B</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>k</mi><mo>^</mo></mover></math>
+      </div>
+    </div>
+    <p class="sub step"><span class="hl">Energy is equally distributed</span> in electric and magnetic form.</p>
+    <div class="derive">
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <msub><mi>E</mi><mi>d</mi></msub><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <msub><mi>ε</mi><mi>o</mi></msub><msup><mi>E</mi><mn>2</mn></msup>
+          <mo>+</mo>
+          <mfrac><msup><mi>B</mi><mn>2</mn></msup><mrow><mn>2</mn><msub><mi>μ</mi><mi>o</mi></msub></mrow></mfrac>
+        </math>
+        <span class="note">&nbsp;(here E, B are instantaneous — not E<sub>o</sub> or E<sub>rms</sub>)</span></span>
+      </div>
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo><mn>2</mn><mo>×</mo>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <msub><mi>ε</mi><mi>o</mi></msub><msup><mi>E</mi><mn>2</mn></msup>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo><msub><mi>ε</mi><mi>o</mi></msub>
+          <msup><mrow><mo>(</mo><msub><mi>E</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mo>)</mo></mrow><mn>2</mn></msup>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <msub><mi>E</mi><mi>d</mi></msub><mo>(</mo><mtext>average</mtext><mo>)</mo><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <msub><mi>ε</mi><mi>o</mi></msub><msubsup><mi>E</mi><mi>o</mi><mn>2</mn></msubsup>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo>
+          <msub><mi>ε</mi><mi>o</mi></msub><msubsup><mi>E</mi><mtext>rms</mtext><mn>2</mn></msubsup>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step" style="font-family:system-ui">Frequency of energy / power =</span>
+        <span class="step"><math displaystyle="true"><mn>2</mn><mi>ω</mi></math>
+        <span class="note">&nbsp;(sin² oscillates twice as fast)</span></span>
+      </div>
+    </div>
+    <div class="hint no-print">sin² averages to ½ — that's the whole trick</div>
+  </div>
+</section>
+
+<!-- ============ Page 6 · Velocity discussion (slide 16) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="toprow">
+      <h2>Velocity discussion</h2>
+      <div class="chip">
+        <math><mover accent="true"><mi>E</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>E</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>j</mi><mo>^</mo></mover></math><br>
+        <math><mover accent="true"><mi>B</mi><mo>&#8594;</mo></mover><mo>=</mo><msub><mi>B</mi><mi>o</mi></msub><mi>sin</mi><mo>(</mo><mi>ω</mi><mi>t</mi><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo><mover accent="true"><mi>k</mi><mo>^</mo></mover></math>
+      </div>
+    </div>
+    <div class="derive">
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <mi>v</mi><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mi>ω</mi><mo>/</mo><mi>k</mi>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>8</mn></msup><mtext>&#160;m/s</mtext>
+        </math>
+        <span class="hl" style="font-size:.8em">&nbsp;— speed of light; light is also an EM wave</span></span>
+      </div>
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <mi>c</mi><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mi>E</mi><mi>B</mi></mfrac>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo>
+          <mfrac><msub><mi>E</mi><mi>o</mi></msub><msub><mi>B</mi><mi>o</mi></msub></mfrac><mo>=</mo>
+          <mfrac><msub><mi>E</mi><mtext>rms</mtext></msub><msub><mi>B</mi><mtext>rms</mtext></msub></mfrac>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo>
+          <mfrac><mn>1</mn><msqrt><msub><mi>μ</mi><mi>o</mi></msub><msub><mi>ε</mi><mi>o</mi></msub></msqrt></mfrac>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step" style="font-family:system-ui;color:#94a3b8">→ in some medium:&nbsp;
+        <math displaystyle="true" style="color:#f1f5f9">
+          <mi>v</mi><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mi>E</mi><mi>B</mi></mfrac><mo>=</mo>
+          <mfrac><mn>1</mn><msqrt><mi>μ</mi><mi>ε</mi></msqrt></mfrac>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step" style="font-family:system-ui;color:#94a3b8">→ Refractive index:&nbsp;
+        <math displaystyle="true" style="color:#f1f5f9">
+          <mi>n</mi><mo>=</mo>
+          <mfrac><mi>c</mi><mi>v</mi></mfrac><mo>=</mo>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <msqrt><mfrac><mrow><mi>μ</mi><mi>ε</mi></mrow><mrow><msub><mi>μ</mi><mi>o</mi></msub><msub><mi>ε</mi><mi>o</mi></msub></mrow></mfrac></msqrt>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo>
+          <msqrt><msub><mi>μ</mi><mi>r</mi></msub><msub><mi>ε</mi><mi>r</mi></msub></msqrt>
+        </math></span>
+      </div>
+    </div>
+    <div class="hint no-print">Same wave physics, slower in a medium — n does the bookkeeping</div>
+  </div>
+</section>
+
+<!-- ============ Page 7 · Refractive index questions (slide 17) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="toprow">
+      <h2>Questions</h2>
+      <div class="chip">
+        <math><mi>n</mi><mo>=</mo><msqrt><msub><mi>μ</mi><mi>r</mi></msub><msub><mi>ε</mi><mi>r</mi></msub></msqrt></math>
+        &nbsp;·&nbsp;
+        <math><mi>v</mi><mo>=</mo><mi>ω</mi><mo>/</mo><mi>k</mi></math>
+        &nbsp;·&nbsp;
+        <math><mi>n</mi><mo>=</mo><mi>c</mi><mo>/</mo><mi>v</mi></math>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col qbox step">
+        <div class="qt">Question 1</div>
+        <div class="q">Find the refractive index if <math><msub><mi>ε</mi><mi>r</mi></msub><mo>=</mo><mn>9</mn></math>.</div>
+        <button class="btn clickable" onclick="document.getElementById('a71').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a71">
+          <span class="hl"><math>
+            <mi>n</mi><mo>=</mo>
+            <msqrt><msub><mi>μ</mi><mi>r</mi></msub><msub><mi>ε</mi><mi>r</mi></msub></msqrt><mo>=</mo>
+            <msqrt><mn>1</mn><mo>×</mo><mn>9</mn></msqrt><mo>=</mo><mn>3</mn>
+          </math></span>
+        </div>
+      </div>
+      <div class="col qbox step">
+        <div class="qt">Question 2</div>
+        <div class="q">Find the refractive index if
+          <math><mi>E</mi><mo>=</mo><mn>10</mn><mo>&#8290;</mo><mi>sin</mi><mo>(</mo><msup><mn>10</mn><mn>4</mn></msup><mi>t</mi><mo>−</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup><mi>x</mi><mo>)</mo></math>.</div>
+        <button class="btn clickable" onclick="document.getElementById('a72').classList.add('on');this.style.opacity=.35">Reveal</button>
+        <div class="ans eq" id="a72">
+          <span class="hl"><math>
+            <mi>v</mi><mo>=</mo>
+            <mfrac><mi>ω</mi><mi>k</mi></mfrac><mo>=</mo>
+            <mfrac><msup><mn>10</mn><mn>4</mn></msup><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mfrac><mo>=</mo>
+            <msup><mn>10</mn><mn>8</mn></msup>
+          </math> &nbsp;⇒&nbsp; <math><mi>n</mi><mo>=</mo><mi>c</mi><mo>/</mo><mi>v</mi><mo>=</mo><mn>3</mn></math></span>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Ink the working below each question, then reveal</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].sl

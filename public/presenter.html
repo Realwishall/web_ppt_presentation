@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LessonForge — Presenter Panel</title>
+<style>
+  :root{
+    --bg:#0b0f19;
+    --surface:#0f172a;
+    --surface-80:rgba(15,23,42,.82);
+    --border:#1e293b;
+    --border-soft:rgba(30,41,59,.9);
+    --text:#f1f5f9;
+    --muted:#94a3b8;
+    --icon:#cbd5e1;
+    --green:#22c55e;
+    --emerald:#10b981;
+    --pencil:#f97316;
+    --violet:#7c3aed;
+    --indigo:#4f46e5;
+    --danger:#ef4444;
+    --sw-navy:#1e293b; --sw-red:#ef4444; --sw-blue:#3b82f6;
+    --sw-green:#22c55e; --sw-orange:#f97316; --sw-white:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    height:100vh;width:100vw;overflow:hidden;position:relative;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(124,58,237,.08), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--violet);outline-offset:2px;border-radius:12px}
+  svg{display:block}
+
+  /* ── TOP CHROME ─────────────────────────────── */
+  .esc-toast{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    background:#111827;border:1px solid var(--border);border-radius:12px;
+    padding:9px 16px;display:flex;align-items:center;gap:8px;
+    font-size:13px;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.5);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .esc-toast.hide{opacity:0;transform:translate(-50%,-10px);pointer-events:none}
+  .keycap{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    border:1px solid #374151;border-bottom-width:2px;border-radius:6px;
+    padding:2px 7px;background:#1f2937;
+  }
+
+  .action-toast{
+    position:absolute;bottom:92px;left:50%;transform:translate(-50%,8px);
+    background:#111827;border:1px solid var(--border);border-radius:10px;
+    padding:8px 14px;font-size:13px;color:var(--icon);z-index:50;
+    opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .action-toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ── STAGE — board fills ALL remaining space ── */
+  .stage{
+    position:absolute;
+    top:14px;              /* badges removed — reclaim the top */
+    left:86px; right:86px; /* just clears the rails */
+    bottom:76px;           /* above the control strip */
+  }
+  .board{
+    position:relative;width:100%;height:100%;   /* no aspect cap — take it all */
+    border-radius:16px;overflow:hidden;
+    background:
+      radial-gradient(rgba(148,163,184,.14) 1px, transparent 1.5px) 0 0/26px 26px,
+      linear-gradient(180deg,#0d1424,#0b101d);
+    border:1px solid var(--border-soft);
+    box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;
+  }
+  .board.visible{opacity:1;pointer-events:auto}
+
+  #snapBox{position:absolute;z-index:1;overflow:hidden;display:none;pointer-events:none}
+  #snapDeck{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none;display:none}
+  #snapImg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none}
+  #deckLayer{position:absolute;inset:0;z-index:0;pointer-events:none}
+  #deckLayer iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;
+    display:none;background:transparent;pointer-events:none;
+  }
+  #ink{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2}
+
+  /* ── live media ────────────────────────────────────────────────────────
+     A deck iframe is sandboxed with allow-scripts only (opaque origin) and
+     the whole deck layer is pointer-events:none — so a video embedded INSIDE
+     a deck can never load a player, and a synthetic lf-click can never press
+     Play. The presenter therefore renders the player itself, in this
+     document, ABOVE the ink canvas, positioned over the placeholder the deck
+     reports. Only the player box takes pointer events; the rest of the board
+     stays inkable, and "Write over video" hands the box back to the pen. */
+  #mediaLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
+  .media-embed{
+    position:absolute;pointer-events:auto;overflow:hidden;border-radius:10px;background:#000;
+    border:1px solid rgba(148,163,184,.28);box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+  .media-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .media-embed.ink-through{pointer-events:none}
+  .media-embed.ink-through:after{
+    content:"";position:absolute;inset:0;border:2px dashed rgba(124,58,237,.8);border-radius:10px;
+  }
+  .media-ink-toggle{
+    position:absolute;pointer-events:auto;display:inline-flex;align-items:center;gap:6px;
+    padding:6px 11px;border-radius:999px;cursor:pointer;white-space:nowrap;
+    border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.94);color:#e2e8f0;
+    font:600 12px/1 system-ui,'Segoe UI',sans-serif;
+  }
+  .media-ink-toggle:hover{background:rgba(30,41,59,.96)}
+  .media-ink-toggle.on{border-color:var(--violet);color:#c4b5fd}
+  .board.tool-pen #ink,.board.tool-eraser-obj #ink{cursor:crosshair}
+  .board.tool-eraser #ink{cursor:pointer}
+
+  /* snapshot (duplicated page) controls */
+  .snap-outline{
+    position:absolute;z-index:3;pointer-events:none;display:none;
+    border:1.5px dashed rgba(124,58,237,.75);border-radius:8px;
+  }
+  .snap-grip{
+    position:absolute;z-index:4;width:28px;height:28px;border-radius:9px;
+    display:none;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);
+  }
+  .snap-grip svg{width:14px;height:14px}
+  #snapMove,.snap-move-alt{background:var(--violet);color:#fff;cursor:grab}
+  #snapMove:active,.snap-move-alt:active{cursor:grabbing}
+  #snapResize{background:#0f172a;border:1px solid var(--violet);color:#c4b5fd;cursor:nwse-resize}
+  #snapClose{background:#0f172a;border:1px solid var(--danger);color:var(--danger);cursor:pointer}
+
+  .empty{
+    position:absolute;inset:14px 86px 76px;display:flex;flex-direction:column;gap:18px;
+    align-items:center;justify-content:center;text-align:center;color:var(--muted);
+    transition:opacity .3s ease;
+  }
+  .empty.hidden{opacity:0;pointer-events:none}
+  .empty p{font-size:16px;max-width:440px;line-height:1.6}
+  .empty .btn-add-first{
+    display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#fff;
+    background:linear-gradient(135deg,var(--violet),var(--indigo));
+    border-radius:12px;padding:11px 20px;
+    box-shadow:0 6px 24px rgba(124,58,237,.35);
+    transition:filter .15s ease,transform .1s ease;
+  }
+  .empty .btn-add-first:hover{filter:brightness(1.1)}
+  .empty .btn-add-first:active{transform:translateY(1px)}
+  .empty .btn-add-first svg{width:16px;height:16px}
+
+  /* ── VERTICAL TOOL RAILS ────────────────────── */
+  .rail{
+    position:absolute;bottom:76px;   /* bottom corners, clear of the control strip */
+    width:64px;display:flex;flex-direction:column;align-items:center;gap:9px;
+    z-index:30;padding:12px 0;max-height:calc(100vh - 166px);overflow-y:auto;
+    scrollbar-width:none;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:20px;backdrop-filter:blur(10px);
+    box-shadow:0 12px 34px rgba(0,0,0,.4);
+  }
+  .rail-left{left:10px}
+  .rail-right{right:10px}
+  .divider{width:30px;height:1px;background:var(--border);flex:none;margin:2px 0}
+
+  .tool-btn{
+    width:44px;height:44px;border-radius:14px;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--icon);transition:background .15s ease,color .15s ease,transform .1s ease;
+  }
+  .tool-btn:hover{background:rgba(148,163,184,.14)}
+  .tool-btn:active{transform:scale(.94)}
+  .tool-btn.is-active{background:var(--emerald);color:var(--pencil);box-shadow:0 4px 14px rgba(16,185,129,.4)}
+  .tool-btn.is-active:hover{background:#0ea371}
+  .tool-btn.eraser-obj{color:#fb923c}
+  .tool-btn.eraser-obj.is-active{color:#7c2d12}
+  .tool-btn.danger{color:var(--danger)}
+  .tool-btn.danger:hover{background:rgba(239,68,68,.16)}
+  .tool-btn svg{width:20px;height:20px}
+
+  .palette{display:grid;grid-template-columns:repeat(2,18px);gap:4px;justify-items:center}
+  .swatch{
+    width:18px;height:18px;border-radius:50%;border:1px solid rgba(148,163,184,.35);
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .swatch:hover{transform:scale(1.15)}
+  .swatch.is-active{box-shadow:0 0 0 2px var(--surface),0 0 0 4px #e2e8f0}
+
+  .widths{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .width-btn{
+    width:32px;height:30px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease;
+  }
+  .width-btn:hover{background:rgba(148,163,184,.14)}
+  .width-btn.is-active{background:#1f2937;box-shadow:0 0 0 2px rgba(203,213,225,.55)}
+  .width-dot{border-radius:50%;background:#fff}
+
+  /* ── BOTTOM CONTROL STRIP ───────────────────── */
+  .bottom-strip{
+    position:absolute;left:16px;right:16px;bottom:14px;
+    display:flex;align-items:center;gap:12px;z-index:30;
+  }
+  .nav-text{
+    display:flex;align-items:center;gap:4px;color:var(--muted);
+    font-size:14px;padding:9px 12px;border-radius:10px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .nav-text:hover:not(:disabled){color:var(--text);background:rgba(148,163,184,.1)}
+  .nav-text:disabled{opacity:.35;cursor:not-allowed}
+  .nav-text svg{width:16px;height:16px}
+
+  .nav-mini{
+    width:30px;height:30px;border-radius:9px;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;flex:none;
+    border:1px solid var(--border);background:var(--surface-80);
+    transition:color .15s ease,background .15s ease;
+  }
+  .nav-mini:hover:not(:disabled){color:var(--text);background:#1e293b}
+  .nav-mini:disabled{opacity:.35;cursor:not-allowed}
+  .nav-mini svg{width:14px;height:14px}
+
+  .spacer{flex:1}
+
+  .center-pill{
+    display:flex;align-items:center;gap:3px;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:16px;padding:6px 8px;backdrop-filter:blur(10px);
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .pill-btn{
+    width:38px;height:38px;border-radius:12px;color:var(--icon);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease,transform .1s ease;
+  }
+  .pill-btn:hover:not(:disabled){background:rgba(148,163,184,.14)}
+  .pill-btn:active:not(:disabled){transform:scale(.92)}
+  .pill-btn:disabled{opacity:.35;cursor:not-allowed}
+  .pill-btn svg{width:18px;height:18px}
+
+  .btn-next{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--violet),var(--indigo));
+    color:#fff;font-weight:600;font-size:14px;
+    border-radius:12px;padding:10px 18px;
+    box-shadow:0 6px 22px rgba(124,58,237,.4);
+    transition:filter .15s ease,transform .1s ease;
+  }
+  .btn-next:hover{filter:brightness(1.12)}
+  .btn-next:active{transform:translateY(1px)}
+  .btn-export{
+    display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:12px;padding:10px 14px;transition:background .15s ease;
+  }
+  .btn-export:hover{background:#1e293b}
+  .btn-export svg{width:16px;height:16px;color:#38bdf8}
+
+  .page-counter{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:10px;padding:9px 12px;letter-spacing:.05em;
+    cursor:pointer;transition:background .15s ease;
+  }
+  .page-counter:hover{background:#1e293b}
+
+  /* ── PAGE OVERVIEW SHEET ────────────────────── */
+  .page-sheet{
+    position:absolute;bottom:70px;left:50%;transform:translate(-50%,12px);
+    max-width:min(86vw,1100px);z-index:45;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:18px;padding:12px;backdrop-filter:blur(12px);
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    opacity:0;pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+  }
+  .page-sheet.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+  .page-sheet-inner{
+    display:flex;gap:10px;overflow-x:auto;padding:2px;
+    scrollbar-width:thin;
+  }
+  .page-tile{
+    position:relative;flex:none;border-radius:12px;overflow:hidden;
+    border:2px solid var(--border);padding:0;line-height:0;background:#0d1424;
+    transition:border-color .15s ease,transform .12s ease;
+  }
+  .page-tile:hover{transform:translateY(-3px);border-color:#475569}
+  .page-tile.cur{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,58,237,.35)}
+  .page-tile img{display:block;width:150px;height:auto;position:relative;z-index:1}
+  .pt-snap{position:absolute;overflow:hidden;z-index:0}
+  .pt-snap iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none}
+  .pt-num{
+    position:absolute;top:6px;left:6px;line-height:1;
+    font-size:11px;font-weight:700;color:#fff;
+    background:rgba(2,6,16,.7);border-radius:6px;padding:3px 7px;
+  }
+  .pt-label{
+    position:absolute;bottom:6px;right:6px;line-height:1;
+    font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    background:rgba(2,6,16,.7);border-radius:6px;padding:3px 6px;
+  }
+  .page-tile.cur .pt-label{color:#c4b5fd}
+  .page-dots{display:none;gap:5px}
+  .page-dots span{
+    width:6px;height:6px;border-radius:50%;background:#334155;
+    transition:background .2s ease,transform .2s ease;
+  }
+  .page-dots span.cur{background:var(--violet);transform:scale(1.35)}
+
+  /* ── CONFIRM DIALOG ─────────────────────────── */
+  .overlay{
+    position:absolute;inset:0;z-index:60;background:rgba(4,7,14,.65);
+    backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  .dialog{
+    background:#111827;border:1px solid var(--border);border-radius:16px;
+    padding:24px 26px;width:340px;box-shadow:0 24px 70px rgba(0,0,0,.6);
+    transform:translateY(8px);transition:transform .2s ease;
+  }
+  .overlay.show .dialog{transform:translateY(0)}
+  .dialog h2{font-size:16px;margin-bottom:8px}
+  .dialog p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+  .dialog-actions{display:flex;justify-content:flex-end;gap:10px}
+  .btn-ghost{padding:8px 14px;border-radius:10px;font-size:13px;color:var(--icon)}
+  .btn-ghost:hover{background:rgba(148,163,184,.12)}
+  .btn-danger{
+    padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;
+    color:#fff;background:var(--danger);
+  }
+  .btn-danger:hover{filter:brightness(1.1)}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top chrome -->
+  <div class="esc-toast" id="escToast">
+    To exit full screen, press and hold <span class="keycap">Esc</span>
+  </div>
+  <div class="action-toast" id="actionToast"></div>
+
+  <!-- Stage: board takes all remaining space -->
+  <main class="stage">
+    <div class="board tool-pen" id="board">
+      <div id="deckLayer"></div>
+      <div id="snapBox">
+        <iframe id="snapDeck" sandbox="allow-scripts" scrolling="no" title="Frozen slide"></iframe>
+        <img id="snapImg" alt="" draggable="false">
+      </div>
+      <canvas id="ink"></canvas>
+      <div id="mediaLayer"></div>
+      <div class="snap-outline" id="snapOutline"></div>
+      <button class="snap-grip" id="snapMove" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip snap-move-alt" id="snapMoveL" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip snap-move-alt" id="snapMoveR" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip" id="snapResize" title="Drag to resize the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v6h-6"/><path d="M21 21 12 12"/></svg>
+      </button>
+      <button class="snap-grip" id="snapClose" title="Remove the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+  </main>
+  <div class="empty" id="emptyState">
+    <p>No slides in this session.<br>Add a blank page to start writing, or load a slides file into the Master&nbsp;Library.</p>
+    <div style="display:flex;gap:12px">
+      <button class="btn-add-first" id="addFirstPage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        Add blank page
+      </button>
+      <button class="btn-add-first" id="loadDeckEmpty" style="background:var(--surface);border:1px solid var(--border);box-shadow:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+        Load slides file
+      </button>
+    </div>
+  </div>
+  <input type="file" id="deckInput" accept=".html,.htm" multiple style="display:none">
+
+  <!-- Mirrored rails (filled by JS) -->
+  <nav class="rail rail-left" data-rail aria-label="Ink tools"></nav>
+  <nav class="rail rail-right" data-rail aria-label="Ink tools (mirror)"></nav>
+
+  <!-- Bottom control strip -->
+  <footer class="bottom-strip">
+    <button class="nav-text" id="prevBtn" title="Previous page (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Previous
+    </button>
+    <button class="nav-mini" id="nextBtnMini" title="Next (→)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+
+    <div class="spacer"></div>
+
+    <div class="center-pill">
+      <button class="pill-btn" data-action="library" title="Master Library — load a slides file (.html)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#f97316"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#22c55e"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#ef4444"/>
+        </svg>
+      </button>
+      <button class="pill-btn" data-action="undo" title="Undo (Ctrl+Z)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button class="pill-btn" data-action="first" title="Jump to first page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 18-6-6 6-6"/><path d="M7 6v12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="clear" title="Clear ink on this page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+      <button class="pill-btn" data-action="delete-after" title="Cut — delete all pages after this one">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="M14.47 14.48 20 20"/><path d="M8.12 8.12 12 12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="last" title="Jump to last page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 18 6-6-6-6"/><path d="M17 6v12"/></svg>
+      </button>
+    </div>
+
+    <button class="btn-next" id="nextStep" title="Next step (→)">
+      Next Step
+    </button>
+
+    <button class="btn-export" data-action="export" title="Export all pages (slides + ink) as a PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+      Export
+    </button>
+
+    <button class="page-counter" id="pageCounterBtn" title="Show all pages">
+      <span id="pageLabel">0 / 0</span>
+      <span class="page-dots" id="pageDots"></span>
+    </button>
+
+    <div class="spacer"></div>
+
+    <button class="nav-mini" id="prevBtnMini" title="Previous (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button class="nav-text" id="nextBtn" title="Next page (→)">
+      Next
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+  </footer>
+
+  <!-- Page overview sheet (opened by the page counter) -->
+  <div class="page-sheet" id="pageSheet">
+    <div class="page-sheet-inner" id="pageSheetInner"></div>
+  </div>
+
+  <!-- End-session confirm -->
+  <div class="overlay" id="closeOverlay">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="closeTitle">
+      <h2 id="closeTitle">End this session?</h2>
+      <p>All pages and ink will be removed. This can't be undone.</p>
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelClose">Keep teaching</button>
+        <button class="btn-danger" id="confirmClose">End session</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ═══ STATE ═══════════════════════════════════
+     Vector model: every page stores its strokes, so pages are
+     fully independent — adding a page can never leak ink.       */
+  const state = {
+    tool:"pen", color:"white", width:1,
+    pages:[],        // [{ strokes, snap, undo, deckId, deckIndex, stepCount, stepIndex }]
+    current:-1,
+    decks:[]         // [{ id, text, count }] — multiple loaded slide files
+  };
+  const deckFrames = {};   // deckId → iframe element
+  // stroke = { mode:"draw"|"erase", color, width, pts:[{x,y}] }
+
+  const COLOR_HEX = {
+    navy:"#1e293b", red:"#ef4444", blue:"#3b82f6",
+    green:"#22c55e", orange:"#f97316", white:"#ffffff"
+  };
+  const WIDTH_PX = [2, 4, 7, 12];
+  const DOT_PX   = [4, 7, 11, 15];
+  const AREA_ERASER_PX = 24;
+  const STROKE_ERASER_HIT = 12;
+
+  /* ═══ DOM ═════════════════════════════════════ */
+  const board       = document.getElementById("board");
+  const canvas      = document.getElementById("ink");
+  const ctx         = canvas.getContext("2d");
+  const emptyState  = document.getElementById("emptyState");
+  const pageLabel   = document.getElementById("pageLabel");
+  const pageDots    = document.getElementById("pageDots");
+  const prevBtn     = document.getElementById("prevBtn");
+  const nextBtn     = document.getElementById("nextBtn");
+  const rails       = document.querySelectorAll("[data-rail]");
+  const actionToast = document.getElementById("actionToast");
+  const closeOverlay= document.getElementById("closeOverlay");
+  const snapImg     = document.getElementById("snapImg");
+  const snapBox     = document.getElementById("snapBox");
+  const snapDeck    = document.getElementById("snapDeck");
+  const deckLayer   = document.getElementById("deckLayer");
+  const deckInput   = document.getElementById("deckInput");
+  const snapOutline = document.getElementById("snapOutline");
+  const snapMove    = document.getElementById("snapMove");
+  const snapMoveL   = document.getElementById("snapMoveL");
+  const snapMoveR   = document.getElementById("snapMoveR");
+  const snapResize  = document.getElementById("snapResize");
+  const snapClose   = document.getElementById("snapClose");
+
+  /* ═══ ICONS ═══════════════════════════════════ */
+  const S = inner =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  const ICONS = {
+    pencil: S(`<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>`),
+    eraser: S(`<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>`),
+    trash:  S(`<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>`),
+    plus:   S(`<path d="M12 5v14"/><path d="M5 12h14"/>`),
+    copy:   S(`<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>`),
+    frame:  S(`<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>`),
+    unframe:S(`<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>`),
+    close:  S(`<path d="M18 6 6 18"/><path d="m6 6 12 12"/>`)
+  };
+
+  /* ═══ RAILS ═══════════════════════════════════
+     Removed per request: marquee (dotted box) tool + eye button */
+  const TOOLS = [
+    { id:"pen",        icon:"pencil", title:"Pen (P)" },
+    { id:"eraser",     icon:"eraser", title:"Stroke eraser — removes a whole stroke (E)" },
+    { id:"eraser-obj", icon:"eraser", title:"Area eraser — rubs out ink", cls:"eraser-obj" }
+  ];
+  const ACTIONS = [
+    { id:"clear",      icon:"trash", title:"Clear ink on this page" },
+    { id:"add-page",   icon:"plus",  title:"Add blank page (N)" },
+    { id:"duplicate",  icon:"copy",  title:"Duplicate & freeze this page" },
+    { id:"fullscreen", icon:"frame", title:"Enter / exit full screen (F)" },
+    { id:"close",      icon:"close", title:"End session", cls:"danger" }
+  ];
+
+  function railHTML(){
+    let h = TOOLS.map(t => `
+      <button class="tool-btn ${t.cls||""} ${state.tool===t.id?"is-active":""}"
+              data-tool="${t.id}" title="${t.title}" aria-pressed="${state.tool===t.id}">
+        ${ICONS[t.icon]}
+      </button>`).join("");
+
+    h += `<div class="divider" role="separator"></div><div class="palette">`;
+    h += Object.keys(COLOR_HEX).map(id => `
+      <button class="swatch ${state.color===id?"is-active":""}" data-color="${id}"
+              title="${id[0].toUpperCase()+id.slice(1)}" style="background:${COLOR_HEX[id]}"
+              aria-pressed="${state.color===id}"></button>`).join("");
+    h += `</div><div class="divider" role="separator"></div><div class="widths">`;
+    h += DOT_PX.map((px,i) => `
+      <button class="width-btn ${state.width===i?"is-active":""}" data-width="${i}"
+              title="Stroke width ${i+1}" aria-pressed="${state.width===i}">
+        <span class="width-dot" style="width:${px}px;height:${px}px"></span>
+      </button>`).join("");
+    h += `</div><div class="divider" role="separator"></div>`;
+    h += ACTIONS.map(a => {
+      let icon = a.icon;
+      if(a.id === "fullscreen" && document.fullscreenElement) icon = "unframe";
+      return `
+      <button class="tool-btn ${a.cls||""}" data-action="${a.id}" title="${a.title}">
+        ${ICONS[icon]}
+      </button>`;
+    }).join("");
+    return h;
+  }
+  function renderRails(){ rails.forEach(r => r.innerHTML = railHTML()); }
+
+  /* ═══ RENDERING ═══════════════════════════════ */
+  function sizeCanvas(){
+    const r = board.getBoundingClientRect();
+    if(r.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = Math.round(r.width  * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineCap = ctx.lineJoin = "round";
+    redraw();
+  }
+
+  function applyStrokeStyle(s, c = ctx){
+    c.globalCompositeOperation = s.mode === "erase" ? "destination-out" : "source-over";
+    c.strokeStyle = COLOR_HEX[s.color] || "#fff";
+    c.lineWidth   = s.mode === "erase" ? AREA_ERASER_PX : WIDTH_PX[s.width];
+  }
+
+  function paintStroke(s, c = ctx){
+    if(!s.pts.length) return;
+    applyStrokeStyle(s, c);
+    c.beginPath();
+    c.moveTo(s.pts[0].x, s.pts[0].y);
+    if(s.pts.length === 1) c.lineTo(s.pts[0].x + .01, s.pts[0].y);
+    for(let i=1;i<s.pts.length;i++) c.lineTo(s.pts[i].x, s.pts[i].y);
+    c.stroke();
+  }
+
+  function redraw(){
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+    const page = state.pages[state.current];
+    if(!page) return;
+    page.strokes.forEach(s => paintStroke(s, ctx));   // forEach's index must NOT land in the ctx param
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  /* ═══ SNAPSHOT (duplicated page object) ═══════ */
+
+  const escAttr = s => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
+  /* A frozen box can carry the slide's HTML too: strip the deck's scripts,
+     show only the frozen slide index and reveal its steps up to stepIndex.
+     Rendered in a sandboxed iframe scaled to fit the box. */
+  function buildFrozenSrcdoc(text, index, step){
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    doc.querySelectorAll("script").forEach(s => s.remove());
+    const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+    const style = `<style>
+html,body{overflow:hidden;margin:0}
+.page{display:none!important}
+.page.__lf-x{display:block!important;opacity:1!important;transform:none!important}
+.step{opacity:0!important;transform:none!important}
+.step.__lf-on{opacity:1!important;visibility:visible!important}
+<\/style>`;
+    const script = `<script>(function(){var ps=document.querySelectorAll(".page");var a=ps[${index}];`
+      + `if(a){a.classList.add("__lf-x");var st=a.querySelectorAll(".step");`
+      + `for(var k=0;k<st.length;k++){if(k<${step})st[k].classList.add("__lf-on");}}})();<\/script>`;
+    return base + style + script;
+  }
+
+  let snapDeckKey = null;   // guards against reloading the iframe on every drag
+  function syncSnapDeck(snap){
+    if(!snap || snap.deckId == null){
+      snapDeck.style.display = "none";
+      if(snapDeckKey !== null){ snapDeck.srcdoc = ""; snapDeckKey = null; }
+      return;
+    }
+    const baseW = snap.baseW || snap.w, baseH = snap.baseH || snap.h;
+    snapDeck.style.width  = baseW + "px";
+    snapDeck.style.height = baseH + "px";
+    snapDeck.style.transform = `scale(${snap.w / baseW}, ${snap.h / baseH})`;
+    snapDeck.style.display = "block";
+    const key = snap.deckId + ":" + snap.deckIndex + ":" + snap.stepIndex;
+    if(key !== snapDeckKey){
+      const deck = state.decks.find(d => d.id === snap.deckId);
+      snapDeck.srcdoc = deck ? buildFrozenSrcdoc(deck.text, snap.deckIndex, snap.stepIndex) : "";
+      snapDeckKey = key;
+    }
+  }
+
+  function positionSnap(){
+    const page = state.pages[state.current];
+    const snap = page && page.snap;
+    const show = !!snap;
+    snapBox.style.display     = show ? "block" : "none";
+    snapOutline.style.display = show ? "block" : "none";
+    [snapMove, snapMoveL, snapMoveR, snapResize, snapClose]
+      .forEach(g => g.style.display = show ? "flex" : "none");
+    if(!show){ syncSnapDeck(null); return; }
+    // the box holds the frozen slide (iframe) + ink raster, both filling it
+    snapBox.style.left = snap.x + "px";
+    snapBox.style.top  = snap.y + "px";
+    snapBox.style.width  = snap.w + "px";
+    snapBox.style.height = snap.h + "px";
+    snapImg.src = snap.url;
+    syncSnapDeck(snap);
+    snapOutline.style.left = snap.x + "px";
+    snapOutline.style.top  = snap.y + "px";
+    snapOutline.style.width  = snap.w + "px";
+    snapOutline.style.height = snap.h + "px";
+    snapMove.style.left   = (snap.x - 14) + "px";
+    snapMove.style.top    = (snap.y - 14) + "px";
+    snapMoveL.style.left  = (snap.x - 14) + "px";
+    snapMoveL.style.top   = (snap.y + snap.h/2 - 14) + "px";
+    snapMoveR.style.left  = (snap.x + snap.w - 14) + "px";
+    snapMoveR.style.top   = (snap.y + snap.h/2 - 14) + "px";
+    snapClose.style.left  = (snap.x + snap.w - 14) + "px";
+    snapClose.style.top   = (snap.y - 14) + "px";
+    snapResize.style.left = (snap.x + snap.w - 14) + "px";
+    snapResize.style.top  = (snap.y + snap.h - 14) + "px";
+  }
+
+  function makeGripDraggable(grip, onDrag){
+    grip.addEventListener("pointerdown", e => {
+      const page = state.pages[state.current];
+      if(!page || !page.snap) return;
+      e.preventDefault();
+      grip.setPointerCapture(e.pointerId);
+      pushUndo();
+      const start = { px:e.clientX, py:e.clientY, ...page.snap };
+      const move = ev => { onDrag(page.snap, start, ev.clientX - start.px, ev.clientY - start.py); positionSnap(); };
+      const up = () => {
+        grip.removeEventListener("pointermove", move);
+        grip.removeEventListener("pointerup", up);
+        grip.removeEventListener("pointercancel", up);
+      };
+      grip.addEventListener("pointermove", move);
+      grip.addEventListener("pointerup", up);
+      grip.addEventListener("pointercancel", up);
+    });
+  }
+  // move freely — including fully outside the working zone
+  const moveSnap = (snap, start, dx, dy) => { snap.x = start.x + dx; snap.y = start.y + dy; };
+  makeGripDraggable(snapMove,  moveSnap);
+  makeGripDraggable(snapMoveL, moveSnap);   // middle-left edge
+  makeGripDraggable(snapMoveR, moveSnap);   // middle-right edge (other side)
+  makeGripDraggable(snapResize, (snap, start, dx, dy) => {
+    snap.w = Math.max(60, start.w + dx);
+    snap.h = Math.max(40, start.h + dy);
+  });
+  snapClose.addEventListener("click", () => {
+    const page = state.pages[state.current];
+    if(!page || !page.snap) return;
+    pushUndo();
+    page.snap = null;
+    positionSnap();
+    toast("Frozen page removed");
+  });
+
+  /* compose current page (snapshot + ink) into a dataURL */
+  function composeCurrent(withBg){
+    const r = board.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const out = document.createElement("canvas");
+    out.width = Math.round(r.width * dpr);
+    out.height = Math.round(r.height * dpr);
+    const o = out.getContext("2d");
+    o.scale(dpr, dpr);
+    if(withBg){ o.fillStyle = "#0b0f19"; o.fillRect(0,0,r.width,r.height); }
+    const page = state.pages[state.current];
+    if(page && page.snap && snapImg.complete && snapImg.naturalWidth){
+      o.drawImage(snapImg, page.snap.x, page.snap.y, page.snap.w, page.snap.h);
+    }
+    o.drawImage(canvas, 0, 0, r.width, r.height);
+    return out.toDataURL("image/png");
+  }
+
+  /* ═══ PAGES ═══════════════════════════════════ */
+  function blankPage(){ return { strokes:[], snap:null, undo:[], deckId:null, deckIndex:null, stepCount:0, stepIndex:0 }; }
+
+  /* clickable pass-through: rects of .clickable elements reported by
+     the active deck; taps inside them click instead of drawing */
+  let deckClickRects = [];
+  function activeDeckFrame(){
+    const page = state.pages[state.current];
+    return page && page.deckId != null ? deckFrames[page.deckId] : null;
+  }
+  function clickableAt(p){
+    return deckClickRects.some(r =>
+      p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+  }
+  window.addEventListener("message", e => {
+    if(!e.data || e.data.type !== "lf-rects") return;
+    const f = activeDeckFrame();
+    if(f && e.source === f.contentWindow) deckClickRects = e.data.rects || [];
+  });
+
+  /* ═══ LIVE MEDIA ═══════════════════════════════════════════════════════
+     Players are rendered HERE, in the presenter document, not inside the deck
+     — see the #mediaLayer note in the stylesheet for why. Reconciliation is
+     by key, never teardown-and-rebuild, because syncDeck() fires on every
+     step: rebuilding would restart the video each time the teacher presses
+     Next. Same key -> reposition the existing iframe and leave it playing. */
+  const mediaLayer = document.getElementById("mediaLayer");
+  const mediaEmbeds = {};                       // key -> {box, iframe, toggle, deckId}
+  const mediaKey = (m) => (m.provider || "youtube") + "|" + m.id + "|" + m.start + "|" + m.end;
+
+  function mediaSrc(m){
+    const id = encodeURIComponent(m.id);
+    if((m.provider || "youtube") === "vimeo")
+      return "https://player.vimeo.com/video/" + id + (m.start ? "#t=" + encodeURIComponent(m.start) + "s" : "");
+    const q = ["rel=0", "modestbranding=1", "playsinline=1"];
+    if(m.start) q.push("start=" + encodeURIComponent(m.start));
+    if(m.end)   q.push("end="   + encodeURIComponent(m.end));
+    return "https://www.youtube-nocookie.com/embed/" + id + "?" + q.join("&");
+  }
+
+  function dropMedia(key){
+    const rec = mediaEmbeds[key];
+    if(!rec) return;
+    rec.iframe.src = "about:blank";             // kill playback + audio at once
+    rec.box.remove();
+    rec.toggle.remove();
+    delete mediaEmbeds[key];
+  }
+  function clearMedia(pred){
+    for(const key in mediaEmbeds) if(!pred || pred(mediaEmbeds[key])) dropMedia(key);
+  }
+
+  function renderMedia(list, deckId){
+    const seen = {};
+    (list || []).forEach(m => {
+      if(!m || !m.id) return;
+      const key = mediaKey(m);
+      seen[key] = true;
+      let rec = mediaEmbeds[key];
+      if(!rec){
+        const box = document.createElement("div");
+        box.className = "media-embed";
+        const f = document.createElement("iframe");
+        f.title = "Video";
+        f.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen");
+        f.setAttribute("allowfullscreen", "");
+        f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+        f.src = mediaSrc(m);
+        box.appendChild(f);
+
+        // Let the teacher write across the video without losing the player.
+        const t = document.createElement("button");
+        t.className = "media-ink-toggle";
+        t.textContent = "Write over video";
+        t.addEventListener("click", () => {
+          const on = box.classList.toggle("ink-through");
+          t.classList.toggle("on", on);
+          t.textContent = on ? "Back to video" : "Write over video";
+        });
+
+        mediaLayer.append(box, t);
+        rec = mediaEmbeds[key] = { box, iframe:f, toggle:t, deckId };
+      }
+      rec.deckId = deckId;
+      rec.box.style.left   = m.x + "px";
+      rec.box.style.top    = m.y + "px";
+      rec.box.style.width  = m.w + "px";
+      rec.box.style.height = m.h + "px";
+      rec.toggle.style.left = Math.max(4, m.x + m.w - 148) + "px";
+      rec.toggle.style.top  = Math.max(4, m.y - 34) + "px";
+    });
+    for(const key in mediaEmbeds) if(!seen[key]) dropMedia(key);
+  }
+
+  window.addEventListener("message", e => {
+    if(!e.data || e.data.type !== "lf-media") return;
+    const f = activeDeckFrame();
+    if(!f || e.source !== f.contentWindow) return;
+    const page = state.pages[state.current];
+    renderMedia(e.data.media, page ? page.deckId : null);
+  });
+
+  /* show the current page's deck slide (if any) and hide all other decks */
+  function syncDeck(){
+    deckClickRects = [];          // stale until the active deck reports back
+    const page = state.pages[state.current];
+    const activeId = page && page.deckId != null ? page.deckId : null;
+    // Decks other than the active one never report, so prune their players
+    // here; the active deck's own empty report handles everything else.
+    clearMedia(rec => activeId === null || String(rec.deckId) !== String(activeId));
+    for(const id in deckFrames){
+      const f = deckFrames[id];
+      if(String(activeId) === String(id)){
+        f.style.display = "block";
+        if(f.contentWindow)
+          f.contentWindow.postMessage(
+            { type:"lf-show", index:page.deckIndex, step:page.stepIndex }, "*");
+      } else {
+        f.style.display = "none";
+      }
+    }
+  }
+
+  function loadPage(i){
+    state.current = i;
+    redraw();          // this page's own strokes only — fresh ink per page,
+    positionSnap();    // but strokes persist and reappear when you come back
+    syncDeck();
+    updateChrome();
+  }
+
+  /* ═══ MASTER LIBRARY — load an HTML/CSS/JS slides file ═══
+     Format: slides are <section class="page">…</section>.
+     class="step"      → revealed one by one with Next.
+     class="clickable" → that element receives REAL clicks through the
+     ink layer: tapping directly on it clicks it instead of drawing.
+     The file's own CSS and JS run inside a sandboxed iframe. */
+  const DECK_CONTROLLER = `
+<style id="__lf-ctl">
+.page{display:none!important}
+.page.__lf-active{display:block!important}
+.page .step{opacity:0!important;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease}
+.page .step.__lf-on{opacity:1!important;transform:none}
+.clickable{pointer-events:auto!important;cursor:pointer}
+/* A [data-video] placeholder may ship its own <iframe> so the file still works
+   when opened in a plain browser. Under the host that iframe is dead (opaque
+   origin), so hide it — the presenter paints a real player on top instead. */
+[data-video] iframe{visibility:hidden!important}
+<\/style>
+<script>
+(function(){
+  function show(i, step){
+    var ps = document.querySelectorAll(".page");
+    for(var k=0;k<ps.length;k++) ps[k].classList.toggle("__lf-active", k===i);
+    var act = ps[i];
+    if(act){
+      var steps = act.querySelectorAll(".step");
+      for(var k=0;k<steps.length;k++) steps[k].classList.toggle("__lf-on", k < step);
+    }
+    setTimeout(sendRects, 60);
+    setTimeout(sendRects, 700);   // again after CSS transitions settle
+    setTimeout(sendMedia, 60);
+    setTimeout(sendMedia, 700);
+  }
+  /* Report any [data-video] placeholder on the ACTIVE page so the host can
+     position a real player over it. Always posts — an empty list is how the
+     host knows to tear the previous player down and stop its audio. */
+  function sendMedia(){
+    var act = document.querySelector(".page.__lf-active");
+    var out = [];
+    if(act){
+      var els = act.querySelectorAll("[data-video]");
+      for(var k=0;k<els.length;k++){
+        var r = els[k].getBoundingClientRect();
+        if(r.width < 8 || r.height < 8) continue;
+        out.push({
+          provider: els[k].getAttribute("data-provider") || "youtube",
+          id:       els[k].getAttribute("data-video"),
+          start:    els[k].getAttribute("data-start") || "",
+          end:      els[k].getAttribute("data-end")   || "",
+          x:r.left, y:r.top, w:r.width, h:r.height
+        });
+      }
+    }
+    parent.postMessage({ type:"lf-media", media:out }, "*");
+  }
+  function sendRects(){
+    var els = document.querySelectorAll(".clickable");
+    var rects = [];
+    for(var k=0;k<els.length;k++){
+      var r = els[k].getBoundingClientRect();
+      if(r.width > 0 && r.height > 0)
+        rects.push({ x:r.left, y:r.top, w:r.width, h:r.height });
+    }
+    parent.postMessage({ type:"lf-rects", rects:rects }, "*");
+  }
+  function doClick(x, y){
+    var els = document.querySelectorAll(".clickable");
+    for(var k=0;k<els.length;k++){
+      var r = els[k].getBoundingClientRect();
+      if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom){
+        els[k].click();
+        setTimeout(sendRects, 100);   // layout may change after the click
+        return;
+      }
+    }
+  }
+  window.addEventListener("message", function(e){
+    var d = e.data || {};
+    if(d.type === "lf-show")  show(d.index, d.step || 0);
+    if(d.type === "lf-click") doClick(d.x, d.y);
+  });
+  window.addEventListener("resize", function(){
+    setTimeout(sendRects, 120);
+    setTimeout(sendMedia, 120);
+  });
+  show(0, 0);
+})();
+<\/script>`;
+
+  // Load a deck from raw slides HTML text. `sourceName` is only used for the
+  // toast/title. Returns true if slides were found.
+  function loadDeckFromText(text, sourceName){
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const pageEls = doc.querySelectorAll(".page");
+    const count = pageEls.length;
+    if(!count){
+      toast('No slides found — needs <section class="page"> blocks');
+      return false;
+    }
+    const stepCounts = Array.from(pageEls, pg => pg.querySelectorAll(".step").length);
+
+    // MULTI-DECK: every loaded deck gets its own iframe — existing decks and
+    // pages are kept, new pages append.
+    const deckId = "d" + Date.now() + "_" + state.decks.length;
+    state.decks.push({ id:deckId, text, count });
+
+    const frame = document.createElement("iframe");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("allowtransparency", "true");
+    frame.title = "Loaded slides — " + sourceName;
+    frame.addEventListener("load", syncDeck, { once:true });
+    deckLayer.appendChild(frame);
+    deckFrames[deckId] = frame;
+    frame.srcdoc = text + DECK_CONTROLLER;
+
+    const startIdx = state.pages.length;
+    for(let i = 0; i < count; i++){
+      const p = blankPage();
+      p.deckId = deckId;
+      p.deckIndex = i;
+      p.stepCount = stepCounts[i];
+      state.pages.push(p);
+    }
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    requestAnimationFrame(() => {
+      if(canvas.width === 0) sizeCanvas();
+      loadPage(startIdx);
+      toast(`Loaded ${count} slide${count>1?"s":""} from ${sourceName}`);
+    });
+    return true;
+  }
+
+  function loadDeckFile(file){
+    const reader = new FileReader();
+    reader.onload = () => loadDeckFromText(String(reader.result), file.name);
+    reader.onerror = () => toast("Couldn't read that file");
+    reader.readAsText(file);
+  }
+
+  deckInput.addEventListener("change", () => {
+    if(deckInput.files) Array.from(deckInput.files).forEach(loadDeckFile);
+    deckInput.value = "";
+  });
+
+  // Host app (PresenterView) can push a folder's HTML in directly, instead of
+  // loading from a file. Distinct message type so it won't clash with the
+  // lf-rects messages that come up from child deck iframes.
+  window.addEventListener("message", (e) => {
+    const d = e.data || {};
+    if(d.type === "lf-load-deck" && typeof d.text === "string"){
+      loadDeckFromText(d.text, d.name || "Library");
+    }
+  });
+
+  function addPage({duplicate=false} = {}){
+    const page = blankPage();
+    if(duplicate && state.current >= 0){
+      const cur = state.pages[state.current];
+      const r = board.getBoundingClientRect();
+      const url = composeCurrent(false);   // ink only — HTML comes from the frozen deck iframe
+      const w = r.width * .62, h = r.height * .62;
+      page.snap = {
+        url, x:(r.width - w)/2, y:(r.height - h)/2, w, h,
+        baseW: r.width, baseH: r.height,
+        // Freeze the slide HTML into the box: remember which deck slide/step this
+        // page showed so the box can re-render it, scaled to the box (not full-screen).
+        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: cur.stepIndex
+      };
+    }
+    state.pages.splice(state.current + 1, 0, page);
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    requestAnimationFrame(() => {
+      if(canvas.width === 0) sizeCanvas();
+      loadPage(state.current + 1);
+      toast(duplicate
+        ? "Page frozen onto a new page — drag or resize it"
+        : "Blank page added");
+    });
+  }
+
+  function deletePagesAfter(){
+    if(state.current < 0) return;
+    const removed = state.pages.length - (state.current + 1);
+    if(removed <= 0) return toast("No pages after this one");
+    state.pages.splice(state.current + 1);
+    updateChrome();
+    toast(`Cut ${removed} page${removed > 1 ? "s" : ""} after this one`);
+  }
+
+  function goTo(i){
+    if(i < 0 || i >= state.pages.length || i === state.current) return;
+    loadPage(i);
+  }
+
+  /* step-aware navigation: Next first reveals the slide's remaining
+     .step animations one by one; only then does it turn the page.  */
+  function nextAction(){
+    const page = state.pages[state.current];
+    if(page && page.stepIndex < page.stepCount){
+      page.stepIndex++;
+      syncDeck();
+      updateChrome();
+      return true;              // consumed by a step
+    }
+    if(state.current < state.pages.length - 1){ goTo(state.current + 1); return true; }
+    return false;               // already at the very end
+  }
+  function prevAction(){
+    const page = state.pages[state.current];
+    if(page && page.stepIndex > 0){
+      page.stepIndex--;
+      syncDeck();
+      updateChrome();
+      return;
+    }
+    goTo(state.current - 1);
+  }
+
+  /* ═══ UNDO (structural, per page) ═════════════ */
+  function cloneState(page){
+    return {
+      strokes: page.strokes.map(s => ({...s, pts: s.pts.map(p => ({...p}))})),
+      snap: page.snap ? {...page.snap} : null
+    };
+  }
+  function pushUndo(){
+    const page = state.pages[state.current];
+    if(!page) return;
+    page.undo.push(cloneState(page));
+    if(page.undo.length > 30) page.undo.shift();
+  }
+  function undo(){
+    const page = state.pages[state.current];
+    if(!page) return;
+    if(!page.undo.length){ toast("Nothing to undo"); return; }
+    const prev = page.undo.pop();
+    page.strokes = prev.strokes;
+    page.snap = prev.snap;
+    redraw();
+    positionSnap();
+  }
+
+  /* ═══ DRAWING & ERASING ═══════════════════════ */
+  let activeStroke = null, erasing = false;
+
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  function distToSegment(p, a, b){
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len2 = dx*dx + dy*dy;
+    let t = len2 ? ((p.x - a.x)*dx + (p.y - a.y)*dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const cx = a.x + t*dx, cy = a.y + t*dy;
+    return Math.hypot(p.x - cx, p.y - cy);
+  }
+
+  function strokeHit(p, s){
+    const tol = STROKE_ERASER_HIT + (s.mode==="erase" ? AREA_ERASER_PX : WIDTH_PX[s.width]) / 2;
+    if(s.pts.length === 1) return Math.hypot(p.x - s.pts[0].x, p.y - s.pts[0].y) <= tol;
+    for(let i=1;i<s.pts.length;i++)
+      if(distToSegment(p, s.pts[i-1], s.pts[i]) <= tol) return true;
+    return false;
+  }
+
+  function eraseStrokesAt(p){
+    const page = state.pages[state.current];
+    const before = page.strokes.length;
+    page.strokes = page.strokes.filter(s => s.mode === "erase" || !strokeHit(p, s));
+    if(page.strokes.length !== before) redraw();
+  }
+
+  canvas.addEventListener("pointerdown", e => {
+    const page = state.pages[state.current];
+    if(!page) return;
+    const p = pos(e);
+
+    // tap landed on a .clickable element of the loaded deck →
+    // forward a real click to it instead of starting a stroke
+    if(clickableAt(p)){
+      const f = activeDeckFrame();
+      if(f && f.contentWindow)
+        f.contentWindow.postMessage({ type:"lf-click", x:p.x, y:p.y }, "*");
+      return;
+    }
+
+    canvas.setPointerCapture(e.pointerId);
+
+    if(state.tool === "eraser"){            // STROKE eraser — whole strokes
+      pushUndo();
+      erasing = true;
+      eraseStrokesAt(p);
+      return;
+    }
+    if(state.tool === "pen" || state.tool === "eraser-obj"){
+      pushUndo();
+      activeStroke = {
+        mode: state.tool === "pen" ? "draw" : "erase",
+        color: state.color, width: state.width,
+        pts: [p]
+      };
+      page.strokes.push(activeStroke);
+      paintStroke(activeStroke);            // dot on tap
+    }
+  });
+
+  canvas.addEventListener("pointermove", e => {
+    const p = pos(e);
+    if(!activeStroke && !erasing)
+      canvas.style.cursor = clickableAt(p) ? "pointer" : "";
+    if(erasing){ eraseStrokesAt(p); return; }
+    if(!activeStroke) return;
+    const last = activeStroke.pts[activeStroke.pts.length - 1];
+    activeStroke.pts.push(p);
+    applyStrokeStyle(activeStroke);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  ["pointerup","pointercancel"].forEach(ev =>
+    canvas.addEventListener(ev, () => {
+      activeStroke = null;
+      erasing = false;
+      ctx.globalCompositeOperation = "source-over";
+    })
+  );
+
+  /* ═══ CHROME / UI SYNC ════════════════════════ */
+  function updateChrome(){
+    const n = state.pages.length, c = state.current;
+    const page = state.pages[c];
+    pageLabel.textContent = n ? `${c+1} / ${n}` : "0 / 0";
+    pageDots.innerHTML = state.pages
+      .map((_,i) => `<span class="${i===c?"cur":""}"></span>`).join("");
+    prevBtn.disabled = c < 0 || (c === 0 && !(page && page.stepIndex > 0));
+    nextBtn.disabled = c < 0 || (c >= n - 1 && !(page && page.stepIndex < page.stepCount));
+    const pm = document.getElementById("prevBtnMini"), nm = document.getElementById("nextBtnMini");
+    if(pm) pm.disabled = prevBtn.disabled;
+    if(nm) nm.disabled = nextBtn.disabled;
+    board.className = "board tool-" + state.tool + (n ? " visible" : "");
+    renderRails();
+  }
+
+  let toastTimer;
+  function toast(msg){
+    actionToast.textContent = msg;
+    actionToast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => actionToast.classList.remove("show"), 2000);
+  }
+
+  /* ═══ ACTIONS ═════════════════════════════════ */
+  function handleAction(id){
+    switch(id){
+      case "add-page":  addPage(); break;
+      case "duplicate": state.current < 0 ? addPage() : addPage({duplicate:true}); break;
+      case "clear": {
+        const page = state.pages[state.current];
+        if(!page) return toast("No page yet — add one first");
+        pushUndo();
+        page.strokes = [];
+        redraw();
+        toast("Ink cleared");
+        break;
+      }
+      case "delete-after": deletePagesAfter(); break;
+      case "undo": undo(); break;
+      case "first": goTo(0); break;
+      case "last":  goTo(state.pages.length - 1); break;
+      case "close": closeOverlay.classList.add("show"); break;
+      case "export": exportPDF(); break;
+      case "fullscreen":
+        if(document.fullscreenElement){
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen()
+            .catch(() => toast("Full screen was blocked by the browser"));
+        }
+        break;
+      case "library": deckInput.click(); break;
+    }
+  }
+
+  /* ═══ EXPORT — PDF of ALL pages ═══════════════
+     Builds one printable document: every page becomes a landscape
+     sheet containing its loaded slide HTML (all steps revealed),
+     its frozen-page snapshot, and its ink strokes rendered to PNG.
+     The browser's print dialog then saves it as a PDF.            */
+  function renderPageInk(page, W, H){
+    return new Promise(resolve => {
+      const c = document.createElement("canvas");
+      const scale = 2;                       // crisp in the PDF
+      c.width = W * scale; c.height = H * scale;
+      const cc = c.getContext("2d");
+      cc.scale(scale, scale);
+      cc.lineCap = cc.lineJoin = "round";
+      const paintInk = () => {
+        page.strokes.forEach(s => paintStroke(s, cc));
+        cc.globalCompositeOperation = "source-over";
+        resolve(c.toDataURL("image/png"));
+      };
+      if(page.snap){
+        const im = new Image();
+        im.onload = () => { cc.drawImage(im, page.snap.x, page.snap.y, page.snap.w, page.snap.h); paintInk(); };
+        im.onerror = paintInk;
+        im.src = page.snap.url;
+      } else paintInk();
+    });
+  }
+
+  /* the board background as an image — browsers often skip printing CSS
+     background colors, but images always print, so the PDF stays dark
+     and matches the presentation's dot-grid look exactly */
+  function renderBoardBg(W, H){
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const cc = c.getContext("2d");
+    const grad = cc.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#0d1424");
+    grad.addColorStop(1, "#0b101d");
+    cc.fillStyle = grad;
+    cc.fillRect(0, 0, W, H);
+    cc.fillStyle = "rgba(148,163,184,.14)";
+    for(let y = 0; y < H; y += 26)
+      for(let x = 0; x < W; x += 26){
+        cc.beginPath();
+        cc.arc(x, y, 1, 0, Math.PI * 2);
+        cc.fill();
+      }
+    return c.toDataURL("image/png");
+  }
+
+  async function exportPDF(){
+    if(!state.pages.length) return toast("Nothing to export — add a page first");
+    toast("Building PDF — choose “Save as PDF” in the print dialog");
+
+    const r = board.getBoundingClientRect();
+    const W = Math.max(2, Math.round(r.width)) || 1280;
+    const H = Math.max(2, Math.round(r.height)) || 720;
+
+    // The WHOLE deck document (scripts stripped) is embedded per sheet in
+    // its own iframe — one stripped copy is prepared per loaded deck.
+    const deckDocs = {};
+    for(const deck of state.decks){
+      const doc = new DOMParser().parseFromString(deck.text, "text/html");
+      doc.querySelectorAll("script").forEach(s => s.remove());
+      deckDocs[deck.id] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+    }
+
+    // per-sheet controls injected into each embedded copy:
+    // show ONLY that sheet's page, reveal all steps, keep colors
+    const EMBED_STYLE = `<style>
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{overflow:hidden}
+.page{display:none!important}
+.page.__lf-x{display:block!important;opacity:1!important;transform:none!important}
+.step{opacity:1!important;transform:none!important;visibility:visible!important}
+</style>`;
+
+    const bgURL = renderBoardBg(W, H);
+    const showPage = i =>
+      `<script>var ps=document.querySelectorAll(".page");` +
+      `if(ps[${i}])ps[${i}].classList.add("__lf-x");<\/script>`;
+
+    const sheets = [];
+    for(const page of state.pages){
+      const inkURL = await renderPageInk(page, W, H);
+      let embed = "";
+      const dd = page.deckId != null ? deckDocs[page.deckId] : null;
+      if(page.deckIndex != null && dd){
+        const srcdoc = dd + EMBED_STYLE + showPage(page.deckIndex);
+        embed = `<iframe class="deck-embed" srcdoc="${escAttr(srcdoc)}"></iframe>`;
+      }
+      // Frozen box that carries slide HTML → a scaled iframe placed at the box.
+      let snapEmbed = "";
+      const s = page.snap;
+      if(s && s.deckId != null && s.deckIndex != null && deckDocs[s.deckId]){
+        const srcdoc = deckDocs[s.deckId] + EMBED_STYLE + showPage(s.deckIndex);
+        const baseW = s.baseW || W, baseH = s.baseH || H;
+        const wrap = `position:absolute;left:${s.x / W * 100}%;top:${s.y / H * 100}%;`
+          + `width:${s.w / W * 100}%;height:${s.h / H * 100}%;overflow:hidden;z-index:5`;
+        const inner = `position:absolute;left:0;top:0;width:${baseW / W * 100}vw;height:${baseH / H * 100}vh;`
+          + `border:0;transform-origin:0 0;transform:scale(${s.w / baseW},${s.h / baseH});background:transparent`;
+        snapEmbed = `<div style="${wrap}"><iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
+      }
+      sheets.push(
+        `<div class="sheet"><img class="bg-layer" src="${bgURL}">${embed}${snapEmbed}<img class="ink-overlay" src="${inkURL}"></div>`);
+    }
+
+    const printDoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>LessonForge export</title>
+<style>
+@page{size:landscape;margin:0}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{margin:0;padding:0;background:#0b0f19}
+.sheet{position:relative;width:100vw;height:100vh;overflow:hidden;background:#0b0f19;page-break-after:always;break-after:page}
+.sheet:last-child{page-break-after:auto;break-after:auto}
+.bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:transparent}
+.ink-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:10}
+</style></head><body>${sheets.join("")}</body></html>`;
+
+    const f = document.createElement("iframe");
+    f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(f);
+    f.onload = () => setTimeout(() => {
+      try{ f.contentWindow.focus(); f.contentWindow.print(); }
+      catch(err){ toast("Print failed — try again"); }
+      setTimeout(() => f.remove(), 60000);   // keep alive while dialog is open
+    }, 1400);   // give embedded deck copies + fonts time to render
+    f.srcdoc = printDoc;
+  }
+
+  /* ═══ PAGE OVERVIEW SHEET ═════════════════════
+     Click the page counter → a bottom panel shows every page as a
+     thumbnail (ink + frozen snapshot over the dark board); clicking
+     a tile jumps straight to that page.                            */
+  const pageSheet      = document.getElementById("pageSheet");
+  const pageSheetInner = document.getElementById("pageSheetInner");
+  const pageCounterBtn = document.getElementById("pageCounterBtn");
+  let sheetOpen = false;
+
+  // The frozen slide's HTML for a tile → a scaled iframe placed at the box.
+  // The tile's dark background and the transparent ink layer sit over it.
+  function frozenThumbEmbed(page, W, H, tw, th){
+    const s = page.snap;
+    if(!s || s.deckId == null || s.deckIndex == null) return "";
+    const deck = state.decks.find(d => d.id === s.deckId);
+    if(!deck) return "";
+    const baseW = s.baseW || W, baseH = s.baseH || H;
+    const boxW = s.w / W * tw, boxH = s.h / H * th;
+    const wrap = `left:${s.x / W * tw}px;top:${s.y / H * th}px;width:${boxW}px;height:${boxH}px`;
+    const inner = `width:${baseW}px;height:${baseH}px;transform:scale(${boxW / baseW},${boxH / baseH})`;
+    const srcdoc = buildFrozenSrcdoc(deck.text, s.deckIndex, s.stepIndex);
+    return `<div class="pt-snap" style="${wrap}">`
+      + `<iframe sandbox="allow-scripts" scrolling="no" style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
+  }
+
+  function renderThumb(page, W, H, tw, th){
+    return new Promise(resolve => {
+      const c = document.createElement("canvas");
+      c.width = tw; c.height = th;
+      const cc = c.getContext("2d");
+      cc.scale(tw / W, th / H);       // transparent — the tile supplies the dark backdrop
+      cc.lineCap = cc.lineJoin = "round";
+      const finish = () => {
+        page.strokes.forEach(s => paintStroke(s, cc));
+        cc.globalCompositeOperation = "source-over";
+        resolve(c.toDataURL());
+      };
+      if(page.snap){
+        const im = new Image();
+        im.onload = () => { cc.drawImage(im, page.snap.x, page.snap.y, page.snap.w, page.snap.h); finish(); };
+        im.onerror = finish;
+        im.src = page.snap.url;
+      } else finish();
+    });
+  }
+
+  async function buildPageSheet(){
+    const r = board.getBoundingClientRect();
+    const W = Math.max(2, Math.round(r.width))  || 1280;
+    const H = Math.max(2, Math.round(r.height)) || 720;
+    const tw = 150, th = Math.max(40, Math.round(tw * H / W));
+    const tiles = await Promise.all(state.pages.map(async (page, i) => {
+      const url = await renderThumb(page, W, H, tw, th);
+      const embed = frozenThumbEmbed(page, W, H, tw, th);
+      const label = page.deckId != null ? "Slide" : (page.snap ? "Frozen" : "Blank");
+      return `<button class="page-tile ${i === state.current ? "cur" : ""}" data-goto="${i}" title="Go to page ${i+1}">
+        ${embed}<img src="${url}" alt="Page ${i+1}">
+        <span class="pt-num">${i+1}</span><span class="pt-label">${label}</span>
+      </button>`;
+    }));
+    pageSheetInner.innerHTML = tiles.join("");
+    // keep the current page's tile in view
+    const cur = pageSheetInner.querySelector(".page-tile.cur");
+    if(cur) cur.scrollIntoView({ inline:"center", block:"nearest" });
+  }
+
+  async function togglePageSheet(force){
+    const next = force !== undefined ? force : !sheetOpen;
+    if(next && !state.pages.length){ toast("No pages yet — add one first"); return; }
+    sheetOpen = next;
+    if(sheetOpen){
+      await buildPageSheet();
+      pageSheet.classList.add("show");
+    } else {
+      pageSheet.classList.remove("show");
+    }
+  }
+
+  pageCounterBtn.addEventListener("click", () => togglePageSheet());
+  pageSheetInner.addEventListener("click", e => {
+    const tile = e.target.closest("button[data-goto]");
+    if(!tile) return;
+    goTo(+tile.dataset.goto);
+    togglePageSheet(false);
+  });
+  document.addEventListener("pointerdown", e => {
+    if(sheetOpen && !pageSheet.contains(e.target) && !pageCounterBtn.contains(e.target))
+      togglePageSheet(false);
+  });
+
+  /* ═══ EVENTS ══════════════════════════════════ */
+  rails.forEach(rail => rail.addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if(!btn) return;
+    if(btn.dataset.tool){ state.tool = btn.dataset.tool; updateChrome(); }
+    else if(btn.dataset.color){ state.color = btn.dataset.color; renderRails(); }
+    else if(btn.dataset.width !== undefined){ state.width = +btn.dataset.width; renderRails(); }
+    else if(btn.dataset.action){ handleAction(btn.dataset.action); }
+  }));
+
+  document.querySelector(".bottom-strip").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if(btn) handleAction(btn.dataset.action);
+  });
+
+  document.getElementById("addFirstPage").addEventListener("click", () => addPage());
+  prevBtn.addEventListener("click", prevAction);
+  nextBtn.addEventListener("click", nextAction);
+  document.getElementById("prevBtnMini").addEventListener("click", prevAction);
+  document.getElementById("nextBtnMini").addEventListener("click", nextAction);
+  document.getElementById("nextStep").addEventListener("click", () => {
+    if(!nextAction()) addPage();   // steps → next page → add page at the very end
+  });
+
+  document.getElementById("cancelClose").addEventListener("click", () =>
+    closeOverlay.classList.remove("show"));
+  document.getElementById("confirmClose").addEventListener("click", () => {
+    closeOverlay.classList.remove("show");
+    state.pages = []; state.current = -1;
+    state.decks = [];
+    for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
+    board.classList.remove("visible");
+    emptyState.classList.remove("hidden");
+    positionSnap();
+    updateChrome();
+    toast("Session ended");
+  });
+
+  document.getElementById("loadDeckEmpty").addEventListener("click", () => deckInput.click());
+
+  document.addEventListener("keydown", e => {
+    if(e.target.matches("input,textarea")) return;
+    if(e.key === "ArrowLeft") prevAction();
+    else if(e.key === "ArrowRight") nextAction();
+    else if(e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey) addPage();
+    else if(e.key.toLowerCase() === "p"){ state.tool = "pen"; updateChrome(); }
+    else if(e.key.toLowerCase() === "e"){ state.tool = "eraser"; updateChrome(); }
+    else if(e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey) handleAction("fullscreen");
+    else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
+    else if(e.key === "Escape"){
+      if(sheetOpen){ togglePageSheet(false); return; }
+      closeOverlay.classList.remove("show");
+    }
+  });
+
+  window.addEventListener("resize", sizeCanvas);
+  document.addEventListener("fullscreenchange", () => {
+    renderRails();                       // swap between enter/exit icon
+    requestAnimationFrame(sizeCanvas);   // board size changes with fullscreen
+  });
+
+  /* ═══ INIT ════════════════════════════════════ */
+  renderRails();
+  updateChrome();
+  setTimeout(() => document.getElementById("escToast").classList.add("hide"), 5000);
+})();
+</script>
+</body>
+</html>

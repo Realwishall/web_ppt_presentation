@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nuclei — 03 amu &amp; Average Atomic Weight</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#0a0710;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(251,146,60,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(244,63,94,.08),transparent 60%),#0a0710}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(34px,9vmin,100px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(28px,6.8vmin,74px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#fb923c;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  .eq{font-size:clamp(22px,4.6vmin,54px);color:#f1f5f9;display:flex;flex-wrap:wrap;align-items:center;column-gap:.45ch;row-gap:.5vmin}
+  .eq math{font-size:1em}
+  .eq .step{display:inline-flex;align-items:center;column-gap:.45ch}
+  .cols{display:flex;gap:3.5vmin;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 30ch;min-width:26ch}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2.2vmin 2.6vmin;box-sizing:border-box}
+  .blist{display:flex;flex-direction:column;gap:2vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.8vmin;align-items:baseline;font-size:clamp(20px,4vmin,44px);line-height:1.45}
+  .blist .dot{flex:0 0 auto;width:1.5vmin;height:1.5vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#fb923c,#f43f5e)}
+  .derive{display:flex;flex-direction:column;gap:1.9vmin}
+  .derive .eq{padding-left:2.6vmin}
+  .qbox{border-left:.6vmin solid #fbbf24;padding:1.8vmin 2.4vmin;background:rgba(251,191,36,.06);
+        border-radius:0 1.4vmin 1.4vmin 0}
+  .qbox .qt{color:#fbbf24;font-weight:700;font-size:clamp(15px,2.5vmin,26px);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1vmin}
+  .qbox .q{font-size:clamp(20px,4vmin,44px);line-height:1.45}
+  .qbox .q math{font-size:1em}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  table{border-collapse:collapse;font-size:clamp(16px,3.1vmin,34px)}
+  th{color:#fb923c;text-align:left;padding:.8vmin 2vmin .8vmin 0;font-weight:700}
+  td{padding:.8vmin 2vmin .8vmin 0;color:#e2e8f0}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Section title (slide 10) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclei · Part 3</div>
+    <h1>What is 1 amu?</h1>
+    <p class="sub step">The ruler we use to weigh atoms.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Definition (slide 11) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>What is 1 amu</h2>
+    <p class="sub step">It is defined as <span class="hl">one-twelfth the mass of a carbon-12 atom</span>.</p>
+    <div class="eq" style="margin-top:1vmin">
+      <span class="step"><math displaystyle="true"><mn>1</mn><mtext>&#160;amu</mtext><mo>=</mo></math></span>
+      <span class="step"><math displaystyle="true">
+        <mfrac><mrow><mtext>Mass of&#160;</mtext><mmultiscripts><mtext>C</mtext><mprescripts/><none/><mn>12</mn></mmultiscripts></mrow><mn>12</mn></mfrac>
+      </math></span>
+    </div>
+    <div class="cols" style="margin-top:1.5vmin">
+      <div class="col card" style="max-width:44vmin">
+        <div class="eq">
+          <span class="step"><math displaystyle="true"><msub><mi>m</mi><mi>p</mi></msub><mo>=</mo></math></span>
+          <span class="step"><math displaystyle="true"><mn>1.00727</mn><mtext>&#160;u</mtext></math></span>
+        </div>
+      </div>
+      <div class="col card" style="max-width:44vmin">
+        <div class="eq">
+          <span class="step"><math displaystyle="true"><msub><mi>m</mi><mi>n</mi></msub><mo>=</mo></math></span>
+          <span class="step"><math displaystyle="true"><mn>1.00866</mn><mtext>&#160;u</mtext></math></span>
+        </div>
+      </div>
+    </div>
+    <div class="eq step" style="margin-top:1vmin">
+      <span class="hl"><math displaystyle="true"><msub><mi>m</mi><mi>n</mi></msub><mo>&gt;</mo><msub><mi>m</mi><mi>p</mi></msub></math></span>
+      <span style="font-family:system-ui;color:#94a3b8;font-size:.6em">&nbsp;— the neutron is slightly heavier</span>
+    </div>
+    <div class="hint no-print">1 u ≈ 1.66 × 10⁻²⁷ kg — worth writing in the margin</div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Section title (slide 12) ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Nuclei · Part 4</div>
+    <h1>Average Atomic Weight of Isotopes</h1>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Weighted average (slide 13) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Average atomic weight of isotope</h2>
+    <p class="sub step">Here we take a <span class="hl">weighted average</span> — each isotope contributes by its abundance.</p>
+    <div class="eq" style="margin-top:1.5vmin;font-size:clamp(24px,4.8vmin,54px)">
+      <span class="step"><math displaystyle="true"><msub><mi>w</mi><mtext>avg</mtext></msub><mo>=</mo></math></span>
+      <span class="step"><math displaystyle="true">
+        <mfrac>
+          <mrow><msub><mi>w</mi><mn>1</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo>
+                <msub><mi>w</mi><mn>2</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo>
+                <msub><mi>w</mi><mn>3</mn></msub><msub><mi>x</mi><mn>3</mn></msub><mo>…</mo></mrow>
+          <mn>100</mn>
+        </mfrac>
+      </math></span>
+    </div>
+    <p class="sub step" style="color:#94a3b8;margin-top:1vmin"><math><mi>w</mi></math> = isotope weight, <math><mi>x</mi></math> = its percentage in nature.</p>
+    <div class="hint no-print">Same maths as your marks-weightage — nothing new</div>
+  </div>
+</section>
+
+<!-- ============ Page 5 · Question 1 (slide 14) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="q">Find the average atomic weight of X if it exists in three forms — 22.06, 22.94 and 23.06 — with percentages 22%, 40%, 38%.</div>
+    </div>
+    <div class="kicker step" style="margin-top:1vmin">Solution</div>
+    <div class="derive">
+      <div class="eq">
+        <span class="step"><math displaystyle="true"><msub><mi>W</mi><mtext>avg</mtext></msub><mo>=</mo></math></span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mrow><mn>22.06</mn><mo>×</mo><mn>22</mn><mo>+</mo><mn>22.94</mn><mo>×</mo><mn>40</mn><mo>+</mo><mn>23.06</mn><mo>×</mo><mn>38</mn></mrow><mn>100</mn></mfrac>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step" style="font-family:system-ui;color:#94a3b8">or, with base 22.06:&nbsp;</span>
+        <span class="step"><math displaystyle="true">
+          <mfrac><mrow><mn>0</mn><mo>×</mo><mn>22</mn><mo>+</mo><mn>0.88</mn><mo>×</mo><mn>40</mn><mo>+</mo><mn>1</mn><mo>×</mo><mn>38</mn></mrow><mn>100</mn></mfrac>
+        </math></span>
+        <span class="step"><math displaystyle="true">
+          <mo>=</mo>
+          <mfrac><mrow><mn>0</mn><mo>+</mo><mn>35.2</mn><mo>+</mo><mn>38</mn></mrow><mn>100</mn></mfrac>
+          <mo>=</mo><mn>0.732</mn>
+        </math></span>
+      </div>
+      <div class="eq">
+        <span class="step"><math displaystyle="true">
+          <msub><mi>W</mi><mtext>avg</mtext></msub><mo>=</mo><mn>22.06</mn><mo>+</mo><mn>0.732</mn><mo>=</mo>
+        </math></span>
+        <span class="step"><span class="hl"><math displaystyle="true"><mn>22.792</mn></math></span></span>
+      </div>
+    </div>
+    <div class="hint no-print">The base trick kills the heavy multiplication</div>
+  </div>
+</section>
+
+<!-- ============ Page 6 · Question 2 — Boron (slide 15) ============ -->
+<section class="page">
+  <div class="wrap">
+    <div class="qbox">
+      <div class="qt">Question</div>
+      <div class="q">Atomic weight of Boron is 10.81 and it has two isotopes
+        <math><mmultiscripts><mtext>B</mtext><mprescripts/><mn>5</mn><mn>10</mn></mmultiscripts></math> and
+        <math><mmultiscripts><mtext>B</mtext><mprescripts/><mn>5</mn><mn>11</mn></mmultiscripts></math>.
+        Then the ratio of the two in nature would be…</div>
+    </div>
+    <div class="cols" style="margin-top:1vmin">
+      <div class="col derive">
+        <div class="eq">
+          <span class="step"><math displaystyle="true"><mn>10.81</mn><mo>=</mo></math></span>
+          <span class="step"><math displaystyle="true">
+            <mfrac><mrow><mn>10</mn><mo>×</mo><mi>x</mi><mo>+</mo><mn>11</mn><mo>×</mo><mo>(</mo><mn>100</mn><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mn>100</mn></mfrac>
+          </math></span>
+        </div>
+        <div class="eq">
+          <span class="step"><math displaystyle="true"><mn>1081</mn><mo>=</mo><mn>10</mn><mi>x</mi><mo>+</mo><mn>1100</mn><mo>−</mo><mn>11</mn><mi>x</mi></math></span>
+        </div>
+        <div class="eq">
+          <span class="step"><math displaystyle="true"><mi>x</mi><mo>=</mo></math></span>
+          <span class="step"><span class="hl"><math displaystyle="true"><mn>19</mn><mi>%</mi></math></span>
+            <span style="font-family:system-ui">&nbsp;⇒&nbsp; ratio&nbsp;<b>19 : 81</b></span></span>
+        </div>
+      </div>
+      <div class="col card step">
+        <div class="kicker" style="margin-bottom:1.2vmin">Shortcut</div>
+        <table>
+          <tr><th>Pair</th><th>Avg</th><th>Split</th></tr>
+          <tr><td>10 &amp; 11</td><td>10.81</td><td><span class="hl">19% : 81%</span></td></tr>
+          <tr><td>10 &amp; 12</td><td>10.8</td><td>60% : 40%</td></tr>
+          <tr><td>10 &amp; 13</td><td>10.6</td><td>80% : 20%</td></tr>
+        </table>
+        <p class="sub" style="font-size:clamp(13px,2.2vmin,22px);color:#94a3b8;margin-top:1vmin">Distance from the heavier isotope ÷ gap = fraction of the lighter one.</p>
+      </div>
+    </div>
+    <div class="hint no-print">Let them solve fully once — then show the shortcut</div>
+  </div>
+</section>
+
+<!-- ============ Page 7 · Isotope facts (slide 16) ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Isotopes — good to know</h2>
+    <ul class="blist" style="margin-top:1vmin">
+      <li class="step"><span class="dot"></span><span>In Greek, <i>isotope</i> means <span class="hl">"the same place"</span> — they occupy the same box in the periodic table.</span></li>
+      <li class="step"><span class="dot"></span><span>Practically <b>every element</b> is a mixture of several isotopes.</span></li>
+      <li class="step"><span class="dot"></span><span>The two heavier isotopes of hydrogen are <span class="hl">deuterium</span> and <span class="hl">tritium</span>. Tritium nuclei are unstable — they don't occur naturally and are made in laboratories.</span></li>
+      <li class="step"><span class="dot"></span><span>The presence of isotopes gave a <b>hint of the existence of the neutron</b>.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

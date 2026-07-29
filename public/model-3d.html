@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html,body{height:100%;margin:0}
+  /* NOTE: no display:none on .page — file must render standalone (rule 1) */
+
+  /* Persistent 3D layer — sibling OUTSIDE .page, behind slides (rule 7) */
+  #bg{position:fixed;inset:0;z-index:0;display:block;
+      background:radial-gradient(1200px 700px at 50% 0%,rgba(99,102,241,.14),transparent 60%),#04050c}
+
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        color:#f1f5f9;font-family:system-ui,'Segoe UI',sans-serif;
+        background:transparent}         /* transparent so the 3D canvas shows through */
+
+  .wrap{height:100%;box-sizing:border-box;display:flex;flex-direction:column;
+        justify-content:space-between;padding:4vmin 5vmin;pointer-events:none}
+
+  header h1{margin:0;font-size:clamp(26px,5vmin,60px);font-weight:800;
+            letter-spacing:.5px;text-shadow:0 2px 20px rgba(0,0,0,.6)}
+  header p{margin:.6vmin 0 0;font-size:clamp(14px,2.3vmin,24px);color:#cbd5e1;
+           text-shadow:0 1px 12px rgba(0,0,0,.6)}
+
+  /* status / loading readout */
+  #status{margin-top:1.4vmin;font-size:clamp(13px,2vmin,20px);color:#a5b4fc}
+
+  /* control bar */
+  .controls{display:flex;flex-wrap:wrap;gap:1.4vmin;justify-content:center;
+            pointer-events:none}
+  .ctl{pointer-events:auto;cursor:pointer;user-select:none;
+       min-width:44px;min-height:44px;padding:1.2vmin 2.2vmin;
+       display:flex;align-items:center;justify-content:center;gap:.8vmin;
+       font:700 clamp(14px,2.3vmin,22px) system-ui;color:#e2e8f0;
+       background:rgba(20,24,40,.72);border:1px solid rgba(129,140,248,.5);
+       border-radius:14px;backdrop-filter:blur(6px);
+       box-shadow:0 6px 24px rgba(0,0,0,.45);transition:transform .1s,background .2s}
+  .ctl:active{transform:scale(.94);background:rgba(99,102,241,.5)}
+  .ctl.on{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent}
+
+  .hint{font-size:clamp(12px,1.9vmin,18px);color:#94a3b8;text-align:center;
+        margin-top:1vmin}
+
+  @media print{
+    #bg{display:none!important}
+    .no-print{display:none!important}
+    .page{background:#04050c!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- Persistent 3D canvas: visible on every slide, OUTSIDE .page -->
+<canvas id="bg"></canvas>
+
+<section class="page">
+  <div class="wrap">
+    <header>
+      <h1>Interactive 3D Model</h1>
+      <p>Drag to orbit · scroll to zoom · or use the buttons below</p>
+      <div id="status">Loading model…</div>
+    </header>
+
+    <div>
+      <div class="controls no-print">
+        <div class="ctl clickable" id="c-left">◀ Rotate</div>
+        <div class="ctl clickable" id="c-right">Rotate ▶</div>
+        <div class="ctl clickable" id="c-in">＋ Zoom</div>
+        <div class="ctl clickable" id="c-out">－ Zoom</div>
+        <div class="ctl clickable on" id="c-auto">⟳ Auto-spin</div>
+        <div class="ctl clickable" id="c-reset">⭯ Reset</div>
+      </div>
+      <div class="hint no-print">Tip: while presenting, use the buttons — drag/scroll work in a normal browser tab.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Three.js (UMD global) + GLTFLoader + OrbitControls from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+  var MODEL_URL = "https://firebasestorage.googleapis.com/v0/b/employeeposition-4de6e.firebasestorage.app/o/Untitled.glb?alt=media&token=0fefad3c-3374-4c14-ac1d-b3c651c3dc2b";
+  var statusEl = document.getElementById('status');
+  function setStatus(t){ if(statusEl) statusEl.textContent = t; }
+
+  var scene, camera, renderer, controls, modelRoot, ready=false;
+
+  function init(){
+    if (typeof THREE === 'undefined' || !THREE.WebGLRenderer){ setStatus('3D engine unavailable (offline?).'); return; }
+    var canvas = document.getElementById('bg');
+    var w = window.innerWidth, h = window.innerHeight;
+    if (!w || !h){ requestAnimationFrame(init); return; }   // zero-size guard (rule 7)
+
+    try {
+      renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+    } catch(err){ setStatus('WebGL not available on this device.'); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.setSize(w, h, false);
+    if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, w/h, 0.01, 5000);
+    camera.position.set(0, 1.2, 4);
+
+    // lighting
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x223044, 1.15));
+    var key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3,5,4); scene.add(key);
+    var fill = new THREE.DirectionalLight(0x88aaff, .5); fill.position.set(-4,2,-3); scene.add(fill);
+
+    modelRoot = new THREE.Group(); scene.add(modelRoot);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = .08;
+    controls.autoRotate = true; controls.autoRotateSpeed = 1.4;
+    controls.enablePan = false;
+
+    loadModel();
+    window.addEventListener('resize', onResize);
+    animate();
+    wireButtons();
+  }
+
+  function loadModel(){
+    if (!THREE.GLTFLoader){ setStatus('Loader unavailable (offline?).'); return; }
+    var loader = new THREE.GLTFLoader();
+    loader.load(MODEL_URL, function(gltf){
+      var obj = gltf.scene || (gltf.scenes && gltf.scenes[0]);
+      if(!obj){ setStatus('Model had no scene.'); return; }
+
+      // center + scale to fit view
+      var box = new THREE.Box3().setFromObject(obj);
+      var size = box.getSize(new THREE.Vector3());
+      var center = box.getCenter(new THREE.Vector3());
+      obj.position.sub(center);
+      var maxDim = Math.max(size.x, size.y, size.z) || 1;
+      var s = 2.4 / maxDim; obj.scale.setScalar(s);
+
+      modelRoot.add(obj);
+      // frame camera to model
+      camera.position.set(0, 1.0, 4.2);
+      controls.target.set(0,0,0); controls.update();
+      ready = true;
+      setStatus('Ready — drag, scroll, or use the buttons.');
+    },
+    function(p){ if(p && p.total){ setStatus('Loading model… ' + Math.round(p.loaded/p.total*100) + '%'); } },
+    function(err){ setStatus('Could not load model. Check the link / network.'); console.error(err); });
+  }
+
+  function onResize(){
+    if(!renderer||!camera) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if(controls) controls.update();
+    if(renderer && scene && camera) renderer.render(scene, camera);
+  }
+
+  // ---- button controls (the only reliable interaction while presenting) ----
+  function nudgeRotate(dir){ if(modelRoot) modelRoot.rotation.y += dir * 0.35; }
+  function zoom(factor){
+    if(!camera||!controls) return;
+    var dir = camera.position.clone().sub(controls.target);
+    var d = dir.length() * factor;
+    d = Math.max(0.6, Math.min(60, d));
+    dir.setLength(d); camera.position.copy(controls.target).add(dir);
+  }
+  function resetView(){
+    if(!camera||!controls||!modelRoot) return;
+    modelRoot.rotation.set(0,0,0);
+    camera.position.set(0,1.0,4.2); controls.target.set(0,0,0); controls.update();
+  }
+  function wireButtons(){
+    var on = function(id,fn){ var el=document.getElementById(id); if(el) el.addEventListener('click',fn); };
+    on('c-left', function(){ nudgeRotate(1); });
+    on('c-right', function(){ nudgeRotate(-1); });
+    on('c-in', function(){ zoom(0.82); });
+    on('c-out', function(){ zoom(1.22); });
+    on('c-reset', resetView);
+    on('c-auto', function(){
+      if(!controls) return;
+      controls.autoRotate = !controls.autoRotate;
+      this.classList.toggle('on', controls.autoRotate);
+    });
+  }
+
+  window.addEventListener('load', function(){ setTimeout(init, 60); });
+  // react to slide changes (rule 5): keep sizing correct if shown later
+  window.addEventListener('message', function(e){
+    if(e.data && e.data.type === 'lf-show'){ onResize(); }
+  });
+})();
+</script>
+
+<!-- Standalone fallback controller (rule 6) — LAST -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      // don't page-turn when tapping a control
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

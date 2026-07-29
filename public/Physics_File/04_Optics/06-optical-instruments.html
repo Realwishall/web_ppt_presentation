@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optics — Optical Instruments</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#03050c;
+  --ink:#EEF1F7;
+  --muted:#8B95AC;
+  --line:rgba(255,255,255,.13);
+  --panel:rgba(255,255,255,.045);
+
+  --obj:#38BDF8;      /* objective lens      */
+  --eyep:#A78BFA;     /* eyepiece            */
+  --erect:#FB923C;    /* erecting lens       */
+  --image:#FBBF24;    /* intermediate image  */
+  --accent:#4ADE80;   /* object / result     */
+  --warn:#FF6B81;     /* final image         */
+
+  --body:Calibri,Candara,'Segoe UI',system-ui,sans-serif;
+  --math:'Cambria Math',Cambria,'STIX Two Math',Georgia,serif;
+  --mono:Consolas,'Lucida Console',ui-monospace,monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHELL — full-height, responsive, no fixed stage
+   ═══════════════════════════════════════════════════════════════ */
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);
+     -webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+
+/* NOTE: never display:none / opacity:0 on .page — the file must render
+   standalone; the host takes over paging with its own !important CSS. */
+.page{position:relative;z-index:1;height:100%;
+  background:radial-gradient(1200px 600px at 50% -12%,rgba(56,189,248,.10),transparent 62%),
+             radial-gradient(900px 520px at 88% 112%,rgba(167,139,250,.08),transparent 60%),
+             var(--bg)}
+.wrap{height:100%;overflow:auto;display:flex;flex-direction:column;
+  gap:1.6vmin;padding:4vmin 5vmin}
+.wrap.center{justify-content:center}
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPE — presentation scale (rule 9)
+   ═══════════════════════════════════════════════════════════════ */
+h1{margin:0;font-weight:700;font-size:clamp(34px,8.6vmin,98px);line-height:1.05;letter-spacing:-.02em}
+h2{margin:0;font-weight:700;font-size:clamp(26px,6.2vmin,66px);line-height:1.08;letter-spacing:-.015em}
+h2 .thin{font-weight:400;color:var(--muted)}
+p{margin:0}
+.kicker{font-family:var(--mono);font-size:clamp(13px,2.3vmin,26px);letter-spacing:.26em;
+  text-transform:uppercase;color:var(--muted)}
+.sub{font-size:clamp(19px,3.7vmin,42px);line-height:1.4;color:#BFC8DA;max-width:80ch}
+.sub.small{font-size:clamp(16px,3vmin,34px)}
+b,strong{color:var(--ink)}
+
+/* reveals — the panel drives opacity/transform with !important */
+.step{opacity:1}
+
+/* ═══════════════════════════════════════════════════════════════
+   MATH — native MathML, renders with JS off, survives PDF export
+   ═══════════════════════════════════════════════════════════════ */
+math{font-family:var(--math);font-size:1em}
+.eq{font-family:var(--math);font-size:clamp(21px,4.4vmin,50px);line-height:1.35}
+.eq.big{font-size:clamp(26px,5.4vmin,60px)}
+.eq.mid{font-size:clamp(18px,3.4vmin,38px)}
+.eq.center{text-align:center}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:1.6vmin;
+  padding:1.8vmin 2.2vmin}
+.card .k{display:block;font-family:var(--mono);font-size:clamp(13px,2.2vmin,25px);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:1vmin}
+.card .body-txt{font-size:clamp(17px,3.3vmin,37px);line-height:1.34;color:#BFC8DA}
+
+.chip{display:inline-flex;align-items:center;gap:.7ch;font-family:var(--mono);
+  font-size:clamp(14px,2.5vmin,28px);letter-spacing:.1em;text-transform:uppercase}
+.chip::before{content:"";width:.55em;height:.55em;border-radius:50%;background:currentColor;
+  box-shadow:0 0 .9em currentColor;flex:none}
+.c-obj{color:var(--obj)} .c-eyep{color:var(--eyep)} .c-erect{color:var(--erect)}
+.c-image{color:var(--image)} .c-accent{color:var(--accent)} .c-warn{color:var(--warn)}
+
+/* two-state result cards: relaxed eye vs strained eye */
+.pair{display:flex;gap:2.2vmin;flex-wrap:wrap}
+.pair > *{flex:1 1 32ch;min-width:26ch}
+.state{border:1px solid var(--line);border-radius:1.6vmin;background:var(--panel);
+  padding:1.8vmin 2.2vmin}
+.state .hd{display:flex;align-items:center;gap:1ch;flex-wrap:wrap;
+  font-family:var(--mono);font-size:clamp(13px,2.2vmin,25px);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:1.2vmin}
+.state .eq{text-align:center;padding:.4vmin 0}
+.state .fine{font-size:clamp(14px,2.6vmin,29px);color:var(--muted);margin-top:.8vmin;
+  line-height:1.32;text-align:center}
+.state.relaxed{border-color:rgba(74,222,128,.35)}
+.state.strained{border-color:rgba(251,191,36,.35)}
+
+/* selectable pair — both results shown, one ticked as the one to quote */
+.selgroup .state{cursor:pointer;transition:border-color .3s,box-shadow .3s,background .3s}
+.state .chk{width:1.15em;height:1.15em;border-radius:.3em;border:.09em solid var(--line);
+  display:inline-grid;place-items:center;font-size:1em;line-height:1;color:transparent;flex:none}
+.state.relaxed.on{border-color:rgba(74,222,128,.9);box-shadow:0 0 3vmin -1vmin #4ADE80}
+.state.strained.on{border-color:rgba(251,191,36,.9);box-shadow:0 0 3vmin -1vmin #FBBF24}
+.state.relaxed.on  .chk{border-color:#4ADE80;background:#4ADE80;color:#04140A}
+.state.strained.on .chk{border-color:#FBBF24;background:#FBBF24;color:#1A1204}
+
+/* numbered derivation chain */
+.chain{display:flex;flex-direction:column;gap:1.1vmin}
+.chain .row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:1.6vmin;
+  border:1px solid var(--line);border-radius:1.4vmin;background:var(--panel);
+  padding:1.2vmin 1.8vmin;font-size:clamp(16px,3.1vmin,35px);line-height:1.3;color:#BFC8DA}
+.chain .n{font-family:var(--mono);font-size:clamp(12px,2.1vmin,24px);color:var(--muted);
+  border:1px solid var(--line);border-radius:.4em;text-align:center;padding:.2em .5em}
+.chain .row.result{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.07)}
+.chain .row.result .n{border-color:rgba(74,222,128,.45);color:var(--accent)}
+.chain .eqpart{display:inline-block;margin-left:.4ch;font-family:var(--math)}
+
+.hero{display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:1.8vmin;background:var(--panel);
+  padding:1.6vmin 3vmin;font-family:var(--math);font-size:clamp(28px,6vmin,66px)}
+
+/* summary table */
+table.tbl{width:100%;border-collapse:separate;border-spacing:.7vmin;table-layout:fixed}
+table.tbl th{font-weight:400;padding:.4vmin 1.2vmin;text-align:left;vertical-align:bottom}
+table.tbl td{background:var(--panel);border:1px solid var(--line);border-radius:1.1vmin;
+  padding:1vmin 1.4vmin;font-size:clamp(15px,2.9vmin,33px);line-height:1.25;
+  color:#BFC8DA;vertical-align:middle}
+table.tbl td.rowlabel{background:transparent;border:none;border-right:1px solid var(--line);
+  border-radius:0;font-weight:600;color:var(--ink)}
+table.tbl td.i1{border-color:rgba(56,189,248,.30)}
+table.tbl td.i2{border-color:rgba(167,139,250,.30)}
+table.tbl td.i3{border-color:rgba(251,146,60,.30)}
+
+/* ═══════════════════════════════════════════════════════════════
+   DIAGRAMS — inline SVG, scale with the board
+   ═══════════════════════════════════════════════════════════════ */
+.dia{display:block;width:100%;height:auto}
+.dia text{font-family:var(--mono)}
+.figure{display:flex;flex-direction:column;gap:.6vmin;min-width:0}
+.dcap{font-family:var(--mono);font-size:clamp(13px,2.3vmin,26px);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);text-align:center}
+.dcap math{font-family:var(--math);text-transform:none;letter-spacing:normal;color:var(--ink)}
+.cols{display:flex;gap:2.4vmin;align-items:center;flex-wrap:wrap;min-width:0}
+.cols.top{align-items:flex-start}
+.grow{flex:1 1 34ch;min-width:0}
+
+.hint{margin-top:auto;font-family:var(--mono);font-size:clamp(12px,1.9vmin,20px);
+  letter-spacing:.18em;color:#475569}
+
+/* ═══════════════════════════════════════════════════════════════
+   PDF EXPORT — scripts are stripped, so flatten every reveal
+   ═══════════════════════════════════════════════════════════════ */
+@media print{
+  .step{opacity:1!important;transform:none!important;visibility:visible!important}
+  .no-print,.hint{display:none!important}
+  .page{break-after:page}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     1 — TITLE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="cols top" style="gap:3.5vmin">
+
+      <div class="grow" style="flex:1 1 30ch">
+        <div class="kicker">Chapter 21 · Optics</div>
+        <h1 style="margin-top:1vmin">Optical<br>instruments</h1>
+        <p class="sub step" style="margin-top:1.6vmin">
+          Four instruments, one trick: use a second lens to make the image
+          <b>subtend a bigger angle at the eye</b> than the object ever could.
+        </p>
+      </div>
+
+      <div class="grow figure" style="flex:1.2 1 44ch;gap:1.6vmin">
+        <svg class="dia" viewBox="0 0 600 300" fill="none" aria-hidden="true">
+          <!-- CASE 1 — unaided, object no closer than the near point -->
+          <g class="step">
+            <text x="104" y="22" fill="#8B95AC" font-size="15" letter-spacing="1.6" text-anchor="middle">NAKED EYE</text>
+            <circle cx="505" cy="64" r="24" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+            <path d="M488 52 A 15 15 0 0 0 488 76" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+            <line x1="100" y1="38" x2="481" y2="64" stroke="#8B95AC" stroke-width="1.4"/>
+            <line x1="100" y1="90" x2="481" y2="64" stroke="#8B95AC" stroke-width="1.4"/>
+            <line x1="100" y1="38" x2="100" y2="90" stroke="#E6ECF7" stroke-width="3.4" stroke-linecap="round"/>
+            <path d="M445.1 59.9 A 60 60 0 0 0 445.1 68.1" stroke="#8B95AC" stroke-width="1.3" fill="none"/>
+            <text x="424" y="70" fill="#8B95AC" font-size="19" text-anchor="middle">&#945;</text>
+            <g stroke="#3A4356" stroke-width="1">
+              <line x1="100" y1="108" x2="505" y2="108"/>
+              <line x1="100" y1="102" x2="100" y2="114"/><line x1="505" y1="102" x2="505" y2="114"/>
+            </g>
+            <text x="302" y="128" fill="#8B95AC" font-size="14" letter-spacing="1.2" text-anchor="middle">HELD AT THE NEAR POINT  D</text>
+          </g>
+          <!-- CASE 2 — identical object, brought much closer behind the lens -->
+          <g class="step">
+            <text x="332" y="166" fill="#4ADE80" font-size="15" letter-spacing="1.6" text-anchor="middle">WITH THE LENS</text>
+            <circle cx="505" cy="208" r="24" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+            <path d="M488 196 A 15 15 0 0 0 488 220" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+            <ellipse cx="452" cy="208" rx="8" ry="42" fill="rgba(74,222,128,.10)" stroke="#4ADE80" stroke-width="1.5"/>
+            <line x1="330" y1="182" x2="481" y2="208" stroke="#4ADE80" stroke-width="1.6"/>
+            <line x1="330" y1="234" x2="481" y2="208" stroke="#4ADE80" stroke-width="1.6"/>
+            <line x1="330" y1="182" x2="330" y2="234" stroke="#E6ECF7" stroke-width="3.4" stroke-linecap="round"/>
+            <path d="M445.9 197.8 A 60 60 0 0 0 445.9 218.2" stroke="#4ADE80" stroke-width="1.3" fill="none"/>
+            <text x="420" y="214" fill="#4ADE80" font-size="19" text-anchor="middle">&#946;</text>
+            <g stroke="#2F4A3A" stroke-width="1">
+              <line x1="330" y1="252" x2="505" y2="252"/>
+              <line x1="330" y1="246" x2="330" y2="258"/><line x1="505" y1="246" x2="505" y2="258"/>
+            </g>
+            <text x="418" y="272" fill="#4ADE80" font-size="14" letter-spacing="1.2" text-anchor="middle">SAME OBJECT, HELD MUCH CLOSER</text>
+          </g>
+        </svg>
+
+        <div class="hero step">
+          <math display="block"><mi>m</mi><mo>=</mo><mfrac><mi>&#946;</mi><mi>&#945;</mi></mfrac></math>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:2.4vmin;flex-wrap:wrap;margin-top:2vmin">
+      <span class="chip c-accent step">Simple microscope</span>
+      <span class="chip c-obj step">Compound microscope</span>
+      <span class="chip c-eyep step">Astronomical telescope</span>
+      <span class="chip c-erect step">Terrestrial telescope</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     2 — SIMPLE MICROSCOPE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">One converging lens</div>
+    <h2>Simple microscope <span class="thin">— the magnifying glass</span></h2>
+
+    <div class="cols" style="flex:1;gap:2.6vmin;margin-top:1vmin">
+
+      <!-- the best the naked eye can do — on screen from the start -->
+      <div class="figure" style="flex:1 1 30ch">
+        <svg class="dia" viewBox="0 0 380 200" fill="none" aria-hidden="true">
+          <line x1="30" y1="90" x2="356" y2="90" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+          <circle cx="330" cy="90" r="22" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+          <path d="M315 77 A 14 14 0 0 0 315 103" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+          <line x1="62" y1="50" x2="306" y2="90" stroke="#8B95AC" stroke-width="1.4"/>
+          <line x1="62" y1="126" x2="306" y2="90" stroke="#8B95AC" stroke-width="1.4"/>
+          <line x1="62" y1="50" x2="62" y2="126" stroke="#4ADE80" stroke-width="3.6" stroke-linecap="round"/>
+          <text x="44" y="94" fill="#4ADE80" font-size="18" text-anchor="middle">h</text>
+          <path d="M268.5 83.9 A 38 38 0 0 0 268.4 95.5" stroke="#8B95AC" stroke-width="1.3" fill="none"/>
+          <text x="250" y="97" fill="#8B95AC" font-size="19" text-anchor="middle">&#945;</text>
+          <g stroke="#3A4356" stroke-width="1">
+            <line x1="62" y1="152" x2="330" y2="152"/>
+            <line x1="62" y1="146" x2="62" y2="158"/><line x1="330" y1="146" x2="330" y2="158"/>
+          </g>
+          <text x="196" y="176" fill="#8B95AC" font-size="14" letter-spacing="1.3" text-anchor="middle">D = 25 cm &#183; NEAR POINT</text>
+        </svg>
+        <div class="dcap">Unaided ·
+          <math><mi>&#945;</mi><mo>=</mo><mfrac><mi>h</mi><mi>D</mi></mfrac></math>
+        </div>
+      </div>
+
+      <!-- then the lens, built up ray by ray -->
+      <div class="figure" style="flex:1.9 1 48ch">
+        <svg class="dia" viewBox="0 0 620 290" fill="none" aria-hidden="true">
+          <g class="step">
+            <line x1="20" y1="170" x2="600" y2="170" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+            <ellipse cx="380" cy="170" rx="11" ry="100" fill="rgba(74,222,128,.07)" stroke="#4ADE80" stroke-width="1.7"/>
+          </g>
+          <!-- foci -->
+          <g class="step">
+            <circle cx="280" cy="170" r="3.5" fill="#8B95AC"/><text x="274" y="190" fill="#8B95AC" font-size="16">F</text>
+            <circle cx="480" cy="170" r="3.5" fill="#8B95AC"/><text x="474" y="190" fill="#8B95AC" font-size="16">F&#8242;</text>
+          </g>
+          <!-- object, just inside F -->
+          <g class="step">
+            <line x1="310" y1="170" x2="310" y2="140" stroke="#4ADE80" stroke-width="3" stroke-linecap="round"/>
+            <polygon points="304,146 310,134 316,146" fill="#4ADE80"/>
+            <text x="316" y="132" fill="#4ADE80" font-size="16">object</text>
+          </g>
+          <!-- construction rays + the eye -->
+          <g class="step">
+            <polyline points="310,140 380,140 560,194" stroke="#E6ECF7" stroke-width="1.7" fill="none"/>
+            <line x1="310" y1="140" x2="560" y2="247" stroke="#E6ECF7" stroke-width="1.7"/>
+            <circle cx="512" cy="188" r="20" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+            <path d="M498 178 A 13 13 0 0 0 498 198" stroke="#C7D0E2" stroke-width="1.5" fill="none"/>
+          </g>
+          <!-- backward extensions + the virtual image -->
+          <g class="step">
+            <g stroke="#FBBF24" stroke-width="1.3" stroke-dasharray="6 5" opacity=".85">
+              <line x1="380" y1="140" x2="147" y2="70"/>
+              <line x1="310" y1="140" x2="147" y2="70"/>
+            </g>
+            <line x1="147" y1="170" x2="147" y2="70" stroke="#FBBF24" stroke-width="3" stroke-linecap="round"/>
+            <polygon points="140,78 147,62 154,78" fill="#FBBF24"/>
+            <text x="60" y="56" fill="#FBBF24" font-size="16">virtual &#183; erect &#183; magnified</text>
+          </g>
+        </svg>
+        <div class="dcap">With the lens · the object may sit inside
+          <math><mi>F</mi></math>
+        </div>
+      </div>
+    </div>
+
+    <p class="sub step" style="text-align:center;max-width:none;margin-top:1vmin">
+      <math><mi>D</mi><mo>=</mo><mn>25</mn><mtext>&#160;cm</mtext></math>, the least distance of distinct vision.
+      A shorter <math><mi>f</mi></math> always means a stronger magnifier.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     3 — SIMPLE MICROSCOPE · PROOF
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Simple microscope · proof</div>
+
+    <div class="cols top" style="flex:1;gap:2.6vmin;margin-top:1vmin">
+
+      <!-- the argument lives in the two pictures: both on screen from the start -->
+      <div style="flex:1 1 32ch;min-width:0;display:flex;flex-direction:column;gap:1.6vmin">
+        <div class="figure">
+          <svg class="dia" viewBox="0 0 380 200" fill="none" aria-hidden="true">
+            <line x1="30" y1="90" x2="356" y2="90" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+            <circle cx="330" cy="90" r="22" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+            <path d="M315 77 A 14 14 0 0 0 315 103" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+            <line x1="62" y1="50" x2="306" y2="90" stroke="#8B95AC" stroke-width="1.4"/>
+            <line x1="62" y1="126" x2="306" y2="90" stroke="#8B95AC" stroke-width="1.4"/>
+            <line x1="62" y1="50" x2="62" y2="126" stroke="#4ADE80" stroke-width="3.6" stroke-linecap="round"/>
+            <text x="44" y="94" fill="#4ADE80" font-size="18" text-anchor="middle">h</text>
+            <path d="M268.5 83.9 A 38 38 0 0 0 268.4 95.5" stroke="#8B95AC" stroke-width="1.3" fill="none"/>
+            <text x="250" y="97" fill="#8B95AC" font-size="19" text-anchor="middle">&#945;</text>
+            <g stroke="#3A4356" stroke-width="1">
+              <line x1="62" y1="152" x2="330" y2="152"/>
+              <line x1="62" y1="146" x2="62" y2="158"/><line x1="330" y1="146" x2="330" y2="158"/>
+            </g>
+            <text x="196" y="176" fill="#8B95AC" font-size="14" letter-spacing="1.3" text-anchor="middle">D = 25 cm &#183; NEAR POINT</text>
+          </svg>
+          <div class="dcap">Unaided ·
+            <math><mi>&#945;</mi><mo>=</mo><mfrac><mi>h</mi><mi>D</mi></mfrac></math>
+          </div>
+        </div>
+        <div class="figure">
+          <svg class="dia" viewBox="0 0 380 200" fill="none" aria-hidden="true">
+            <line x1="30" y1="90" x2="356" y2="90" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+            <circle cx="330" cy="90" r="22" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+            <path d="M315 77 A 14 14 0 0 0 315 103" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+            <ellipse cx="286" cy="90" rx="8" ry="52" fill="rgba(74,222,128,.10)" stroke="#4ADE80" stroke-width="1.6"/>
+            <line x1="200" y1="50" x2="306" y2="90" stroke="#4ADE80" stroke-width="1.6"/>
+            <line x1="200" y1="126" x2="306" y2="90" stroke="#4ADE80" stroke-width="1.6"/>
+            <line x1="200" y1="50" x2="200" y2="126" stroke="#4ADE80" stroke-width="3.6" stroke-linecap="round"/>
+            <text x="182" y="94" fill="#4ADE80" font-size="18" text-anchor="middle">h</text>
+            <path d="M270.4 76.6 A 38 38 0 0 0 270 102.2" stroke="#4ADE80" stroke-width="1.3" fill="none"/>
+            <text x="250" y="97" fill="#4ADE80" font-size="19" text-anchor="middle">&#946;</text>
+            <g stroke="#2F4A3A" stroke-width="1">
+              <line x1="200" y1="152" x2="286" y2="152"/>
+              <line x1="200" y1="146" x2="200" y2="158"/><line x1="286" y1="146" x2="286" y2="158"/>
+            </g>
+            <text x="243" y="176" fill="#4ADE80" font-size="14" letter-spacing="1.3" text-anchor="middle">u &#183; FAR LESS THAN D</text>
+          </svg>
+          <div class="dcap">With the lens ·
+            <math><mi>&#946;</mi><mo>=</mo><mfrac><mi>h</mi><mi>u</mi></mfrac></math>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1.35 1 40ch;min-width:0;display:flex;flex-direction:column;gap:1.6vmin">
+        <div class="chain">
+          <div class="row step"><div class="n">01</div>
+            <div>Unaided, the closest you may hold it is the near point:
+              <span class="eqpart step"><math><mi>&#945;</mi><mo>=</mo><mfrac><mi>h</mi><mi>D</mi></mfrac></math></span></div></div>
+          <div class="row step"><div class="n">02</div>
+            <div>Behind the lens it sits at <math><mi>u</mi></math>, far smaller than <math><mi>D</mi></math>:
+              <span class="eqpart step"><math><mi>&#946;</mi><mo>=</mo><mfrac><mi>h</mi><mi>u</mi></mfrac></math></span></div></div>
+          <div class="row step"><div class="n">03</div>
+            <div>Divide the two angles:
+              <span class="eqpart step"><math><mi>m</mi><mo>=</mo><mfrac><mi>&#946;</mi><mi>&#945;</mi></mfrac><mo>=</mo>
+                <mfrac><mrow><mi>h</mi><mo>/</mo><mi>u</mi></mrow><mrow><mi>h</mi><mo>/</mo><mi>D</mi></mrow></mfrac>
+                <mo>=</mo><mfrac><mi>D</mi><mi>u</mi></mfrac></math></span></div></div>
+          <div class="row step"><div class="n">04</div>
+            <div>Lens formula:
+              <span class="eqpart step"><math><mfrac><mn>1</mn><mi>v</mi></mfrac><mo>&#8722;</mo>
+                <mfrac><mn>1</mn><mi>u</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mi>f</mi></mfrac></math></span></div></div>
+          <div class="row step"><div class="n">05</div>
+            <div>Both lie against the light, so both are negative:
+              <span class="eqpart step"><math><mfrac><mn>1</mn><mrow><mo>&#8722;</mo><mi>v</mi></mrow></mfrac><mo>&#8722;</mo>
+                <mfrac><mn>1</mn><mrow><mo>&#8722;</mo><mi>u</mi></mrow></mfrac><mo>=</mo>
+                <mfrac><mn>1</mn><mi>f</mi></mfrac></math></span></div></div>
+          <div class="row result step"><div class="n">06</div>
+            <div>Rearranged, as plain lengths:
+              <span class="eqpart step"><math><mfrac><mn>1</mn><mi>u</mi></mfrac><mo>=</mo>
+                <mfrac><mn>1</mn><mi>v</mi></mfrac><mo>+</mo><mfrac><mn>1</mn><mi>f</mi></mfrac></math></span></div></div>
+        </div>
+
+        <div class="pair selgroup">
+          <div class="state relaxed sel clickable step">
+            <div class="hd" style="color:var(--accent)"><span class="chk">&#10003;</span><span class="chip c-accent">Relaxed eye</span></div>
+            <div class="eq mid step">
+              <math display="block"><mi>v</mi><mo>&#8594;</mo><mi>&#8734;</mi><mo>&#8658;</mo><mi>u</mi><mo>=</mo><mi>f</mi></math>
+            </div>
+            <div class="eq step">
+              <math display="block"><mi>m</mi><mo>=</mo><mfrac><mi>D</mi><mi>f</mi></mfrac></math>
+            </div>
+          </div>
+          <div class="state strained sel on clickable step">
+            <div class="hd" style="color:var(--image)"><span class="chk">&#10003;</span><span class="chip c-image">Strained eye</span></div>
+            <div class="eq mid step">
+              <math display="block"><mi>v</mi><mo>=</mo><mi>D</mi><mo>&#8658;</mo><mi>u</mi><mo>=</mo>
+                <mfrac><mrow><mi>D</mi><mi>f</mi></mrow><mrow><mi>D</mi><mo>+</mo><mi>f</mi></mrow></mfrac></math>
+            </div>
+            <div class="eq step">
+              <math display="block"><mi>m</mi><mo>=</mo><mfrac><mi>D</mi><mi>u</mi></mfrac><mo>=</mo>
+                <mn>1</mn><mo>+</mo><mfrac><mi>D</mi><mi>f</mi></mfrac></math>
+            </div>
+          </div>
+        </div>
+        <div class="hint no-print">Tap either card to tick the result you want to quote</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     4 — COMPOUND MICROSCOPE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Two lenses in series</div>
+    <h2>Compound microscope</h2>
+
+    <div class="figure" style="flex:1;justify-content:center;margin-top:1vmin">
+      <svg class="dia" viewBox="0 0 620 270" fill="none" aria-hidden="true" style="max-height:56vh;margin:0 auto">
+        <line x1="15" y1="105" x2="600" y2="105" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+        <!-- objective + eyepiece -->
+        <ellipse cx="170" cy="105" rx="9" ry="45" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.6"/>
+        <text x="170" y="42" fill="#38BDF8" font-size="15" letter-spacing="1.4" text-anchor="middle">OBJECTIVE</text>
+        <ellipse cx="340" cy="105" rx="10" ry="55" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.6"/>
+        <text x="340" y="32" fill="#A78BFA" font-size="15" letter-spacing="1.4" text-anchor="middle">EYEPIECE</text>
+
+        <!-- object just outside F of the objective -->
+        <g class="step">
+          <line x1="110" y1="105" x2="110" y2="93" stroke="#4ADE80" stroke-width="2.6" stroke-linecap="round"/>
+          <polygon points="105,96 110,88 115,96" fill="#4ADE80"/>
+          <text x="104" y="82" fill="#4ADE80" font-size="15" text-anchor="middle">object</text>
+        </g>
+        <!-- objective rays -->
+        <g class="step">
+          <polyline points="110,93 170,93 290,129" stroke="#E6ECF7" stroke-width="1.5" fill="none"/>
+          <line x1="110" y1="93" x2="290" y2="129" stroke="#E6ECF7" stroke-width="1.5"/>
+        </g>
+        <!-- intermediate real image, inverted -->
+        <g class="step">
+          <line x1="290" y1="105" x2="290" y2="129" stroke="#FBBF24" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="285,123 290,133 295,123" fill="#FBBF24"/>
+          <text x="290" y="150" fill="#FBBF24" font-size="15" text-anchor="middle">real &#183; inverted</text>
+        </g>
+        <!-- eyepiece rays + the eye -->
+        <g class="step">
+          <polyline points="290,129 340,129 460,81" stroke="#E6ECF7" stroke-width="1.5" fill="none"/>
+          <line x1="290" y1="129" x2="460" y2="47" stroke="#E6ECF7" stroke-width="1.5"/>
+          <circle cx="500" cy="58" r="19" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+          <path d="M487 49 A 12 12 0 0 0 487 67" stroke="#C7D0E2" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- backward extensions to the final virtual image -->
+        <g class="step">
+          <g stroke="#FF6B81" stroke-width="1.2" stroke-dasharray="6 5" opacity=".8">
+            <line x1="340" y1="129" x2="40" y2="249"/>
+            <line x1="290" y1="129" x2="40" y2="249"/>
+          </g>
+          <line x1="40" y1="105" x2="40" y2="249" stroke="#FF6B81" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="35,241 40,253 45,241" fill="#FF6B81"/>
+          <text x="46" y="238" fill="#FF6B81" font-size="15">final &#183; virtual &#183; inverted</text>
+        </g>
+      </svg>
+    </div>
+
+    <p class="sub step" style="text-align:center;max-width:none">
+      The objective magnifies <b>linearly</b>, the eyepiece magnifies <b>angularly</b> — so the two just multiply.
+      <math><mi>L</mi></math> is the tube length: objective to eyepiece.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     5 — COMPOUND MICROSCOPE · PROOF
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Proof</div>
+    <h2>Two magnifications, multiplied</h2>
+
+    <div class="card" style="margin-top:1.4vmin">
+      <span class="k">The idea</span>
+      <div class="body-txt step">
+        The objective does the first magnification <b>linearly</b>; the eyepiece then treats that
+        real image as its own object and magnifies it <b>angularly</b>, exactly like a simple microscope.
+      </div>
+    </div>
+
+    <div class="chain" style="margin-top:1.4vmin">
+      <div class="row step"><div class="n">01</div>
+        <div>Objective forms a real, inverted image:
+          <span class="eqpart step"><math><msub><mi>m</mi><mi>o</mi></msub><mo>=</mo>
+            <mfrac><msub><mi>v</mi><mi>o</mi></msub><msub><mi>u</mi><mi>o</mi></msub></mfrac></math></span></div></div>
+      <div class="row step"><div class="n">02</div>
+        <div>That image is the eyepiece's object, and the eyepiece is a magnifier:
+          <span class="eqpart step"><math><msub><mi>m</mi><mi>e</mi></msub><mo>=</mo>
+            <mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac></math></span>
+          <span class="step">or</span>
+          <span class="eqpart step"><math><mn>1</mn><mo>+</mo>
+            <mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac></math></span></div></div>
+      <div class="row step"><div class="n">03</div>
+        <div>They act in series, so the magnifications multiply:
+          <span class="eqpart step"><math><mi>m</mi><mo>=</mo><msub><mi>m</mi><mi>o</mi></msub><mo>&#215;</mo>
+            <msub><mi>m</mi><mi>e</mi></msub></math></span></div></div>
+      <div class="row step"><div class="n">04</div>
+        <div>The tube must span object image to eyepiece,
+          <span class="step">giving the length <math><mi>L</mi></math> below</span></div></div>
+    </div>
+
+    <div class="pair" style="margin-top:1.4vmin">
+      <div class="state relaxed step">
+        <div class="hd" style="color:var(--accent)"><span class="chip c-accent">Relaxed eye</span>&nbsp;image at &#8734;</div>
+        <div class="eq mid step">
+          <math display="block"><mi>m</mi><mo>=</mo>
+            <mfrac><msub><mi>v</mi><mi>o</mi></msub><msub><mi>u</mi><mi>o</mi></msub></mfrac><mo>&#8901;</mo>
+            <mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac>
+            <mspace width="1.4em"/><mi>L</mi><mo>=</mo><msub><mi>v</mi><mi>o</mi></msub><mo>+</mo>
+            <msub><mi>f</mi><mi>e</mi></msub></math>
+        </div>
+      </div>
+      <div class="state strained step">
+        <div class="hd" style="color:var(--image)"><span class="chip c-image">Strained eye</span>&nbsp;image at
+          <math><mi>D</mi></math></div>
+        <div class="eq mid step">
+          <math display="block"><mi>m</mi><mo>=</mo>
+            <mfrac><msub><mi>v</mi><mi>o</mi></msub><msub><mi>u</mi><mi>o</mi></msub></mfrac>
+            <mrow><mo>(</mo><mn>1</mn><mo>+</mo>
+              <mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac><mo>)</mo></mrow>
+            <mspace width="1.4em"/><mi>L</mi><mo>=</mo><msub><mi>v</mi><mi>o</mi></msub><mo>+</mo>
+            <mrow><mo>|</mo><msub><mi>u</mi><mi>e</mi></msub><mo>|</mo></mrow></math>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     6 — ASTRONOMICAL TELESCOPE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Object at infinity</div>
+    <h2>Telescope <span class="thin">— astronomical / celestial</span></h2>
+
+    <div class="figure" style="flex:1;justify-content:center;margin-top:1vmin">
+      <svg class="dia" viewBox="0 0 640 260" fill="none" aria-hidden="true" style="max-height:56vh;margin:0 auto">
+        <line x1="15" y1="105" x2="625" y2="105" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+        <!-- objective -->
+        <ellipse cx="100" cy="105" rx="9" ry="40" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.7"/>
+        <text x="100" y="48" fill="#38BDF8" font-size="14" letter-spacing="1.3" text-anchor="middle">OBJECTIVE</text>
+
+        <!-- parallel light from the distant object, tilted by alpha -->
+        <g class="step">
+          <g stroke="#E6ECF7" stroke-width="1.5">
+            <line x1="15" y1="59.2" x2="100" y2="67"/>
+            <line x1="15" y1="97.2" x2="100" y2="105"/>
+            <line x1="15" y1="135.2" x2="100" y2="143"/>
+          </g>
+          <path d="M62.2 101.5 A 38 38 0 0 0 62 105" stroke="#8B95AC" stroke-width="1.3" fill="none"/>
+          <text x="52" y="124" fill="#8B95AC" font-size="18" text-anchor="middle">&#945;</text>
+        </g>
+
+        <!-- real image at the objective's focus -->
+        <g class="step">
+          <g stroke="#38BDF8" stroke-width="1.5">
+            <line x1="100" y1="67" x2="385" y2="131"/>
+            <line x1="100" y1="105" x2="385" y2="131"/>
+            <line x1="100" y1="143" x2="385" y2="131"/>
+          </g>
+          <line x1="385" y1="70" x2="385" y2="162" stroke="#FBBF24" stroke-width="1" stroke-dasharray="4 5" opacity=".4"/>
+          <line x1="385" y1="105" x2="385" y2="131" stroke="#FBBF24" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="380,125 385,136 390,125" fill="#FBBF24"/>
+          <text x="374" y="120" fill="#FBBF24" font-size="16" text-anchor="end">h&#8242;</text>
+        </g>
+
+        <!-- eyepiece: a magnifier for that image -->
+        <g class="step">
+          <ellipse cx="430" cy="105" rx="8" ry="30" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.7"/>
+          <text x="430" y="60" fill="#A78BFA" font-size="14" letter-spacing="1.3" text-anchor="middle">EYEPIECE</text>
+          <circle cx="500" cy="105" r="3" fill="#A78BFA"/>
+          <text x="500" y="126" fill="#A78BFA" font-size="14" text-anchor="middle">F&#8242;&#8337;</text>
+          <g stroke="#A78BFA" stroke-width="1.5">
+            <line x1="385" y1="131" x2="430" y2="131"/>
+            <line x1="385" y1="131" x2="430" y2="105"/>
+          </g>
+        </g>
+
+        <!-- light leaves diverging: the eye sees a virtual image -->
+        <g class="step">
+          <g stroke="#4ADE80" stroke-width="1.6">
+            <line x1="430" y1="131" x2="600" y2="67.9"/>
+            <line x1="430" y1="105" x2="600" y2="6.8"/>
+          </g>
+          <circle cx="580" cy="47" r="26" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+          <path d="M562 32 A 17 17 0 0 0 562 62" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+          <path d="M472 105 A 42 42 0 0 0 466.4 84" stroke="#4ADE80" stroke-width="1.3" fill="none"/>
+          <text x="480" y="130" fill="#4ADE80" font-size="18" text-anchor="middle">&#946;</text>
+        </g>
+
+        <!-- trace the emergent light back: the final image, wherever it falls -->
+        <g class="step">
+          <g stroke="#FF6B81" stroke-width="1.3" stroke-dasharray="6 5" opacity=".85">
+            <line x1="430" y1="131" x2="304" y2="178"/>
+            <line x1="430" y1="105" x2="304" y2="178"/>
+          </g>
+          <line x1="304" y1="105" x2="304" y2="178" stroke="#FF6B81" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="298,170 304,183 310,170" fill="#FF6B81"/>
+          <text x="304" y="203" fill="#FF6B81" font-size="14" letter-spacing="1.2" text-anchor="middle">FINAL IMAGE &#183; ANY DISTANCE v</text>
+        </g>
+
+        <!-- lengths -->
+        <g class="step">
+          <g stroke="#8B95AC" stroke-width="1">
+            <line x1="100" y1="224" x2="430" y2="224"/>
+            <line x1="100" y1="218" x2="100" y2="230"/>
+            <line x1="385" y1="218" x2="385" y2="230"/>
+            <line x1="430" y1="218" x2="430" y2="230"/>
+          </g>
+          <text x="242" y="246" fill="#38BDF8" font-size="16" text-anchor="middle">f&#8320;</text>
+          <text x="452" y="246" fill="#A78BFA" font-size="16" text-anchor="middle">u&#8337;</text>
+        </g>
+      </svg>
+    </div>
+
+    <p class="sub step" style="text-align:center;max-width:none">
+      The objective always drops a real inverted image on its own focal plane. The eyepiece then works as a
+      plain magnifier for it, sitting <math><msub><mi>u</mi><mi>e</mi></msub></math> away — so the final image
+      can be put <b>wherever you focus</b>.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     7 — TELESCOPE · PROOF
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Telescope · proof · general, then both settings</div>
+
+    <div class="cols top" style="gap:2.4vmin;margin-top:1vmin">
+
+      <div class="figure" style="flex:1.05 1 42ch">
+        <svg class="dia" viewBox="0 0 640 260" fill="none" aria-hidden="true">
+          <line x1="15" y1="105" x2="625" y2="105" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+          <ellipse cx="100" cy="105" rx="9" ry="40" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.7"/>
+          <text x="100" y="48" fill="#38BDF8" font-size="14" letter-spacing="1.3" text-anchor="middle">OBJECTIVE</text>
+          <g stroke="#E6ECF7" stroke-width="1.5">
+            <line x1="15" y1="59.2" x2="100" y2="67"/>
+            <line x1="15" y1="97.2" x2="100" y2="105"/>
+            <line x1="15" y1="135.2" x2="100" y2="143"/>
+          </g>
+          <path d="M62.2 101.5 A 38 38 0 0 0 62 105" stroke="#8B95AC" stroke-width="1.3" fill="none"/>
+          <text x="52" y="124" fill="#8B95AC" font-size="18" text-anchor="middle">&#945;</text>
+          <g stroke="#38BDF8" stroke-width="1.5">
+            <line x1="100" y1="67" x2="385" y2="131"/>
+            <line x1="100" y1="105" x2="385" y2="131"/>
+            <line x1="100" y1="143" x2="385" y2="131"/>
+          </g>
+          <line x1="385" y1="70" x2="385" y2="162" stroke="#FBBF24" stroke-width="1" stroke-dasharray="4 5" opacity=".4"/>
+          <line x1="385" y1="105" x2="385" y2="131" stroke="#FBBF24" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="380,125 385,136 390,125" fill="#FBBF24"/>
+          <text x="374" y="120" fill="#FBBF24" font-size="16" text-anchor="end">h&#8242;</text>
+          <ellipse cx="430" cy="105" rx="8" ry="30" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.7"/>
+          <text x="430" y="60" fill="#A78BFA" font-size="14" letter-spacing="1.3" text-anchor="middle">EYEPIECE</text>
+          <circle cx="500" cy="105" r="3" fill="#A78BFA"/>
+          <text x="500" y="126" fill="#A78BFA" font-size="14" text-anchor="middle">F&#8242;&#8337;</text>
+          <g stroke="#A78BFA" stroke-width="1.5">
+            <line x1="385" y1="131" x2="430" y2="131"/>
+            <line x1="385" y1="131" x2="430" y2="105"/>
+          </g>
+          <g stroke="#4ADE80" stroke-width="1.6">
+            <line x1="430" y1="131" x2="600" y2="67.9"/>
+            <line x1="430" y1="105" x2="600" y2="6.8"/>
+          </g>
+          <circle cx="580" cy="47" r="26" fill="rgba(255,255,255,.04)" stroke="#5C6780" stroke-width="1.3"/>
+          <path d="M562 32 A 17 17 0 0 0 562 62" stroke="#C7D0E2" stroke-width="1.6" fill="none"/>
+          <path d="M472 105 A 42 42 0 0 0 466.4 84" stroke="#4ADE80" stroke-width="1.3" fill="none"/>
+          <text x="480" y="130" fill="#4ADE80" font-size="18" text-anchor="middle">&#946;</text>
+          <g stroke="#FF6B81" stroke-width="1.3" stroke-dasharray="6 5" opacity=".85">
+            <line x1="430" y1="131" x2="304" y2="178"/>
+            <line x1="430" y1="105" x2="304" y2="178"/>
+          </g>
+          <line x1="304" y1="105" x2="304" y2="178" stroke="#FF6B81" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="298,170 304,183 310,170" fill="#FF6B81"/>
+          <text x="304" y="203" fill="#FF6B81" font-size="14" letter-spacing="1.2" text-anchor="middle">FINAL IMAGE &#183; ANY DISTANCE v</text>
+          <g stroke="#8B95AC" stroke-width="1">
+            <line x1="100" y1="224" x2="430" y2="224"/>
+            <line x1="100" y1="218" x2="100" y2="230"/>
+            <line x1="385" y1="218" x2="385" y2="230"/>
+            <line x1="430" y1="218" x2="430" y2="230"/>
+          </g>
+          <text x="242" y="246" fill="#38BDF8" font-size="16" text-anchor="middle">f&#8320;</text>
+          <text x="452" y="246" fill="#A78BFA" font-size="16" text-anchor="middle">u&#8337;</text>
+        </svg>
+      </div>
+
+      <div class="chain" style="flex:1 1 38ch;min-width:0">
+        <div class="row step"><div class="n">01</div>
+          <div>Objective images it at its focus:
+            <span class="eqpart step"><math><mi>&#945;</mi><mo>=</mo>
+              <mfrac><msup><mi>h</mi><mo>&#8242;</mo></msup><msub><mi>f</mi><mi>o</mi></msub></mfrac></math></span></div></div>
+        <div class="row step"><div class="n">02</div>
+          <div>Eyepiece magnifies it from <math><msub><mi>u</mi><mi>e</mi></msub></math> away:
+            <span class="eqpart step"><math><mi>&#946;</mi><mo>=</mo>
+              <mfrac><msup><mi>h</mi><mo>&#8242;</mo></msup><msub><mi>u</mi><mi>e</mi></msub></mfrac></math></span></div></div>
+        <div class="row result step"><div class="n">03</div>
+          <div>True for any final image:
+            <span class="eqpart step"><math><mi>m</mi><mo>=</mo><mfrac><mi>&#946;</mi><mi>&#945;</mi></mfrac><mo>=</mo>
+              <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>u</mi><mi>e</mi></msub></mfrac></math></span></div></div>
+        <div class="row step"><div class="n">04</div>
+          <div>Put the image at <math><mi>&#8734;</mi></math>:
+            <span class="eqpart step"><math><msub><mi>u</mi><mi>e</mi></msub><mo>=</mo>
+              <msub><mi>f</mi><mi>e</mi></msub></math></span></div></div>
+        <div class="row step"><div class="n">05</div>
+          <div>Put it at <math><mi>D</mi></math> instead:
+            <span class="eqpart step"><math><mfrac><mn>1</mn><msub><mi>u</mi><mi>e</mi></msub></mfrac><mo>=</mo>
+              <mfrac><mn>1</mn><mi>D</mi></mfrac><mo>+</mo>
+              <mfrac><mn>1</mn><msub><mi>f</mi><mi>e</mi></msub></mfrac><mo>&#8658;</mo>
+              <msub><mi>u</mi><mi>e</mi></msub><mo>=</mo>
+              <mfrac><mrow><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mrow>
+                     <mrow><msub><mi>f</mi><mi>e</mi></msub><mo>+</mo><mi>D</mi></mrow></mfrac></math></span></div></div>
+      </div>
+    </div>
+
+    <div class="pair selgroup" style="margin-top:1.4vmin">
+      <div class="state relaxed sel on clickable step">
+        <div class="hd" style="color:var(--accent)"><span class="chk">&#10003;</span><span class="chip c-accent">Relaxed eye</span>&nbsp;image at &#8734; · normal adjustment</div>
+        <div class="eq mid step">
+          <math display="block"><mi>m</mi><mo>=</mo><mo>&#8722;</mo>
+            <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac>
+            <mspace width="1.6em"/><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo>
+            <msub><mi>f</mi><mi>e</mi></msub></math>
+        </div>
+      </div>
+      <div class="state strained sel clickable step">
+        <div class="hd" style="color:var(--image)"><span class="chk">&#10003;</span><span class="chip c-image">Strained eye</span>&nbsp;image at
+          <math><mi>D</mi></math></div>
+        <div class="eq mid step">
+          <math display="block"><mi>m</mi><mo>=</mo><mo>&#8722;</mo>
+            <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac>
+            <mrow><mo>(</mo><mn>1</mn><mo>+</mo>
+              <mfrac><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mfrac><mo>)</mo></mrow>
+            <mspace width="1.2em"/><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo>
+            <mfrac><mrow><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mrow>
+                   <mrow><msub><mi>f</mi><mi>e</mi></msub><mo>+</mo><mi>D</mi></mrow></mfrac></math>
+        </div>
+      </div>
+    </div>
+    <div class="hint no-print">Tap either card to tick the result you want to quote</div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     8 — TELESCOPE · THE TWO SETTINGS SIDE BY SIDE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Telescope · the two settings, side by side</div>
+
+    <div class="cols top" style="gap:2.4vmin;margin-top:1vmin">
+
+      <div class="figure" style="flex:1 1 34ch">
+        <svg class="dia" viewBox="0 0 470 205" fill="none" aria-hidden="true">
+          <line x1="12" y1="92" x2="460" y2="92" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+          <ellipse cx="70" cy="92" rx="7" ry="34" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.6"/>
+          <g stroke="#E6ECF7" stroke-width="1.4">
+            <line x1="12" y1="54.7" x2="70" y2="60"/>
+            <line x1="12" y1="86.7" x2="70" y2="92"/>
+            <line x1="12" y1="118.7" x2="70" y2="124"/>
+          </g>
+          <g stroke="#38BDF8" stroke-width="1.4">
+            <line x1="70" y1="60" x2="290" y2="104"/>
+            <line x1="70" y1="92" x2="290" y2="104"/>
+            <line x1="70" y1="124" x2="290" y2="104"/>
+          </g>
+          <line x1="290" y1="92" x2="290" y2="104" stroke="#FBBF24" stroke-width="2.6" stroke-linecap="round"/>
+          <polygon points="285,99 290,108 295,99" fill="#FBBF24"/>
+          <ellipse cx="350" cy="92" rx="6" ry="24" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.6"/>
+          <g stroke="#A78BFA" stroke-width="1.4">
+            <line x1="290" y1="104" x2="350" y2="68"/>
+            <line x1="290" y1="104" x2="350" y2="92"/>
+            <line x1="290" y1="104" x2="350" y2="116"/>
+          </g>
+          <g stroke="#4ADE80" stroke-width="1.6">
+            <line x1="350" y1="68" x2="455" y2="47"/>
+            <line x1="350" y1="92" x2="455" y2="71"/>
+            <line x1="350" y1="116" x2="455" y2="95"/>
+          </g>
+          <text x="398" y="136" fill="#4ADE80" font-size="13.4" letter-spacing="1.2" text-anchor="middle">IMAGE AT &#8734;</text>
+          <text x="322" y="192" fill="#A78BFA" font-size="15" text-anchor="middle">f&#8337;</text>
+          <g stroke="#8B95AC" stroke-width="1">
+            <line x1="70" y1="176" x2="350" y2="176"/>
+            <line x1="70" y1="170" x2="70" y2="182"/>
+            <line x1="290" y1="170" x2="290" y2="182"/>
+            <line x1="350" y1="170" x2="350" y2="182"/>
+          </g>
+          <text x="180" y="192" fill="#38BDF8" font-size="15" text-anchor="middle">f&#8320;</text>
+        </svg>
+        <div class="dcap" style="color:var(--accent)">Normal adjustment</div>
+      </div>
+
+      <div class="figure" style="flex:1 1 34ch">
+        <svg class="dia" viewBox="0 0 470 205" fill="none" aria-hidden="true">
+          <line x1="12" y1="92" x2="460" y2="92" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+          <ellipse cx="70" cy="92" rx="7" ry="34" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.6"/>
+          <g stroke="#E6ECF7" stroke-width="1.4">
+            <line x1="12" y1="54.7" x2="70" y2="60"/>
+            <line x1="12" y1="86.7" x2="70" y2="92"/>
+            <line x1="12" y1="118.7" x2="70" y2="124"/>
+          </g>
+          <g stroke="#38BDF8" stroke-width="1.4">
+            <line x1="70" y1="60" x2="290" y2="104"/>
+            <line x1="70" y1="92" x2="290" y2="104"/>
+            <line x1="70" y1="124" x2="290" y2="104"/>
+          </g>
+          <line x1="290" y1="92" x2="290" y2="104" stroke="#FBBF24" stroke-width="2.6" stroke-linecap="round"/>
+          <polygon points="285,99 290,108 295,99" fill="#FBBF24"/>
+          <ellipse cx="335" cy="92" rx="6" ry="24" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.6"/>
+          <g stroke="#A78BFA" stroke-width="1.4">
+            <line x1="290" y1="104" x2="335" y2="68"/>
+            <line x1="290" y1="104" x2="335" y2="92"/>
+            <line x1="290" y1="104" x2="335" y2="116"/>
+          </g>
+          <g stroke="#4ADE80" stroke-width="1.6">
+            <line x1="335" y1="68" x2="455" y2="20"/>
+            <line x1="335" y1="92" x2="455" y2="60"/>
+            <line x1="335" y1="116" x2="455" y2="100"/>
+          </g>
+          <g stroke="#FF6B81" stroke-width="1.2" stroke-dasharray="5 4" opacity=".8">
+            <line x1="335" y1="68" x2="155" y2="140"/>
+            <line x1="335" y1="116" x2="155" y2="140"/>
+          </g>
+          <line x1="155" y1="92" x2="155" y2="140" stroke="#FF6B81" stroke-width="2.6" stroke-linecap="round"/>
+          <polygon points="150,133 155,145 160,133" fill="#FF6B81"/>
+          <text x="155" y="162" fill="#FF6B81" font-size="13.4" letter-spacing="1.2" text-anchor="middle">IMAGE AT D</text>
+          <ellipse cx="350" cy="92" rx="6" ry="24" fill="none" stroke="#A78BFA" stroke-width="1.2" stroke-dasharray="4 4" opacity=".55"/>
+          <line x1="349" y1="140" x2="338" y2="140" stroke="#A78BFA" stroke-width="1.2"/>
+          <polygon points="334,140 341,137 341,143" fill="#A78BFA"/>
+          <text x="315" y="192" fill="#A78BFA" font-size="15" text-anchor="middle">u&#8337;</text>
+          <g stroke="#8B95AC" stroke-width="1">
+            <line x1="70" y1="176" x2="335" y2="176"/>
+            <line x1="70" y1="170" x2="70" y2="182"/>
+            <line x1="290" y1="170" x2="290" y2="182"/>
+            <line x1="335" y1="170" x2="335" y2="182"/>
+          </g>
+          <text x="180" y="192" fill="#38BDF8" font-size="15" text-anchor="middle">f&#8320;</text>
+        </svg>
+        <div class="dcap" style="color:var(--image)">Near point</div>
+      </div>
+    </div>
+
+    <div class="pair" style="margin-top:1.2vmin">
+      <div class="state relaxed step">
+        <div class="hd" style="color:var(--accent)"><span class="chip c-accent">Normal adjustment</span>&nbsp;image at &#8734;</div>
+        <div class="eq mid step">
+          <math display="block"><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo>
+            <msub><mi>f</mi><mi>e</mi></msub><mspace width="1.6em"/>
+            <mi>m</mi><mo>=</mo><mo>&#8722;</mo>
+            <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac></math>
+        </div>
+        <div class="fine step">Both focal planes coincide. This is the standard result to quote.</div>
+      </div>
+      <div class="state strained step">
+        <div class="hd" style="color:var(--image)"><span class="chip c-image">Near point</span>&nbsp;image at
+          <math><mi>D</mi></math></div>
+        <div class="eq mid step">
+          <math display="block"><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo>
+            <mfrac><mrow><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mrow>
+                   <mrow><msub><mi>f</mi><mi>e</mi></msub><mo>+</mo><mi>D</mi></mrow></mfrac>
+            <mspace width="1.2em"/>
+            <mi>m</mi><mo>=</mo><mo>&#8722;</mo>
+            <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac>
+            <mrow><mo>(</mo><mn>1</mn><mo>+</mo>
+              <mfrac><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mfrac><mo>)</mo></mrow></math>
+        </div>
+        <div class="fine step">Eyepiece pulled slightly in. A little more magnification, at the cost of strain.</div>
+      </div>
+    </div>
+
+    <div class="pair" style="margin-top:1.2vmin">
+      <div class="card">
+        <span class="k">The minus sign</span>
+        <div class="body-txt step">
+          <math><mi>m</mi></math> is negative because the final image is <b>inverted</b>. For stars nobody minds —
+          which is exactly why this design is called <b>astronomical</b>.
+        </div>
+      </div>
+      <div class="card">
+        <span class="k">How to build a strong telescope</span>
+        <div class="body-txt step">
+          Large <math><msub><mi>f</mi><mi>o</mi></msub></math>, small <math><msub><mi>f</mi><mi>e</mi></msub></math>.
+          That also makes the tube long — high magnification and a compact instrument pull against each other.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     9 — TERRESTRIAL TELESCOPE
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap">
+    <div class="kicker">Fixing the inversion</div>
+    <h2>Terrestrial telescope</h2>
+
+    <div class="figure" style="flex:1;justify-content:center;margin-top:1vmin">
+      <svg class="dia" viewBox="0 0 620 240" fill="none" aria-hidden="true" style="max-height:48vh;margin:0 auto">
+        <line x1="15" y1="110" x2="600" y2="110" stroke="#2C3446" stroke-width="1" stroke-dasharray="5 6"/>
+        <!-- three lenses -->
+        <ellipse cx="80" cy="110" rx="8" ry="40" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1.6"/>
+        <text x="80" y="56" fill="#38BDF8" font-size="14" letter-spacing="1.2" text-anchor="middle">OBJECTIVE</text>
+        <ellipse cx="300" cy="110" rx="8" ry="32" fill="rgba(251,146,60,.08)" stroke="#FB923C" stroke-width="1.6"/>
+        <text x="300" y="64" fill="#FB923C" font-size="14" letter-spacing="1.2" text-anchor="middle">ERECTING LENS</text>
+        <ellipse cx="430" cy="110" rx="8" ry="26" fill="rgba(167,139,250,.08)" stroke="#A78BFA" stroke-width="1.6"/>
+        <text x="430" y="72" fill="#A78BFA" font-size="14" letter-spacing="1.2" text-anchor="middle">EYEPIECE</text>
+
+        <!-- incoming parallel light -->
+        <g class="step">
+          <g stroke="#E6ECF7" stroke-width="1.5">
+            <line x1="15" y1="78" x2="80" y2="78"/>
+            <line x1="15" y1="110" x2="80" y2="110"/>
+            <line x1="15" y1="142" x2="80" y2="142"/>
+          </g>
+        </g>
+        <!-- first (inverted) image -->
+        <g class="step">
+          <g stroke="#38BDF8" stroke-width="1.5">
+            <line x1="80" y1="78" x2="220" y2="138"/>
+            <line x1="80" y1="110" x2="220" y2="138"/>
+            <line x1="80" y1="142" x2="220" y2="138"/>
+          </g>
+          <line x1="220" y1="110" x2="220" y2="138" stroke="#FBBF24" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="215,132 220,142 225,132" fill="#FBBF24"/>
+          <text x="220" y="160" fill="#FBBF24" font-size="14" text-anchor="middle">INVERTED</text>
+        </g>
+        <!-- erecting lens flips it back -->
+        <g class="step">
+          <g stroke="#FB923C" stroke-width="1.5">
+            <line x1="220" y1="138" x2="300" y2="90"/>
+            <line x1="300" y1="90" x2="380" y2="82"/>
+            <line x1="220" y1="138" x2="300" y2="110"/>
+            <line x1="300" y1="110" x2="380" y2="82"/>
+          </g>
+          <line x1="380" y1="110" x2="380" y2="82" stroke="#4ADE80" stroke-width="2.8" stroke-linecap="round"/>
+          <polygon points="375,88 380,78 385,88" fill="#4ADE80"/>
+          <text x="380" y="44" fill="#4ADE80" font-size="14" text-anchor="middle">ERECT AGAIN</text>
+        </g>
+        <!-- eyepiece -> parallel out -->
+        <g class="step">
+          <g stroke="#A78BFA" stroke-width="1.5">
+            <line x1="380" y1="82" x2="430" y2="88"/>
+            <line x1="380" y1="82" x2="430" y2="110"/>
+            <line x1="380" y1="82" x2="430" y2="132"/>
+          </g>
+          <g stroke="#4ADE80" stroke-width="1.6">
+            <line x1="430" y1="88" x2="580" y2="70"/>
+            <line x1="430" y1="110" x2="580" y2="92"/>
+            <line x1="430" y1="132" x2="580" y2="114"/>
+          </g>
+        </g>
+        <!-- length -->
+        <g class="step">
+          <line x1="80" y1="212" x2="430" y2="212" stroke="#8B95AC" stroke-width="1"/>
+          <g stroke="#8B95AC" stroke-width="1.4">
+            <line x1="80" y1="206" x2="80" y2="218"/>
+            <line x1="220" y1="206" x2="220" y2="218"/>
+            <line x1="380" y1="206" x2="380" y2="218"/>
+            <line x1="430" y1="206" x2="430" y2="218"/>
+          </g>
+          <text x="150" y="232" fill="#38BDF8" font-size="15" text-anchor="middle">f&#8320;</text>
+          <text x="300" y="232" fill="#FB923C" font-size="15" text-anchor="middle">4f</text>
+          <text x="405" y="232" fill="#A78BFA" font-size="15" text-anchor="middle">f&#8337;</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="cols" style="gap:1.8vmin;align-items:stretch">
+      <div class="card" style="flex:1.15 1 30ch">
+        <span class="k" style="color:var(--erect)">What the third lens does</span>
+        <div class="body-txt step">
+          The intermediate image is placed at <b><math><mn>2</mn><mi>f</mi></math></b> from the erecting lens,
+          so it is re-imaged at <math><mn>2</mn><mi>f</mi></math> on the far side —
+          <b>same size, flipped again</b>, hence erect overall.
+        </div>
+      </div>
+      <div class="state relaxed" style="flex:1 1 22ch">
+        <div class="hd" style="color:var(--accent)">Length</div>
+        <div class="eq step" style="text-align:center">
+          <math display="block"><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo>
+            <mn>4</mn><mi>f</mi><mo>+</mo><msub><mi>f</mi><mi>e</mi></msub></math>
+        </div>
+      </div>
+      <div class="state relaxed" style="flex:1 1 22ch">
+        <div class="hd" style="color:var(--accent)">Magnification</div>
+        <div class="eq step" style="text-align:center">
+          <math display="block"><mi>m</mi><mo>=</mo>
+            <mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac></math>
+        </div>
+        <div class="fine step">Erect, so no minus sign.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     10 — SUMMARY
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">All four together</div>
+    <h2>The whole chapter <span class="thin">on one screen</span></h2>
+
+    <table class="tbl" style="margin-top:1.6vmin">
+      <colgroup><col style="width:19%"><col><col><col></colgroup>
+      <thead>
+        <tr>
+          <th></th>
+          <th><span class="chip c-accent">Simple microscope</span></th>
+          <th><span class="chip c-obj">Compound microscope</span></th>
+          <th><span class="chip c-eyep">Telescope</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rowlabel">Object is</td>
+          <td class="i1 step">Very close — inside <math><mi>F</mi></math></td>
+          <td class="i2 step">Very close — just outside <math><msub><mi>F</mi><mi>o</mi></msub></math></td>
+          <td class="i3 step">Very far — at infinity</td>
+        </tr>
+        <tr>
+          <td class="rowlabel"><math><mi>m</mi></math> · relaxed eye</td>
+          <td class="i1 step"><math><mfrac><mi>D</mi><mi>f</mi></mfrac></math></td>
+          <td class="i2 step"><math><mfrac><msub><mi>v</mi><mi>o</mi></msub><msub><mi>u</mi><mi>o</mi></msub></mfrac><mo>&#8901;</mo><mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac></math></td>
+          <td class="i3 step"><math><mo>&#8722;</mo><mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac></math></td>
+        </tr>
+        <tr>
+          <td class="rowlabel"><math><mi>m</mi></math> · image at <math><mi>D</mi></math></td>
+          <td class="i1 step"><math><mn>1</mn><mo>+</mo><mfrac><mi>D</mi><mi>f</mi></mfrac></math></td>
+          <td class="i2 step"><math><mfrac><msub><mi>v</mi><mi>o</mi></msub><msub><mi>u</mi><mi>o</mi></msub></mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mi>D</mi><msub><mi>f</mi><mi>e</mi></msub></mfrac><mo>)</mo></mrow></math></td>
+          <td class="i3 step"><math><mo>&#8722;</mo><mfrac><msub><mi>f</mi><mi>o</mi></msub><msub><mi>f</mi><mi>e</mi></msub></mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><msub><mi>f</mi><mi>e</mi></msub><mi>D</mi></mfrac><mo>)</mo></mrow></math></td>
+        </tr>
+        <tr>
+          <td class="rowlabel">Length <math><mi>L</mi></math></td>
+          <td class="i1 step">— single lens</td>
+          <td class="i2 step"><math><msub><mi>v</mi><mi>o</mi></msub><mo>+</mo><msub><mi>f</mi><mi>e</mi></msub></math> &nbsp;(relaxed)</td>
+          <td class="i3 step"><math><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo><msub><mi>f</mi><mi>e</mi></msub></math> &nbsp;(relaxed)</td>
+        </tr>
+        <tr>
+          <td class="rowlabel">Terrestrial version</td>
+          <td class="i1 step">—</td>
+          <td class="i2 step">—</td>
+          <td class="i3 step"><math><mi>L</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>+</mo><mn>4</mn><mi>f</mi><mo>+</mo><msub><mi>f</mi><mi>e</mi></msub></math> · <math><mi>m</mi><mo>=</mo><msub><mi>f</mi><mi>o</mi></msub><mo>/</mo><msub><mi>f</mi><mi>e</mi></msub></math>, erect</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="sub step" style="margin-top:1.6vmin;max-width:none">
+      Microscopes bring a <b>near</b> object closer; telescopes bring a <b>far</b> one nearer —
+      both by handing the eye a bigger angle.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     Tick-the-result toggle. Click-driven only (rule 3); the default
+     choice is already marked .on in the HTML, so the PDF export —
+     which strips every <script> — still shows the right card ticked.
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  document.querySelectorAll('.selgroup').forEach(function(group){
+    var opts = [].slice.call(group.querySelectorAll('.state.sel'));
+    opts.forEach(function(o){
+      o.addEventListener('click', function(e){
+        e.stopPropagation();
+        opts.forEach(function(x){ x.classList.toggle('on', x === o); });
+      });
+    });
+  });
+})();
+</script>
+
+<!-- ══════════════════ Standalone fallback controller ══════════════════ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present → stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

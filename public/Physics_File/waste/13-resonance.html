@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AC — 13 Resonance</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#050a14;font-family:system-ui,'Segoe UI',sans-serif;color:#f1f5f9}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(34,211,238,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(251,191,36,.07),transparent 60%),#050a14}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2vmin;padding:4.5vmin 6vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  h1{margin:0;font-size:clamp(32px,8vmin,92px);letter-spacing:.02em}
+  h2{margin:0;font-size:clamp(24px,5.2vmin,56px)}
+  .kicker{font-size:clamp(16px,2.9vmin,30px);letter-spacing:.35em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+  .sub{font-size:clamp(20px,4vmin,44px);color:#cbd5e1;max-width:78ch;line-height:1.45;margin:0}
+  .hl{color:#fbbf24;font-weight:600}
+  .step{opacity:1}
+  math{font-family:'Cambria Math',Cambria,'STIX Two Math','Latin Modern Math',serif}
+  table{border-collapse:collapse;font-size:clamp(15px,2.6vmin,26px);width:100%;max-width:100vmin}
+  th{color:#22d3ee;text-align:left;padding:1vmin 1.6vmin 1vmin 0;font-weight:700;border-bottom:1px solid rgba(148,163,184,.3)}
+  td{padding:1vmin 1.6vmin 1vmin 0;color:#e2e8f0;border-bottom:1px solid rgba(148,163,184,.15)}
+  td.v{font-family:'Cambria Math',Cambria,serif;font-style:italic;color:#fbbf24}
+  .blist{display:flex;flex-direction:column;gap:1.6vmin;margin:0;padding:0;list-style:none}
+  .blist li{display:flex;gap:1.6vmin;align-items:baseline;font-size:clamp(17px,3.3vmin,36px);line-height:1.42}
+  .blist .dot{flex:0 0 auto;width:1.4vmin;height:1.4vmin;border-radius:50%;position:relative;top:-.3vmin;
+              background:linear-gradient(135deg,#22d3ee,#fbbf24)}
+  .blist .step{display:inline}
+  .card{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-radius:1.6vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+  .fig svg{width:100%;height:auto;display:block}
+  .hint{margin-top:auto;font-size:clamp(14px,2vmin,20px);color:#475569}
+  @media print{ .step{opacity:1!important;transform:none!important} .no-print{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- ============ Page 1 · Title ============ -->
+<section class="page">
+  <div class="wrap center">
+    <div class="kicker">Alternating Current · Part 13</div>
+    <h1>Resonance</h1>
+    <p class="sub step">The one special frequency where the circuit stops "fighting" the supply at all.</p>
+  </div>
+</section>
+
+<!-- ============ Page 2 · Three circuit behaviours ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Inductive, capacitive, or resistive?</h2>
+    <div class="card step">
+      <table>
+        <tr><th>Condition</th><th>Circuit behaves as</th><th>Phase</th></tr>
+        <tr class="step"><td><math><msub><mi>X</mi><mi>L</mi></msub><mo>&gt;</mo><msub><mi>X</mi><mi>C</mi></msub></math></td><td>Inductive</td><td class="v">V leads I</td></tr>
+        <tr class="step"><td><math><msub><mi>X</mi><mi>L</mi></msub><mo>&lt;</mo><msub><mi>X</mi><mi>C</mi></msub></math></td><td>Capacitive</td><td class="v">I leads V</td></tr>
+        <tr class="step"><td><math><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><msub><mi>X</mi><mi>C</mi></msub></math></td><td>Purely resistive — <b>resonance</b></td><td class="v">I, V in phase</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Page 3 · Resonance condition ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>The resonance condition</h2>
+    <ul class="blist">
+      <li class="step"><span class="dot"></span><span>At resonance, <math><msub><mi>X</mi><mi>L</mi></msub><mo>=</mo><msub><mi>X</mi><mi>C</mi></msub></math>, so the reactive part of impedance cancels: <span class="hl"><math><mi>Z</mi><mo>=</mo><mi>R</mi></math></span> — its <span class="hl">minimum</span> possible value</span></li>
+      <li class="step"><span class="dot"></span><span>Since <math><mi>I</mi><mo>=</mo><mi>V</mi><mo>/</mo><mi>Z</mi></math>, current is <span class="hl">maximum</span> at resonance</span></li>
+      <li class="step"><span class="dot"></span><span>Resonant angular frequency: <span class="hl"><math><msub><mi>ω</mi><mn>0</mn></msub><mo>=</mo><mfrac><mn>1</mn><msqrt><mi>LC</mi></msqrt></mfrac></math></span> — same formula as free LC oscillation</span></li>
+      <li class="step"><span class="dot"></span><span>A series resonant circuit is called an <b>acceptor circuit</b> — it offers minimum impedance (accepts current) at its resonant frequency, e.g. tuning in one radio station from many</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Page 4 · Resonance curve ============ -->
+<section class="page">
+  <div class="wrap">
+    <h2>Current vs frequency</h2>
+    <div class="fig card step" style="max-width:62vmin;margin:0 auto">
+      <svg viewBox="0 0 340 190" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="160" x2="320" y2="160" stroke="#64748b" stroke-width="1.4"/>
+        <line x1="30" y1="160" x2="30" y2="15" stroke="#64748b" stroke-width="1.4"/>
+        <path d="M30 155 C90 150 140 40 175 30 C210 40 260 150 320 155" fill="none" stroke="#22d3ee" stroke-width="3"/>
+        <line x1="175" y1="30" x2="175" y2="160" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text x="150" y="180" fill="#fbbf24" font-size="13" font-family="system-ui">ω₀</text>
+        <text x="6" y="20" fill="#94a3b8" font-size="13" font-family="system-ui">I</text>
+        <text x="310" y="178" fill="#94a3b8" font-size="13" font-family="system-ui">ω</text>
+      </svg>
+    </div>
+    <div class="hint no-print">Peak current occurs exactly at ω₀ = 1/√(LC)</div>
+  </div>
+</section>
+
+<!-- ============ Standalone fallback controller ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>
