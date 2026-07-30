@@ -42,5 +42,4 @@ build/status.csv
 
 # Local split JSON / HTML data and extra files (excluded from version control)
 JSON_split_data/
-JSON_split_html/
 extra_fiels/

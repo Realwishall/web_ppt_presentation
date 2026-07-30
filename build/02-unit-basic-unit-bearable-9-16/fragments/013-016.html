@@ -1,0 +1,156 @@
+<!-- Slide 13 — the three conversions. Each angle stays on screen as its own row
+     header; the working under it arrives one line per press. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Question <span class="inline-lead">Convert given angle into radian</span></h2>
+
+    <div class="callout callout--tip step">
+      <span class="callout-label">The only tools needed</span>
+      180&deg; = &pi; rad &nbsp;&bull;&nbsp; 1&prime; = (1/60)&deg; &nbsp;&bull;&nbsp; 1&Prime; = (1/60)&prime; = (1/3600)&deg;
+    </div>
+
+    <p class="sub">Solution</p>
+
+    <div class="glossary">
+      <div class="g-row wide">
+        <span class="label">4&deg; =</span>
+        <div>
+          <div class="eq step">4 &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> rad</div>
+          <div class="eq step">= <span class="frac"><span class="num">&pi;</span><span class="den">45</span></span> rad &nbsp;&asymp;&nbsp; 0.070 rad</div>
+        </div>
+      </div>
+
+      <div class="g-row wide">
+        <span class="label">6&deg;40&prime; =</span>
+        <div>
+          <div class="eq step">40&prime; = <span class="frac"><span class="num">40</span><span class="den">60</span></span>&deg; = <span class="frac"><span class="num">2</span><span class="den">3</span></span>&deg; &nbsp;&rarr;&nbsp; 6&deg;40&prime; = <span class="frac"><span class="num">20</span><span class="den">3</span></span>&deg;</div>
+          <div class="eq step"><span class="frac"><span class="num">20</span><span class="den">3</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">&pi;</span><span class="den">27</span></span> rad &nbsp;&asymp;&nbsp; 0.116 rad</div>
+        </div>
+      </div>
+
+      <div class="g-row wide">
+        <span class="label">6&deg;40&prime;50&Prime; =</span>
+        <div>
+          <div class="eq step">50&Prime; = <span class="frac"><span class="num">50</span><span class="den">3600</span></span>&deg; &nbsp;&rarr;&nbsp; 6 + <span class="frac"><span class="num">40</span><span class="den">60</span></span> + <span class="frac"><span class="num">50</span><span class="den">3600</span></span> = <span class="frac"><span class="num">481</span><span class="den">72</span></span>&deg;</div>
+          <div class="eq step"><span class="frac"><span class="num">481</span><span class="den">72</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">481&pi;</span><span class="den">12960</span></span> rad &nbsp;&asymp;&nbsp; 0.117 rad</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note step">Same recipe every time: drag minutes and seconds down to degrees first, then multiply by &pi;/180 once.</p>
+  </div>
+</section>
+
+<!-- Slide 14 — solid angle. The definition and the ratio, then the sphere
+     question; the figure is the last reveal. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Solid angle</h2>
+
+    <div class="split-6040">
+      <div class="stack">
+        <div class="g-row wide">
+          <span class="label for-quantity">Solid angle&nbsp;:</span>
+          <span class="step">the opening a surface makes at a point &mdash; a cone in space, not a wedge in a plane.</span>
+        </div>
+
+        <div class="eq big step">&Omega; = <span class="frac"><span class="num">S</span><span class="den">r<sup>2</sup></span></span></div>
+
+        <p class="note step">Area divided by area &mdash; dimensionless again. Its unit is the <b>steradian (sr)</b>.</p>
+
+        <div class="qa">
+          <div class="q">Question: Find solid angle for full sphere.</div>
+          <div class="a step">Solution: the surface that surrounds the point completely is the whole sphere, S = 4&pi;r&sup2;.</div>
+          <div class="a step">&Omega; = 4&pi;r&sup2; &divide; r&sup2; = 4&pi; steradian &asymp; 12.57 sr</div>
+        </div>
+
+        <div class="callout callout--note step">
+          <span class="callout-label">Compare</span>
+          a full turn in a plane is 2&pi; rad; a full look-around in space is 4&pi; sr.
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="step">
+          <div class="figure-frame tall">
+            <svg viewBox="0 0 360 340" data-anime="draw" role="img" aria-label="A sphere of radius r with a cone from its centre O cutting a cap of area S on the surface">
+              <circle cx="170" cy="170" r="145" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".7"/>
+              <path d="M170 170 L286 82 A145 145 0 0 0 262 194 Z" fill="#38bdf8" fill-opacity=".18" stroke="none"/>
+              <path d="M170 170 L286 82" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M170 170 L262 194" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M286 82 A145 145 0 0 0 262 194" fill="none" stroke="#f2d024" stroke-width="8" stroke-linecap="round"/>
+              <ellipse cx="212" cy="158" rx="26" ry="20" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="170" cy="170" r="5.5" fill="currentColor"/>
+              <g fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="26">
+                <text x="140" y="184">O</text>
+                <text x="224" y="118">r</text>
+              </g>
+              <text x="300" y="66" fill="#f2d024" font-family="Cambria, Georgia, serif" font-style="italic" font-size="28">S</text>
+              <g font-family="Cambria, Georgia, serif" font-style="italic" font-size="26" fill="currentColor">
+                <text x="196" y="290">&#937;</text>
+                <text x="220" y="290">=</text>
+                <text x="252" y="278">S</text>
+                <text x="248" y="308">r</text>
+              </g>
+              <text x="262" y="302" fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="17">2</text>
+              <path d="M244 286 L276 286" stroke="currentColor" stroke-width="2.2"/>
+            </svg>
+          </div>
+          <div class="fig-caption">The cap of area S at distance r subtends the solid angle &Omega;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 15 — section divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">System of unit</h1>
+  </div>
+</section>
+
+<!-- Slide 16 — the four systems, cell by cell, then why SI won. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">System of unit</h2>
+
+    <table class="data compact">
+      <thead>
+        <tr><th>System</th><th>Length</th><th>Mass</th><th>Time</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="prop">CGS</td>
+          <td class="step">Centimetre</td><td class="step">gram</td><td class="step">Second</td>
+        </tr>
+        <tr>
+          <td class="prop">MKS</td>
+          <td class="step">Meter</td><td class="step">Kilogram</td><td class="step">Second</td>
+        </tr>
+        <tr>
+          <td class="prop">FPS</td>
+          <td class="step">Foot(0.3m)</td><td class="step">Pound(0.45Kg)</td><td class="step">Second</td>
+        </tr>
+        <tr>
+          <td class="prop">SI</td>
+          <td class="step">Meter</td><td class="step">Kilogram</td><td class="step">Second</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note step">SI grows straight out of MKS &mdash; same three, with ampere, kelvin, mole and candela added to complete the seven.</p>
+
+    <div class="g-row wide">
+      <span class="label">SI is:</span>
+      <ul class="bullets arrow tight">
+        <li class="step">Metric</li>
+        <li class="step">Rational (logic)</li>
+        <li class="step">Coherent (multiple is 1)</li>
+        <li class="step">Easily available</li>
+        <li class="step">Easily reproducible</li>
+        <li class="step">Invariable</li>
+      </ul>
+    </div>
+  </div>
+</section>

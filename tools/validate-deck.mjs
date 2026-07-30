@@ -56,14 +56,25 @@ if (!files.length) { console.error('no html files to check'); process.exit(1); }
 /* ------------------------------------------------------------- the rules -- */
 function validate(file) {
   const src = fs.readFileSync(file, 'utf8');
-  const bytes = Buffer.byteLength(src, 'utf8');
+
+  /* Vendored libraries (animejs / three) are inlined by build-deck.mjs — never
+     loaded from a CDN, which is the thing this gate actually cares about. They
+     are third-party code we do not lint, and their weight is not "somebody
+     pasted slide screenshots", so they come out of both the token scan and the
+     size budget. Everything the deck itself writes is still checked.         */
+  const vendorBlocks = src.match(/<script data-vendor="[^"]*">[\s\S]*?<\/script>/g) || [];
+  const vendorNames = vendorBlocks.map((b) => b.match(/data-vendor="([^"]*)"/)[1]);
+  const vendorBytes = vendorBlocks.reduce((a, s) => a + Buffer.byteLength(s, 'utf8'), 0);
+  const lint = vendorBlocks.reduce((s, b) => s.replace(b, ''), src);
+
+  const bytes = Buffer.byteLength(src, 'utf8') - vendorBytes;
   const errors = [];
   const warnings = [];
   const E = (m) => errors.push(m);
   const W = (m) => warnings.push(m);
 
   /* -- structure (rule 1, 8) -------------------------------------------- */
-  const pages = (src.match(/<section[^>]*class="[^"]*\bpage\b/g) || []).length;
+  const pages = (lint.match(/<section[^>]*class="[^"]*\bpage\b/g) || []).length;
   if (!pages) E('no <section class="page"> blocks');
 
   const styleBlock = (src.match(/<style[\s\S]*?<\/style>/gi) || []).join('\n');
@@ -89,25 +100,25 @@ function validate(file) {
     [/\bwindow\.open\s*\(/, 'window.open()'], [/<form\b/i, '<form>'],
     [/<input\b/i, '<input>'], [/<textarea\b/i, '<textarea>'], [/<select\b/i, '<select>'],
   ];
-  for (const [re, name] of banned) if (re.test(src)) E(`uses ${name} — blocked in the sandboxed iframe (rules 2, 3)`);
+  for (const [re, name] of banned) if (re.test(lint)) E(`uses ${name} — blocked in the sandboxed iframe (rules 2, 3)`);
 
   /* -- reserved names (rule 12) ----------------------------------------- */
-  const lfNames = src.match(/(?:class|id)="[^"]*__lf-(?!ctl)[\w-]+/g);
+  const lfNames = lint.match(/(?:class|id)="[^"]*__lf-(?!ctl)[\w-]+/g);
   if (lfNames) E(`uses reserved __lf- name: ${lfNames[0]}`);
-  if (/postMessage\s*\(\s*\{\s*type\s*:\s*['"]lf-/.test(src)) E('postMessages a reserved lf- type (rule 12)');
+  if (/postMessage\s*\(\s*\{\s*type\s*:\s*['"]lf-/.test(lint)) E('postMessages a reserved lf- type (rule 12)');
 
   /* -- external / local assets (rule 2) --------------------------------- */
-  const relAssets = (src.match(/(?:src|href)="(?!https?:|data:|#|mailto:)[^"]+"/g) || [])
+  const relAssets = (lint.match(/(?:src|href)="(?!https?:|data:|#|mailto:)[^"]+"/g) || [])
     .filter((s) => !/xmlns/.test(s));
   if (relAssets.length) E(`local/relative asset path — the file ships alone: ${relAssets[0]}`);
 
-  const cdn = (src.match(/<script[^>]+src="https?:\/\/[^"]+"/g) || []);
+  const cdn = (lint.match(/<script[^>]+src="https?:\/\/[^"]+"/g) || []);
   if (cdn.length) E(`loads a CDN script (${cdn[0].match(/https?:\/\/[^/]+/)[0]}) — scripts are STRIPPED in PDF export, so anything it renders comes out blank (rule 11)`);
-  if (/<link[^>]+href="https?:/i.test(src)) W('loads an external stylesheet — fails with no classroom network (rule 2)');
-  if (/MathJax/i.test(src)) E('MathJax present — equations will be blank in PDF export; pre-render with data-tex instead (rule 11)');
+  if (/<link[^>]+href="https?:/i.test(lint)) W('loads an external stylesheet — fails with no classroom network (rule 2)');
+  if (/MathJax/i.test(lint)) E('MathJax present — equations will be blank in PDF export; pre-render with data-tex instead (rule 11)');
 
   /* -- size / screenshot dumping ---------------------------------------- */
-  const b64 = src.match(/data:image\/\w+;base64,([A-Za-z0-9+/=]+)/g) || [];
+  const b64 = lint.match(/data:image\/\w+;base64,([A-Za-z0-9+/=]+)/g) || [];
   const b64Bytes = b64.reduce((a, s) => a + s.length, 0);
   const share = bytes ? b64Bytes / bytes : 0;
   const kb = bytes / 1024;
@@ -122,8 +133,8 @@ function validate(file) {
     W(`${(share * 100).toFixed(0)}% of the file is base64 (${b64.length} image(s) / ${pages} pages) — fine if these are genuine photographs, not if they are slide captures`);
 
   /* -- stepping (rules 16, 17) ------------------------------------------ */
-  const steps = (src.match(/class="[^"]*\bstep\b/g) || []).length;
-  const pageBlocks = src.match(/<section[^>]*class="[^"]*\bpage\b[\s\S]*?<\/section>/g) || [];
+  const steps = (lint.match(/class="[^"]*\bstep\b/g) || []).length;
+  const pageBlocks = lint.match(/<section[^>]*class="[^"]*\bpage\b[\s\S]*?<\/section>/g) || [];
   const contentPages = pageBlocks.filter(isContentPage);
   const nContent = contentPages.length || pages;
   const perPage = nContent ? steps / nContent : 0;
@@ -138,10 +149,10 @@ function validate(file) {
   if (flat.length)
     E(`${flat.length} content page(s) have no .step at all — everything appears at once (rule 16)`);
 
-  if (/<tr[^>]*class="[^"]*\bstep\b/.test(src))
+  if (/<tr[^>]*class="[^"]*\bstep\b/.test(lint))
     E('a <tr> carries .step — this project steps each <td> instead (rule 17)');
 
-  for (const row of src.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/g) || []) {
+  for (const row of lint.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/g) || []) {
     if (/<th\b/.test(row)) continue;
     const firstCell = row.match(/<td\b[^>]*>/);
     if (firstCell && /\bstep\b/.test(firstCell[0]))
@@ -149,20 +160,20 @@ function validate(file) {
   }
 
   /* -- label / definition pairing (rule 17) ------------------------------ */
-  for (const gr of src.match(/<div[^>]*class="[^"]*\bg-row\b[^"]*"[\s\S]*?<\/div>/g) || []) {
+  for (const gr of lint.match(/<div[^>]*class="[^"]*\bg-row\b[^"]*"[\s\S]*?<\/div>/g) || []) {
     const label = gr.match(/class="[^"]*\blabel\b[^"]*"/);
     if (label && /\bstep\b/.test(label[0]))
       { E('a .label is stepped — term and definition must not reveal together (rule 17)'); break; }
   }
-  for (const q of src.match(/class="[^"]*\bq\b[^"]*"/g) || []) {
+  for (const q of lint.match(/class="[^"]*\bq\b[^"]*"/g) || []) {
     if (/\bstep\b/.test(q)) { E('a question (.q) is stepped — questions stay visible, answers step (rule 17)'); break; }
   }
 
   /* -- branding (rule 17) ------------------------------------------------ */
-  if (/class="[^"]*(logo|brand|watermark|badge-pw)/i.test(src)) E('a logo / brand element is present (rule 17)');
+  if (/class="[^"]*(logo|brand|watermark|badge-pw)/i.test(lint)) E('a logo / brand element is present (rule 17)');
 
   /* -- interactivity (rule 3) -------------------------------------------- */
-  const handlers = (src.match(/<[^>]+onclick=/g) || []);
+  const handlers = (lint.match(/<[^>]+onclick=/g) || []);
   const unclickable = handlers.filter((h) => !/\bclickable\b/.test(h));
   if (unclickable.length) E(`${unclickable.length} onclick handler(s) not marked class="clickable" — clicks never reach them (rule 3)`);
   if (/:hover[^{]*\{[^}]*(display|visibility|opacity)/.test(styleBlock))
@@ -172,9 +183,9 @@ function validate(file) {
   if (!/@media\s+print/i.test(styleBlock)) E('no @media print block — PDF export will show unrevealed steps (rule 11)');
 
   /* -- design system drift ----------------------------------------------- */
-  const inlineStyles = (src.match(/\sstyle="[^"]*"/g) || []).length;
+  const inlineStyles = (lint.match(/\sstyle="[^"]*"/g) || []).length;
   if (inlineStyles > pages) W(`${inlineStyles} inline style attributes across ${pages} pages — should live in deck-base.css`);
-  const styleBlocks = (src.match(/<style/gi) || []).length;
+  const styleBlocks = (lint.match(/<style/gi) || []).length;
   if (styleBlocks > 1) W(`${styleBlocks} <style> blocks — the design system expects exactly one`);
 
   /* -- slide count of record --------------------------------------------- */
@@ -186,6 +197,7 @@ function validate(file) {
 
   return {
     file: path.basename(file),
+    libs: vendorNames, vendorKb: +(vendorBytes / 1024).toFixed(0),
     pages, contentPages: nContent, steps, kb: +kb.toFixed(0),
     images: b64.length, imgShare: +(share * 100).toFixed(0),
     stepsPerPage: +perPage.toFixed(1),
@@ -204,7 +216,8 @@ if (asJson) {
     const mark = r.pass ? (r.warnings.length ? 'WARN' : 'PASS') : 'FAIL';
     console.log(`\n${mark}  ${r.file}`);
     console.log(`      ${r.pages} pages (${r.contentPages} content) · ${r.steps} steps ` +
-                `(${r.stepsPerPage}/content page) · ${r.kb} KB · ${r.images} images (${r.imgShare}%)`);
+                `(${r.stepsPerPage}/content page) · ${r.kb} KB · ${r.images} images (${r.imgShare}%)` +
+                (r.libs.length ? ` · libs ${r.libs.join('+')} ${r.vendorKb} KB` : ''));
     for (const e of r.errors) console.log(`      ERROR  ${e}`);
     for (const w of r.warnings) console.log(`      warn   ${w}`);
   }

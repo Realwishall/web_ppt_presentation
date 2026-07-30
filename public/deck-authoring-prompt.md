@@ -368,6 +368,86 @@ canvas:
 - Never make the video the only carrier of an idea; the slide must still teach
   with the player missing.
 
+### 19. Hard-won rules from real conversions (read this before authoring)
+
+Every item below cost a rebuild at least once. They are cheap to obey and
+expensive to rediscover.
+
+**Stepping**
+
+- **Never nest a `.step` inside a `.step`.** The host reveals every `.step` in
+  document order and a reveal can propagate to descendants, so a stepped wrapper
+  around stepped children fires **two animations on one press**. If a group must
+  appear together, make the group its own `.step` and put the individual reveals
+  in a **sibling** container (see `.term-row.chips` + `.term-row` in
+  `docs/components.md`).
+- **A figure is the last reveal, not the first.** Do the words and the algebra,
+  then show the graph — wrap the whole `.figure-frame` + `.fig-caption` in one
+  `<div class="step">`.
+- **Question slides: the question and all options are visible immediately.** Do
+  not step the options — the class needs to read them all to think. Step the
+  *reasons* instead. Tapping the right option turns it green
+  (`onclick="this.classList.add('correct')"`), the wrong ones red.
+- Reveal one idea per press, and **light the thing you are naming at the same
+  moment you name it** (`data-lights` / `data-lit`) — the definition and its
+  highlight are one beat, not two.
+
+**Typography**
+
+- **Prose is the UI font. Only symbol-only equations get the math serif.** A
+  sentence set in Cambria italic looks wrong at the back of a room.
+- **Never put words inside `data-tex`.** `\text{constant}` renders as ugly mixed
+  type; write `n × u = constant` as a normal `.callout` or `.lead` instead.
+  `data-tex` is for `n_1 u_1 = n_2 u_2`, `n \propto \frac{1}{u}`, `A = l^2`.
+- `data-tex` is only converted on **`<span …></span>`** — on a `<div>` it is
+  silently left as raw LaTeX. The build log's `latex N converted` must equal the
+  number of `data-tex` attributes you wrote.
+
+**Media**
+
+- The gate fails a deck at **images ≥ pages ÷ 2 (when > 3)**. For an 8-page deck
+  that means **3 photos maximum** — draw ticks, arrows and icons as characters
+  (`&#10003;`) or inline SVG, never as pasted bitmaps.
+- Downscale photos to ~1100 px wide, JPEG q82, before inlining. Anything over
+  260 KB is rejected by the build.
+
+**Process**
+
+- Author `build/<slug>/fragments/*.html`, assemble with `build-deck.mjs`, gate
+  with `validate-deck.mjs`, then copy the built file out. **Never hand-edit the
+  built `.html`** — rules 1, 6 and 8 live in the build script.
+- If a slide needs something the vocabulary lacks, add it to `deck-base.css`
+  **and** `docs/components.md`, then use it. Never inline CSS in a fragment.
+- Before shipping, diff the deck's plain text against every `full_text` /
+  `text_content` in the source JSON. Anything missing is a dropped label.
+
+### 20. Motion — anime.js and three.js are available, INLINE and opt-in
+
+Both libraries are installed (`npm i animejs three`) and pre-built into
+`tools/vendor/` by `tools/make-vendor.mjs`. Use them when movement teaches
+something; skip them when it only decorates.
+
+- **Never load them from a CDN** (rule 2 and rule 11: scripts are stripped on
+  PDF export, and the classroom may be offline). `tools/build-deck.mjs` inlines a
+  library only when the deck asks for it — markup containing `data-anime=` or
+  `data-three=`, or `"libs": ["anime","three"]` in the manifest — and wraps it in
+  `<script data-vendor="…">`. The gate excludes those bytes from the size budget.
+- **Fragments contain no JS**, so motion is requested declaratively and played by
+  presets shipped in the build script:
+  `data-anime="draw"` (an `<svg>` draws its strokes on when revealed),
+  `data-anime="count"` (a number counts up), `data-anime="pulse"`,
+  `data-anime="float"`, and `data-three="globe" | "stars"` on a
+  `<div class="scene-frame">`.
+- **Never put a preset on a `.step` element itself.** The host owns `.step`
+  opacity and transform with `!important`; a preset fights it. Mark something
+  *inside* the stepped wrapper instead.
+- **Nothing may exist only in motion.** A `.scene-frame` must contain a
+  `.scene-fallback` (inline SVG or a sentence) — that is what prints and what
+  shows without WebGL — and a `draw` figure must already be complete and
+  readable with JS off.
+- Keep it to one moving element at a time, away from the area the teacher writes
+  on, and never loop anything behind text.
+
 ---
 
 ## CONTENT BRIEF  (fill this in, then send)

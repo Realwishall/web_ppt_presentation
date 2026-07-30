@@ -15,6 +15,27 @@ defined in `tools/deck-base.css` and inlined at build time.
 
 ---
 
+## Visual language — "midnight + gold"
+
+Set once in `tools/deck-base.css`; authors never restate it. Knowing it stops
+you reaching for markup that fights the theme.
+
+| | |
+|---|---|
+| Stage | near-black indigo (`#05060d`→`#0d1020`) with a slow gold/violet aurora on `#bg`, plus a hairline of light along the top of every slide |
+| Headings | gold `#f5c542`; `h2.heading` carries an automatic gold bar on its left — do not add your own |
+| Titles | white→gold gradient text, with a centred gold rule under a `.wrap.center` title |
+| Surfaces | frosted glass: a top-lit gradient, a hairline border, a soft drop shadow. `.card` `.callout` `.figure-frame` `.term-card` `.info-box` `.option` `.qa` all share it |
+| Tables | rounded glass panel, uppercase letter-spaced gold header band, zebra body rows, `td.prop` marked by a gold inner edge — no 1px grid |
+| Emphasis | `.eq.big` prints in soft gold with a faint glow; `.result` is a gold-ringed chip |
+| Print | every gradient, glow and glass effect flattens in `@media print`; the PDF keeps the dark stage and solid ink |
+
+Two consequences for authors: a bare `<span>` inside a `.g-row` is already set
+at body scale, and symbol-only working lines should be `<div class="eq step">`
+so they land in the math serif rather than the UI font.
+
+---
+
 ## Stepping law (rules 16–17) — read before anything else
 
 Visible from the first moment, **never** `.step`:
@@ -167,6 +188,43 @@ Marks: `.mark-quantity` (amber), `.mark-number` (green), `.mark-unit` (grey).
 Labels: `.label.for-quantity`, `.label.for-number`, `.label.for-unit`.
 The marked line is never a `.step` — it's the thing being explained.
 
+### Spotlight statement — `.eq.spot` + `data-lights` / `data-lit`
+
+The same marks, but they start **plain** and light up only when their definition
+is revealed, so the class reads the sentence first and then watches each word
+catch fire as it is named. Put `data-lit="key"` on the mark and `data-lights="key"`
+on the `.step` that defines it; `build-deck.mjs` ships the observer that pairs
+them **within a page**. One `.step` may light several keys (`data-lights="n u"`).
+
+```html
+<div class="eq big spot">A rod of
+  <span class="mark-quantity" data-lit="q">length</span>
+  <span class="mark-number" data-lit="n">4</span><span class="mark-unit" data-lit="u">m</span></div>
+```
+
+Stepping back unlights. Scripts are stripped on export, so `@media print` forces
+every mark lit — the PDF still carries the colour mapping.
+
+### `term-row` — colour-coded term cards
+
+A row of term chips that arrive **together on one press**, with each definition
+stepping in underneath its own chip afterwards. Pairs with `.eq.spot` above: the
+chip colour and the mark colour are the same mapping.
+
+The **row** is the `.step` (all three names at once); the chip itself never is.
+
+```html
+<div class="term-row step">          <!-- .two for two columns -->
+  <div class="term-card">
+    <span class="term for-quantity">Physical quantity</span>
+    <p class="step" data-lights="q">The quantity that can be measured…</p>
+  </div>
+  …
+</div>
+```
+
+Chips: `.term.for-quantity`, `.term.for-number`, `.term.for-unit`.
+
 ### `derivation`
 
 One line per `.step`; optional reason on the right.
@@ -295,6 +353,42 @@ to read — with JS off (PDF export) every box prints flat and undimmed.
   …
 </div>
 ```
+
+## Motion — `data-anime` presets and `.scene-frame[data-three]`
+
+Authors write no JS. A data attribute names a preset; `build-deck.mjs` inlines
+the library (only if some slide asks for it) and plays the preset the first time
+that element becomes visible.
+
+| Attribute | Put it on | Effect |
+|---|---|---|
+| `data-anime="draw"` | an inline `<svg>` | strokes draw themselves on |
+| `data-anime="count"` | an element whose text is a number | counts up to that number |
+| `data-anime="pulse"` | any non-`.step` element | one gentle attention pulse |
+| `data-anime="float"` | a decorative mark | slow endless bob |
+| `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
+
+```html
+<div class="step">
+  <div class="figure-frame tall">
+    <svg viewBox="0 0 380 320" data-anime="draw">…</svg>
+  </div>
+  <div class="fig-caption">θ is the arc divided by the radius</div>
+</div>
+
+<div class="scene-frame" data-three="globe">
+  <div class="scene-fallback">A sphere seen from its centre — surface 4πr².</div>
+</div>
+```
+
+Rules that are not negotiable:
+
+- **The preset never goes on the `.step` itself** — the host owns `.step`
+  opacity and transform with `!important`. Mark a child of the stepped wrapper.
+- **A `.scene-frame` must contain a `.scene-fallback`.** Scripts are stripped in
+  PDF export and the room may have no WebGL; the fallback is what prints.
+- A `draw` figure must already be complete and correct with JS off.
+- One moving thing at a time, never behind text, never where the teacher writes.
 
 ## Video — `.video-frame[data-video]` + `.video-fallback`
 

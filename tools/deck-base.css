@@ -1,9 +1,10 @@
 /* ============================================================================
    LessonForge deck-base.css  —  canonical design system for converted decks
    ----------------------------------------------------------------------------
-   Extracted and generalised from `01 - Physical world - Bearable.html`, the one
-   deck in the corpus that is a true HTML rebuild (22 KB, 14 pages, 97 steps,
-   real tables, zero embedded slide images).
+   "Midnight + gold": a near-black indigo stage, warm gold headings, frosted
+   glass surfaces lit from the top edge. Everything below is presentation scale
+   (rule 9) and pure CSS — no script, no web font, no external asset — so the
+   look survives PDF export and an offline classroom.
 
    This file is INLINED into every generated deck by tools/build-deck.mjs.
    Deck authors never write CSS. If a slide needs something that isn't here,
@@ -12,6 +13,7 @@
 
    Compliance notes (see public/deck-authoring-prompt.md):
      rule 1  — nothing here hides .page (no display:none / opacity:0 / visibility)
+     rule 3  — no hover state carries information; hover never fires in class
      rule 8  — .page is a bare full-height surface; all layout lives on .wrap
      rule 9  — dark stage, presentation-scale type via clamp()
      rule 10 — vmin/clamp everywhere; no fixed px for anything that must scale
@@ -22,98 +24,153 @@
 /* ---------------------------------------------------------------- tokens -- */
 :root{
   /* stage */
-  --bg-body:      #05060a;
-  --bg-stage:     #0a0b0f;
+  --bg-body:      #05060d;
+  --bg-stage:     #080a14;
+  --bg-deep:      #0d1020;
 
   /* ink */
-  --ink:          #f1f5f9;   /* primary text            */
-  --sub:          #cbd5e1;   /* secondary / explanatory */
-  --muted:        #94a3b8;   /* notes, captions         */
+  --ink:          #f4f7fb;   /* primary text            */
+  --sub:          #c7d2e1;   /* secondary / explanatory */
+  --muted:        #93a1b5;   /* notes, captions         */
 
-  /* accents — yellow is the heading/label colour throughout */
-  --yellow:       #f2d024;
-  --accent:       #6366f1;
-  --accent2:      #8b5cf6;
-  --blue:         #4472c4;   /* table header fill (matches Office theme) */
-  --green:        #22c55e;
-  --red:          #ef4444;
-  --cyan:         #38bdf8;
+  /* accents — gold is the heading/label colour throughout */
+  --gold:         #f5c542;
+  --gold-soft:    #ffe9a8;
+  --gold-deep:    #b98a12;
+  --yellow:       #f5c542;   /* legacy alias, same hue  */
+  --accent:       #7c8cff;
+  --accent2:      #a78bfa;
+  --blue:         #2b3a68;   /* table header base       */
+  --green:        #34d399;
+  --red:          #fb7185;
+  --cyan:         #56ccf2;
 
-  /* surfaces */
-  --card-bg:      rgba(255,255,255,.03);
-  --card-border:  rgba(255,255,255,.14);
-  --rule:         rgba(255,255,255,.08);
+  /* surfaces — layered glass, lit from the top edge */
+  --card-bg:      linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  --card-flat:    rgba(255,255,255,.035);
+  --card-border:  rgba(255,255,255,.12);
+  --rule:         rgba(255,255,255,.07);
+  --hairline:     rgba(255,255,255,.09);
+  --lip:          inset 0 .1vmin 0 rgba(255,255,255,.10);
+  --lift:         0 1.2vmin 3.6vmin rgba(0,0,0,.45);
+  --lift-lg:      0 2.4vmin 7vmin rgba(0,0,0,.55);
+  --radius:       1.5vmin;
+  --radius-lg:    2.1vmin;
 
   /* type scale — presentation scale, NOT web scale (rule 9) */
-  --fs-title:     clamp(36px, 8.6vmin, 98px);
+  --fs-title:     clamp(36px, 8.8vmin, 100px);
   --fs-h2:        clamp(26px, 5.6vmin, 60px);
   --fs-h3:        clamp(22px, 4.4vmin, 46px);
   --fs-body:      clamp(19px, 3.3vmin, 38px);
   --fs-small:     clamp(17px, 2.8vmin, 32px);
   --fs-note:      clamp(16px, 2.6vmin, 28px);
   --fs-eq:        clamp(20px, 3.9vmin, 44px);
-  --fs-th:        clamp(16px, 2.4vmin, 26px);
-  --fs-td:        clamp(15px, 2.3vmin, 25px);
+  --fs-th:        clamp(15px, 2.2vmin, 25px);
+  --fs-td:        clamp(15px, 2.35vmin, 26px);
 
   /* fonts (rule 17) */
-  --font-ui:      Calibri, Candara, 'Segoe UI', system-ui, sans-serif;
+  --font-ui:      Calibri, Candara, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
   --font-math:    'Cambria Math', Cambria, Georgia, serif;
 
   /* rhythm */
   --gap:          2.2vmin;
-  --pad-y:        9vmin;
+  --pad-y:        8.5vmin;
   --pad-x:        7.5vmin;
 }
 
 html,body{height:100%;margin:0}
-body{background:var(--bg-body);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
+     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+     font-kerning:normal;font-variant-numeric:tabular-nums}
+::selection{background:rgba(245,197,66,.28)}
 
 /* --------------------------------------------- persistent layers (rule 1) --
-   Siblings of .page — the host only toggles .page, never these.             */
+   Siblings of .page — the host only toggles .page, never these. The two
+   pseudo-elements are a slow, cheap aurora: gradients only, no blur filter,
+   no script, and they never carry information (rule 11).                    */
 #bg{position:fixed;inset:0;z-index:0;overflow:hidden;
     background:
-      radial-gradient(1100px 650px at 12% -12%, rgba(255,255,255,.035), transparent 60%),
-      radial-gradient(900px 600px at 105% 105%, rgba(99,102,241,.06), transparent 60%),
-      var(--bg-stage);}
-#bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+      radial-gradient(120vmin 80vmin at 12% -18%, rgba(245,197,66,.055), transparent 62%),
+      radial-gradient(110vmin 90vmin at 108% 112%, rgba(124,140,255,.09), transparent 60%),
+      linear-gradient(165deg, var(--bg-deep) 0%, var(--bg-stage) 45%, var(--bg-body) 100%);}
+#bg:before,#bg:after{content:"";position:absolute;border-radius:50%;
+    will-change:transform;pointer-events:none}
+#bg:before{width:90vmin;height:90vmin;left:-24vmin;top:-30vmin;
+    background:radial-gradient(circle,rgba(245,197,66,.10),transparent 66%);
+    animation:lf-drift-a 48s ease-in-out infinite alternate}
+#bg:after{width:110vmin;height:110vmin;right:-32vmin;bottom:-38vmin;
+    background:radial-gradient(circle,rgba(124,140,255,.13),transparent 64%);
+    animation:lf-drift-b 62s ease-in-out infinite alternate}
+@keyframes lf-drift-a{from{transform:translate3d(0,0,0) scale(1)}
+                      to  {transform:translate3d(9vmin,6vmin,0) scale(1.14)}}
+@keyframes lf-drift-b{from{transform:translate3d(0,0,0) scale(1)}
+                      to  {transform:translate3d(-8vmin,-7vmin,0) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){#bg:before,#bg:after{animation:none}}
+#bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.32}
 
-.kicker-tag{position:fixed;left:2.8vmin;top:2.8vmin;z-index:5;color:var(--sub);
-    font-size:1.7vmin;letter-spacing:.08em;text-transform:uppercase;opacity:.55;
+.kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
+    font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    padding:.7vmin 1.6vmin;border-radius:99px;opacity:.72;
+    background:rgba(245,197,66,.08);border:.1vmin solid rgba(245,197,66,.22);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     pointer-events:none}
 
 /* ------------------------------------------------------- page + wrappers --
    rule 8: .page is forced to display:block by the host, so NO flex here.    */
 .page{position:relative;z-index:1;height:100%;box-sizing:border-box;color:var(--ink)}
+/* a single hairline of light along the top edge of every slide */
+.page:before{content:"";position:absolute;left:0;right:0;top:0;height:.28vmin;
+    background:linear-gradient(90deg,transparent,rgba(245,197,66,.55),rgba(124,140,255,.4),transparent);
+    opacity:.7;pointer-events:none}
 
 .wrap{height:100%;box-sizing:border-box;overflow:auto;
       padding:var(--pad-y) var(--pad-x) 6vmin;
       display:flex;flex-direction:column;gap:var(--gap)}
 .wrap.center{align-items:center;justify-content:center;text-align:center}
 .wrap.tight{gap:1.2vmin}
-.wrap.dense{padding:6vmin 5vmin 4vmin;gap:1.4vmin}   /* heavy tables/derivations */
+.wrap.dense{padding:6vmin 5.5vmin 4vmin;gap:1.5vmin}   /* heavy tables/derivations */
+
+.wrap::-webkit-scrollbar{width:.9vmin}
+.wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
+.wrap::-webkit-scrollbar-track{background:transparent}
 
 /* The host controls the hidden→shown transition with !important. Never set
    opacity/visibility on .step yourself (rule 4).                            */
 .step{opacity:1}
 
 /* ------------------------------------------------------------- headings --- */
-h1.title       {margin:0;font-size:var(--fs-title);color:#fff;font-weight:700;line-height:1.1}
-h2.heading     {margin:0 0 1vmin;font-size:var(--fs-h2);color:var(--yellow);font-weight:700;line-height:1.15}
-h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--yellow);font-weight:700}
-h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--yellow);font-weight:700}
+h1.title{margin:0;font-size:var(--fs-title);font-weight:700;line-height:1.06;
+    letter-spacing:-.015em;color:#fff;
+    background:linear-gradient(174deg,#ffffff 12%,var(--gold-soft) 78%,var(--gold) 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
+.wrap.center h1.title:after{content:"";display:block;width:13vmin;height:.5vmin;
+    margin:2.6vmin auto 0;border-radius:99px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+h2.heading{position:relative;margin:0 0 1.2vmin;padding-left:2.8vmin;
+    font-size:var(--fs-h2);color:var(--gold);font-weight:700;
+    line-height:1.12;letter-spacing:-.005em}
+h2.heading:before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:.55vmin;
+    border-radius:99px;
+    background:linear-gradient(180deg,var(--gold),rgba(245,197,66,.15))}
+h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--gold);font-weight:700}
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--gold);
+    font-weight:700;letter-spacing:.005em}
 h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
 
 .inline-lead{color:var(--ink);font-weight:400;font-size:var(--fs-body);margin-left:1.2vmin}
 .paren      {font-size:.55em;font-weight:400;color:var(--sub)}   /* "(contd.)" */
 
 /* ----------------------------------------------------------------- text --- */
-p{margin:0;font-size:var(--fs-body);line-height:1.45;color:var(--ink)}
+p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
 .sub    {color:var(--sub)}
-.note   {color:var(--sub);font-style:italic;font-size:var(--fs-note)}
+.note   {color:var(--muted);font-style:italic;font-size:var(--fs-note);line-height:1.45}
 .caption{color:var(--muted);font-size:var(--fs-note)}
 .example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
 .example b{color:var(--ink);font-style:normal}
-.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.5}
+.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.4;
+         letter-spacing:-.01em}
 
 /* -------------------------------------------------------------- layouts --- */
 .two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
@@ -123,57 +180,89 @@ p{margin:0;font-size:var(--fs-body);line-height:1.45;color:var(--ink)}
 .grid4     {display:grid;grid-template-columns:repeat(4,1fr);gap:2.4vmin;margin-top:.5vmin}
 .col p     {margin-bottom:1.2vmin}
 .cell p    {font-size:var(--fs-small);color:var(--sub)}
-.stack     {display:flex;flex-direction:column;gap:1.4vmin}
+.stack     {display:flex;flex-direction:column;gap:1.6vmin}
 .row       {display:flex;flex-wrap:wrap;align-items:center;gap:2vmin}
 
 /* -------------------------------------------- glossary / definition list --
    rule 17: the LABEL is never a .step — only the definition steps in.       */
 .glossary{display:flex;flex-direction:column;gap:2.4vmin;margin-top:1vmin}
-.g-row{display:grid;grid-template-columns:24vmin 1fr;gap:2vmin;align-items:start}
+.g-row{position:relative;display:grid;grid-template-columns:24vmin 1fr;gap:2.4vmin;
+       align-items:start;padding-left:1.8vmin}
+.g-row:before{content:"";position:absolute;left:0;top:.35em;bottom:.2em;width:.28vmin;
+       border-radius:99px;background:linear-gradient(180deg,rgba(245,197,66,.55),transparent)}
 .g-row.wide{grid-template-columns:34vmin 1fr}
-.label{color:var(--yellow);font-weight:700;font-size:var(--fs-body)}
+/* a bare <span> definition would otherwise fall back to the 16px UA default —
+   both sides of the pair read at body scale (rule 9). */
+.g-row>*{font-size:var(--fs-body);line-height:1.5;color:var(--ink);min-width:0}
+.label{color:var(--gold);font-weight:700;font-size:var(--fs-body);letter-spacing:.005em}
 .g-row .sub-list{margin-top:.6vmin;display:flex;flex-direction:column;gap:.3vmin}
 .g-row .sub-list span{display:block;font-size:var(--fs-small);color:var(--sub);padding-left:2vmin}
 
 /* -------------------------------------------------------------- bullets --- */
-ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.4vmin}
-ul.bullets li{position:relative;padding-left:2.6vmin;font-size:var(--fs-body);line-height:1.4}
-ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--yellow);font-size:.7em}
-ul.bullets.box   li:before{content:"\2b1c";color:var(--yellow);font-size:.6em;top:.15em}
-ul.bullets.arrow li:before{content:"\27a4";color:var(--yellow);font-size:.7em}
-ul.bullets.dot   li:before{content:"\2022";color:var(--yellow);font-size:1em;top:-.05em}
-ul.bullets.tight{gap:.8vmin}
+ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.5vmin}
+ul.bullets li{position:relative;padding-left:3.2vmin;font-size:var(--fs-body);line-height:1.45}
+ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--gold);font-size:.7em}
+ul.bullets.box   li:before{content:"\2b1c";color:var(--gold);font-size:.6em;top:.15em}
+ul.bullets.arrow li:before{content:"\27a4";color:var(--gold);font-size:.7em}
+ul.bullets.dot   li:before{content:"\2022";color:var(--gold);font-size:1em;top:-.05em}
+ul.bullets.tight{gap:.9vmin}
 ul.bullets.small li{font-size:var(--fs-small)}
 ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
 
 /* ------------------------------------------------------------------ Q&A --
    rule 17: question always visible, answer stepped.                         */
-.qa{margin-bottom:1.6vmin}
-.qa .q{color:var(--yellow);font-weight:700;font-size:clamp(18px,2.9vmin,32px)}
-.qa .a{margin-top:.5vmin;padding-left:2.4vmin;color:var(--sub);font-size:clamp(17px,2.7vmin,30px)}
+.qa{margin-bottom:1.6vmin;padding:1.6vmin 2vmin;border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
+    box-shadow:var(--lip)}
+.qa .q{color:var(--gold);font-weight:700;font-size:clamp(18px,2.9vmin,32px);line-height:1.35}
+.qa .a{margin-top:.8vmin;padding-left:2.4vmin;color:var(--sub);
+       font-size:clamp(17px,2.7vmin,30px);line-height:1.45}
 
 /* -------------------------------------------------------------- surfaces --- */
-.card{background:var(--card-bg);border:.14vmin solid var(--card-border);
-      border-radius:1.2vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
-.callout{border-left:.45vmin solid var(--accent);background:rgba(99,102,241,.08);
-         padding:1.4vmin 2vmin;border-radius:.6vmin;font-size:var(--fs-small)}
-.callout--note{border-left-color:var(--cyan);background:rgba(56,189,248,.08)}
-.callout--warn{border-left-color:var(--red);background:rgba(239,68,68,.08)}
-.callout--tip {border-left-color:var(--green);background:rgba(34,197,94,.08)}
-.callout .callout-label{display:block;color:var(--yellow);font-weight:700;margin-bottom:.4vmin}
+.card{background:var(--card-bg);border:.12vmin solid var(--card-border);
+      border-radius:var(--radius);padding:2.2vmin 2.6vmin;box-sizing:border-box;
+      box-shadow:var(--lip),var(--lift)}
+
+.callout{position:relative;border:0;border-radius:var(--radius);
+         padding:1.7vmin 2.2vmin 1.7vmin 3vmin;font-size:var(--fs-small);
+         line-height:1.45;color:var(--ink);
+         background:linear-gradient(180deg,rgba(124,140,255,.16),rgba(124,140,255,.05));
+         box-shadow:var(--lip),var(--lift)}
+.callout:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
+         width:.45vmin;border-radius:99px;background:var(--accent)}
+.callout--note{background:linear-gradient(180deg,rgba(86,204,242,.16),rgba(86,204,242,.05))}
+.callout--note:before{background:var(--cyan)}
+.callout--warn{background:linear-gradient(180deg,rgba(251,113,133,.16),rgba(251,113,133,.05))}
+.callout--warn:before{background:var(--red)}
+.callout--tip {background:linear-gradient(180deg,rgba(52,211,153,.16),rgba(52,211,153,.05))}
+.callout--tip:before{background:var(--green)}
+.callout .callout-label{display:block;color:var(--gold);font-weight:700;
+         font-size:.86em;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.6vmin}
 
 /* --------------------------------------------------------------- tables ---
    rule 17: .step goes on each data <td>, NEVER on the <tr>, and the first
-   column (td.prop) stays unstepped so it reads as a row header.             */
-table.data{border-collapse:collapse;width:100%;margin-top:1vmin}
-table.data th{background:var(--blue);color:var(--yellow);font-weight:700;text-align:left;
-      padding:1.2vmin 1.4vmin;font-size:var(--fs-th);border:1px solid rgba(255,255,255,.15)}
-table.data td{padding:1.3vmin 1.4vmin;font-size:var(--fs-td);
-      border-bottom:1px solid var(--rule);vertical-align:top}
-table.data td.prop{color:var(--yellow);font-weight:700}
+   column (td.prop) stays unstepped so it reads as a row header.
+   Rounded glass panel, gold header band, zebra body, no boxy 1px grid.     */
+table.data{border-collapse:separate;border-spacing:0;width:100%;margin-top:1.4vmin;
+      background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+      border:.12vmin solid var(--card-border);border-radius:var(--radius-lg);
+      overflow:hidden;box-shadow:var(--lip),var(--lift-lg)}
+table.data th{
+      background:linear-gradient(180deg,rgba(245,197,66,.20),rgba(245,197,66,.06));
+      color:var(--gold-soft);font-weight:700;text-align:left;
+      padding:1.5vmin 1.9vmin;font-size:var(--fs-th);
+      letter-spacing:.11em;text-transform:uppercase;white-space:nowrap;
+      border-bottom:.18vmin solid rgba(245,197,66,.45)}
+table.data th+th{box-shadow:inset .1vmin 0 0 rgba(255,255,255,.08)}
+table.data td{padding:1.5vmin 1.9vmin;font-size:var(--fs-td);color:var(--ink);
+      border-bottom:.1vmin solid var(--rule);vertical-align:middle;line-height:1.35}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+table.data td.prop{color:var(--gold);font-weight:700;
+      box-shadow:inset .35vmin 0 0 rgba(245,197,66,.6)}
 table.data td.num{text-align:right;font-family:var(--font-math)}
-table.data.compact th{padding:.8vmin 1vmin}
-table.data.compact td{padding:.8vmin 1vmin}
+table.data.compact th{padding:1.05vmin 1.3vmin}
+table.data.compact td{padding:1.05vmin 1.3vmin}
 table.data.center td{text-align:center}
 .ok{color:var(--green);font-weight:900}
 .no{color:var(--red);font-weight:900}
@@ -183,20 +272,21 @@ table.data.center td{text-align:center}
      1. .eq / .frac / .radical  — hand-built markup for inline symbol math
      2. MathML emitted by tools/build-deck.mjs from LaTeX in the slide plan   */
 .eq{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:var(--fs-eq);
-    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em}
+    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em;letter-spacing:.005em}
 .eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
-.eq-note{font-style:italic;color:var(--sub);font-size:var(--fs-note)}
+.eq-note{font-style:italic;color:var(--muted);font-size:var(--fs-note)}
 .eq.small{font-size:var(--fs-small)}
-.eq.big  {font-size:clamp(24px,5vmin,56px)}
+.eq.big  {font-size:clamp(24px,5vmin,56px);color:var(--gold-soft);
+          text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
 
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
-      margin:0 .18em;line-height:1.15}
-.frac .num{border-bottom:.09em solid currentColor;padding:0 .18em .06em}
-.frac .den{padding:.06em .18em 0}
+      margin:0 .2em;line-height:1.15}
+.frac .num{border-bottom:.08em solid currentColor;padding:0 .2em .08em}
+.frac .den{padding:.08em .2em 0}
 
 .radical{display:inline-flex;align-items:flex-start}
 .radical .sym{font-size:1.25em;line-height:.9;margin-right:-.06em}
-.radical .content{border-top:.09em solid currentColor;padding:0 .16em}
+.radical .content{border-top:.08em solid currentColor;padding:0 .16em}
 
 .vec{position:relative;display:inline-block}
 .vec:after{content:"\2192";position:absolute;left:0;right:0;top:-.62em;
@@ -212,63 +302,136 @@ math[display="block"]{display:block;margin:.8vmin 0}
    are colour-coded to the terms defined below them. Colour is the mapping, so
    each mark must pair with a .label of the same hue.                         */
 .mark-quantity,.mark-number,.mark-unit{
-  padding:.06em .3em;border-radius:.3em;font-style:normal}
-.mark-quantity{background:rgba(180,83,9,.55);color:#fff}       /* physical quantity */
-.mark-number  {background:rgba(34,197,94,.35);color:#fff}      /* numerical part    */
-.mark-unit    {background:rgba(148,163,184,.40);color:#fff}    /* unit              */
+  padding:.08em .34em;border-radius:.32em;font-style:normal}
+.mark-quantity{background:linear-gradient(180deg,rgba(217,119,6,.7),rgba(180,83,9,.55));color:#fff}
+.mark-number  {background:linear-gradient(180deg,rgba(52,211,153,.45),rgba(16,185,129,.3));color:#fff}
+.mark-unit    {background:linear-gradient(180deg,rgba(203,213,225,.45),rgba(148,163,184,.32));color:#fff}
 
 .label.for-quantity{color:#fbbf24}
 .label.for-number  {color:var(--green)}
-.label.for-unit    {color:#cbd5e1}
+.label.for-unit    {color:#dbe4ef}
+
+/* ------------------------------------------- spotlight statement (.spot) ---
+   Same marks, but they start PLAIN and light up only when the matching
+   definition is revealed. `[data-lights="key"]` on the .step, `[data-lit="key"]`
+   on the mark; tools/build-deck.mjs ships the observer that pairs them within a
+   page. Scripts are stripped on export, so @media print forces every mark lit
+   (rule 11) and the slide still teaches with JS off.                         */
+.eq.spot{font-family:var(--font-math);gap:.32em;
+  padding:2.4vmin 3.2vmin;border-radius:var(--radius-lg);line-height:1.35;
+  background:var(--card-bg);border:.12vmin solid var(--card-border);
+  box-shadow:var(--lip),var(--lift)}
+.eq.spot [data-lit]{background:transparent;color:inherit;box-shadow:none;
+  transition:background .4s ease,color .4s ease,box-shadow .4s ease}
+.eq.spot .mark-quantity.is-lit{background:rgba(217,119,6,.68);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(251,191,36,.55)}
+.eq.spot .mark-number.is-lit{background:rgba(52,211,153,.45);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(52,211,153,.6)}
+.eq.spot .mark-unit.is-lit{background:rgba(203,213,225,.45);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(203,213,225,.55)}
+
+/* ------------------------------------------------------------ term cards ---
+   Two grids on the SAME column track: a row of colour-coded chips, and the
+   definition cards that land underneath them.
+
+   NEVER nest a .step inside a .step — the host reveals every .step in document
+   order, and some hosts propagate the reveal to descendants, so a stepped row
+   wrapping stepped children fires two reveals on one press. That is why the
+   chips row and the definitions row are SIBLINGS: `.term-row.chips` is one
+   .step (all names together), and each `.term-card` below is its own.        */
+.term-row{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4vmin;
+  margin-top:.6vmin;align-items:start}
+.term-row.two{grid-template-columns:repeat(2,1fr)}
+.term-row.chips{margin-top:1.8vmin;margin-bottom:.4vmin}
+.wrap.center .term-row{justify-items:center}
+.wrap.center .term-row .term{justify-self:center}
+.term-row .term{justify-self:start;padding:1vmin 2.6vmin;border-radius:99px;
+  font-family:var(--font-ui);font-weight:700;font-size:var(--fs-small);
+  letter-spacing:.02em;line-height:1.3;box-shadow:var(--lip),var(--lift)}
+.term-card{background:var(--card-bg);border:.12vmin solid var(--card-border);
+  border-radius:var(--radius);padding:1.9vmin 2.1vmin;box-sizing:border-box;
+  margin:0;font-family:var(--font-ui);font-size:var(--fs-small);
+  color:var(--sub);line-height:1.45;box-shadow:var(--lip),var(--lift)}
+.term-card.for-quantity{border-left:.5vmin solid rgba(251,191,36,.75)}
+.term-card.for-unit    {border-left:.5vmin solid rgba(203,213,225,.7)}
+.term-card.for-number  {border-left:.5vmin solid rgba(52,211,153,.75)}
+.term.for-quantity{background:linear-gradient(180deg,rgba(217,119,6,.62),rgba(146,64,14,.5));
+  color:#fff;border:.14vmin solid rgba(251,191,36,.5)}
+.term.for-number{background:linear-gradient(180deg,rgba(52,211,153,.35),rgba(16,185,129,.22));
+  color:#eafaf0;border:.14vmin solid rgba(52,211,153,.55)}
+.term.for-unit{background:linear-gradient(180deg,rgba(203,213,225,.34),rgba(148,163,184,.22));
+  color:#f4f7fb;border:.14vmin solid rgba(203,213,225,.45)}
 
 /* --------------------------------------------------- derivation / steps --- */
-.derivation{display:flex;flex-direction:column;gap:1.2vmin}
+.derivation{display:flex;flex-direction:column;gap:1.3vmin}
 .derivation .line{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink);
                   display:flex;align-items:baseline;gap:.5em}
 .derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
                        font-size:var(--fs-note)}
-.result{display:inline-block;border:.18vmin solid var(--yellow);border-radius:.8vmin;
-        padding:.8vmin 1.6vmin;color:var(--yellow);font-family:var(--font-math);
-        font-size:var(--fs-eq);font-weight:700}
+.result{display:inline-block;border:.14vmin solid rgba(245,197,66,.7);border-radius:1.1vmin;
+        padding:1vmin 2vmin;color:var(--gold-soft);font-family:var(--font-math);
+        font-size:var(--fs-eq);font-weight:700;
+        background:linear-gradient(180deg,rgba(245,197,66,.16),rgba(245,197,66,.05));
+        box-shadow:var(--lip),0 0 4vmin rgba(245,197,66,.16)}
 
 /* ------------------------------------------------------- worked example --- */
-.worked{display:flex;flex-direction:column;gap:1.4vmin}
+.worked{display:flex;flex-direction:column;gap:1.5vmin}
 .worked .given   {color:var(--sub);font-size:var(--fs-small)}
-.worked .asked   {color:var(--yellow);font-weight:700;font-size:var(--fs-small)}
-.worked .solution{display:flex;flex-direction:column;gap:1vmin}
+.worked .asked   {color:var(--gold);font-weight:700;font-size:var(--fs-small)}
+.worked .solution{display:flex;flex-direction:column;gap:1.1vmin}
 
 /* -------------------------------------------------------------- figures ---
    Inline <svg> lives inside .figure-frame; the frame owns the sizing so the
    SVG only needs a viewBox (never fixed width/height).                      */
 .figure-frame{display:flex;align-items:center;justify-content:center;
-              background:var(--card-bg);border:.12vmin solid var(--card-border);
-              border-radius:1.2vmin;padding:2vmin;box-sizing:border-box;min-height:0}
+              background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+              border:.12vmin solid var(--card-border);
+              border-radius:var(--radius-lg);padding:2.4vmin;box-sizing:border-box;
+              min-height:0;box-shadow:var(--lip),var(--lift-lg)}
 .figure-frame svg{width:100%;height:auto;max-height:52vh;color:var(--ink)}
-.figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:.6vmin}
-.figure-frame.plain{background:none;border:0;padding:0}
+.figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:1vmin}
+.figure-frame.plain{background:none;border:0;padding:0;box-shadow:none}
 .figure-frame.tall svg,.figure-frame.tall img{max-height:64vh}
-.fig-caption{margin-top:.8vmin;text-align:center;color:var(--muted);font-size:var(--fs-note)}
+.fig-caption{margin-top:1vmin;text-align:center;color:var(--muted);font-size:var(--fs-note);
+             letter-spacing:.02em}
 
 /* ------------------------------------------------------------ questions ---
-   Only .option carries .clickable (rule 3): ≥44px, stable position.         */
-.options{display:flex;flex-direction:column;gap:1.4vmin;margin-top:1vmin}
-.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
-.option{border:.14vmin solid rgba(255,255,255,.25);border-radius:1vmin;
-        padding:1.4vmin 2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
-        min-height:44px;box-sizing:border-box;background:rgba(255,255,255,.02);
-        transition:border-color .25s,background .25s}
+   Only .option carries .clickable (rule 3): ≥44px, stable position.
+   No hover state — hover never fires while teaching.                        */
+.options{display:flex;flex-direction:column;gap:1.5vmin;margin-top:1vmin}
+.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5vmin}
+.option{position:relative;display:flex;align-items:center;gap:1.4vmin;
+        border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
+        padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        min-height:44px;box-sizing:border-box;line-height:1.3;
+        background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+        box-shadow:var(--lip),var(--lift);
+        transition:border-color .3s ease,background .3s ease,box-shadow .3s ease}
 /* An option paired with an aside (the formula that disqualifies it, a ✓/✗).
    Two cells so the option text and its aside can be separate reveals. */
 .option-row{display:grid;grid-template-columns:minmax(0,1fr) auto;
             gap:2.4vmin;align-items:center}
 .option-row .option{margin:0}
-.option.picked {border-color:var(--accent2);background:rgba(139,92,246,.12)}
-.option.correct{border-color:var(--green);background:rgba(34,197,94,.12)}
-.option.wrong  {border-color:var(--red);background:rgba(239,68,68,.10)}
-.opt-badge{display:inline-block;min-width:2.4vmin;margin-right:1vmin;
-           color:var(--yellow);font-weight:700}
-.answer-box{margin-top:1vmin;padding:1.4vmin 2vmin;border-left:.35vmin solid var(--green);
-            background:rgba(34,197,94,.08);font-size:clamp(17px,2.8vmin,32px)}
+.option.picked {border-color:rgba(167,139,250,.8);
+                background:linear-gradient(180deg,rgba(167,139,250,.22),rgba(167,139,250,.06));
+                box-shadow:var(--lip),0 0 0 .22vmin rgba(167,139,250,.35)}
+.option.correct{border-color:rgba(52,211,153,.85);
+                background:linear-gradient(180deg,rgba(52,211,153,.24),rgba(52,211,153,.06));
+                box-shadow:var(--lip),0 0 0 .22vmin rgba(52,211,153,.4),0 0 5vmin rgba(52,211,153,.22)}
+.option.wrong  {border-color:rgba(251,113,133,.8);
+                background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(251,113,133,.05))}
+.opt-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+           width:1.9em;height:1.9em;border-radius:99px;font-size:.72em;font-weight:700;
+           color:#241a02;background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+           box-shadow:0 .3vmin 1.4vmin rgba(245,197,66,.35)}
+.option.correct .opt-badge{background:linear-gradient(180deg,#bbf7d0,var(--green));color:#04291d}
+.option.wrong   .opt-badge{background:linear-gradient(180deg,#fecdd3,var(--red));color:#3f0a14}
+.answer-box{position:relative;margin-top:1.2vmin;padding:1.7vmin 2.2vmin 1.7vmin 3vmin;
+            border-radius:var(--radius);font-size:clamp(17px,2.8vmin,32px);line-height:1.4;
+            background:linear-gradient(180deg,rgba(52,211,153,.18),rgba(52,211,153,.05));
+            box-shadow:var(--lip),var(--lift)}
+.answer-box:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
+            width:.45vmin;border-radius:99px;background:var(--green)}
 .answer-box .ok{margin-right:.6vmin}
 .answer-box i{color:var(--sub)}
 
@@ -288,19 +451,19 @@ math[display="block"]{display:block;margin:.8vmin 0}
    so the box stays big for exactly as long as the teacher is on it.
    The transform lives on the BOX, never on the .step, because the host owns
    .step opacity and transform with !important.                               */
-.box-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.2vmin;margin-top:1vmin}
+.box-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.4vmin;margin-top:1.2vmin}
 .box-grid.three{grid-template-columns:repeat(3,1fr)}
 .box-grid.one  {grid-template-columns:1fr}
 .info-box{position:relative;background:var(--card-bg);
-          border:.16vmin solid var(--card-border);border-left:.5vmin solid var(--yellow);
-          border-radius:1.2vmin;padding:1.6vmin 2vmin;box-sizing:border-box;
-          will-change:transform;
+          border:.12vmin solid var(--card-border);border-left:.5vmin solid var(--gold);
+          border-radius:var(--radius-lg);padding:1.9vmin 2.2vmin;box-sizing:border-box;
+          box-shadow:var(--lip),var(--lift);will-change:transform;
           /* a touch of overshoot, so "the box opened" reads as its own beat
              even when the teacher presses Next quickly */
           transition:transform .45s cubic-bezier(.34,1.36,.5,1),opacity .4s ease,
                      box-shadow .4s ease,border-color .4s ease,background .4s ease}
-.info-box h4.cell-heading{margin:0 0 .4vmin}
-.info-box p{font-size:var(--fs-small);color:var(--sub)}
+.info-box h4.cell-heading{margin:0 0 .5vmin}
+.info-box p{font-size:var(--fs-small);color:var(--sub);line-height:1.45}
 
 /* Grow INWARD, so a 120% box never pushes past the slide's padding: the outer
    column pins its outer edge, a lone column grows from its centre.           */
@@ -310,21 +473,43 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .box-grid.three > .info-box:nth-child(3n+1){transform-origin:left center}
 .box-grid.three > .info-box:nth-child(3n)  {transform-origin:right center}
 
-.page.has-focus .info-box{opacity:.5}          /* only once a box holds the floor */
+.page.has-focus .info-box{opacity:.45}          /* only once a box holds the floor */
 /* The enlarged box overlaps its neighbours, so its background must be nearly
    solid — at card transparency the text underneath bleeds through and the two
    sets of words mix. Just enough translucency to read as a raised panel.     */
 .page.has-focus .info-box.is-active,
 .info-box.is-active{
-  opacity:1;transform:scale(1.2);z-index:5;border-color:var(--yellow);
-  background:rgba(17,21,33,.94);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  box-shadow:0 0 0 .2vmin rgba(242,208,36,.35),0 2vmin 6vmin rgba(0,0,0,.6);
+  opacity:1;transform:scale(1.2);z-index:5;border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(23,27,44,.97),rgba(13,16,32,.97));
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 0 0 .2vmin rgba(245,197,66,.4),0 2.4vmin 7vmin rgba(0,0,0,.65),
+             0 0 9vmin rgba(245,197,66,.14);
 }
 /* Zero-size sentinel steps injected by tools/build-deck.mjs: one before the
    box's content and one after it, so "grow" and "shrink" are each their own
    press. Never display:none — the fx observer needs an offsetParent to test. */
 .box-zoom{display:block;width:0;height:0;margin:0;padding:0;border:0;overflow:hidden}
+
+/* ------------------------------------------------------------ 3D scenes ---
+   `<div class="scene-frame" data-three="globe">` — build-deck.mjs inlines three
+   and starts a slow scene sized to this box (rule 7: after load, zero-size
+   guard, WebGL feature-detect, try/catch, silent failure).
+
+   Scripts are STRIPPED in PDF export and the room may have no GPU, so the frame
+   MUST contain a `.scene-fallback` — inline SVG or a sentence. It is what
+   prints and what shows when WebGL is unavailable; the runtime only hides it
+   once a canvas is actually live. Never put an idea only in the 3D layer.   */
+.scene-frame{position:relative;width:100%;aspect-ratio:16/10;box-sizing:border-box;
+  border-radius:var(--radius-lg);overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift-lg)}
+.scene-frame.tall{aspect-ratio:4/3}
+.scene-frame canvas{position:absolute;inset:0;width:100%;height:100%}
+.scene-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:2.4vmin;box-sizing:border-box;text-align:center;
+  color:var(--sub);font-size:var(--fs-note);line-height:1.4}
+.scene-fallback svg{width:100%;height:100%;color:var(--ink)}
+.scene-frame.is-live .scene-fallback{display:none}
 
 /* ---------------------------------------------------------------- video ---
    16:9 embed. Scripts are stripped in PDF export (rule 11) and the classroom
@@ -332,35 +517,51 @@ math[display="block"]{display:block;margin:.8vmin 0}
    the in/out points — that is what prints and what the teacher reads if the
    embed refuses to load.                                                     */
 .video-frame{position:relative;width:100%;max-width:158vh;aspect-ratio:16/9;margin:0 auto;
-             border-radius:1.2vmin;overflow:hidden;background:#000;
-             border:.16vmin solid var(--card-border)}
+             border-radius:var(--radius-lg);overflow:hidden;background:#000;
+             border:.12vmin solid var(--card-border);box-shadow:var(--lift-lg)}
 .video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .video-fallback{margin-top:1.2vmin;text-align:center;color:var(--sub);font-size:var(--fs-note)}
 .video-fallback .url{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;
                      color:var(--cyan);word-break:break-all}
-.video-fallback .cue{color:var(--yellow);font-weight:700}
+.video-fallback .cue{color:var(--gold);font-weight:700}
 
 /* ------------------------------------------------------------- utilities --- */
 .center-y{display:flex;flex-direction:column;align-items:center;justify-content:center;
           height:100%;gap:2vmin;text-align:center}
 
 /* --------------------------------------------------------------- button --- */
-.btn{border:0;border-radius:1vmin;padding:1.2vmin 2.2vmin;
-     font:700 2.4vmin var(--font-ui);color:#fff;min-height:44px;
-     background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer}
+.btn{border:0;border-radius:1.2vmin;padding:1.3vmin 2.4vmin;
+     font:700 2.4vmin var(--font-ui);color:#241a02;min-height:44px;
+     background:linear-gradient(180deg,var(--gold-soft),var(--gold));cursor:pointer;
+     box-shadow:0 .6vmin 2.4vmin rgba(245,197,66,.3)}
 
 /* ------------------------------------------------------- print / export ---
-   rule 11: all steps flat, on-screen chrome gone, dark stage preserved.     */
+   rule 11: all steps flat, on-screen chrome gone, dark stage preserved.
+   Gradients, glass and glow are screen luxuries — print gets solid ink.     */
 @media print{
   .step{opacity:1!important;transform:none!important;visibility:visible!important}
+  /* the observer is gone with the scripts — show every mark lit */
+  .eq.spot .mark-quantity{background:rgba(217,119,6,.68)!important;color:#fff!important}
+  .eq.spot .mark-number  {background:rgba(52,211,153,.45)!important;color:#fff!important}
+  .eq.spot .mark-unit    {background:rgba(203,213,225,.45)!important;color:#fff!important}
   #bg,.kicker-tag,.no-print{display:none!important}
   body{background:var(--bg-stage)}
+  .page:before{background:none!important;height:0!important}
+  /* gradient-clipped text can rasterise blank — print it as solid ink */
+  h1.title{color:var(--gold-soft)!important;background:none!important;
+           -webkit-text-fill-color:var(--gold-soft)!important}
   .wrap{overflow:visible}
   .figure-frame svg,.figure-frame img{max-height:60vh}
-  .info-box{transform:none!important;opacity:1!important;box-shadow:none!important;
-            background:var(--card-bg)!important;backdrop-filter:none!important}
+  .figure-frame,.card,.callout,.option,.answer-box,.term-card,.qa,.result,
+  table.data,.info-box{box-shadow:none!important}
+  .eq.big{text-shadow:none!important}
+  .info-box{transform:none!important;opacity:1!important;
+            backdrop-filter:none!important}
   .page.has-focus .info-box{opacity:1!important}
   .box-zoom{display:none!important}
+  /* WebGL renders blank on paper — print the fallback instead */
+  .scene-frame canvas{display:none!important}
+  .scene-frame .scene-fallback{display:flex!important}
   .video-frame{display:none!important}
   .video-fallback{font-size:var(--fs-small)}
 }

@@ -342,6 +342,270 @@ const revealFx = `<script>
 })();
 </script>`;
 
+/* ---------------------------------------------------- vendored libraries --
+   animejs and three ship INLINE or not at all: a deck runs in
+   `<iframe sandbox="allow-scripts">` with no guaranteed network, and rule 11
+   fails any CDN <script>. tools/make-vendor.mjs prepares the two bundles.
+
+   Inlining is OPT-IN and automatic: a lib is only carried if the deck's markup
+   actually asks for it (`data-anime=` / `data-three=`), or the manifest lists it
+   in "libs". A text deck stays 50 KB.
+
+   Everything they drive is DECORATION. Scripts are stripped for PDF export, so
+   a slide must still teach with the animation missing (rules 7, 11).         */
+const VENDOR_FILES = { anime: 'anime.umd.min.js', three: 'three.iife.min.js' };
+const libsAsked = new Set(Array.isArray(manifest.libs) ? manifest.libs : []);
+if (/\bdata-anime\s*=/.test(body)) libsAsked.add('anime');
+if (/\bdata-three\s*=/.test(body)) libsAsked.add('three');
+
+let vendorScripts = '';
+let vendorBytes = 0;
+for (const lib of libsAsked) {
+  const file = VENDOR_FILES[lib] && path.join(TOOLS, 'vendor', VENDOR_FILES[lib]);
+  if (!file || !fs.existsSync(file)) {
+    console.error(`  ! no vendored build for "${lib}" — run: node tools/make-vendor.mjs`);
+    process.exitCode = 3;
+    continue;
+  }
+  /* a bundle may carry the literal "</script" inside a string; escape it so it
+     cannot close our own tag */
+  const src = fs.readFileSync(file, 'utf8').replace(/<\/script/gi, '<\\/script');
+  vendorBytes += Buffer.byteLength(src, 'utf8');
+  vendorScripts += `\n<!-- vendored ${lib} — inlined, never a CDN (rule 11) -->\n`
+    + `<script data-vendor="${lib}">\n${src}\n</script>\n`;
+}
+
+/* --------------------------------------------------------- anime.js (fx) ---
+   Authors never write JS — a fragment is page sections only. They write a
+   `data-anime` preset on an element and this runtime plays it ONCE, the moment
+   that element first becomes visible (same computed-opacity test as the other
+   fx, so it works under the host and under the rule-6 fallback).
+
+     data-anime="draw"   an <svg>: its strokes draw themselves on
+     data-anime="count"  a number: counts up to the printed value
+     data-anime="pulse"  one gentle attention pulse
+     data-anime="float"  slow, endless bob (decorative marks only)
+
+   NEVER applied to a `.step` itself: the host owns .step opacity and transform
+   with !important, so the preset goes on something INSIDE the stepped wrapper
+   (the <svg> in a stepped figure, the number in a stepped line).             */
+const animeFx = `<script>
+(function(){
+  if (!document.querySelector('[data-anime]')) return;
+  window.addEventListener('load', function(){
+    var A = window.anime;
+    if (!A || typeof A.animate !== 'function') return;      // lib missing -> silent
+    var nodes = [].slice.call(document.querySelectorAll('[data-anime]'));
+    var played = [];
+
+    function visible(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;      // hidden page
+      var n = el;
+      while (n && n.nodeType === 1){
+        if (parseFloat(getComputedStyle(n).opacity || '1') < 0.5) return false;
+        n = n.parentElement;
+      }
+      return true;
+    }
+    function stroked(svg){
+      return [].slice.call(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect'))
+        .filter(function(s){
+          var st = getComputedStyle(s).stroke;
+          return st && st !== 'none' && st !== 'rgba(0, 0, 0, 0)';
+        });
+    }
+    function draw(el){
+      var svg = el.tagName && el.tagName.toLowerCase() === 'svg' ? el : el.querySelector('svg');
+      if (!svg) return;
+      var items = stroked(svg).filter(function(s){
+        var len = 0;
+        try { len = s.getTotalLength ? s.getTotalLength() : 0; } catch (e) { len = 0; }
+        if (!len) return false;
+        s.style.strokeDasharray  = len + ' ' + len;
+        s.style.strokeDashoffset = len;
+        return true;
+      });
+      if (!items.length) return;
+      A.animate(items, {
+        strokeDashoffset: 0, duration: 850, ease: 'inOut(2)',
+        delay: A.stagger ? A.stagger(70) : 0,
+        onComplete: function(){
+          items.forEach(function(s){ s.style.strokeDasharray = ''; s.style.strokeDashoffset = ''; });
+        }
+      });
+    }
+    function count(el){
+      var text = el.textContent || '';
+      var target = parseFloat(text.replace(/[^0-9.\\-]/g, ''));
+      if (isNaN(target)) return;
+      var tail = text.replace(/^[^0-9.\\-]*[0-9.\\-]+/, '');
+      var head = (text.match(/^[^0-9.\\-]*/) || [''])[0];
+      var dp = (String(target).split('.')[1] || '').length;
+      var o = { v: 0 };
+      A.animate(o, { v: target, duration: 900, ease: 'out(3)', onUpdate: function(){
+        el.textContent = head + o.v.toFixed(dp) + tail;
+      }});
+    }
+    function pulse(el){ A.animate(el, { scale: [1, 1.06, 1], duration: 700, ease: 'inOut(2)' }); }
+    function float(el){ A.animate(el, { y: [0, -6, 0], duration: 4200, loop: true, ease: 'inOut(2)' }); }
+
+    var presets = { draw: draw, count: count, pulse: pulse, float: float };
+
+    function sync(){
+      nodes.forEach(function(el){
+        if (played.indexOf(el) !== -1 || !visible(el)) return;
+        var run = presets[(el.getAttribute('data-anime') || '').trim()];
+        played.push(el);
+        if (!run) return;
+        if (el.classList.contains('step') && run !== draw && run !== count) return;
+        try { run(el); } catch (e) { /* a broken preset must never blank a slide */ }
+      });
+    }
+
+    setTimeout(function(){
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
+      } catch (e) { /* the lf-show hook below still fires */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>`;
+
+/* ------------------------------------------------------------ three (fx) ---
+   `<div class="scene-frame" data-three="globe">` gets a slow WebGL scene, sized
+   to the box, initialised after load with a zero-size guard, a WebGL
+   feature-detect and try/catch (rule 7). It renders BLANK in PDF export, so the
+   frame must always contain a `.scene-fallback` — inline SVG or a sentence —
+   which stays put and is what prints.
+
+     data-three="globe"   wireframe sphere, slow spin (solid angle, fields)
+     data-three="stars"   drifting point field (chapter openers)               */
+const threeFx = `<script>
+(function(){
+  var frames = [].slice.call(document.querySelectorAll('[data-three]'));
+  if (!frames.length) return;
+  window.addEventListener('load', function(){
+    var T = window.THREE;
+    if (!T || !T.WebGLRenderer) return;
+    try {
+      var probe = document.createElement('canvas');
+      if (!(probe.getContext('webgl') || probe.getContext('experimental-webgl'))) return;
+    } catch (e) { return; }
+
+    frames.forEach(function(frame){
+      try { start(frame); } catch (e) { /* a dead scene must not blank the slide */ }
+    });
+
+    function start(frame){
+      var w = frame.clientWidth, h = frame.clientHeight;
+      if (!w || !h) { requestAnimationFrame(function(){ start(frame); }); return; }
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(45, w / h, 0.1, 100);
+      camera.position.set(0, 0, 5);
+
+      var kind = (frame.getAttribute('data-three') || 'globe').trim();
+      var group = new T.Group();
+      scene.add(group);
+
+      if (kind === 'stars'){
+        var n = 900, pos = new Float32Array(n * 3);
+        for (var i = 0; i < n; i++){
+          pos[i*3]   = (Math.random() - 0.5) * 18;
+          pos[i*3+1] = (Math.random() - 0.5) * 12;
+          pos[i*3+2] = (Math.random() - 0.5) * 12;
+        }
+        var geo = new T.BufferGeometry();
+        geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+        group.add(new T.Points(geo, new T.PointsMaterial({
+          color: 0xf5c542, size: 0.045, transparent: true, opacity: 0.75
+        })));
+      } else {
+        group.add(new T.LineSegments(
+          new T.WireframeGeometry(new T.SphereGeometry(1.7, 24, 16)),
+          new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.45 })));
+        group.add(new T.Mesh(
+          new T.SphereGeometry(1.68, 48, 32),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.55 })));
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.0022;
+        group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
+        renderer.render(scene, camera);
+      })();
+    }
+  });
+})();
+</script>`;
+
+/* ------------------------------------------------- spotlight marks (fx) ---
+   `<p class="step" data-lights="q">` lights every `[data-lit~="q"]` on the same
+   page the moment that step is revealed, and unlights it on the way back. Used
+   by the .eq.spot statement: the class hears the definition and simultaneously
+   sees the word it names catch fire.
+
+   Visibility is read from the COMPUTED opacity, exactly like the box
+   spotlight — so it works under the host's !important CSS and under the rule-6
+   fallback's inline styles alike. Scripts are stripped for PDF export, where
+   @media print in deck-base.css forces every mark lit instead. No-op for decks
+   with no [data-lights].                                                      */
+const lightsFx = `<script>
+(function(){
+  window.addEventListener('load', function(){
+    var cues = [].slice.call(document.querySelectorAll('[data-lights]'));
+    if (!cues.length) return;
+
+    function shown(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;   // hidden page
+      return parseFloat(getComputedStyle(el).opacity || '1') > 0.5;
+    }
+    function sync(){
+      cues.forEach(function(cue){
+        var on = shown(cue);
+        var scope = cue.closest('.page') || document;
+        cue.getAttribute('data-lights').split(/\\s+/).forEach(function(key){
+          if (!key) return;
+          var hits = scope.querySelectorAll('[data-lit~="' + key + '"]');
+          for (var i = 0; i < hits.length; i++) hits[i].classList.toggle('is-lit', on);
+        });
+      });
+    }
+
+    setTimeout(function(){                   // after host/fallback has hidden pages
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes:true, subtree:true, attributeFilter:['style','class'] });
+      } catch (e) { /* no observer -> the lf-show hook below still works */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>`;
+
 /* -------------------------------------------------------------- assemble -- */
 const html = `<!doctype html>
 <html lang="en">
@@ -359,9 +623,18 @@ ${css.trim()}
 ${persistentLayers}
 
 ${body}
-
+${vendorScripts}
 <!-- Box spotlight on reveal (no-op without .info-box) -->
 ${revealFx}
+
+<!-- Mark spotlight on reveal (no-op without [data-lights]) -->
+${lightsFx}
+
+<!-- anime.js presets on reveal (no-op without [data-anime]) -->
+${animeFx}
+
+<!-- three.js scenes (no-op without [data-three]) -->
+${threeFx}
 
 <!-- Standalone fallback controller (rule 6) — LAST -->
 ${fallback}
@@ -387,6 +660,10 @@ if (mediaCount) {
 }
 if (zoomed.count) {
   console.log(`  zoom  ${zoomed.count} focus box(es) instrumented (grow / content / shrink)`);
+}
+if (libsAsked.size) {
+  console.log(`  libs  ${[...libsAsked].join(', ')} inlined, ${(vendorBytes / 1024).toFixed(0)} KB `
+              + `(decoration only — blank in PDF export)`);
 }
 if (texCount) {
   console.log(`  latex ${texCount} converted to MathML` +

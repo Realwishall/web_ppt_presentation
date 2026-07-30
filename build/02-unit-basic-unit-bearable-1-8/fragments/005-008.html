@@ -1,0 +1,115 @@
+<!-- Slide 5 — magnitude is fixed: same rod, different unit, different number.
+     The graph is the LAST reveal, never on screen before the algebra. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Magnitude</h2>
+
+    <div class="split-6040">
+      <div class="stack">
+        <div class="card step">
+          <div class="lead">4 km = 4000 m = 4,00,000 cm</div>
+          <p class="note">the same rod, counted three ways</p>
+        </div>
+
+        <p class="step">The unit got smaller, so the number got bigger &mdash; the rod never changed.</p>
+
+        <span class="eq big step" data-tex="n_1 u_1 = n_2 u_2"></span>
+
+        <div class="callout callout--tip step">
+          <span class="callout-label">n &times; u = constant</span>
+          whatever unit you choose, the product stays the same. That product is the magnitude.
+        </div>
+
+        <span class="eq big step" data-tex="n \propto \dfrac{1}{u}"></span>
+      </div>
+
+      <div class="col">
+        <div class="step">
+          <div class="figure-frame tall">
+            <svg viewBox="0 0 400 300" role="img" aria-label="Graph of numerical part n against unit u: a rectangular hyperbola">
+              <g stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round">
+                <path d="M60 260 L60 30"/>
+                <path d="M52 44 L60 26 L68 44"/>
+                <path d="M60 260 L375 260"/>
+                <path d="M361 252 L379 260 L361 268"/>
+              </g>
+              <path d="M92 44 C150 176, 176 222, 366 240" fill="none" stroke="#f2d024" stroke-width="4.5" stroke-linecap="round"/>
+              <g stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="6 6" fill="none">
+                <path d="M60 92 L128 92"/><path d="M128 92 L128 260"/>
+                <path d="M60 214 L266 214"/><path d="M266 214 L266 260"/>
+              </g>
+              <g fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="26">
+                <text x="30" y="40">n</text>
+                <text x="372" y="292">u</text>
+              </g>
+            </svg>
+          </div>
+          <div class="fig-caption">n against u &mdash; a rectangular hyperbola</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 6 — section divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Fundamental/Derived<br>quantity and unit</h1>
+  </div>
+</section>
+
+<!-- Slide 7 — two focus boxes: each one grows, teaches, shrinks, then the next -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Fundamental/Derived quantity and unit</h2>
+
+    <div class="box-grid">
+      <div class="info-box">
+        <h4 class="cell-heading">Fundamental quantity</h4>
+        <p class="step">It is a set of quantity in which one quantity can not be derived by other quantity of this set.</p>
+        <p class="step">And there unit is fundamental unit.</p>
+      </div>
+      <div class="info-box">
+        <h4 class="cell-heading">Derived quantity</h4>
+        <p class="step">All other quantity are derived quantity. They depend on more than one fundamental quantity.</p>
+        <p class="step">And there unit is derived unit.</p>
+      </div>
+    </div>
+
+    <div class="callout callout--note step">
+      <span class="callout-label">Test for a fundamental set</span>
+      Pick up any one member &mdash; if the other two can build it, the set fails.
+    </div>
+  </div>
+</section>
+
+<!-- Slide 8 — question and all four options are on screen at once; tapping the
+     right one turns it green. The reasons step in afterwards. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Question</h2>
+    <p>Which of the following can act as set of the fundamental quantity?</p>
+
+    <div class="options">
+      <div class="option-row">
+        <div class="option clickable" onclick="this.classList.add('wrong')"><span class="opt-badge">A</span>Length, area, velocity</div>
+        <span class="eq small step" data-tex="A = l^{2}"></span>
+      </div>
+      <div class="option-row">
+        <div class="option clickable" onclick="this.classList.add('wrong')"><span class="opt-badge">B</span>Force, Acceleration, mass</div>
+        <span class="eq small step" data-tex="F = m\,a"></span>
+      </div>
+      <div class="option-row">
+        <div class="option clickable" onclick="this.classList.add('correct')"><span class="opt-badge">C</span>Velocity, Force, time</div>
+        <span class="ok step">&#10003;</span>
+      </div>
+      <div class="option-row">
+        <div class="option clickable" onclick="this.classList.add('wrong')"><span class="opt-badge">D</span>Momentum, velocity, mass</div>
+        <span class="eq small step" data-tex="p = m\,v"></span>
+      </div>
+    </div>
+
+    <div class="answer-box step"><span class="ok">&#10003;</span>Solution: C &mdash; Velocity, Force, time
+      &mdash; <i>none of the three can be built from the other two.</i></div>
+  </div>
+</section>

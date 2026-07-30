@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>21 - Optics - 05 Optics - Optical instrument (Part 1, slides 1-5) - EYE</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#05070f}
+
+  /* ---------- persistent layer (OUTSIDE .page) ---------- */
+  #bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+      background:radial-gradient(1400px 800px at 12% -12%,rgba(56,189,248,.16),transparent 62%),
+                 radial-gradient(1200px 760px at 92% 110%,rgba(168,85,247,.15),transparent 60%),
+                 #05070f}
+  #bg::before,#bg::after{content:"";position:absolute;border-radius:50%;filter:blur(60px);opacity:.35}
+  #bg::before{width:44vmin;height:44vmin;left:-8vmin;top:52vmin;background:#0ea5e9;animation:float1 26s ease-in-out infinite}
+  #bg::after{width:38vmin;height:38vmin;right:-6vmin;top:-8vmin;background:#a855f7;animation:float2 32s ease-in-out infinite}
+  @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(6vmin,-8vmin)}}
+  @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-7vmin,7vmin)}}
+
+  /* ---------- page surface (never hidden in CSS) ---------- */
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        color:#f2f6ff;
+        font-family:Calibri,Candara,'Segoe UI',system-ui,sans-serif;
+        background:linear-gradient(180deg,rgba(8,12,24,.72),rgba(3,5,12,.92));}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;
+        display:flex;flex-direction:column;gap:2.2vmin;padding:4.2vmin 5vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+
+  /* ---------- headings ---------- */
+  .head{display:flex;align-items:center;gap:2.2vmin;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(34px,8.6vmin,98px);line-height:1.02;font-weight:700;
+     color:#FFE95C;letter-spacing:.4px;text-shadow:0 .5vmin 2.4vmin rgba(255,214,0,.22)}
+  h1.plain{color:#ffffff}
+  h2{margin:0;font-size:clamp(26px,6.2vmin,66px);line-height:1.08;font-weight:700;color:#ffffff}
+  .chip{display:inline-block;padding:.7vmin 2.2vmin;border-radius:99px;
+        font-size:clamp(17px,3.2vmin,36px);font-weight:700;letter-spacing:.6px;
+        color:#7dd3fc;background:rgba(56,189,248,.14);border:.28vmin solid rgba(56,189,248,.5)}
+  .rule{height:.5vmin;border-radius:99px;background:linear-gradient(90deg,#FFE95C,#38bdf8 45%,transparent);opacity:.9}
+
+  p{margin:0;font-size:clamp(19px,3.7vmin,42px);line-height:1.35;color:#dbe6f7}
+  .yellow{color:#FFE95C;font-weight:600}
+  .note{font-size:clamp(17px,3.1vmin,36px);color:#a9bcd6;line-height:1.35}
+
+  /* ---------- comparison table (slide 1) ---------- */
+  .tbl{width:100%;border-collapse:separate;border-spacing:1.1vmin;table-layout:fixed}
+  .tbl th,.tbl td{padding:1.5vmin 1.9vmin;border-radius:1.6vmin;vertical-align:middle;
+                  font-size:clamp(18px,3.35vmin,40px);line-height:1.24}
+  .tbl thead th{font-size:clamp(22px,4.6vmin,52px);font-weight:700;letter-spacing:.4px}
+  .th-far{color:#7dd3fc;background:rgba(56,189,248,.15);border:.3vmin solid rgba(56,189,248,.45)}
+  .th-near{color:#f0abfc;background:rgba(217,70,239,.15);border:.3vmin solid rgba(217,70,239,.45)}
+  .th-blank{background:transparent;border:0}
+  .rowlab{color:#FFE95C;font-weight:700;text-align:left;
+          background:rgba(255,233,92,.10);border:.3vmin solid rgba(255,233,92,.34);
+          font-size:clamp(19px,3.7vmin,42px)}
+  td.far{color:#eaf8ff;background:rgba(56,189,248,.09);border:.28vmin solid rgba(56,189,248,.26)}
+  td.near{color:#fdf0ff;background:rgba(217,70,239,.09);border:.28vmin solid rgba(217,70,239,.26)}
+  .tbl col.c1{width:24%}
+
+  /* ---------- generic cards ---------- */
+  .card{border-radius:2vmin;padding:2.4vmin 2.8vmin;
+        background:rgba(255,255,255,.045);border:.3vmin solid rgba(255,255,255,.14)}
+  .card.warn{background:rgba(255,233,92,.10);border-color:rgba(255,233,92,.42)}
+  .card.cool{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.40)}
+  .card.mag{background:rgba(217,70,239,.10);border-color:rgba(217,70,239,.40)}
+  .lbl{font-size:clamp(18px,3.3vmin,38px);font-weight:700;color:#9fd3ff;letter-spacing:.5px;
+       text-transform:uppercase;margin-bottom:.6vmin}
+  .big{font-size:clamp(24px,5vmin,56px);font-weight:700;
+       font-family:'Cambria Math',Cambria,Georgia,serif}
+  .eqn{font-family:'Cambria Math',Cambria,Georgia,serif;
+       font-size:clamp(21px,4.4vmin,50px);color:#ffffff}
+
+  /* ---------- figure panels (slides 4-5) ---------- */
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:2.4vmin;flex:1;min-height:0}
+  .fig{display:flex;flex-direction:column;gap:1.2vmin;min-height:0;
+       border-radius:2vmin;padding:1.6vmin 1.8vmin;
+       background:rgba(255,255,255,.05);border:.3vmin solid rgba(255,255,255,.16)}
+  .fig .cap{font-size:clamp(18px,3.4vmin,40px);font-weight:700;color:#ffffff;text-align:center}
+  .fig .cap .tag{display:inline-block;padding:.35vmin 1.4vmin;border-radius:99px;margin-right:1vmin;
+                 font-size:.82em;font-weight:700}
+  .tag.bad{color:#fca5a5;background:rgba(239,68,68,.18);border:.22vmin solid rgba(239,68,68,.5)}
+  .tag.good{color:#86efac;background:rgba(34,197,94,.18);border:.22vmin solid rgba(34,197,94,.5)}
+  .shot{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+        background:#ffffff;border-radius:1.4vmin;padding:.9vmin;overflow:hidden}
+  .shot svg{width:100%;height:100%;max-height:100%;display:block}
+  .fig .sub{font-size:clamp(15px,2.75vmin,32px);color:#c3d3ea;text-align:center;line-height:1.25}
+
+  .row{display:flex;gap:2.2vmin;flex-wrap:wrap}
+  .row>*{flex:1 1 34%}
+  .grow{flex:1;min-height:0}
+
+  .step{opacity:1}   /* host/fallback controls the hidden -> shown transition */
+
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    #bg,.no-print{display:none!important}
+    .page{background:#05070f!important}
+    .shot{background:#fff!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- persistent background layer: OUTSIDE every .page -->
+<div id="bg"></div>
+
+<!-- ================= SLIDE 1 : EYE - Far Point vs Near Point ================= -->
+<section class="page">
+  <div class="wrap">
+    <div class="head">
+      <h1>EYE</h1>
+      <span class="chip">Far Point &nbsp;vs&nbsp; Near Point</span>
+    </div>
+    <div class="rule"></div>
+
+    <table class="tbl">
+      <colgroup><col class="c1"><col><col></colgroup>
+      <thead>
+        <tr>
+          <th class="th-blank"></th>
+          <th class="th-far">Far Point</th>
+          <th class="th-near">Near point</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rowlab">Define</td>
+          <td class="far step">The largest distance a person can see clearly</td>
+          <td class="near step">The smallest distance a person can see clearly</td>
+        </tr>
+        <tr>
+          <td class="rowlab">Position</td>
+          <td class="far step"><span class="big">Infinite&nbsp;(&infin;)</span></td>
+          <td class="near step"><span class="big">25&nbsp;cm</span></td>
+        </tr>
+        <tr>
+          <td class="rowlab">Magnification</td>
+          <td class="far step">Magnification is <b>minimum</b></td>
+          <td class="near step">Magnification is <b>maximum</b></td>
+        </tr>
+        <tr>
+          <td class="rowlab">Strained /<br>Relaxed eye</td>
+          <td class="far step"><b>Relaxed</b> eye position</td>
+          <td class="near step"><b>Strained</b> eye position</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= SLIDE 2 : Fixing the Far Point ================= -->
+<section class="page">
+  <div class="wrap">
+    <div class="head">
+      <h1 class="plain">Far Point</h1>
+      <span class="chip">Fixing</span>
+    </div>
+    <div class="rule"></div>
+
+    <div class="card warn step">
+      <p class="yellow">If someone far point is not infinity but something like 250&nbsp;cm</p>
+    </div>
+
+    <div class="row">
+      <div class="card cool">
+        <div class="lbl">Normal eye</div>
+        <p class="step">Far point = <span class="eqn">&infin;</span> &nbsp;&rarr;&nbsp; distant objects are seen clearly.</p>
+      </div>
+      <div class="card mag">
+        <div class="lbl">This eye</div>
+        <p class="step">Far point = <span class="eqn">250&nbsp;cm = 2.5&nbsp;m</span> &nbsp;&rarr;&nbsp; anything beyond 2.5&nbsp;m looks blurred.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">So what has to be done</div>
+      <p class="step">The lens must bring an object at <b>infinity</b> to form its image at the eye&rsquo;s own far point, <b>250&nbsp;cm</b> &mdash; the farthest place this eye can still see clearly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 3 : Fixing the Near Point ================= -->
+<section class="page">
+  <div class="wrap">
+    <div class="head">
+      <h1 class="plain">Near point</h1>
+      <span class="chip">Fixing</span>
+    </div>
+    <div class="rule"></div>
+
+    <div class="card warn step">
+      <p class="yellow">If someone near point is not 25 but something like 50&nbsp;cm</p>
+    </div>
+
+    <div class="row">
+      <div class="card cool">
+        <div class="lbl">Normal eye</div>
+        <p class="step">Near point = <span class="eqn">25&nbsp;cm</span> &nbsp;&rarr;&nbsp; close objects are seen clearly.</p>
+      </div>
+      <div class="card mag">
+        <div class="lbl">This eye</div>
+        <p class="step">Near point = <span class="eqn">50&nbsp;cm</span> &nbsp;&rarr;&nbsp; anything nearer than 50&nbsp;cm looks blurred.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">So what has to be done</div>
+      <p class="step">The lens must take an object kept at the normal <b>25&nbsp;cm</b> and form its image at this eye&rsquo;s own near point, <b>50&nbsp;cm</b> &mdash; the closest place this eye can still see clearly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 4 : We are fixing - near point (convex lens) ================= -->
+<section class="page">
+  <div class="wrap">
+    <div class="head">
+      <h1 class="plain">We are fixing</h1>
+      <span class="chip">Near point &nbsp;&middot;&nbsp; Convex lens</span>
+    </div>
+    <div class="rule"></div>
+
+    <p class="note step">Near point has shifted <b>away</b> from the eye, so rays from a close object would meet <b>behind</b> the retina. A <b>converging (convex)</b> lens is placed in front of the eye.</p>
+
+    <div class="figs">
+      <div class="fig">
+        <div class="cap"><span class="tag bad">Defect</span>Without lens</div>
+        <div class="shot step"><svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" role="img">
+ <defs>
+  <radialGradient id="vit_hyper" cx="42%" cy="36%" r="78%">
+   <stop offset="0%" stop-color="#f4fcff"/><stop offset="100%" stop-color="#addef4"/>
+  </radialGradient>
+  <radialGradient id="lns_hyper" cx="42%" cy="34%" r="76%">
+   <stop offset="0%" stop-color="#b9d2f7"/><stop offset="100%" stop-color="#5468c4"/>
+  </radialGradient>
+  <linearGradient id="gls_hyper" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0%" stop-color="#eaf7fe"/><stop offset="100%" stop-color="#b3ddf4"/>
+  </linearGradient>
+ </defs>
+ <line x1="0" y1="170" x2="660" y2="170" stroke="#9aa8bd" stroke-width="1.2" stroke-dasharray="5 8"/>
+ <ellipse cx="300" cy="170" rx="140" ry="126" fill="#f4f0d2" stroke="#232323" stroke-width="2.6"/>
+ <ellipse cx="300" cy="170" rx="132" ry="118" fill="url(#vit_hyper)" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 196 92 C 154 112 154 228 196 248 L 214 240 C 184 222 184 118 214 100 Z"
+       fill="#e3f4fc" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 208 106 C 190 100 186 112 192 124 L 204 134 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 208 234 C 190 240 186 228 192 216 L 204 206 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 202 130 L 214 140 M 202 136 L 214 148 M 202 210 L 214 200 M 202 204 L 214 192"
+       stroke="#232323" stroke-width="1.3" fill="none"/>
+ <ellipse cx="212" cy="170" rx="22" ry="46" fill="url(#lns_hyper)" stroke="#232323" stroke-width="2"/>
+ <circle cx="432" cy="170" r="5" fill="#111"/>
+ <text x="446" y="208" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="start">retina</text>
+ <path d="M6.0,118.0 L212.0,118.0 L432.0,147.5" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M432.0,147.5 L600.0,170.0" fill="none" stroke="#c2410c" stroke-width="2.6" stroke-dasharray="8 6"/>
+ <path d="M6.0,170.0 L212.0,170.0 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M432.0,170.0 L600.0,170.0" fill="none" stroke="#c2410c" stroke-width="2.6" stroke-dasharray="8 6"/>
+ <path d="M6.0,222.0 L212.0,222.0 L432.0,192.5" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M432.0,192.5 L600.0,170.0" fill="none" stroke="#c2410c" stroke-width="2.6" stroke-dasharray="8 6"/>
+ <circle cx="600" cy="170" r="7" fill="#c2410c"/>
+ <text x="652" y="30" font-size="22" font-weight="700" fill="#c2410c" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="end">focus BEHIND the retina</text>
+</svg></div>
+        <div class="sub step">Rays converge <b>beyond</b> the retina &rarr; blurred image.</div>
+      </div>
+      <div class="fig">
+        <div class="cap"><span class="tag good">Corrected</span>With convex lens</div>
+        <div class="shot step"><svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" role="img">
+ <defs>
+  <radialGradient id="vit_convex" cx="42%" cy="36%" r="78%">
+   <stop offset="0%" stop-color="#f4fcff"/><stop offset="100%" stop-color="#addef4"/>
+  </radialGradient>
+  <radialGradient id="lns_convex" cx="42%" cy="34%" r="76%">
+   <stop offset="0%" stop-color="#b9d2f7"/><stop offset="100%" stop-color="#5468c4"/>
+  </radialGradient>
+  <linearGradient id="gls_convex" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0%" stop-color="#eaf7fe"/><stop offset="100%" stop-color="#b3ddf4"/>
+  </linearGradient>
+ </defs>
+ <line x1="0" y1="170" x2="660" y2="170" stroke="#9aa8bd" stroke-width="1.2" stroke-dasharray="5 8"/>
+ <ellipse cx="300" cy="170" rx="140" ry="126" fill="#f4f0d2" stroke="#232323" stroke-width="2.6"/>
+ <ellipse cx="300" cy="170" rx="132" ry="118" fill="url(#vit_convex)" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 196 92 C 154 112 154 228 196 248 L 214 240 C 184 222 184 118 214 100 Z"
+       fill="#e3f4fc" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 208 106 C 190 100 186 112 192 124 L 204 134 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 208 234 C 190 240 186 228 192 216 L 204 206 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 202 130 L 214 140 M 202 136 L 214 148 M 202 210 L 214 200 M 202 204 L 214 192"
+       stroke="#232323" stroke-width="1.3" fill="none"/>
+ <ellipse cx="212" cy="170" rx="22" ry="46" fill="url(#lns_convex)" stroke="#232323" stroke-width="2"/>
+ <circle cx="432" cy="170" r="5" fill="#111"/>
+ <text x="446" y="208" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="start">retina</text>
+ <path d="M 78 58 Q 108 170 78 282 Q 48 170 78 58 Z" fill="url(#gls_convex)" stroke="#232323" stroke-width="2.2"/>
+ <text x="78" y="312" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="middle">convex lens</text>
+ <path d="M6.0,118.0 L78.0,118.0 L212.0,136.7 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,170.0 L78.0,170.0 L212.0,170.0 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,222.0 L78.0,222.0 L212.0,203.3 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <circle cx="432" cy="170" r="7" fill="#15803d"/>
+ <text x="652" y="30" font-size="22" font-weight="700" fill="#15803d" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="end">focus ON the retina</text>
+</svg></div>
+        <div class="sub step">The convex lens converges rays first &rarr; focus lands <b>on</b> the retina.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 5 : We are fixing - far point (concave lens) ================= -->
+<section class="page">
+  <div class="wrap">
+    <div class="head">
+      <h1 class="plain">We are fixing</h1>
+      <span class="chip">Far point &nbsp;&middot;&nbsp; Concave lens</span>
+    </div>
+    <div class="rule"></div>
+
+    <p class="note step">Far point has come <b>closer</b> than infinity, so rays from a distant object meet <b>before</b> the retina. A <b>diverging (concave)</b> lens is placed in front of the eye.</p>
+
+    <div class="figs">
+      <div class="fig">
+        <div class="cap"><span class="tag bad">Defect</span>Without lens</div>
+        <div class="shot step"><svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" role="img">
+ <defs>
+  <radialGradient id="vit_myopia" cx="42%" cy="36%" r="78%">
+   <stop offset="0%" stop-color="#f4fcff"/><stop offset="100%" stop-color="#addef4"/>
+  </radialGradient>
+  <radialGradient id="lns_myopia" cx="42%" cy="34%" r="76%">
+   <stop offset="0%" stop-color="#b9d2f7"/><stop offset="100%" stop-color="#5468c4"/>
+  </radialGradient>
+  <linearGradient id="gls_myopia" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0%" stop-color="#eaf7fe"/><stop offset="100%" stop-color="#b3ddf4"/>
+  </linearGradient>
+ </defs>
+ <line x1="0" y1="170" x2="660" y2="170" stroke="#9aa8bd" stroke-width="1.2" stroke-dasharray="5 8"/>
+ <ellipse cx="300" cy="170" rx="140" ry="126" fill="#f4f0d2" stroke="#232323" stroke-width="2.6"/>
+ <ellipse cx="300" cy="170" rx="132" ry="118" fill="url(#vit_myopia)" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 196 92 C 154 112 154 228 196 248 L 214 240 C 184 222 184 118 214 100 Z"
+       fill="#e3f4fc" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 208 106 C 190 100 186 112 192 124 L 204 134 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 208 234 C 190 240 186 228 192 216 L 204 206 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 202 130 L 214 140 M 202 136 L 214 148 M 202 210 L 214 200 M 202 204 L 214 192"
+       stroke="#232323" stroke-width="1.3" fill="none"/>
+ <ellipse cx="212" cy="170" rx="22" ry="46" fill="url(#lns_myopia)" stroke="#232323" stroke-width="2"/>
+ <circle cx="432" cy="170" r="5" fill="#111"/>
+ <text x="446" y="208" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="start">retina</text>
+ <path d="M6.0,118.0 L212.0,118.0 L352.0,170.0 L432.0,199.7" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,170.0 L212.0,170.0 L352.0,170.0 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,222.0 L212.0,222.0 L352.0,170.0 L432.0,140.3" fill="none" stroke="#111" stroke-width="2.6"/>
+ <circle cx="352" cy="170" r="7" fill="#c2410c"/>
+ <text x="652" y="30" font-size="22" font-weight="700" fill="#c2410c" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="end">focus BEFORE the retina</text>
+</svg></div>
+        <div class="sub step">Rays converge <b>in front of</b> the retina &rarr; blurred image.</div>
+      </div>
+      <div class="fig">
+        <div class="cap"><span class="tag good">Corrected</span>With concave lens</div>
+        <div class="shot step"><svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" role="img">
+ <defs>
+  <radialGradient id="vit_concave" cx="42%" cy="36%" r="78%">
+   <stop offset="0%" stop-color="#f4fcff"/><stop offset="100%" stop-color="#addef4"/>
+  </radialGradient>
+  <radialGradient id="lns_concave" cx="42%" cy="34%" r="76%">
+   <stop offset="0%" stop-color="#b9d2f7"/><stop offset="100%" stop-color="#5468c4"/>
+  </radialGradient>
+  <linearGradient id="gls_concave" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0%" stop-color="#eaf7fe"/><stop offset="100%" stop-color="#b3ddf4"/>
+  </linearGradient>
+ </defs>
+ <line x1="0" y1="170" x2="660" y2="170" stroke="#9aa8bd" stroke-width="1.2" stroke-dasharray="5 8"/>
+ <ellipse cx="300" cy="170" rx="140" ry="126" fill="#f4f0d2" stroke="#232323" stroke-width="2.6"/>
+ <ellipse cx="300" cy="170" rx="132" ry="118" fill="url(#vit_concave)" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 196 92 C 154 112 154 228 196 248 L 214 240 C 184 222 184 118 214 100 Z"
+       fill="#e3f4fc" stroke="#232323" stroke-width="2.2"/>
+ <path d="M 208 106 C 190 100 186 112 192 124 L 204 134 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 208 234 C 190 240 186 228 192 216 L 204 206 Z" fill="#f2a07a" stroke="#232323" stroke-width="1.5"/>
+ <path d="M 202 130 L 214 140 M 202 136 L 214 148 M 202 210 L 214 200 M 202 204 L 214 192"
+       stroke="#232323" stroke-width="1.3" fill="none"/>
+ <ellipse cx="212" cy="170" rx="22" ry="46" fill="url(#lns_concave)" stroke="#232323" stroke-width="2"/>
+ <circle cx="432" cy="170" r="5" fill="#111"/>
+ <text x="446" y="208" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="start">retina</text>
+ <path d="M 53 58 L 103 58 Q 74 170 103 282 L 53 282 Q 82 170 53 58 Z" fill="url(#gls_concave)" stroke="#232323" stroke-width="2.2"/>
+ <text x="78" y="312" font-size="21" font-weight="700" fill="#0f172a" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="middle">concave lens</text>
+ <path d="M6.0,118.0 L78.0,118.0 L212.0,101.4 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,170.0 L78.0,170.0 L212.0,170.0 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <path d="M6.0,222.0 L78.0,222.0 L212.0,238.6 L432.0,170.0" fill="none" stroke="#111" stroke-width="2.6"/>
+ <circle cx="432" cy="170" r="7" fill="#15803d"/>
+ <text x="652" y="30" font-size="22" font-weight="700" fill="#15803d" font-family="Calibri,'Segoe UI',sans-serif" text-anchor="end">focus ON the retina</text>
+</svg></div>
+        <div class="sub step">The concave lens spreads rays first &rarr; focus moves back <b>onto</b> the retina.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ standalone fallback controller (rule 6) - LAST ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present -> stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

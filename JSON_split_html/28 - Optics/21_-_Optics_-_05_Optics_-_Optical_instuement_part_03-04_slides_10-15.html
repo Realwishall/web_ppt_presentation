@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optics — Optical Instruments (slides 10–15) — LessonForge Deck</title>
+<style>
+/* ============================================================================
+   LessonForge deck-base.css  —  canonical design system for converted decks
+   ----------------------------------------------------------------------------
+   Extracted and generalised from `01 - Physical world - Bearable.html`, the one
+   deck in the corpus that is a true HTML rebuild (22 KB, 14 pages, 97 steps,
+   real tables, zero embedded slide images).
+
+   This file is INLINED into every generated deck by tools/build-deck.mjs.
+   Deck authors never write CSS. If a slide needs something that isn't here,
+   the component gets added HERE and documented in docs/components.md — never
+   as inline styles in a deck.
+
+   Compliance notes (see public/deck-authoring-prompt.md):
+     rule 1  — nothing here hides .page (no display:none / opacity:0 / visibility)
+     rule 8  — .page is a bare full-height surface; all layout lives on .wrap
+     rule 9  — dark stage, presentation-scale type via clamp()
+     rule 10 — vmin/clamp everywhere; no fixed px for anything that must scale
+     rule 11 — @media print block at the bottom; nothing depends on JS
+     rule 17 — Calibri stack; equations in Cambria Math; NO logo/brand styles
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+:root{
+  /* stage */
+  --bg-body:      #05060a;
+  --bg-stage:     #0a0b0f;
+
+  /* ink */
+  --ink:          #f1f5f9;   /* primary text            */
+  --sub:          #cbd5e1;   /* secondary / explanatory */
+  --muted:        #94a3b8;   /* notes, captions         */
+
+  /* accents — yellow is the heading/label colour throughout */
+  --yellow:       #f2d024;
+  --accent:       #6366f1;
+  --accent2:      #8b5cf6;
+  --blue:         #4472c4;   /* table header fill (matches Office theme) */
+  --green:        #22c55e;
+  --red:          #ef4444;
+  --cyan:         #38bdf8;
+
+  /* surfaces */
+  --card-bg:      rgba(255,255,255,.03);
+  --card-border:  rgba(255,255,255,.14);
+  --rule:         rgba(255,255,255,.08);
+
+  /* type scale — presentation scale, NOT web scale (rule 9) */
+  --fs-title:     clamp(36px, 8.6vmin, 98px);
+  --fs-h2:        clamp(26px, 5.6vmin, 60px);
+  --fs-h3:        clamp(22px, 4.4vmin, 46px);
+  --fs-body:      clamp(19px, 3.3vmin, 38px);
+  --fs-small:     clamp(17px, 2.8vmin, 32px);
+  --fs-note:      clamp(16px, 2.6vmin, 28px);
+  --fs-eq:        clamp(20px, 3.9vmin, 44px);
+  --fs-th:        clamp(16px, 2.4vmin, 26px);
+  --fs-td:        clamp(15px, 2.3vmin, 25px);
+
+  /* fonts (rule 17) */
+  --font-ui:      Calibri, Candara, 'Segoe UI', system-ui, sans-serif;
+  --font-math:    'Cambria Math', Cambria, Georgia, serif;
+
+  /* rhythm */
+  --gap:          2.2vmin;
+  --pad-y:        9vmin;
+  --pad-x:        7.5vmin;
+}
+
+html,body{height:100%;margin:0}
+body{background:var(--bg-body);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+
+/* --------------------------------------------- persistent layers (rule 1) --
+   Siblings of .page — the host only toggles .page, never these.             */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:
+      radial-gradient(1100px 650px at 12% -12%, rgba(255,255,255,.035), transparent 60%),
+      radial-gradient(900px 600px at 105% 105%, rgba(99,102,241,.06), transparent 60%),
+      var(--bg-stage);}
+#bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+
+.kicker-tag{position:fixed;left:2.8vmin;top:2.8vmin;z-index:5;color:var(--sub);
+    font-size:1.7vmin;letter-spacing:.08em;text-transform:uppercase;opacity:.55;
+    pointer-events:none}
+
+/* ------------------------------------------------------- page + wrappers --
+   rule 8: .page is forced to display:block by the host, so NO flex here.    */
+.page{position:relative;z-index:1;height:100%;box-sizing:border-box;color:var(--ink)}
+
+.wrap{height:100%;box-sizing:border-box;overflow:auto;
+      padding:var(--pad-y) var(--pad-x) 6vmin;
+      display:flex;flex-direction:column;gap:var(--gap)}
+.wrap.center{align-items:center;justify-content:center;text-align:center}
+.wrap.tight{gap:1.2vmin}
+.wrap.dense{padding:6vmin 5vmin 4vmin;gap:1.4vmin}   /* heavy tables/derivations */
+
+/* The host controls the hidden→shown transition with !important. Never set
+   opacity/visibility on .step yourself (rule 4).                            */
+.step{opacity:1}
+
+/* ------------------------------------------------------------- headings --- */
+h1.title       {margin:0;font-size:var(--fs-title);color:#fff;font-weight:700;line-height:1.1}
+h2.heading     {margin:0 0 1vmin;font-size:var(--fs-h2);color:var(--yellow);font-weight:700;line-height:1.15}
+h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--yellow);font-weight:700}
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--yellow);font-weight:700}
+h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
+
+.inline-lead{color:var(--ink);font-weight:400;font-size:var(--fs-body);margin-left:1.2vmin}
+.paren      {font-size:.55em;font-weight:400;color:var(--sub)}   /* "(contd.)" */
+
+/* ----------------------------------------------------------------- text --- */
+p{margin:0;font-size:var(--fs-body);line-height:1.45;color:var(--ink)}
+.sub    {color:var(--sub)}
+.note   {color:var(--sub);font-style:italic;font-size:var(--fs-note)}
+.caption{color:var(--muted);font-size:var(--fs-note)}
+.example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
+.example b{color:var(--ink);font-style:normal}
+.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.5}
+
+/* -------------------------------------------------------------- layouts --- */
+.two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
+.split-6040{display:grid;grid-template-columns:3fr 2fr;gap:4vmin;margin-top:1vmin}
+.split-4060{display:grid;grid-template-columns:2fr 3fr;gap:4vmin;margin-top:1vmin}
+.grid3     {display:grid;grid-template-columns:repeat(3,1fr);gap:3vmin;margin-top:.5vmin}
+.grid4     {display:grid;grid-template-columns:repeat(4,1fr);gap:2.4vmin;margin-top:.5vmin}
+.col p     {margin-bottom:1.2vmin}
+.cell p    {font-size:var(--fs-small);color:var(--sub)}
+.stack     {display:flex;flex-direction:column;gap:1.4vmin}
+.row       {display:flex;flex-wrap:wrap;align-items:center;gap:2vmin}
+
+/* -------------------------------------------- glossary / definition list --
+   rule 17: the LABEL is never a .step — only the definition steps in.       */
+.glossary{display:flex;flex-direction:column;gap:2.4vmin;margin-top:1vmin}
+.g-row{display:grid;grid-template-columns:24vmin 1fr;gap:2vmin;align-items:start}
+.g-row.wide{grid-template-columns:34vmin 1fr}
+.label{color:var(--yellow);font-weight:700;font-size:var(--fs-body)}
+.g-row .sub-list{margin-top:.6vmin;display:flex;flex-direction:column;gap:.3vmin}
+.g-row .sub-list span{display:block;font-size:var(--fs-small);color:var(--sub);padding-left:2vmin}
+
+/* -------------------------------------------------------------- bullets --- */
+ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.4vmin}
+ul.bullets li{position:relative;padding-left:2.6vmin;font-size:var(--fs-body);line-height:1.4}
+ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--yellow);font-size:.7em}
+ul.bullets.box   li:before{content:"\2b1c";color:var(--yellow);font-size:.6em;top:.15em}
+ul.bullets.arrow li:before{content:"\27a4";color:var(--yellow);font-size:.7em}
+ul.bullets.dot   li:before{content:"\2022";color:var(--yellow);font-size:1em;top:-.05em}
+ul.bullets.tight{gap:.8vmin}
+ul.bullets.small li{font-size:var(--fs-small)}
+ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
+
+/* ------------------------------------------------------------------ Q&A --
+   rule 17: question always visible, answer stepped.                         */
+.qa{margin-bottom:1.6vmin}
+.qa .q{color:var(--yellow);font-weight:700;font-size:clamp(18px,2.9vmin,32px)}
+.qa .a{margin-top:.5vmin;padding-left:2.4vmin;color:var(--sub);font-size:clamp(17px,2.7vmin,30px)}
+
+/* -------------------------------------------------------------- surfaces --- */
+.card{background:var(--card-bg);border:.14vmin solid var(--card-border);
+      border-radius:1.2vmin;padding:2vmin 2.4vmin;box-sizing:border-box}
+.callout{border-left:.45vmin solid var(--accent);background:rgba(99,102,241,.08);
+         padding:1.4vmin 2vmin;border-radius:.6vmin;font-size:var(--fs-small)}
+.callout--note{border-left-color:var(--cyan);background:rgba(56,189,248,.08)}
+.callout--warn{border-left-color:var(--red);background:rgba(239,68,68,.08)}
+.callout--tip {border-left-color:var(--green);background:rgba(34,197,94,.08)}
+.callout .callout-label{display:block;color:var(--yellow);font-weight:700;margin-bottom:.4vmin}
+
+/* --------------------------------------------------------------- tables ---
+   rule 17: .step goes on each data <td>, NEVER on the <tr>, and the first
+   column (td.prop) stays unstepped so it reads as a row header.             */
+table.data{border-collapse:collapse;width:100%;margin-top:1vmin}
+table.data th{background:var(--blue);color:var(--yellow);font-weight:700;text-align:left;
+      padding:1.2vmin 1.4vmin;font-size:var(--fs-th);border:1px solid rgba(255,255,255,.15)}
+table.data td{padding:1.3vmin 1.4vmin;font-size:var(--fs-td);
+      border-bottom:1px solid var(--rule);vertical-align:top}
+table.data td.prop{color:var(--yellow);font-weight:700}
+table.data td.num{text-align:right;font-family:var(--font-math)}
+table.data.compact th{padding:.8vmin 1vmin}
+table.data.compact td{padding:.8vmin 1vmin}
+table.data.center td{text-align:center}
+.ok{color:var(--green);font-weight:900}
+.no{color:var(--red);font-weight:900}
+
+/* ------------------------------------------------------------ equations ---
+   Two mechanisms, both script-free so they survive PDF export (rule 11):
+     1. .eq / .frac / .radical  — hand-built markup for inline symbol math
+     2. MathML emitted by tools/build-deck.mjs from LaTeX in the slide plan   */
+.eq{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:var(--fs-eq);
+    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em}
+.eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
+.eq-note{font-style:italic;color:var(--sub);font-size:var(--fs-note)}
+.eq.small{font-size:var(--fs-small)}
+.eq.big  {font-size:clamp(24px,5vmin,56px)}
+
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
+      margin:0 .18em;line-height:1.15}
+.frac .num{border-bottom:.09em solid currentColor;padding:0 .18em .06em}
+.frac .den{padding:.06em .18em 0}
+
+.radical{display:inline-flex;align-items:flex-start}
+.radical .sym{font-size:1.25em;line-height:.9;margin-right:-.06em}
+.radical .content{border-top:.09em solid currentColor;padding:0 .16em}
+
+.vec{position:relative;display:inline-block}
+.vec:after{content:"\2192";position:absolute;left:0;right:0;top:-.62em;
+           font-size:.72em;text-align:center;font-style:normal}
+
+/* MathML rendered at build time — inherit the deck's math font */
+math{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink)}
+math[display="block"]{display:block;margin:.8vmin 0}
+.eq math{font-size:inherit}
+
+/* ------------------------------------------------- annotated highlights ---
+   For "A rod of [length] [4][m]" style examples, where parts of an expression
+   are colour-coded to the terms defined below them. Colour is the mapping, so
+   each mark must pair with a .label of the same hue.                         */
+.mark-quantity,.mark-number,.mark-unit{
+  padding:.06em .3em;border-radius:.3em;font-style:normal}
+.mark-quantity{background:rgba(180,83,9,.55);color:#fff}       /* physical quantity */
+.mark-number  {background:rgba(34,197,94,.35);color:#fff}      /* numerical part    */
+.mark-unit    {background:rgba(148,163,184,.40);color:#fff}    /* unit              */
+
+.label.for-quantity{color:#fbbf24}
+.label.for-number  {color:var(--green)}
+.label.for-unit    {color:#cbd5e1}
+
+/* --------------------------------------------------- derivation / steps --- */
+.derivation{display:flex;flex-direction:column;gap:1.2vmin}
+.derivation .line{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink);
+                  display:flex;align-items:baseline;gap:.5em}
+.derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
+                       font-size:var(--fs-note)}
+.result{display:inline-block;border:.18vmin solid var(--yellow);border-radius:.8vmin;
+        padding:.8vmin 1.6vmin;color:var(--yellow);font-family:var(--font-math);
+        font-size:var(--fs-eq);font-weight:700}
+
+/* ------------------------------------------------------- worked example --- */
+.worked{display:flex;flex-direction:column;gap:1.4vmin}
+.worked .given   {color:var(--sub);font-size:var(--fs-small)}
+.worked .asked   {color:var(--yellow);font-weight:700;font-size:var(--fs-small)}
+.worked .solution{display:flex;flex-direction:column;gap:1vmin}
+
+/* -------------------------------------------------------------- figures ---
+   Inline <svg> lives inside .figure-frame; the frame owns the sizing so the
+   SVG only needs a viewBox (never fixed width/height).                      */
+.figure-frame{display:flex;align-items:center;justify-content:center;
+              background:var(--card-bg);border:.12vmin solid var(--card-border);
+              border-radius:1.2vmin;padding:2vmin;box-sizing:border-box;min-height:0}
+.figure-frame svg{width:100%;height:auto;max-height:52vh;color:var(--ink)}
+.figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:.6vmin}
+.figure-frame.plain{background:none;border:0;padding:0}
+.figure-frame.tall svg,.figure-frame.tall img{max-height:64vh}
+.fig-caption{margin-top:.8vmin;text-align:center;color:var(--muted);font-size:var(--fs-note)}
+
+/* ------------------------------------------------------------ questions ---
+   Only .option carries .clickable (rule 3): ≥44px, stable position.         */
+.options{display:flex;flex-direction:column;gap:1.4vmin;margin-top:1vmin}
+.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
+.option{border:.14vmin solid rgba(255,255,255,.25);border-radius:1vmin;
+        padding:1.4vmin 2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        min-height:44px;box-sizing:border-box;background:rgba(255,255,255,.02);
+        transition:border-color .25s,background .25s}
+/* An option paired with an aside (the formula that disqualifies it, a ✓/✗).
+   Two cells so the option text and its aside can be separate reveals. */
+.option-row{display:grid;grid-template-columns:minmax(0,1fr) auto;
+            gap:2.4vmin;align-items:center}
+.option-row .option{margin:0}
+.option.picked {border-color:var(--accent2);background:rgba(139,92,246,.12)}
+.option.correct{border-color:var(--green);background:rgba(34,197,94,.12)}
+.option.wrong  {border-color:var(--red);background:rgba(239,68,68,.10)}
+.opt-badge{display:inline-block;min-width:2.4vmin;margin-right:1vmin;
+           color:var(--yellow);font-weight:700}
+.answer-box{margin-top:1vmin;padding:1.4vmin 2vmin;border-left:.35vmin solid var(--green);
+            background:rgba(34,197,94,.08);font-size:clamp(17px,2.8vmin,32px)}
+.answer-box .ok{margin-right:.6vmin}
+.answer-box i{color:var(--sub)}
+
+/* ------------------------------------------------- focus boxes (reveals) ---
+   "One idea per box, and the box holds the floor while you teach it."
+   The box itself is NOT a .step — its label stays visible (rule 17) and the
+   explanation inside it is what reveals. tools/build-deck.mjs ships an observer
+   that runs each box through its own three-beat cycle:
+
+     press 1   box grows to 120%, every other box dims back
+     press 2…  its content appears, one line per press, inside the big box
+     press N   box settles back to 100%, dimming clears
+     press N+1 the next box starts its own cycle
+
+   Grow and shrink are each their OWN press — build-deck.mjs injects a zero-size
+   sentinel .step at each end of the box to make that so. Nothing is on a timer,
+   so the box stays big for exactly as long as the teacher is on it.
+   The transform lives on the BOX, never on the .step, because the host owns
+   .step opacity and transform with !important.                               */
+.box-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.2vmin;margin-top:1vmin}
+.box-grid.three{grid-template-columns:repeat(3,1fr)}
+.box-grid.one  {grid-template-columns:1fr}
+.info-box{position:relative;background:var(--card-bg);
+          border:.16vmin solid var(--card-border);border-left:.5vmin solid var(--yellow);
+          border-radius:1.2vmin;padding:1.6vmin 2vmin;box-sizing:border-box;
+          will-change:transform;
+          /* a touch of overshoot, so "the box opened" reads as its own beat
+             even when the teacher presses Next quickly */
+          transition:transform .45s cubic-bezier(.34,1.36,.5,1),opacity .4s ease,
+                     box-shadow .4s ease,border-color .4s ease,background .4s ease}
+.info-box h4.cell-heading{margin:0 0 .4vmin}
+.info-box p{font-size:var(--fs-small);color:var(--sub)}
+
+/* Grow INWARD, so a 120% box never pushes past the slide's padding: the outer
+   column pins its outer edge, a lone column grows from its centre.           */
+.box-grid > .info-box{transform-origin:center center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(odd) {transform-origin:left center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(even){transform-origin:right center}
+.box-grid.three > .info-box:nth-child(3n+1){transform-origin:left center}
+.box-grid.three > .info-box:nth-child(3n)  {transform-origin:right center}
+
+.page.has-focus .info-box{opacity:.5}          /* only once a box holds the floor */
+/* The enlarged box overlaps its neighbours, so its background must be nearly
+   solid — at card transparency the text underneath bleeds through and the two
+   sets of words mix. Just enough translucency to read as a raised panel.     */
+.page.has-focus .info-box.is-active,
+.info-box.is-active{
+  opacity:1;transform:scale(1.2);z-index:5;border-color:var(--yellow);
+  background:rgba(17,21,33,.94);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 0 0 .2vmin rgba(242,208,36,.35),0 2vmin 6vmin rgba(0,0,0,.6);
+}
+/* Zero-size sentinel steps injected by tools/build-deck.mjs: one before the
+   box's content and one after it, so "grow" and "shrink" are each their own
+   press. Never display:none — the fx observer needs an offsetParent to test. */
+.box-zoom{display:block;width:0;height:0;margin:0;padding:0;border:0;overflow:hidden}
+
+/* ---------------------------------------------------------------- video ---
+   16:9 embed. Scripts are stripped in PDF export (rule 11) and the classroom
+   may be offline, so every video MUST carry a .video-fallback with the URL and
+   the in/out points — that is what prints and what the teacher reads if the
+   embed refuses to load.                                                     */
+.video-frame{position:relative;width:100%;max-width:158vh;aspect-ratio:16/9;margin:0 auto;
+             border-radius:1.2vmin;overflow:hidden;background:#000;
+             border:.16vmin solid var(--card-border)}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-fallback{margin-top:1.2vmin;text-align:center;color:var(--sub);font-size:var(--fs-note)}
+.video-fallback .url{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;
+                     color:var(--cyan);word-break:break-all}
+.video-fallback .cue{color:var(--yellow);font-weight:700}
+
+/* ------------------------------------------------------------- utilities --- */
+.center-y{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          height:100%;gap:2vmin;text-align:center}
+
+/* --------------------------------------------------------------- button --- */
+.btn{border:0;border-radius:1vmin;padding:1.2vmin 2.2vmin;
+     font:700 2.4vmin var(--font-ui);color:#fff;min-height:44px;
+     background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer}
+
+/* ------------------------------------------------------- print / export ---
+   rule 11: all steps flat, on-screen chrome gone, dark stage preserved.     */
+@media print{
+  .step{opacity:1!important;transform:none!important;visibility:visible!important}
+  #bg,.kicker-tag,.no-print{display:none!important}
+  body{background:var(--bg-stage)}
+  .wrap{overflow:visible}
+  .figure-frame svg,.figure-frame img{max-height:60vh}
+  .info-box{transform:none!important;opacity:1!important;box-shadow:none!important;
+            background:var(--card-bg)!important;backdrop-filter:none!important}
+  .page.has-focus .info-box{opacity:1!important}
+  .box-zoom{display:none!important}
+  .video-frame{display:none!important}
+  .video-fallback{font-size:var(--fs-small)}
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent layers: visible on EVERY slide, OUTSIDE any .page (rule 1) -->
+<div id="bg" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="hex" width="70" height="121" patternUnits="userSpaceOnUse">
+        <polygon points="35,0 70,20.2 70,60.6 35,80.8 0,60.6 0,20.2" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1.4"/>
+        <polygon points="35,80.8 70,101 70,141.4 35,161.6 0,141.4 0,101" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1.4"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#hex)"/>
+  </svg>
+</div>
+<div class="kicker-tag">Optics · Optical Instruments</div>
+
+<!-- Slide 10 — Terrestrial Telescope -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Terrestrial Telescope</h2>
+
+    <div class="split-6040">
+      <div class="figure-frame plain tall">
+        <svg viewBox="0 0 1300 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Terrestrial telescope ray diagram">
+          <defs>
+            <marker id="ar-y" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#f2d024"/>
+            </marker>
+            <marker id="ar-c" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#38bdf8"/>
+            </marker>
+            <marker id="ar-g" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#22c55e"/>
+            </marker>
+          </defs>
+
+          <!-- scaffold: axis + the three lenses stay visible -->
+          <line x1="30" y1="250" x2="1270" y2="250" stroke="#94a3b8" stroke-width="2" stroke-dasharray="12 10"/>
+
+          <g fill="rgba(56,189,248,.16)" stroke="#38bdf8" stroke-width="4">
+            <path d="M200,90 Q244,250 200,410 Q156,250 200,90 Z"/>
+            <path d="M600,150 Q632,250 600,350 Q568,250 600,150 Z"/>
+            <path d="M930,165 Q959,250 930,335 Q901,250 930,165 Z"/>
+          </g>
+
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#f2d024" text-anchor="middle">
+            <text x="200" y="462">Objective</text>
+            <text x="600" y="462">Erecting lens</text>
+            <text x="930" y="462">Eyepiece</text>
+          </g>
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">
+            <text x="200" y="490">long focal length</text>
+            <text x="600" y="490">only inverts</text>
+            <text x="930" y="490">short focal length</text>
+          </g>
+
+          <!-- step 1: parallel beam from a distant object -->
+          <g class="step" stroke="#f2d024" stroke-width="3.5" fill="none">
+            <line x1="40" y1="90" x2="200" y2="150" marker-end="url(#ar-y)"/>
+            <line x1="40" y1="190" x2="200" y2="250" marker-end="url(#ar-y)"/>
+            <line x1="40" y1="290" x2="200" y2="350" marker-end="url(#ar-y)"/>
+          </g>
+
+          <!-- step 2: objective converges to the first real image -->
+          <g class="step" stroke="#f2d024" stroke-width="3.5" fill="none">
+            <line x1="200" y1="150" x2="460" y2="347"/>
+            <line x1="200" y1="250" x2="460" y2="347"/>
+            <line x1="200" y1="350" x2="460" y2="347"/>
+          </g>
+
+          <!-- step 3: I1 -->
+          <g class="step">
+            <line x1="460" y1="250" x2="460" y2="352" stroke="#f2d024" stroke-width="6" marker-end="url(#ar-y)"/>
+            <text x="474" y="392" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#f2d024">I</text>
+            <text x="487" y="399" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#f2d024">1</text>
+          </g>
+
+          <!-- step 4: erecting lens re-inverts -->
+          <g class="step" stroke="#38bdf8" stroke-width="3.5" fill="none">
+            <path d="M460,347 L600,347 L740,153"/>
+            <path d="M460,347 L600,250 L740,153"/>
+            <path d="M460,347 L600,153 L740,153"/>
+          </g>
+
+          <!-- step 5: I2 -->
+          <g class="step">
+            <line x1="740" y1="250" x2="740" y2="148" stroke="#38bdf8" stroke-width="6" marker-end="url(#ar-c)"/>
+            <text x="754" y="132" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="27" font-weight="700" fill="#38bdf8">I</text>
+            <text x="767" y="139" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#38bdf8">2</text>
+          </g>
+
+          <!-- step 6: eyepiece sends the beam out parallel -->
+          <g class="step" stroke="#22c55e" stroke-width="3.5" fill="none">
+            <path d="M740,153 L930,153 L1180,281" marker-end="url(#ar-g)"/>
+            <path d="M740,153 L930,250 L1180,378" marker-end="url(#ar-g)"/>
+            <ellipse cx="1232" cy="330" rx="34" ry="24" fill="none" stroke="#22c55e" stroke-width="3.5"/>
+            <circle cx="1232" cy="330" r="10" fill="#22c55e" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="center-y">
+        <div class="step"><span class="eq big"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><msub><mi>f</mi><mn>0</mn></msub><mo>+</mo><mn>4</mn><mi>f</mi><mo>+</mo><msub><mi>f</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">L=f_0+4f+f_e</annotation></semantics></math></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 11 — Reflecting type Telescope -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Reflecting type Telescope</h2>
+
+    <div class="split-6040">
+      <div class="figure-frame plain tall">
+        <svg viewBox="0 0 1380 680" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cassegrain reflecting telescope ray diagram">
+          <defs>
+            <marker id="rt-a" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,1 L11,6 L0,11 z" fill="#bff2a8"/>
+            </marker>
+          </defs>
+
+          <!-- scaffold: tube, mirrors, eyepiece stay visible -->
+          <g fill="#a7e08c" stroke="#5f9a49" stroke-width="2">
+            <rect x="75" y="100" width="505" height="24" rx="6"/>
+            <rect x="75" y="580" width="505" height="24" rx="6"/>
+            <rect x="650" y="284" width="620" height="14" rx="5"/>
+            <rect x="650" y="418" width="620" height="14" rx="5"/>
+          </g>
+
+          <!-- objective mirror: two arcs with a central hole -->
+          <g fill="none" stroke="#a7e08c" stroke-width="15" stroke-linecap="round">
+            <path d="M580,112 C648,196 664,258 664,292"/>
+            <path d="M580,592 C648,508 664,446 664,412"/>
+          </g>
+          <!-- silvered (back) face of the objective — light never reaches this side -->
+          <g stroke="#f2d024" stroke-width="3.5" stroke-linecap="round" opacity=".9">
+            <line x1="600" y1="125" x2="626" y2="121"/>
+            <line x1="624" y1="159" x2="650" y2="157"/>
+            <line x1="642" y1="190" x2="668" y2="190"/>
+            <line x1="655" y1="218" x2="681" y2="221"/>
+            <line x1="664" y1="243" x2="689" y2="248"/>
+            <line x1="669" y1="265" x2="694" y2="273"/>
+            <line x1="672" y1="284" x2="695" y2="295"/>
+            <line x1="600" y1="579" x2="626" y2="583"/>
+            <line x1="624" y1="545" x2="650" y2="547"/>
+            <line x1="642" y1="514" x2="668" y2="514"/>
+            <line x1="655" y1="486" x2="681" y2="483"/>
+            <line x1="664" y1="461" x2="689" y2="456"/>
+            <line x1="669" y1="439" x2="694" y2="431"/>
+            <line x1="672" y1="420" x2="695" y2="409"/>
+          </g>
+
+          <!-- secondary mirror -->
+          <path d="M450,248 C424,300 424,414 450,472" fill="none" stroke="#a7e08c" stroke-width="13" stroke-linecap="round"/>
+          <!-- silvered (back) face of the secondary -->
+          <g stroke="#f2d024" stroke-width="3.5" stroke-linecap="round" opacity=".9">
+            <line x1="438" y1="258" x2="417" y2="261"/>
+            <line x1="430" y1="287" x2="409" y2="294"/>
+            <line x1="425" y1="321" x2="405" y2="330"/>
+            <line x1="424" y1="358" x2="404" y2="368"/>
+            <line x1="425" y1="394" x2="407" y2="407"/>
+            <line x1="430" y1="429" x2="413" y2="444"/>
+            <line x1="438" y1="461" x2="423" y2="477"/>
+          </g>
+
+          <!-- eyepiece -->
+          <ellipse cx="1030" cy="352" rx="19" ry="76" fill="rgba(167,224,140,.18)" stroke="#a7e08c" stroke-width="5"/>
+
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="30" font-weight="700" fill="#f2d024">
+            <text x="712" y="152">Objective mirror</text>
+            <text x="56" y="352">Secondary mirror</text>
+            <text x="960" y="536">Eyepiece</text>
+          </g>
+          <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="23" font-style="italic" fill="#f2d024">
+            <text x="712" y="186">silvered on the back</text>
+            <text x="316" y="646">silvered side</text>
+            <path d="M368,634 L412,486" stroke="#f2d024" stroke-width="2.5" fill="none"/>
+          </g>
+
+          <!-- step 1: parallel light from a distant star -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="150" y1="175" x2="612" y2="175" marker-end="url(#rt-a)"/>
+            <line x1="150" y1="525" x2="612" y2="525" marker-end="url(#rt-a)"/>
+          </g>
+
+          <!-- step 2: objective reflects the beam back to the secondary -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="612" y1="175" x2="452" y2="272" marker-end="url(#rt-a)"/>
+            <line x1="612" y1="525" x2="452" y2="440" marker-end="url(#rt-a)"/>
+          </g>
+
+          <!-- step 3: secondary sends it through the hole to the focus -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <line x1="452" y1="272" x2="905" y2="355" marker-end="url(#rt-a)"/>
+            <line x1="452" y1="440" x2="905" y2="355" marker-end="url(#rt-a)"/>
+            <circle cx="905" cy="355" r="8" fill="#f2d024" stroke="none"/>
+            <text x="838" y="330" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="26" fill="#f2d024" stroke="none">focus</text>
+          </g>
+
+          <!-- step 4: through the eyepiece to the eye -->
+          <g class="step" stroke="#bff2a8" stroke-width="4" fill="none">
+            <path d="M905,355 L1030,378 L1160,368"/>
+            <path d="M905,355 L1030,332 L1160,344"/>
+            <ellipse cx="1210" cy="356" rx="34" ry="24" stroke="#bff2a8" stroke-width="4"/>
+            <circle cx="1210" cy="356" r="10" fill="#bff2a8" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="center-y">
+        <div class="box-grid one">
+          <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+            <h4 class="cell-heading">No chromatic aberration</h4>
+            <p class="step">A mirror reflects &#8212; it never disperses. All colours come to the same focus.</p>
+          <i class="step box-zoom" aria-hidden="true"></i></div>
+          <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+            <h4 class="cell-heading">Can be made large</h4>
+            <p class="step">A mirror is supported over its whole back, so it can be built far bigger than any lens &#8212; and a bigger aperture means more light and better resolution.</p>
+          <i class="step box-zoom" aria-hidden="true"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- New slide — video clip 0:33 to 0:50 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Watch this <span class="paren">&#8212; 0:33 to 0:50</span></h2>
+
+    <!-- data-video is the contract the presenter reads: it paints a REAL,
+         clickable player over this box, in its own document, above the ink
+         canvas. The inner iframe is only so the file still plays when the
+         .html is opened in a plain browser. -->
+    <div class="video-frame" data-video="dPWmdcAKSFA" data-start="33" data-end="50">
+      <iframe src="https://www.youtube-nocookie.com/embed/dPWmdcAKSFA?start=33&amp;end=50&amp;rel=0&amp;modestbranding=1"
+              title="Clip, 0:33 to 0:50"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+
+    <div class="video-fallback">
+      <div class="cue">Play from 0:33 to 0:50</div>
+      <div class="url">https://www.youtube.com/watch?v=dPWmdcAKSFA</div>
+    </div>
+
+    <ul class="bullets arrow small tight">
+      <li class="step">Watch what the mirror does to the beam &#8212; then we will draw it.</li>
+      <li class="step">If the embed does not play, open the link above and jump to 0:33.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Slide 12 — Warning about sign convention -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Warning about sign convention</h1>
+    <div class="lead step">Every distance is measured from the pole / optical centre, along the direction of the incident light.</div>
+    <div class="lead step">Put the sign in first, then substitute &#8212; not the other way round.</div>
+  </div>
+</section>
+
+<!-- Slide 13 — Human eye, cross-section -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">The Human Eye &#8212; cross-section</h2>
+
+    <div class="figure-frame plain tall">
+      <svg viewBox="0 0 1280 770" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Labelled cross-section of the human eye">
+
+        <!-- ---------- the eyeball itself (always visible) ---------- -->
+        <!-- extraocular muscles -->
+        <g fill="#cf4552">
+          <path d="M470,118 L582,80 L600,124 L488,162 Z"/>
+          <path d="M470,642 L582,680 L600,636 L488,598 Z"/>
+        </g>
+
+        <!-- concentric coats: sclera / choroid / retina / vitreous -->
+        <circle cx="620" cy="380" r="292" fill="#c3d3ea"/>
+        <circle cx="620" cy="380" r="272" fill="#d43b4c"/>
+        <circle cx="620" cy="380" r="256" fill="#f3e3a3"/>
+        <circle cx="620" cy="380" r="242" fill="#d9a4aa"/>
+
+        <!-- optic nerve leaving at the back -->
+        <path d="M860,318 L1130,300 L1130,430 L860,412 Z" fill="#f3e3a3" stroke="#c9b96b" stroke-width="4"/>
+        <path d="M900,362 L1130,362" stroke="#c9b96b" stroke-width="3"/>
+
+        <!-- anterior chamber + cornea -->
+        <path d="M408,182 C306,214 252,292 250,380 C252,468 306,546 408,578 Z"
+              fill="#dfeaf6" stroke="#7fa8d8" stroke-width="6"/>
+
+        <!-- ciliary muscle -->
+        <ellipse cx="416" cy="176" rx="38" ry="24" fill="#d9414f"/>
+        <ellipse cx="416" cy="584" rx="38" ry="24" fill="#d9414f"/>
+
+        <!-- crystalline lens -->
+        <ellipse cx="414" cy="380" rx="60" ry="106" fill="#eef6fd" stroke="#9dc0e0" stroke-width="5"/>
+
+        <!-- iris (leaves the pupil open in the middle) -->
+        <g fill="#c94b57" stroke="#8f2f3a" stroke-width="3">
+          <rect x="374" y="186" width="26" height="92" rx="9"/>
+          <rect x="374" y="482" width="26" height="92" rx="9"/>
+        </g>
+
+        <!-- ---------- labels: one reveal each ---------- -->
+        <g font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="30" font-weight="700"
+           fill="#f2d024" stroke="none">
+
+          <g class="step">
+            <text x="16" y="256">Cornea</text>
+            <path d="M130,268 L258,318" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="16" y="500">Aqueous humour</text>
+            <path d="M210,512 L318,452" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="196" y="86">Iris</text>
+            <path d="M244,98 L386,190" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="330" y="46">Pupil</text>
+            <path d="M372,58 L400,320" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="120" y="716">Lens</text>
+            <path d="M200,704 L406,472" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="404" y="754">Ciliary muscle</text>
+            <path d="M446,724 L420,610" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="702" y="52">Retina</text>
+            <path d="M746,64 L752,158" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="1000" y="196">Choroid</text>
+            <path d="M1000,208 L880,282" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="1030" y="516">Sclera</text>
+            <path d="M1032,504 L896,478" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="620" y="754">Vitreous humour</text>
+            <path d="M700,724 L680,556" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+
+          <g class="step">
+            <text x="1006" y="628">Optic nerve</text>
+            <path d="M1050,616 L1030,442" stroke="#f2d024" stroke-width="3" fill="none"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <p class="caption step">Light is bent mostly at the cornea, fine-focused by the lens, and lands on the retina &#8212; where the rod and cone cells sit.</p>
+  </div>
+</section>
+
+<!-- Slide 14 — Parts of the eye and what each one does -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Parts of the Eye <span class="paren">&#8212; and what each one does</span></h2>
+
+    <div class="box-grid">
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Cornea</h4>
+        <p class="step">Transparent front part. Refracts light &#8212; <b>2/3 of the eye's total optical power</b>.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Iris</h4>
+        <p class="step">Annular structure in the eye. Controls the diameter and size of the pupil, and so controls the amount of light reaching the retina.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Pupil</h4>
+        <p class="step">Opening in the centre. Allows light to enter the eye.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Retina</h4>
+        <p class="step">Innermost, light-sensitive layer. Translates the image into electrical neural impulses to the brain.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Ciliary muscle</h4>
+        <p class="step">Controls accommodation for viewing objects at varying distances. It does this by changing the shape of the lens.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Rod cells</h4>
+        <p class="step">Responsible for vision in <b>low light</b> conditions.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Cone cells</h4>
+        <p class="step">Responsible for vision in <b>bright light</b>, and for <b>colour vision</b>.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+
+      <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
+        <h4 class="cell-heading">Hold on to this</h4>
+        <p class="step">The cornea does most of the bending; the ciliary muscle and lens only fine-tune it. That is why accommodation has a limited range.</p>
+      <i class="step box-zoom" aria-hidden="true"></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- Box spotlight on reveal (no-op without .info-box) -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    var boxes = [].slice.call(document.querySelectorAll('.info-box'));
+    if (!boxes.length) return;
+
+    function shown(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;   // hidden page
+      return parseFloat(getComputedStyle(el).opacity || '1') > 0.5;
+    }
+    function marks(box){
+      try { return box.querySelectorAll(':scope > .box-zoom'); }
+      catch (e) { return box.querySelectorAll('.box-zoom'); }
+    }
+    /* 'shut' -> not reached yet | 'open' -> holding the floor | 'done' -> shrunk */
+    function state(box){
+      var z = marks(box);
+      if (z.length < 2){                     // uninstrumented box: open on any step
+        var st = box.querySelectorAll('.step');
+        for (var i = 0; i < st.length; i++) if (shown(st[i])) return 'open';
+        return 'shut';
+      }
+      if (shown(z[z.length - 1])) return 'done';
+      if (shown(z[0]))            return 'open';
+      return 'shut';
+    }
+
+    var current = null;
+    function sync(){
+      var next = null;
+      for (var i = 0; i < boxes.length; i++)
+        if (state(boxes[i]) === 'open') next = boxes[i];
+      if (next === current) return;          // also stops our own class writes
+                                             // from re-entering the observer
+      var page = (next || current) ? (next || current).closest('.page') : null;
+      if (current) current.classList.remove('is-active');
+      if (next)    next.classList.add('is-active');
+      if (page)    page.classList.toggle('has-focus', !!next);
+      current = next;
+    }
+
+    setTimeout(function(){                   // after host/fallback has hidden pages
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes:true, subtree:true, attributeFilter:['style','class'] });
+      } catch (e) { /* no observer -> the lf-show hook below still works */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>
+
+<!-- Standalone fallback controller (rule 6) — LAST -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present -> stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+
+</body>
+</html>
