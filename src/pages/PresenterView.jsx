@@ -16,6 +16,7 @@ export default function PresenterView() {
   const navigate = useNavigate()
   const location = useLocation()
   const iframeRef = useRef(null)
+  const wrapRef = useRef(null)
   const [libOpen, setLibOpen] = useState(false)
   // A folder passed via navigation state (e.g. the "Preview" button on the
   // content panel) is auto-loaded once the presenter iframe is ready.
@@ -49,10 +50,14 @@ export default function PresenterView() {
         post({ type: 'lf-library-ack' })   // tells the panel not to fall back
       } else if (d.type === 'lf-exit') {
         navigate(-1)
-      } else if (d.type === 'lf-fullscreen' && !d.on && document.fullscreenElement) {
-        // the panel's own exitFullscreen() was refused — we own the iframe,
-        // so release it from up here instead
-        document.exitFullscreen().catch(() => {})
+      } else if (d.type === 'lf-fullscreen') {
+        // This wrapper — not the iframe — is the full-screen element, because
+        // a browser paints only the full-screen element and its descendants.
+        // Fullscreening the iframe would leave the picker below unpainted and
+        // the Library button dead. The wrapper contains both.
+        post({ type: 'lf-fullscreen-ack' })
+        if (d.on) wrapRef.current?.requestFullscreen?.().catch(() => {})
+        else if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
       }
     }
     // whoever ends up owning the request, the panel is told the truth
@@ -66,7 +71,7 @@ export default function PresenterView() {
   }, [navigate, post])
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0b0f19]">
+    <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">
       <iframe
         ref={iframeRef}
         title="Presenter panel"

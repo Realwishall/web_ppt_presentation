@@ -544,14 +544,20 @@
   const tellHost = msg => { if(hosted) parent.postMessage(msg, "*"); };
 
   /* ═══ FULL SCREEN ═════════════════════════════
-     Entering is easy — this document asks for it. Leaving used to be the
-     broken half: a nested document's `fullscreenElement` is not something we
-     can rely on, so when the host ends up owning the request the toggle read
-     "not full screen" and tried to ENTER again, which looks like a dead
-     button. So both halves are belt-and-braces now: the host mirrors its own
-     state down (lf-fs-state) and will release full screen on request
-     (lf-fullscreen{on:false}) if the local exit is refused. */
-  let hostFS = false;
+     Full screen belongs to the HOST's container, not to this document. Only
+     the full-screen element and its descendants are rendered: if this iframe
+     is the full-screen element then everything the host draws — the Library
+     picker above all — simply does not paint, and its button looks dead. The
+     host's container holds both the board and the picker, so putting it in
+     charge is what makes the Library work in either mode.
+
+     Leaving was the other half of the same knot. A nested document's
+     `fullscreenElement` is null when the host owns the request, so the toggle
+     read "not full screen" and tried to ENTER again. Hence: the host mirrors
+     its state down (lf-fs-state) and takes lf-fullscreen{on} for both
+     directions; going it alone here is only the fallback for a host that
+     never acks, or for the panel opened on its own. */
+  let hostFS = false, fsAck = false;
   const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
   const isFS = () => !!fsEl() || hostFS;
 
@@ -565,13 +571,21 @@
     try{ Promise.resolve(exit.call(document)).catch(askHostExitFS); }
     catch(err){ askHostExitFS(); }
   }
-  function enterFS(){
+  function enterFSLocal(){
     const el = document.documentElement;
     const req = el.requestFullscreen || el.webkitRequestFullscreen;
     const blocked = () => toast("Full screen was blocked by the browser");
     if(!req) return blocked();
     try{ Promise.resolve(req.call(el)).catch(blocked); }
     catch(err){ blocked(); }
+  }
+  function enterFS(){
+    if(!hosted) return enterFSLocal();
+    fsAck = false;
+    tellHost({ type:"lf-fullscreen", on:true });
+    // the click's user activation reaches the host too and lasts seconds, so
+    // this late fallback is still allowed to request full screen itself
+    setTimeout(() => { if(!fsAck && !isFS()) enterFSLocal(); }, 400);
   }
   function toggleFS(){ isFS() ? exitFS() : enterFS(); }
 
@@ -1105,6 +1119,8 @@ html,body{overflow:hidden;margin:0}
       loadDeckFromText(d.text, d.name || "Library");
     } else if(d.type === "lf-library-ack"){
       libraryAck = true;                 // the picker is up; don't fall back
+    } else if(d.type === "lf-fullscreen-ack"){
+      fsAck = true;                      // the host drives it; don't go it alone
     } else if(d.type === "lf-fs-state"){
       hostFS = !!d.on;
       renderRails();
