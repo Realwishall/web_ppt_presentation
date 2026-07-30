@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Presentation, Library, X, ChevronRight, Layers, FolderOpen, Loader2,
+  Library, X, ChevronRight, Layers, FolderOpen, Loader2,
 } from 'lucide-react'
 import { listClasses, listChapters, listFolders } from '../lib/content'
 import ChapterIcon from '../components/ChapterIcon'
 import { TagBadge } from '../components/ContentPanel'
 
 // Full-screen host for the standalone presenter panel (public/presenter.html).
-// Instead of loading slides from an uploaded file, the Library picker here
-// pulls a folder's stored HTML from Firestore and posts it into the panel.
+// The board gets the whole viewport — no header of our own — so the panel's
+// own control strip asks us for the three things it can't do from inside a
+// sandboxed iframe: open the Library picker, navigate back out, and release
+// full screen. Decks come from Firestore, never from an uploaded file.
 export default function PresenterView() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -19,45 +21,59 @@ export default function PresenterView() {
   // content panel) is auto-loaded once the presenter iframe is ready.
   const pendingFolder = useRef(location.state?.folder || null)
 
+  const post = useCallback((msg) => {
+    iframeRef.current?.contentWindow?.postMessage(msg, '*')
+  }, [])
+
   // Post a folder's HTML into the presenter iframe as a new deck.
   const loadFolder = useCallback((folder) => {
-    const win = iframeRef.current?.contentWindow
-    if (!win) return
-    win.postMessage({ type: 'lf-load-deck', text: folder.html || '', name: folder.name || 'Folder' }, '*')
+    post({ type: 'lf-load-deck', text: folder.html || '', name: folder.name || 'Folder' })
     setLibOpen(false)
-  }, [])
+  }, [post])
 
   // When the iframe finishes loading, flush any folder queued from navigation.
   const onIframeLoad = useCallback(() => {
+    post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
     if (pendingFolder.current) {
       loadFolder(pendingFolder.current)
       pendingFolder.current = null
     }
-  }, [loadFolder])
+  }, [loadFolder, post])
+
+  useEffect(() => {
+    const onMessage = (e) => {
+      if (e.source !== iframeRef.current?.contentWindow) return
+      const d = e.data || {}
+      if (d.type === 'lf-open-library') {
+        setLibOpen(true)
+        post({ type: 'lf-library-ack' })   // tells the panel not to fall back
+      } else if (d.type === 'lf-exit') {
+        navigate(-1)
+      } else if (d.type === 'lf-fullscreen' && !d.on && document.fullscreenElement) {
+        // the panel's own exitFullscreen() was refused — we own the iframe,
+        // so release it from up here instead
+        document.exitFullscreen().catch(() => {})
+      }
+    }
+    // whoever ends up owning the request, the panel is told the truth
+    const onFsChange = () => post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
+    window.addEventListener('message', onMessage)
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => {
+      window.removeEventListener('message', onMessage)
+      document.removeEventListener('fullscreenchange', onFsChange)
+    }
+  }, [navigate, post])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0b0f19]">
-      <div className="flex h-11 shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-950 px-3 text-slate-200">
-        <button onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-white/10">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
-          <Presentation className="h-4 w-4 text-violet-400" /> Teach
-        </span>
-        <button onClick={() => setLibOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-violet-500">
-          <Library className="h-4 w-4" /> Library
-        </button>
-      </div>
-
+    <div className="fixed inset-0 z-50 bg-[#0b0f19]">
       <iframe
         ref={iframeRef}
         title="Presenter panel"
         src="/presenter.html"
         allow="fullscreen"
         onLoad={onIframeLoad}
-        className="w-full flex-1 border-0"
+        className="h-full w-full border-0"
       />
 
       {libOpen && <LibraryPicker onClose={() => setLibOpen(false)} onPick={loadFolder} />}

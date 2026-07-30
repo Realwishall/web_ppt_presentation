@@ -379,15 +379,20 @@
     </div>
   </main>
   <div class="empty" id="emptyState">
-    <p>No slides in this session.<br>Add a blank page to start writing, or load a slides file into the Master&nbsp;Library.</p>
+    <p>No slides in this session.<br>Add a blank page to start writing, or open the Master&nbsp;Library and pick a folder.</p>
     <div style="display:flex;gap:12px">
       <button class="btn-add-first" id="addFirstPage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
         Add blank page
       </button>
       <button class="btn-add-first" id="loadDeckEmpty" style="background:var(--surface);border:1px solid var(--border);box-shadow:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
-        Load slides file
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#f97316"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#22c55e"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#ef4444"/>
+        </svg>
+        Open Library
       </button>
     </div>
   </div>
@@ -410,7 +415,10 @@
     <div class="spacer"></div>
 
     <div class="center-pill">
-      <button class="pill-btn" data-action="library" title="Master Library — load a slides file (.html)">
+      <button class="pill-btn" id="exitBtn" data-action="exit" title="Leave the presenter — back to the app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m8 17-5-5 5-5"/><path d="M3 12h12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="library" title="Master Library — pick a folder to teach">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#f97316"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
@@ -526,6 +534,47 @@
   const snapResize  = document.getElementById("snapResize");
   const snapClose   = document.getElementById("snapClose");
 
+  /* ═══ HOST BRIDGE ═════════════════════════════
+     The panel normally runs inside the app (PresenterView) in an iframe and
+     has no chrome of its own, so it asks the host for the things the host
+     owns: the Master Library picker, the way back out, and — see FULL SCREEN
+     below — releasing full screen. Opened on its own (no host) every one of
+     those falls back to something that works standalone. */
+  const hosted = window.parent !== window;
+  const tellHost = msg => { if(hosted) parent.postMessage(msg, "*"); };
+
+  /* ═══ FULL SCREEN ═════════════════════════════
+     Entering is easy — this document asks for it. Leaving used to be the
+     broken half: a nested document's `fullscreenElement` is not something we
+     can rely on, so when the host ends up owning the request the toggle read
+     "not full screen" and tried to ENTER again, which looks like a dead
+     button. So both halves are belt-and-braces now: the host mirrors its own
+     state down (lf-fs-state) and will release full screen on request
+     (lf-fullscreen{on:false}) if the local exit is refused. */
+  let hostFS = false;
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const isFS = () => !!fsEl() || hostFS;
+
+  function askHostExitFS(){
+    if(hosted) tellHost({ type:"lf-fullscreen", on:false });
+    else toast("Press Esc to leave full screen");
+  }
+  function exitFS(){
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if(!fsEl() || !exit) return askHostExitFS();
+    try{ Promise.resolve(exit.call(document)).catch(askHostExitFS); }
+    catch(err){ askHostExitFS(); }
+  }
+  function enterFS(){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    const blocked = () => toast("Full screen was blocked by the browser");
+    if(!req) return blocked();
+    try{ Promise.resolve(req.call(el)).catch(blocked); }
+    catch(err){ blocked(); }
+  }
+  function toggleFS(){ isFS() ? exitFS() : enterFS(); }
+
   /* ═══ ICONS ═══════════════════════════════════ */
   const S = inner =>
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
@@ -575,10 +624,12 @@
       </button>`).join("");
     h += `</div><div class="divider" role="separator"></div>`;
     h += ACTIONS.map(a => {
-      let icon = a.icon;
-      if(a.id === "fullscreen" && document.fullscreenElement) icon = "unframe";
+      let icon = a.icon, cls = a.cls || "";
+      // the two frame icons read almost the same at 20px, so the button also
+      // lights up while full screen is on — otherwise "exit" looks like a no-op
+      if(a.id === "fullscreen" && isFS()){ icon = "unframe"; cls += " is-active"; }
       return `
-      <button class="tool-btn ${a.cls||""}" data-action="${a.id}" title="${a.title}">
+      <button class="tool-btn ${cls}" data-action="${a.id}" title="${a.title}">
         ${ICONS[icon]}
       </button>`;
     }).join("");
@@ -1032,13 +1083,32 @@ html,body{overflow:hidden;margin:0}
     deckInput.value = "";
   });
 
-  // Host app (PresenterView) can push a folder's HTML in directly, instead of
-  // loading from a file. Distinct message type so it won't clash with the
-  // lf-rects messages that come up from child deck iframes.
+  /* The grid button opens the app's Master Library — decks come from the
+     library, not from the teacher's laptop. Standalone there is no library to
+     ask, so it falls back to the local file picker; the same fallback catches
+     a host that predates lf-open-library and therefore never acks. */
+  let libraryAck = false;
+  function openLibrary(){
+    if(!hosted) return deckInput.click();
+    libraryAck = false;
+    tellHost({ type:"lf-open-library" });
+    setTimeout(() => { if(!libraryAck) deckInput.click(); }, 600);
+  }
+
+  // Messages coming DOWN from the host app (PresenterView). Distinct types so
+  // they can't clash with the lf-rects / lf-media messages that come UP from
+  // the child deck iframes.
   window.addEventListener("message", (e) => {
     const d = e.data || {};
     if(d.type === "lf-load-deck" && typeof d.text === "string"){
+      libraryAck = true;                 // a deck arrived — no file picker
       loadDeckFromText(d.text, d.name || "Library");
+    } else if(d.type === "lf-library-ack"){
+      libraryAck = true;                 // the picker is up; don't fall back
+    } else if(d.type === "lf-fs-state"){
+      hostFS = !!d.on;
+      renderRails();
+      requestAnimationFrame(sizeCanvas);
     }
   });
 
@@ -1264,15 +1334,9 @@ html,body{overflow:hidden;margin:0}
       case "last":  goTo(state.pages.length - 1); break;
       case "close": closeOverlay.classList.add("show"); break;
       case "export": exportPDF(); break;
-      case "fullscreen":
-        if(document.fullscreenElement){
-          document.exitFullscreen();
-        } else {
-          document.documentElement.requestFullscreen()
-            .catch(() => toast("Full screen was blocked by the browser"));
-        }
-        break;
-      case "library": deckInput.click(); break;
+      case "fullscreen": toggleFS(); break;
+      case "library": openLibrary(); break;
+      case "exit": tellHost({ type:"lf-exit" }); break;
     }
   }
 
@@ -1548,7 +1612,7 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     toast("Session ended");
   });
 
-  document.getElementById("loadDeckEmpty").addEventListener("click", () => deckInput.click());
+  document.getElementById("loadDeckEmpty").addEventListener("click", openLibrary);
 
   document.addEventListener("keydown", e => {
     if(e.target.matches("input,textarea")) return;
@@ -1566,12 +1630,16 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
   });
 
   window.addEventListener("resize", sizeCanvas);
-  document.addEventListener("fullscreenchange", () => {
-    renderRails();                       // swap between enter/exit icon
-    requestAnimationFrame(sizeCanvas);   // board size changes with fullscreen
-  });
+  ["fullscreenchange","webkitfullscreenchange"].forEach(ev =>
+    document.addEventListener(ev, () => {
+      renderRails();                       // swap between enter/exit icon
+      requestAnimationFrame(sizeCanvas);   // board size changes with fullscreen
+    })
+  );
 
   /* ═══ INIT ════════════════════════════════════ */
+  // nothing to go back to when the panel is opened on its own
+  if(!hosted) document.getElementById("exitBtn").style.display = "none";
   renderRails();
   updateChrome();
   setTimeout(() => document.getElementById("escToast").classList.add("hide"), 5000);
