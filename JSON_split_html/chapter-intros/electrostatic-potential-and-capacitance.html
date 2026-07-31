@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Electrostatic Potential and Capacitance | Class 12 Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+--bg: #0a0a12;
+  --accent: #a3e635;
+  --text: #f7fee7;
+  --muted: #a1a1aa;
+  --glow: #84cc16;
+  --display: 'Chakra Petch', serif;
+  --body: 'Barlow', sans-serif;
+  --mono: 'Barlow', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+}
+
+/* Persistent 3D layer — OUTSIDE .page */
+#canvas-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 60%), var(--bg);
+}
+#canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+}
+
+/* Single landing slide */
+.page {
+  position: relative; z-index: 2;
+  height: 100%; box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--body);
+}
+.wrap {
+  height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 6vmin 7vw 8vmin;
+  max-width: 72ch;
+  position: relative; z-index: 2;
+}
+.chapter-badge {
+  font-size: clamp(12px, 1.8vmin, 18px);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.2vmin; display: block;
+  animation: fadeUp 1s ease both;
+}
+.brand {
+  font-family: var(--display);
+  color: var(--text);
+  text-shadow: 0 2px 40px var(--bg), 0 0 80px var(--bg);
+  animation: fadeUp 1s 0.15s ease both;
+  margin: 0;
+}
+.headline {
+  animation: fadeUp 1s 0.3s ease both;
+  margin: 0;
+}
+.tagline {
+  margin-top: 1.6vmin; color: var(--muted);
+  font-size: clamp(14px, 2.2vmin, 22px); max-width: 40ch;
+  animation: fadeUp 1s 0.45s ease both;
+}
+.strip {
+  display: flex; flex-wrap: wrap; gap: 1.2vmin;
+  margin-top: 3.5vmin; max-width: 70ch;
+  animation: fadeUp 1s 0.6s ease both;
+}
+.tag {
+  padding: 1vmin 2vmin; border-radius: 999px;
+  font-size: clamp(12px, 1.9vmin, 18px); font-weight: 600;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hint {
+  margin-top: 3vmin;
+  font-size: clamp(12px, 1.8vmin, 16px);
+  color: var(--muted); letter-spacing: 0.04em;
+  animation: fadeUp 1s 0.75s ease both;
+}
+
+/* Per-chapter hero typography overrides */
+.wrap { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; \n      .strip { justify-content:center; }
+      .brand { font-size:clamp(2rem, 5vw, 4rem); text-transform:uppercase; letter-spacing:0.08em; }
+      .headline { font-size:1.5rem; margin-top:1rem; color:var(--accent); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media print {
+  #canvas-wrap, .vignette, .hint { display: none !important; }
+  .page { background: var(--bg) !important; }
+  .chapter-badge, .brand, .headline, .tagline, .strip { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent background siblings (OUTSIDE .page) -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- ===== Single chapter landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="chapter-badge">Class 12 · Chapter 2</span>
+    <h1 class="brand">Electrostatic Potential and Capacitance</h1>
+    <p class="headline">Voltage, capacitors, and stored charge</p>
+    <p class="tagline">Potential energy per unit charge.</p>
+    <div class="strip">
+        <span class="tag">Electrostatic Potential</span>
+        <span class="tag">Potential due to Point Charge &amp; Dipole</span>
+        <span class="tag">Equipotential Surfaces</span>
+        <span class="tag">Capacitors &amp; Capacitance</span>
+        <span class="tag">Dielectrics &amp; Energy Storage</span>
+      </div>
+    <p class="hint no-print">Press <b>Next</b> to begin the chapter</p>
+  </div>
+</section>
+
+<script>
+(function() {
+  const ACCENT = 10741301;
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  function size(){
+    const w = Math.max(wrap.clientWidth || innerWidth || 1, 1);
+    const h = Math.max(wrap.clientHeight || innerHeight || 1, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  wrap.appendChild(renderer.domElement);
+  
+      const plate1 = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 0.1), new THREE.MeshBasicMaterial({ color: 0xa3e635, transparent: true, opacity: 0.6 }));
+      plate1.position.z = -1; scene.add(plate1);
+      const plate2 = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 0.1), new THREE.MeshBasicMaterial({ color: 0x84cc16, transparent: true, opacity: 0.6 }));
+      plate2.position.z = 1; scene.add(plate2);
+      const sparks = [];
+      for (let i = 0; i < 50; i++) {
+        const s = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 4), new THREE.MeshBasicMaterial({ color: ACCENT }));
+        scene.add(s); sparks.push(s);
+      }
+      camera.position.set(5, 2, 6); camera.lookAt(0,0,0);
+      function tick(t) {
+        const gap = 0.8 + Math.sin(t)*0.4;
+        plate1.position.z = -gap; plate2.position.z = gap;
+        sparks.forEach((s,i) => {
+          s.position.set((Math.random()-0.5)*3.5, (Math.random()-0.5)*2.5, -gap + (i/50)*gap*2);
+          s.material.opacity = 0.5 + Math.sin(t*5+i)*0.5;
+        });
+      }
+  let t0 = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = (performance.now() - t0) / 1000;
+    tick(t);
+    renderer.render(scene, camera);
+  }
+  animate();
+  addEventListener('resize', size);
+  })();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

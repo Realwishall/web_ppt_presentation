@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ray Optics and Optical Instruments | Class 12 Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600;700;800&family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+--bg: #0c0a09;
+  --accent: #fcd34d;
+  --text: #fafaf9;
+  --muted: #d6d3d1;
+  --glow: #fbbf24;
+  --display: 'Cormorant', serif;
+  --body: 'Figtree', sans-serif;
+  --mono: 'Figtree', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+}
+
+/* Persistent 3D layer — OUTSIDE .page */
+#canvas-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 60%), var(--bg);
+}
+#canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+}
+
+/* Single landing slide */
+.page {
+  position: relative; z-index: 2;
+  height: 100%; box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--body);
+}
+.wrap {
+  height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 6vmin 7vw 8vmin;
+  max-width: 72ch;
+  position: relative; z-index: 2;
+}
+.chapter-badge {
+  font-size: clamp(12px, 1.8vmin, 18px);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.2vmin; display: block;
+  animation: fadeUp 1s ease both;
+}
+.brand {
+  font-family: var(--display);
+  color: var(--text);
+  text-shadow: 0 2px 40px var(--bg), 0 0 80px var(--bg);
+  animation: fadeUp 1s 0.15s ease both;
+  margin: 0;
+}
+.headline {
+  animation: fadeUp 1s 0.3s ease both;
+  margin: 0;
+}
+.tagline {
+  margin-top: 1.6vmin; color: var(--muted);
+  font-size: clamp(14px, 2.2vmin, 22px); max-width: 40ch;
+  animation: fadeUp 1s 0.45s ease both;
+}
+.strip {
+  display: flex; flex-wrap: wrap; gap: 1.2vmin;
+  margin-top: 3.5vmin; max-width: 70ch;
+  animation: fadeUp 1s 0.6s ease both;
+}
+.tag {
+  padding: 1vmin 2vmin; border-radius: 999px;
+  font-size: clamp(12px, 1.9vmin, 18px); font-weight: 600;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hint {
+  margin-top: 3vmin;
+  font-size: clamp(12px, 1.8vmin, 16px);
+  color: var(--muted); letter-spacing: 0.04em;
+  animation: fadeUp 1s 0.75s ease both;
+}
+
+/* Per-chapter hero typography overrides */
+.wrap { display:flex; flex-direction:column; justify-content:center; min-height:0;height:100%; padding:4rem 8vw; text-align:center; align-items:center; }
+      .brand { font-size:clamp(2.5rem, 6vw, 5.5rem); font-weight:300; }
+      .headline { font-size:1.4rem; margin-top:1.5rem; font-style:italic; max-width:30ch; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media print {
+  #canvas-wrap, .vignette, .hint { display: none !important; }
+  .page { background: var(--bg) !important; }
+  .chapter-badge, .brand, .headline, .tagline, .strip { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent background siblings (OUTSIDE .page) -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- ===== Single chapter landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="chapter-badge">Class 12 · Chapter 9</span>
+    <h1 class="brand">Ray Optics and Optical Instruments</h1>
+    <p class="headline">Mirrors, lenses, and seeing farther</p>
+    <p class="tagline">Light travels in straight rays — almost.</p>
+    <div class="strip">
+        <span class="tag">Reflection at Spherical Surfaces</span>
+        <span class="tag">Refraction &amp; Total Internal Reflection</span>
+        <span class="tag">Refraction at Spherical Surfaces</span>
+        <span class="tag">Thin Lenses &amp; Prism</span>
+        <span class="tag">Optical Instruments</span>
+      </div>
+    <p class="hint no-print">Press <b>Next</b> to begin the chapter</p>
+  </div>
+</section>
+
+<script>
+(function() {
+  const ACCENT = 16569165;
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  function size(){
+    const w = Math.max(wrap.clientWidth || innerWidth || 1, 1);
+    const h = Math.max(wrap.clientHeight || innerHeight || 1, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  wrap.appendChild(renderer.domElement);
+  
+      const lens = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0xfcd34d, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+      lens.scale.set(0.3, 1, 1); scene.add(lens);
+      const rays = [];
+      for (let i = -3; i <= 3; i++) {
+        const pts = [new THREE.Vector3(-6, i*0.5, 0), new THREE.Vector3(0, i*0.5, 0), new THREE.Vector3(5, -i*0.8, 0)];
+        const r = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: ACCENT }));
+        scene.add(r); rays.push({ line: r, pts });
+      }
+      camera.position.z = 12;
+      function tick(t) {
+        rays.forEach((r,i) => {
+          const y = (i-3)*0.5;
+          r.pts[2].y = -y * (1 + Math.sin(t)*0.2);
+          r.line.geometry.setFromPoints(r.pts);
+        });
+        lens.rotation.y = Math.sin(t*0.5)*0.2;
+      }
+  let t0 = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = (performance.now() - t0) / 1000;
+    tick(t);
+    renderer.render(scene, camera);
+  }
+  animate();
+  addEventListener('resize', size);
+  })();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

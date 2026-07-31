@@ -179,6 +179,10 @@
   .tool-btn.is-active:hover{background:#0ea371}
   .tool-btn.eraser-obj{color:#fb923c}
   .tool-btn.eraser-obj.is-active{color:#7c2d12}
+  /* animation toggle: plain while motion is on, lit amber while it is off —
+     "off" is the state worth spotting from the back of the room */
+  .tool-btn.anim-off{color:#fbbf24;background:rgba(251,191,36,.12)}
+  .tool-btn.anim-off:hover{background:rgba(251,191,36,.22)}
   .tool-btn.danger{color:var(--danger)}
   .tool-btn.danger:hover{background:rgba(239,68,68,.16)}
   .tool-btn svg{width:20px;height:20px}
@@ -494,10 +498,14 @@
      fully independent — adding a page can never leak ink.       */
   const state = {
     tool:"pen", color:"white", width:1,
+    anim:true,       // false → every page opens with ALL of its steps showing
     pages:[],        // [{ strokes, snap, undo, deckId, deckIndex, stepCount, stepIndex }]
     current:-1,
     decks:[]         // [{ id, text, count }] — multiple loaded slide files
   };
+  // the teacher's choice outlives the session — a room with a projector that
+  // smears motion should not have to be told again next lesson
+  try{ state.anim = localStorage.getItem("lf-anim") !== "0"; }catch(err){}
   const deckFrames = {};   // deckId → iframe element
   // stroke = { mode:"draw"|"erase", color, width, pts:[{x,y}] }
 
@@ -600,7 +608,9 @@
     copy:   S(`<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>`),
     frame:  S(`<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>`),
     unframe:S(`<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>`),
-    close:  S(`<path d="M18 6 6 18"/><path d="m6 6 12 12"/>`)
+    close:  S(`<path d="M18 6 6 18"/><path d="m6 6 12 12"/>`),
+    zap:    S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>`),
+    zapOff: S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/><path d="M3 3 21 21"/>`)
   };
 
   /* ═══ RAILS ═══════════════════════════════════
@@ -619,7 +629,19 @@
   ];
 
   function railHTML(){
-    let h = TOOLS.map(t => `
+    // Animation switch, top of both rails: the one control that changes what a
+    // page DOES when it opens, so it sits above the ink tools, not among them.
+    let h = `
+      <button class="tool-btn ${state.anim ? "" : "anim-off"}" data-action="anim"
+              title="${state.anim
+                ? "Animations on — steps reveal one press at a time (A)"
+                : "Animations off — every page opens with its full content (A)"}"
+              aria-pressed="${!state.anim}">
+        ${ICONS[state.anim ? "zap" : "zapOff"]}
+      </button>
+      <div class="divider" role="separator"></div>`;
+
+    h += TOOLS.map(t => `
       <button class="tool-btn ${t.cls||""} ${state.tool===t.id?"is-active":""}"
               data-tool="${t.id}" title="${t.title}" aria-pressed="${state.tool===t.id}">
         ${ICONS[t.icon]}
@@ -923,6 +945,29 @@ html,body{overflow:hidden;margin:0}
     renderMedia(e.data.media, page ? page.deckId : null);
   });
 
+  /* ═══ ANIMATION SWITCH ════════════════════════
+     With animations off a page is never half-told: the deck is asked to show
+     every step of it at once, and Next/Previous move whole pages. The page's
+     own stepIndex is left untouched, so switching back mid-lesson resumes
+     stepping instead of losing the teacher's place. */
+  const shownStep  = p => p ? (state.anim ? p.stepIndex : p.stepCount) : 0;
+  const hasNextStep = p => !!p && state.anim && p.stepIndex < p.stepCount;
+  const hasPrevStep = p => !!p && state.anim && p.stepIndex > 0;
+
+  function setAnim(on){
+    state.anim = !!on;
+    try{ localStorage.setItem("lf-anim", state.anim ? "1" : "0"); }catch(err){}
+    // turning motion back on must not blank the board: keep the page that is
+    // already up fully revealed, and let the NEXT page do the stepping
+    const page = state.pages[state.current];
+    if(state.anim && page) page.stepIndex = page.stepCount;
+    syncDeck();
+    updateChrome();
+    toast(state.anim
+      ? "Animations on — steps reveal one press at a time"
+      : "Animations off — every page opens with its full content");
+  }
+
   /* show the current page's deck slide (if any) and hide all other decks */
   function syncDeck(){
     deckClickRects = [];          // stale until the active deck reports back
@@ -937,7 +982,7 @@ html,body{overflow:hidden;margin:0}
         f.style.display = "block";
         if(f.contentWindow)
           f.contentWindow.postMessage(
-            { type:"lf-show", index:page.deckIndex, step:page.stepIndex }, "*");
+            { type:"lf-show", index:page.deckIndex, step:shownStep(page), anim:state.anim }, "*");
       } else {
         f.style.display = "none";
       }
@@ -958,7 +1003,7 @@ html,body{overflow:hidden;margin:0}
      class="clickable" → that element receives REAL clicks through the
      ink layer: tapping directly on it clicks it instead of drawing.
      The file's own CSS and JS run inside a sandboxed iframe. */
-  const DECK_CONTROLLER = `
+  const deckController = (animOn) => `
 <style id="__lf-ctl">
 .page{display:none!important}
 .page.__lf-active{display:block!important}
@@ -969,9 +1014,62 @@ html,body{overflow:hidden;margin:0}
    when opened in a plain browser. Under the host that iframe is dead (opaque
    origin), so hide it — the presenter paints a real player on top instead. */
 [data-video] iframe{visibility:hidden!important}
+
+/* ── ANIMATIONS OFF ───────────────────────────────────────────────────────
+   The host reveals every step at once; this collapses the motion that would
+   otherwise still play on the way in. Durations go to 1ms rather than
+   \`animation:none\` so a keyframe that ENDS somewhere (fill-mode:forwards)
+   still lands there, and a WebGL scene hands over to the same static figure
+   the PDF export prints. */
+html.__lf-noanim .page .step{transition:none!important;transform:none!important}
+html.__lf-noanim *,html.__lf-noanim *::before,html.__lf-noanim *::after{
+  animation-duration:1ms!important;animation-delay:0s!important;
+  animation-iteration-count:1!important;
+  transition-duration:1ms!important;transition-delay:0s!important;
+}
+html.__lf-noanim .scene-frame canvas{display:none!important}
+html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
 <\/style>
 <script>
 (function(){
+  /* ── animation switch ──────────────────────────────────────────────────
+     CSS above handles the deck's own transitions. The [data-anime] presets
+     are JS, and their runtime captured \`window.anime\` at load — so the only
+     thing that reaches an already-running deck is swapping the method ON
+     that same object. \`instant\` plays a preset's LAST frame and nothing
+     else: onComplete restores a drawn SVG's strokes, and a "count" target
+     (a plain object) is jumped to its end value and printed once. A preset
+     whose only effect is motion (pulse, float) simply does nothing.        */
+  var animOn = ${animOn ? "true" : "false"}, realAnimate = null;
+
+  function instant(targets, props){
+    var p = props || {};
+    try{
+      if(targets && typeof targets === "object" && !targets.nodeType && targets.length === undefined){
+        for(var k in p){
+          if(typeof p[k] === "function") continue;
+          if(k === "duration" || k === "delay" || k === "ease" || k === "loop" || k === "autoplay") continue;
+          targets[k] = Object.prototype.toString.call(p[k]) === "[object Array]"
+            ? p[k][p[k].length - 1] : p[k];
+        }
+        if(typeof p.onUpdate === "function") p.onUpdate();
+      }
+      if(typeof p.onComplete === "function") p.onComplete();
+    }catch(err){}
+    return { play:function(){}, pause:function(){}, revert:function(){}, restart:function(){} };
+  }
+
+  function applyAnim(on){
+    animOn = !!on;
+    document.documentElement.classList.toggle("__lf-noanim", !animOn);
+    var A = window.anime;
+    if(!A || typeof A.animate !== "function") return;
+    try{
+      if(!animOn && !realAnimate){ realAnimate = A.animate; A.animate = instant; }
+      else if(animOn && realAnimate){ A.animate = realAnimate; realAnimate = null; }
+    }catch(err){ /* a frozen library must never blank a slide */ }
+  }
+
   function show(i, step){
     var ps = document.querySelectorAll(".page");
     for(var k=0;k<ps.length;k++) ps[k].classList.toggle("__lf-active", k===i);
@@ -1030,13 +1128,19 @@ html,body{overflow:hidden;margin:0}
   }
   window.addEventListener("message", function(e){
     var d = e.data || {};
-    if(d.type === "lf-show")  show(d.index, d.step || 0);
+    if(d.type === "lf-show"){
+      if(d.anim !== undefined) applyAnim(d.anim);   // switch first, then paint
+      show(d.index, d.step || 0);
+    }
     if(d.type === "lf-click") doClick(d.x, d.y);
   });
   window.addEventListener("resize", function(){
     setTimeout(sendRects, 120);
     setTimeout(sendMedia, 120);
   });
+  applyAnim(animOn);
+  // the preset runtime installs itself on load; re-assert after it exists
+  window.addEventListener("load", function(){ applyAnim(animOn); });
   show(0, 0);
 })();
 <\/script>`;
@@ -1065,7 +1169,7 @@ html,body{overflow:hidden;margin:0}
     frame.addEventListener("load", syncDeck, { once:true });
     deckLayer.appendChild(frame);
     deckFrames[deckId] = frame;
-    frame.srcdoc = text + DECK_CONTROLLER;
+    frame.srcdoc = text + deckController(state.anim);
 
     const startIdx = state.pages.length;
     for(let i = 0; i < count; i++){
@@ -1140,7 +1244,7 @@ html,body{overflow:hidden;margin:0}
         baseW: r.width, baseH: r.height,
         // Freeze the slide HTML into the box: remember which deck slide/step this
         // page showed so the box can re-render it, scaled to the box (not full-screen).
-        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: cur.stepIndex
+        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: shownStep(cur)
       };
     }
     state.pages.splice(state.current + 1, 0, page);
@@ -1173,7 +1277,7 @@ html,body{overflow:hidden;margin:0}
      .step animations one by one; only then does it turn the page.  */
   function nextAction(){
     const page = state.pages[state.current];
-    if(page && page.stepIndex < page.stepCount){
+    if(hasNextStep(page)){
       page.stepIndex++;
       syncDeck();
       updateChrome();
@@ -1184,7 +1288,7 @@ html,body{overflow:hidden;margin:0}
   }
   function prevAction(){
     const page = state.pages[state.current];
-    if(page && page.stepIndex > 0){
+    if(hasPrevStep(page)){
       page.stepIndex--;
       syncDeck();
       updateChrome();
@@ -1313,8 +1417,8 @@ html,body{overflow:hidden;margin:0}
     pageLabel.textContent = n ? `${c+1} / ${n}` : "0 / 0";
     pageDots.innerHTML = state.pages
       .map((_,i) => `<span class="${i===c?"cur":""}"></span>`).join("");
-    prevBtn.disabled = c < 0 || (c === 0 && !(page && page.stepIndex > 0));
-    nextBtn.disabled = c < 0 || (c >= n - 1 && !(page && page.stepIndex < page.stepCount));
+    prevBtn.disabled = c < 0 || (c === 0 && !hasPrevStep(page));
+    nextBtn.disabled = c < 0 || (c >= n - 1 && !hasNextStep(page));
     const pm = document.getElementById("prevBtnMini"), nm = document.getElementById("nextBtnMini");
     if(pm) pm.disabled = prevBtn.disabled;
     if(nm) nm.disabled = nextBtn.disabled;
@@ -1351,6 +1455,7 @@ html,body{overflow:hidden;margin:0}
       case "close": closeOverlay.classList.add("show"); break;
       case "export": exportPDF(); break;
       case "fullscreen": toggleFS(); break;
+      case "anim": setAnim(!state.anim); break;
       case "library": openLibrary(); break;
       case "exit": tellHost({ type:"lf-exit" }); break;
     }
@@ -1638,6 +1743,7 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     else if(e.key.toLowerCase() === "p"){ state.tool = "pen"; updateChrome(); }
     else if(e.key.toLowerCase() === "e"){ state.tool = "eraser"; updateChrome(); }
     else if(e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey) handleAction("fullscreen");
+    else if(e.key.toLowerCase() === "a" && !e.ctrlKey && !e.metaKey) handleAction("anim");
     else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
     else if(e.key === "Escape"){
       if(sheetOpen){ togglePageSheet(false); return; }

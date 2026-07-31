@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Electromagnetic Induction | Class 12 Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One:wght@300;400;500;600;700;800&family=Hind:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+--bg: #0f172a;
+  --accent: #f97316;
+  --text: #fff7ed;
+  --muted: #94a3b8;
+  --glow: #fb923c;
+  --display: 'Russo One', serif;
+  --body: 'Hind', sans-serif;
+  --mono: 'Hind', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+}
+
+/* Persistent 3D layer — OUTSIDE .page */
+#canvas-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 60%), var(--bg);
+}
+#canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+}
+
+/* Single landing slide */
+.page {
+  position: relative; z-index: 2;
+  height: 100%; box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--body);
+}
+.wrap {
+  height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 6vmin 7vw 8vmin;
+  max-width: 72ch;
+  position: relative; z-index: 2;
+}
+.chapter-badge {
+  font-size: clamp(12px, 1.8vmin, 18px);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.2vmin; display: block;
+  animation: fadeUp 1s ease both;
+}
+.brand {
+  font-family: var(--display);
+  color: var(--text);
+  text-shadow: 0 2px 40px var(--bg), 0 0 80px var(--bg);
+  animation: fadeUp 1s 0.15s ease both;
+  margin: 0;
+}
+.headline {
+  animation: fadeUp 1s 0.3s ease both;
+  margin: 0;
+}
+.tagline {
+  margin-top: 1.6vmin; color: var(--muted);
+  font-size: clamp(14px, 2.2vmin, 22px); max-width: 40ch;
+  animation: fadeUp 1s 0.45s ease both;
+}
+.strip {
+  display: flex; flex-wrap: wrap; gap: 1.2vmin;
+  margin-top: 3.5vmin; max-width: 70ch;
+  animation: fadeUp 1s 0.6s ease both;
+}
+.tag {
+  padding: 1vmin 2vmin; border-radius: 999px;
+  font-size: clamp(12px, 1.9vmin, 18px); font-weight: 600;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hint {
+  margin-top: 3vmin;
+  font-size: clamp(12px, 1.8vmin, 16px);
+  color: var(--muted); letter-spacing: 0.04em;
+  animation: fadeUp 1s 0.75s ease both;
+}
+
+/* Per-chapter hero typography overrides */
+.wrap { display:flex; flex-direction:column; justify-content:center; min-height:0;height:100%; padding:4rem 6vw; }
+      .brand { font-size:clamp(2.5rem, 6vw, 5rem); text-transform:uppercase; }
+      .headline { font-size:1.4rem; margin-top:1rem; max-width:26ch; border-left:4px solid var(--accent); padding-left:1rem; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media print {
+  #canvas-wrap, .vignette, .hint { display: none !important; }
+  .page { background: var(--bg) !important; }
+  .chapter-badge, .brand, .headline, .tagline, .strip { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent background siblings (OUTSIDE .page) -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- ===== Single chapter landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="chapter-badge">Class 12 · Chapter 6</span>
+    <h1 class="brand">Electromagnetic Induction</h1>
+    <p class="headline">Faraday's gift to generators</p>
+    <p class="tagline">Changing flux induces emf.</p>
+    <div class="strip">
+        <span class="tag">Magnetic Flux</span>
+        <span class="tag">Faraday's &amp; Lenz's Laws</span>
+        <span class="tag">Motional EMF</span>
+        <span class="tag">Eddy Currents</span>
+        <span class="tag">Inductance &amp; AC Generator</span>
+      </div>
+    <p class="hint no-print">Press <b>Next</b> to begin the chapter</p>
+  </div>
+</section>
+
+<script>
+(function() {
+  const ACCENT = 16347926;
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  function size(){
+    const w = Math.max(wrap.clientWidth || innerWidth || 1, 1);
+    const h = Math.max(wrap.clientHeight || innerHeight || 1, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  wrap.appendChild(renderer.domElement);
+  
+      const coilPts = [];
+      for (let i = 0; i < 150; i++) {
+        const t = i/8; coilPts.push(new THREE.Vector3(Math.cos(t)*1.5, -3 + i*0.04, Math.sin(t)*1.5));
+      }
+      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(coilPts), new THREE.LineBasicMaterial({ color: ACCENT })));
+      const magnet = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 2, 16), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+      scene.add(magnet);
+      const flux = [];
+      for (let i = 0; i < 30; i++) {
+        const f = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.6 }));
+        scene.add(f); flux.push(f);
+      }
+      camera.position.set(5, 2, 8); camera.lookAt(0,0,0);
+      function tick(t) {
+        magnet.position.y = Math.sin(t)*2;
+        flux.forEach((f,i) => {
+          const a = t*3 + i*0.5;
+          f.position.set(Math.cos(a)*2, magnet.position.y + (i-15)*0.15, Math.sin(a)*2);
+        });
+      }
+  let t0 = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = (performance.now() - t0) / 1000;
+    tick(t);
+    renderer.render(scene, camera);
+  }
+  animate();
+  addEventListener('resize', size);
+  })();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

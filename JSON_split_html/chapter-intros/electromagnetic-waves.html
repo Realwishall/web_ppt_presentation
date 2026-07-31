@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Electromagnetic Waves | Class 12 Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@300;400;500;600;700;800&family=Josefin+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+--bg: #030712;
+  --accent: #e879f9;
+  --text: #fafafa;
+  --muted: #9ca3af;
+  --glow: #22d3ee;
+  --display: 'Syncopate', serif;
+  --body: 'Josefin Sans', sans-serif;
+  --mono: 'Josefin Sans', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+}
+
+/* Persistent 3D layer — OUTSIDE .page */
+#canvas-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 60%), var(--bg);
+}
+#canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+}
+
+/* Single landing slide */
+.page {
+  position: relative; z-index: 2;
+  height: 100%; box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--body);
+}
+.wrap {
+  height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 6vmin 7vw 8vmin;
+  max-width: 72ch;
+  position: relative; z-index: 2;
+}
+.chapter-badge {
+  font-size: clamp(12px, 1.8vmin, 18px);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.2vmin; display: block;
+  animation: fadeUp 1s ease both;
+}
+.brand {
+  font-family: var(--display);
+  color: var(--text);
+  text-shadow: 0 2px 40px var(--bg), 0 0 80px var(--bg);
+  animation: fadeUp 1s 0.15s ease both;
+  margin: 0;
+}
+.headline {
+  animation: fadeUp 1s 0.3s ease both;
+  margin: 0;
+}
+.tagline {
+  margin-top: 1.6vmin; color: var(--muted);
+  font-size: clamp(14px, 2.2vmin, 22px); max-width: 40ch;
+  animation: fadeUp 1s 0.45s ease both;
+}
+.strip {
+  display: flex; flex-wrap: wrap; gap: 1.2vmin;
+  margin-top: 3.5vmin; max-width: 70ch;
+  animation: fadeUp 1s 0.6s ease both;
+}
+.tag {
+  padding: 1vmin 2vmin; border-radius: 999px;
+  font-size: clamp(12px, 1.9vmin, 18px); font-weight: 600;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hint {
+  margin-top: 3vmin;
+  font-size: clamp(12px, 1.8vmin, 16px);
+  color: var(--muted); letter-spacing: 0.04em;
+  animation: fadeUp 1s 0.75s ease both;
+}
+
+/* Per-chapter hero typography overrides */
+.wrap { display:flex; flex-direction:column; justify-content:flex-end; min-height:0;height:100%; padding:4rem 6vw 5rem; }
+      .brand { font-size:clamp(2rem, 5vw, 4rem); text-transform:uppercase; letter-spacing:0.2em; }
+      .headline { font-size:1.5rem; margin-top:1rem; color:var(--accent); text-shadow:0 0 24px var(--glow); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media print {
+  #canvas-wrap, .vignette, .hint { display: none !important; }
+  .page { background: var(--bg) !important; }
+  .chapter-badge, .brand, .headline, .tagline, .strip { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent background siblings (OUTSIDE .page) -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- ===== Single chapter landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="chapter-badge">Class 12 · Chapter 8</span>
+    <h1 class="brand">Electromagnetic Waves</h1>
+    <p class="headline">Oscillating E and B, racing at c</p>
+    <p class="tagline">Light is an electromagnetic wave.</p>
+    <div class="strip">
+        <span class="tag">Displacement Current</span>
+        <span class="tag">Maxwell's Equations (Overview)</span>
+        <span class="tag">EM Waves &amp; Their Characteristics</span>
+        <span class="tag">Transverse Nature</span>
+        <span class="tag">Electromagnetic Spectrum</span>
+      </div>
+    <p class="hint no-print">Press <b>Next</b> to begin the chapter</p>
+  </div>
+</section>
+
+<script>
+(function() {
+  const ACCENT = 15235577;
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  function size(){
+    const w = Math.max(wrap.clientWidth || innerWidth || 1, 1);
+    const h = Math.max(wrap.clientHeight || innerHeight || 1, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  wrap.appendChild(renderer.domElement);
+  
+      const eWave = [], bWave = [];
+      for (let i = 0; i < 80; i++) {
+        eWave.push(new THREE.Vector3(-6+i*0.15, 0, 0));
+        bWave.push(new THREE.Vector3(-6+i*0.15, 0, 0));
+      }
+      const eg = new THREE.BufferGeometry().setFromPoints(eWave);
+      const bg = new THREE.BufferGeometry().setFromPoints(bWave);
+      scene.add(new THREE.Line(eg, new THREE.LineBasicMaterial({ color: 0xe879f9 })));
+      scene.add(new THREE.Line(bg, new THREE.LineBasicMaterial({ color: 0x22d3ee })));
+      const axis = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(-7,0,0), 14, 0x6b7280, 0.3, 0.2);
+      scene.add(axis);
+      camera.position.set(2, 4, 10); camera.lookAt(0,0,0);
+      function tick(t) {
+        eWave.forEach((p,i) => { p.y = Math.sin(i*0.2 + t*2)*1.5; p.z = 0; });
+        bWave.forEach((p,i) => { p.z = Math.sin(i*0.2 + t*2)*1.5; p.y = 0; });
+        eg.setFromPoints(eWave); bg.setFromPoints(bWave);
+      }
+  let t0 = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = (performance.now() - t0) / 1000;
+    tick(t);
+    renderer.render(scene, camera);
+  }
+  animate();
+  addEventListener('resize', size);
+  })();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

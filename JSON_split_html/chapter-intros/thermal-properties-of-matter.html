@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Thermal Properties of Matter | Class 11 Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+--bg: #1a0f0a;
+  --accent: #fb923c;
+  --text: #fff7ed;
+  --muted: #c4a484;
+  --glow: #ef4444;
+  --display: 'Sora', serif;
+  --body: 'Instrument Sans', sans-serif;
+  --mono: 'Instrument Sans', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+}
+
+/* Persistent 3D layer — OUTSIDE .page */
+#canvas-wrap {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 13%, transparent), transparent 60%), var(--bg);
+}
+#canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+}
+
+/* Single landing slide */
+.page {
+  position: relative; z-index: 2;
+  height: 100%; box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--body);
+}
+.wrap {
+  height: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 6vmin 7vw 8vmin;
+  max-width: 72ch;
+  position: relative; z-index: 2;
+}
+.chapter-badge {
+  font-size: clamp(12px, 1.8vmin, 18px);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.2vmin; display: block;
+  animation: fadeUp 1s ease both;
+}
+.brand {
+  font-family: var(--display);
+  color: var(--text);
+  text-shadow: 0 2px 40px var(--bg), 0 0 80px var(--bg);
+  animation: fadeUp 1s 0.15s ease both;
+  margin: 0;
+}
+.headline {
+  animation: fadeUp 1s 0.3s ease both;
+  margin: 0;
+}
+.tagline {
+  margin-top: 1.6vmin; color: var(--muted);
+  font-size: clamp(14px, 2.2vmin, 22px); max-width: 40ch;
+  animation: fadeUp 1s 0.45s ease both;
+}
+.strip {
+  display: flex; flex-wrap: wrap; gap: 1.2vmin;
+  margin-top: 3.5vmin; max-width: 70ch;
+  animation: fadeUp 1s 0.6s ease both;
+}
+.tag {
+  padding: 1vmin 2vmin; border-radius: 999px;
+  font-size: clamp(12px, 1.9vmin, 18px); font-weight: 600;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hint {
+  margin-top: 3vmin;
+  font-size: clamp(12px, 1.8vmin, 16px);
+  color: var(--muted); letter-spacing: 0.04em;
+  animation: fadeUp 1s 0.75s ease both;
+}
+
+/* Per-chapter hero typography overrides */
+.wrap { display:flex; flex-direction:column; justify-content:center; min-height:0;height:100%; padding:4rem 6vw; background:radial-gradient(ellipse at 30% 80%, rgba(239,68,68,0.15), transparent 50%); }
+      .brand { font-size:clamp(2.8rem, 7vw, 6rem); }
+      .headline { font-size:1.35rem; margin-top:1rem; max-width:28ch; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media print {
+  #canvas-wrap, .vignette, .hint { display: none !important; }
+  .page { background: var(--bg) !important; }
+  .chapter-badge, .brand, .headline, .tagline, .strip { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Persistent background siblings (OUTSIDE .page) -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- ===== Single chapter landing slide ===== -->
+<section class="page">
+  <div class="wrap">
+    <span class="chapter-badge">Class 11 · Chapter 11</span>
+    <h1 class="brand">Thermal Properties of Matter</h1>
+    <p class="headline">Warmth that reshapes matter</p>
+    <p class="tagline">Heat expands. Temperature rises.</p>
+    <div class="strip">
+        <span class="tag">Temperature &amp; Heat</span>
+        <span class="tag">Thermal Expansion</span>
+        <span class="tag">Specific Heat Capacity</span>
+        <span class="tag">Calorimetry &amp; Phase Change</span>
+        <span class="tag">Heat Transfer</span>
+      </div>
+    <p class="hint no-print">Press <b>Next</b> to begin the chapter</p>
+  </div>
+</section>
+
+<script>
+(function() {
+  const ACCENT = 16486972;
+  const wrap = document.getElementById('canvas-wrap');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  function size(){
+    const w = Math.max(wrap.clientWidth || innerWidth || 1, 1);
+    const h = Math.max(wrap.clientHeight || innerHeight || 1, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  wrap.appendChild(renderer.domElement);
+  
+      const flames = [];
+      for (let i = 0; i < 150; i++) {
+        const f = new THREE.Mesh(new THREE.SphereGeometry(0.1+Math.random()*0.15, 4, 4), new THREE.MeshBasicMaterial({ color: Math.random()>0.5 ? 0xfb923c : 0xef4444, transparent: true, opacity: 0.7 }));
+        f.userData = { x: (Math.random()-0.5)*4, life: Math.random() };
+        scene.add(f); flames.push(f);
+      }
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(3, 0.3, 0.3), new THREE.MeshBasicMaterial({ color: 0x78716c }));
+      bar.position.y = -2; scene.add(bar);
+      camera.position.z = 10;
+      function tick(t) {
+        flames.forEach((f,i) => {
+          f.userData.life += 0.01;
+          if (f.userData.life > 1) { f.userData.life = 0; f.userData.x = (Math.random()-0.5)*4; }
+          const L = f.userData.life;
+          f.position.set(f.userData.x + Math.sin(t*3+i)*0.2, -2 + L*5, Math.cos(t+i)*0.3);
+          f.material.opacity = 1 - L; f.scale.setScalar(1 - L*0.5);
+        });
+      }
+  let t0 = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = (performance.now() - t0) / 1000;
+    tick(t);
+    renderer.render(scene, camera);
+  }
+  animate();
+  addEventListener('resize', size);
+  })();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>
