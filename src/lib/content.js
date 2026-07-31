@@ -16,6 +16,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -142,6 +143,17 @@ export const updateFolder = (classId, chapterId, folderId, data) =>
   })
 export const deleteFolder = (classId, chapterId, folderId) =>
   deleteDoc(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', folderId))
+
+// Persist a new folder order in one write: `orderedIds` is the list as the
+// teacher arranged it, and each folder's `order` becomes its index (what
+// `bySortOrder` reads back).
+export function reorderFolders(classId, chapterId, orderedIds) {
+  const batch = writeBatch(db)
+  orderedIds.forEach((folderId, order) => {
+    batch.update(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', folderId), { order })
+  })
+  return batch.commit()
+}
 
 // ---------- batches ----------
 export const listBatches = () => listCol(['batches'])

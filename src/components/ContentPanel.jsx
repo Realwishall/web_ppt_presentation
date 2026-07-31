@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FolderPlus, Plus, Trash2, ChevronRight, Layers, FolderOpen, Pencil, Loader2,
-  UploadCloud, ClipboardPaste, FileCode2, X, Play,
+  UploadCloud, ClipboardPaste, FileCode2, X, Play, ChevronUp, ChevronDown, GripVertical,
 } from 'lucide-react'
 import ChapterIcon from './ChapterIcon'
 import FolderEditor from './FolderEditor'
@@ -10,7 +10,7 @@ import {
   FOLDER_TAGS, DEFAULT_CHAPTER_SVG, extractHtmlTitle,
   listClasses, createClass, deleteClass,
   listChapters, createChapter, deleteChapter,
-  listFolders, createFolder, deleteFolder,
+  listFolders, createFolder, deleteFolder, updateFolder, reorderFolders,
 } from '../lib/content'
 
 // Left half of the dashboard: author Classes → Chapters → Folders.
@@ -204,6 +204,9 @@ function FolderList({ cls, chapter }) {
   const [dragOver, setDragOver] = useState(false)
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pasteHtml, setPasteHtml] = useState('')
+  const [dragId, setDragId] = useState(null) // folder being dragged
+  const [drop, setDrop] = useState(null) // {id, edge:'top'|'bottom'} — where it would land
+  const pressRef = useRef(null) // what the pointer went down on, to veto drags off a control
 
   const load = useCallback(async () => setItems(await listFolders(cls.id, chapter.id)), [cls.id, chapter.id])
   useEffect(() => { load() }, [load])
@@ -264,6 +267,44 @@ function FolderList({ cls, chapter }) {
     await load()
   }
 
+  // Reorder: show the new order at once, then write every folder's index.
+  // If the write fails we fall back to what the server actually has.
+  async function move(from, to) {
+    if (from === to || to < 0 || to >= items.length) return
+    const next = [...items]
+    next.splice(to, 0, ...next.splice(from, 1))
+    setItems(next.map((f, i) => ({ ...f, order: i })))
+    setErr('')
+    try {
+      await reorderFolders(cls.id, chapter.id, next.map((f) => f.id))
+    } catch (e) {
+      setErr(e.message || 'Could not save the new order.')
+      await load()
+    }
+  }
+  // Drop the dragged row into the gap the indicator is showing: above the
+  // hovered row for the top edge, below it for the bottom one.
+  function dropHere() {
+    if (!dragId || !drop) return
+    const from = items.findIndex((f) => f.id === dragId)
+    let to = items.findIndex((f) => f.id === drop.id)
+    if (from < 0 || to < 0) return
+    if (drop.edge === 'bottom') to += 1
+    if (from < to) to -= 1 // the row leaves its old slot before it is re-inserted
+    move(from, to)
+  }
+
+  async function changeTag(id, tagValue) {
+    setItems((prev) => prev.map((f) => (f.id === id ? { ...f, tag: tagValue } : f)))
+    setErr('')
+    try {
+      await updateFolder(cls.id, chapter.id, id, { tag: tagValue })
+    } catch (e) {
+      setErr(e.message || 'Could not change the tag.')
+      await load()
+    }
+  }
+
   if (items === null) return <Spinner />
   return (
     <div>
@@ -280,7 +321,7 @@ function FolderList({ cls, chapter }) {
           Both name the folder from the document's <title>. */}
       <div className="mb-3 grid gap-2 sm:grid-cols-2">
         <label
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragOver={(e) => { if (dragId) return; e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-5 text-center text-sm transition ${
@@ -323,10 +364,47 @@ function FolderList({ cls, chapter }) {
       {err && <div className="mb-3 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-400">{err}</div>}
 
       {items.length === 0 && <Empty icon={FolderOpen} text="No folders yet. Each folder holds one HTML deck." />}
+      {items.length > 1 && (
+        <p className="mb-2 text-xs text-slate-500">Drag a row to reorder it — or use its arrows. The tag is editable in place.</p>
+      )}
       <ul className="space-y-2">
-        {items.map((f) => (
+        {items.map((f, i) => (
           <li key={f.id}
-            className="glass flex items-center gap-3 rounded-xl border p-3 transition hover:border-white/15">
+            draggable
+            onPointerDown={(e) => { pressRef.current = e.target }}
+            onDragStart={(e) => {
+              // A press that began on a control (tag select, Edit, Delete) is
+              // that control's, not a reorder.
+              if (pressRef.current?.closest?.('button,select,input,textarea')) { e.preventDefault(); return }
+              setDragId(f.id)
+              e.dataTransfer.effectAllowed = 'move'
+              e.dataTransfer.setData('text/plain', f.id)
+            }}
+            onDragEnd={() => { setDragId(null); setDrop(null) }}
+            onDragOver={(e) => {
+              if (!dragId) return // an .html file drag, not a row
+              e.preventDefault()
+              e.dataTransfer.dropEffect = 'move'
+              const box = e.currentTarget.getBoundingClientRect()
+              const edge = e.clientY < box.top + box.height / 2 ? 'top' : 'bottom'
+              setDrop((v) => (v?.id === f.id && v.edge === edge ? v : { id: f.id, edge }))
+            }}
+            onDrop={(e) => { if (!dragId) return; e.preventDefault(); e.stopPropagation(); dropHere(); setDrop(null) }}
+            className={`glass relative flex items-center gap-3 rounded-xl border p-3 transition hover:border-white/15 ${
+              dragId === f.id ? 'opacity-40' : ''
+            }`}>
+            {/* where the row would land */}
+            {dragId && dragId !== f.id && drop?.id === f.id && (
+              <span className={`pointer-events-none absolute inset-x-2 h-0.5 rounded-full bg-indigo-400 ${
+                drop.edge === 'top' ? '-top-1' : '-bottom-1'
+              }`} />
+            )}
+            <span title="Drag to reorder"
+              className="flex shrink-0 cursor-grab flex-col items-center text-slate-600 active:cursor-grabbing">
+              <MoveBtn onClick={() => move(i, i - 1)} disabled={i === 0} title="Move up"><ChevronUp className="h-4 w-4" /></MoveBtn>
+              <GripVertical className="h-3.5 w-3.5" />
+              <MoveBtn onClick={() => move(i, i + 1)} disabled={i === items.length - 1} title="Move down"><ChevronDown className="h-4 w-4" /></MoveBtn>
+            </span>
             <button onClick={() => navigate('/teach', { state: { folder: f } })}
               title="Preview in presentation view"
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-400 transition hover:bg-violet-600 hover:text-white">
@@ -334,7 +412,13 @@ function FolderList({ cls, chapter }) {
             </button>
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold text-slate-100">{f.name}</span>
-              <TagBadge tag={f.tag} />
+              <select value={f.tag || FOLDER_TAGS[0]} onChange={(e) => changeTag(f.id, e.target.value)}
+                title="Change tag"
+                className="mt-0.5 cursor-pointer rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-slate-400 outline-none transition hover:border-indigo-400/50 hover:text-slate-200 focus:border-indigo-400 [&>option]:bg-slate-900">
+                {/* keep a tag that predates FOLDER_TAGS selectable rather than silently rewriting it */}
+                {(FOLDER_TAGS.includes(f.tag) || !f.tag ? FOLDER_TAGS : [f.tag, ...FOLDER_TAGS])
+                  .map((t) => <option key={t}>{t}</option>)}
+              </select>
             </span>
             <button onClick={() => setEditing(f)}
               className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500">
@@ -379,6 +463,15 @@ function Row({ children, onOpen, onDelete }) {
       </button>
       <IconBtn onClick={onDelete} danger title="Delete"><Trash2 className="h-4 w-4" /></IconBtn>
     </li>
+  )
+}
+// One nudge of a folder up or down; the pair also doubles as the drag handle.
+function MoveBtn({ children, onClick, disabled, title }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} title={title}
+      className="rounded p-0.5 transition hover:bg-white/10 hover:text-slate-200 disabled:opacity-25 disabled:hover:bg-transparent">
+      {children}
+    </button>
   )
 }
 function IconBtn({ children, onClick, danger, title }) {

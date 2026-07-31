@@ -491,9 +491,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .box-zoom{display:block;width:0;height:0;margin:0;padding:0;border:0;overflow:hidden}
 
 /* ------------------------------------------------------------ 3D scenes ---
-   `<div class="scene-frame" data-three="globe">` — build-deck.mjs inlines three
-   and starts a slow scene sized to this box (rule 7: after load, zero-size
-   guard, WebGL feature-detect, try/catch, silent failure).
+   `<div class="scene-frame" data-three="globe|stars|screw-gauge">` — build-deck.mjs
+   inlines three and starts a WebGL scene sized to this box (rule 7: after load,
+   zero-size guard, WebGL feature-detect, try/catch, silent failure).
 
    Scripts are STRIPPED in PDF export and the room may have no GPU, so the frame
    MUST contain a `.scene-fallback` — inline SVG or a sentence. It is what
@@ -524,6 +524,75 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .video-fallback .url{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;
                      color:var(--cyan);word-break:break-all}
 .video-fallback .cue{color:var(--gold);font-weight:700}
+
+/* -------------------------------------------------- live instrument (sim) ---
+   `<div class="sim-lab" data-sim="screw-gauge">` — a click-driven virtual
+   instrument. tools/build-deck.mjs ships the engine (a no-op when no [data-sim]
+   is present); the fragment carries the WHOLE instrument as inline SVG, already
+   drawn at its start state, because scripts are stripped in PDF export (rule 11)
+   — the printed slide must still show a real, readable measurement. The engine
+   only moves what is already there and rewrites the [data-out] read-outs.
+
+   Only .sim-btn carries .clickable (rule 3): ≥44 px, fixed position, and the
+   whole control bar sits BELOW the instrument so the teacher can write on the
+   scales without hitting a button.                                           */
+/* `.sim` is the rig root: it must CONTAIN the control bar, because the engine
+   only binds [data-act] buttons found inside the [data-sim] element. */
+.sim{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.sim-lab{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);
+  gap:2.2vmin;align-items:stretch;margin-top:.4vmin;min-height:0}
+.sim-lab.wide{grid-template-columns:minmax(0,1fr)}
+.sim-stage{display:flex;align-items:center;justify-content:center;min-width:0;
+  padding:1.4vmin;box-sizing:border-box;border-radius:var(--radius-lg);
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift-lg)}
+.sim-stage svg{width:100%;height:auto;max-height:54vh}
+/* 3D micrometer nested in the stage: the scene-frame owns the chrome */
+.sim-stage .scene-frame{width:100%;max-height:54vh;aspect-ratio:16/10;
+  border:0;box-shadow:none;background:transparent;border-radius:calc(var(--radius-lg) - .4vmin)}
+.sim-stage:has(.scene-frame){padding:.4vmin}
+.sim-stage .scene-fallback{padding:.6vmin}
+.sim-stage .scene-fallback svg{max-height:52vh}
+
+.sim-panel{display:flex;flex-direction:column;justify-content:center;gap:.2vmin;
+  min-width:0;padding:1.6vmin 1.9vmin;box-sizing:border-box;
+  border-radius:var(--radius-lg);background:var(--card-bg);
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift)}
+.sim-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.2vmin;
+  align-items:baseline;padding:.62vmin 0;
+  border-bottom:.1vmin solid var(--rule)}
+.sim-row:last-child{border-bottom:0}
+.sim-key{color:var(--gold);font-weight:700;line-height:1.2;
+  font-size:clamp(13px,2vmin,22px);letter-spacing:.015em}
+.sim-val{font-family:var(--font-math);text-align:right;white-space:nowrap;
+  color:var(--ink);font-size:clamp(14px,2.2vmin,25px)}
+.sim-row.total{margin-top:.5vmin;padding-top:.9vmin;border-bottom:0;
+  border-top:.16vmin solid rgba(245,197,66,.5)}
+.sim-row.total .sim-key{font-size:clamp(14px,2.2vmin,24px)}
+.sim-row.total .sim-val{color:var(--gold-soft);font-weight:700;
+  font-size:clamp(18px,3.1vmin,35px)}
+.sim-note{margin-top:.9vmin;color:var(--muted);font-style:italic;line-height:1.35;
+  font-size:clamp(12px,1.85vmin,20px)}
+
+.sim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;
+  gap:1.4vmin 2.6vmin;margin-top:1.4vmin}
+.sim-group{display:flex;flex-direction:column;gap:.7vmin;min-width:0}
+.sim-group-label{color:var(--muted);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;font-size:clamp(11px,1.7vmin,18px)}
+.sim-keys{display:flex;flex-wrap:wrap;gap:.9vmin}
+.sim-btn{display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:.9vmin 1.7vmin;box-sizing:border-box;cursor:pointer;
+  border-radius:1.1vmin;border:.12vmin solid rgba(255,255,255,.18);
+  font-family:var(--font-ui);font-weight:700;line-height:1.15;color:var(--ink);
+  font-size:clamp(13px,2vmin,23px);
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  box-shadow:var(--lip),var(--lift);
+  transition:border-color .25s ease,background .25s ease,color .25s ease}
+.sim-btn.is-on{color:#241a02;border-color:rgba(245,197,66,.9);
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  box-shadow:0 .4vmin 2vmin rgba(245,197,66,.32)}
+.sim-btn.act{color:#e9f6ff;border-color:rgba(86,204,242,.55);
+  background:linear-gradient(180deg,rgba(86,204,242,.24),rgba(86,204,242,.07))}
 
 /* ------------------------------------------------------------- utilities --- */
 .center-y{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -564,4 +633,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
   .scene-frame .scene-fallback{display:flex!important}
   .video-frame{display:none!important}
   .video-fallback{font-size:var(--fs-small)}
+  /* the instrument is drawn in static SVG, so it prints — but its buttons do
+     nothing on paper, and the read-out is frozen at the deck's start state */
+  .sim-controls{display:none!important}
+  .sim-stage,.sim-panel{box-shadow:none!important}
+  .sim-stage svg{max-height:58vh}
 }

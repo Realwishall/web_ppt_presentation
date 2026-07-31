@@ -367,6 +367,7 @@ that element becomes visible.
 | `data-anime="pulse"` | any non-`.step` element | one gentle attention pulse |
 | `data-anime="float"` | a decorative mark | slow endless bob |
 | `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
+| `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
 
 ```html
 <div class="step">
@@ -381,6 +382,21 @@ that element becomes visible.
 </div>
 ```
 
+For the live instrument, nest the 3D frame in `.sim-stage` and keep the existing
+SVG as `.scene-fallback` (PDF / no-WebGL). The sim engine calls
+`frame.__sgUpdate({ gap, reading, csr, thick, name, divs })` on every control
+click — authors still write no JS.
+
+```html
+<div class="sim-stage">
+  <div class="scene-frame" data-three="screw-gauge">
+    <div class="scene-fallback">
+      <svg viewBox="0 0 1200 640">…start-state instrument…</svg>
+    </div>
+  </div>
+</div>
+```
+
 Rules that are not negotiable:
 
 - **The preset never goes on the `.step` itself** — the host owns `.step`
@@ -389,6 +405,89 @@ Rules that are not negotiable:
   PDF export and the room may have no WebGL; the fallback is what prints.
 - A `draw` figure must already be complete and correct with JS off.
 - One moving thing at a time, never behind text, never where the teacher writes.
+
+## Live instrument — `.sim[data-sim="screw-gauge"]`
+
+A click-driven virtual screw gauge. `build-deck.mjs` ships the engine (no-op
+when no `[data-sim]` is on the page); the author writes **no JS** — the whole rig
+is declared with data attributes on markup they already draw.
+
+**The SVG in the fragment must be drawn at the START STATE and be complete on
+its own.** Scripts are stripped for PDF export (rule 11), so the printed slide
+still has to show a real instrument sitting on a real, readable measurement. The
+engine only *moves* what is already there.
+
+```html
+<div class="sim" data-sim="screw-gauge" data-pitch="0.5" data-divisions="50"
+     data-open-max="6" data-open-gap="1.2">
+  <div class="sim-lab">
+    <div class="sim-stage"><svg viewBox="0 0 1200 640">…</svg></div>
+    <div class="sim-panel">
+      <div class="sim-row"><span class="sim-key">Main scale reading</span>
+        <span class="sim-val step" data-out="msr">0.50 mm</span></div>
+      …
+      <div class="sim-row total"><span class="sim-key">Correct reading</span>
+        <span class="sim-val step" data-out="true">0.84 mm</span></div>
+      <p class="sim-note" data-out="note">…</p>
+    </div>
+  </div>
+  <div class="sim-controls">
+    <div class="sim-group">
+      <span class="sim-group-label">Put in the jaws</span>
+      <div class="sim-keys">
+        <span class="sim-btn clickable is-on" data-act="obj" data-val="wire"
+              data-thick="0.84" data-name="Thin wire">Thin wire</span>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**`.sim` is the root and must contain the control bar** — the engine only binds
+`[data-act]` buttons found inside the `[data-sim]` element. `.sim-lab` is just
+the stage + panel grid.
+
+| On the rig | Meaning |
+|---|---|
+| `data-pitch` / `data-divisions` | the instrument; least count is `pitch ÷ divisions` |
+| `data-open-max` | furthest the jaws open, in mm |
+| `data-open-gap` | how far "Open the jaws" backs off from contact, in mm |
+
+| Inside the SVG | Meaning |
+|---|---|
+| `[data-sg-move="scale"]` | a `<g>` that slides right by the **indicated** reading; `data-u` = px per mm in that view |
+| `[data-sg-move="jaw"]` | a `<g>` that slides right by the **true jaw opening** |
+| `.sg-csr-ticks` | the thimble's circular scale; `data-x`/`data-y` = tick origin, `data-gap` = px between divisions, `data-span` = divisions drawn each side. Redrawn by the engine |
+| `.sg-object` | the specimen; its `width` is set to thickness × `data-u` |
+| `.sg-object-label` | `<text>` naming the specimen |
+
+Draw the sleeve **before** the thimble group: the thimble is opaque, so it hides
+the main-scale marks it has passed — which is exactly how the main scale reading
+is taken.
+
+| Button `data-act` | Effect |
+|---|---|
+| `obj` | put `data-thick` (mm) / `data-name` in the jaws |
+| `ze` | set the zero error to `data-val` divisions (signed) |
+| `turn` | turn by `data-val` divisions — **negative closes**, positive opens |
+| `close` | run the ratchet down until it grips |
+| `open` | back off by `data-open-gap` |
+| `orbit` | rotate the 3D micrometer: `data-yaw` / `data-pitch` in radians |
+| `view` | camera preset: `data-val` = `reset` \| `scales` \| `jaws` \| `left` \| `right` \| `up` \| `down` |
+
+The 3D scene (`data-three="screw-gauge"`) draws **flat scale plates** with large
+classroom-readable numbers (main scale + circular scale window). Cylinder body
+stays metal; numbering is never wrapped around a curved surface.
+
+Mark the starting choice in each group with `is-on`; the engine reads the start
+state from it and keeps the class in sync afterwards.
+
+Read-outs: `data-out="pitch | divs | lc | object | msr | csr | obs | ze | true |
+note"`. Put `.step` on the **value**, never on the `.sim-key`, so each line of the
+reading is its own reveal (rule 17) — the numbers keep updating live once shown.
+
+Only `.sim-btn` carries `clickable` (rule 3), and the whole control bar sits
+below the instrument so the teacher can write on the scales.
 
 ## Video — `.video-frame[data-video]` + `.video-fallback`
 
@@ -434,6 +533,7 @@ and what the teacher reads if the player is blocked.
 | `.stack` `.row` | Generic vertical / horizontal flow |
 | `.card` | Bordered surface |
 | `.box-grid` + `.info-box` | Focus boxes; each runs grow → content → shrink, one press per beat |
+| `.sim` + `.sim-lab` / `.sim-panel` / `.sim-controls` | Live instrument; the engine moves the SVG the author drew |
 | `.video-frame` + `.video-fallback` | 16:9 embed; the fallback is what prints |
 | `.center-y` | Vertically + horizontally centre a column's contents |
 | `.callout` `--note` `--warn` `--tip` | Highlighted aside; `.callout-label` for its title |

@@ -477,87 +477,19 @@ const animeFx = `<script>
 </script>`;
 
 /* ------------------------------------------------------------ three (fx) ---
-   `<div class="scene-frame" data-three="globe">` gets a slow WebGL scene, sized
-   to the box, initialised after load with a zero-size guard, a WebGL
-   feature-detect and try/catch (rule 7). It renders BLANK in PDF export, so the
-   frame must always contain a `.scene-fallback` — inline SVG or a sentence —
-   which stays put and is what prints.
+   `<div class="scene-frame" data-three="globe|stars|screw-gauge">` gets a WebGL
+   scene, sized to the box, initialised after load with a zero-size guard, a
+   WebGL feature-detect and try/catch (rule 7). It renders BLANK in PDF export,
+   so the frame must always contain a `.scene-fallback` — inline SVG or a
+   sentence — which stays put and is what prints.
 
-     data-three="globe"   wireframe sphere, slow spin (solid angle, fields)
-     data-three="stars"   drifting point field (chapter openers)               */
-const threeFx = `<script>
-(function(){
-  var frames = [].slice.call(document.querySelectorAll('[data-three]'));
-  if (!frames.length) return;
-  window.addEventListener('load', function(){
-    var T = window.THREE;
-    if (!T || !T.WebGLRenderer) return;
-    try {
-      var probe = document.createElement('canvas');
-      if (!(probe.getContext('webgl') || probe.getContext('experimental-webgl'))) return;
-    } catch (e) { return; }
-
-    frames.forEach(function(frame){
-      try { start(frame); } catch (e) { /* a dead scene must not blank the slide */ }
-    });
-
-    function start(frame){
-      var w = frame.clientWidth, h = frame.clientHeight;
-      if (!w || !h) { requestAnimationFrame(function(){ start(frame); }); return; }
-
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(w, h);
-      frame.appendChild(renderer.domElement);
-      frame.classList.add('is-live');
-
-      var scene = new T.Scene();
-      var camera = new T.PerspectiveCamera(45, w / h, 0.1, 100);
-      camera.position.set(0, 0, 5);
-
-      var kind = (frame.getAttribute('data-three') || 'globe').trim();
-      var group = new T.Group();
-      scene.add(group);
-
-      if (kind === 'stars'){
-        var n = 900, pos = new Float32Array(n * 3);
-        for (var i = 0; i < n; i++){
-          pos[i*3]   = (Math.random() - 0.5) * 18;
-          pos[i*3+1] = (Math.random() - 0.5) * 12;
-          pos[i*3+2] = (Math.random() - 0.5) * 12;
-        }
-        var geo = new T.BufferGeometry();
-        geo.setAttribute('position', new T.BufferAttribute(pos, 3));
-        group.add(new T.Points(geo, new T.PointsMaterial({
-          color: 0xf5c542, size: 0.045, transparent: true, opacity: 0.75
-        })));
-      } else {
-        group.add(new T.LineSegments(
-          new T.WireframeGeometry(new T.SphereGeometry(1.7, 24, 16)),
-          new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.45 })));
-        group.add(new T.Mesh(
-          new T.SphereGeometry(1.68, 48, 32),
-          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.55 })));
-      }
-
-      function resize(){
-        var nw = frame.clientWidth, nh = frame.clientHeight;
-        if (!nw || !nh) return;
-        camera.aspect = nw / nh; camera.updateProjectionMatrix();
-        renderer.setSize(nw, nh);
-      }
-      window.addEventListener('resize', resize);
-
-      (function loop(){
-        requestAnimationFrame(loop);
-        group.rotation.y += 0.0022;
-        group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
-        renderer.render(scene, camera);
-      })();
-    }
-  });
-})();
-</script>`;
+     data-three="globe"         wireframe sphere, slow spin
+     data-three="stars"         drifting point field
+     data-three="screw-gauge"   procedural micrometer; driven by the sim engine
+                                via frame.__sgUpdate when nested in [data-sim]  */
+const threeFxSrc = fs.readFileSync(path.join(TOOLS, 'fx-three-runtime.js'), 'utf8')
+  .replace(/<\/script/gi, '<\\/script');
+const threeFx = `<!-- three.js scenes (no-op without [data-three]) -->\n<script>\n${threeFxSrc}\n</script>`;
 
 /* ------------------------------------------------- spotlight marks (fx) ---
    `<p class="step" data-lights="q">` lights every `[data-lit~="q"]` on the same
@@ -606,6 +538,240 @@ const lightsFx = `<script>
 })();
 </script>`;
 
+/* --------------------------------------------------- screw gauge sim (fx) --
+   `<div class="sim" data-sim="screw-gauge" data-pitch=".5" data-divisions="50">`
+   turns the inline SVG the author already drew into a working micrometer, and
+   — when a nested `[data-three="screw-gauge"]` scene is live — also drives the
+   procedural Three.js model via `frame.__sgUpdate`.
+
+   Authors write no JS (fragments are page sections only), so the whole rig is
+   declared with data attributes:
+
+     [data-sg-move="scale"|"jaw"]  a <g> that slides right as the jaws open;
+                                   data-u = px per mm in that view
+     .sg-csr-ticks                 the thimble's circular scale; data-x/-y are
+                                   the tick origin, data-gap the pitch between
+                                   divisions, data-span how many each side
+     .sg-object                    the specimen between the jaws (width = its
+                                   thickness x data-u)
+     [data-act]                    a .sim-btn: obj | ze | turn | close | open
+                                   | orbit | view
+                                   orbit: data-yaw / data-pitch (radians)
+                                   view:  data-val = reset|scales|jaws|left|right|up|down
+     [data-out]                    a read-out cell the engine rewrites
+
+   The SVG in the fragment is drawn AT THE START STATE and is complete on its
+   own: scripts are stripped for PDF export (rule 11), so the printed slide
+   still shows a real instrument sitting on a real, readable measurement. This
+   engine only moves it. No-op for decks with no [data-sim].                  */
+const simFx = `<script>
+(function(){
+  var rigs = [].slice.call(document.querySelectorAll('[data-sim="screw-gauge"]'));
+  if (!rigs.length) return;
+  window.addEventListener('load', function(){
+    rigs.forEach(function(r){
+      try { init(r); } catch (e) { /* a dead rig must never blank the slide */ }
+    });
+  });
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var UI = "Calibri, Candara, 'Segoe UI', sans-serif";
+  var MINUS = '−';
+
+  function num(el, name, dflt){
+    if (!el) return dflt;
+    var v = parseFloat(el.getAttribute(name));
+    return isNaN(v) ? dflt : v;
+  }
+
+  function init(root){
+    var pitch  = num(root, 'data-pitch', 0.5);
+    var divs   = Math.round(num(root, 'data-divisions', 50));
+    var lc     = pitch / divs;
+    var dp     = lc < 0.005 ? 3 : 2;
+    var maxPos = Math.round(num(root, 'data-open-max', 6) / lc);
+    var slack  = Math.round(num(root, 'data-open-gap', 1.2) / lc);
+
+    var movers  = [].slice.call(root.querySelectorAll('[data-sg-move]'));
+    var ticks   = root.querySelector('.sg-csr-ticks');
+    var objRect = root.querySelector('.sg-object');
+    var objTag  = root.querySelector('.sg-object-label');
+
+    var tkX = num(ticks, 'data-x', 156);
+    var tkY = num(ticks, 'data-y', 470);
+    var tkG = num(ticks, 'data-gap', 22);
+    var tkN = Math.round(num(ticks, 'data-span', 4));
+    var objU = num(objRect, 'data-u', 40);
+
+    var objBtns = [].slice.call(root.querySelectorAll('[data-act="obj"]'));
+    var zeBtns  = [].slice.call(root.querySelectorAll('[data-act="ze"]'));
+
+    var on0 = root.querySelector('[data-act="obj"].is-on');
+    var on1 = root.querySelector('[data-act="ze"].is-on');
+    var st = {
+      t:    num(on0, 'data-thick', 0),
+      name: (on0 && on0.getAttribute('data-name')) || '',
+      ze:   Math.round(num(on1, 'data-val', 0)),
+      pos:  0
+    };
+
+    function contact(){ return Math.round(st.t / lc) + st.ze; }
+    function clamp(p){ return Math.max(contact(), Math.min(maxPos, p)); }
+    st.pos = contact();
+
+    function mm(v){ return (v < 0 ? MINUS : '') + Math.abs(v).toFixed(dp) + ' mm'; }
+    function out(key, text){
+      var cells = root.querySelectorAll('[data-out="' + key + '"]');
+      for (var i = 0; i < cells.length; i++) cells[i].textContent = text;
+    }
+    function mark(group, hit){
+      group.forEach(function(b){ b.classList.toggle('is-on', b === hit); });
+    }
+
+    function drawTicks(csr){
+      if (!ticks) return;
+      while (ticks.firstChild) ticks.removeChild(ticks.firstChild);
+      for (var k = -tkN; k <= tkN; k++){
+        var d = (((csr + k) % divs) + divs) % divs;
+        var y = tkY - k * tkG;
+        var major = d % 5 === 0;
+        var here = k === 0;
+        var ln = document.createElementNS(NS, 'line');
+        ln.setAttribute('x1', tkX);
+        ln.setAttribute('y1', y);
+        ln.setAttribute('x2', tkX + (major || here ? 54 : 34));
+        ln.setAttribute('y2', y);
+        ln.setAttribute('stroke', here ? '#c0392b' : '#16202f');
+        ln.setAttribute('stroke-width', here ? 5 : (major ? 4 : 2.6));
+        ln.setAttribute('stroke-linecap', 'round');
+        ticks.appendChild(ln);
+        if (major || here){
+          var tx = document.createElementNS(NS, 'text');
+          tx.setAttribute('x', tkX + 66);
+          tx.setAttribute('y', y + 9);
+          tx.setAttribute('font-family', UI);
+          tx.setAttribute('font-size', '26');
+          tx.setAttribute('font-weight', '700');
+          tx.setAttribute('fill', here ? '#c0392b' : '#16202f');
+          tx.textContent = d;
+          ticks.appendChild(tx);
+        }
+      }
+    }
+
+    function render(){
+      var R    = st.pos * lc;                       // what the scales indicate
+      var zeMm = st.ze * lc;
+      var gap  = Math.max(0, R - zeMm);             // the true jaw opening
+      var csr  = ((st.pos % divs) + divs) % divs;
+      var msr  = R >= 0 ? Math.floor(R / pitch + 1e-9) * pitch : 0;
+
+      movers.forEach(function(g){
+        var v = g.getAttribute('data-sg-move') === 'jaw' ? gap : R;
+        g.setAttribute('transform',
+          'translate(' + (v * num(g, 'data-u', 58)).toFixed(2) + ',0)');
+      });
+      if (objRect){
+        objRect.setAttribute('width', Math.max(0, st.t * objU).toFixed(2));
+        objRect.setAttribute('opacity', st.t > 0 ? '1' : '0');
+      }
+      if (objTag){
+        objTag.setAttribute('opacity', st.t > 0 ? '1' : '0');
+        objTag.textContent = st.name;
+      }
+      drawTicks(csr);
+
+      out('pitch', pitch.toFixed(dp) + ' mm');
+      out('divs',  String(divs));
+      out('lc',    mm(lc));
+      out('object', st.t > 0 ? st.name : 'nothing (jaws closed)');
+      out('msr',   R >= 0 ? mm(msr) : mm(0));
+      out('csr',   csr + ' ' + '×' + ' ' + lc.toFixed(dp) + ' = ' + mm(csr * lc));
+      out('obs',   mm(R));
+      out('ze',    st.ze === 0 ? 'nil'
+                 : (st.ze > 0 ? '+' : MINUS) + Math.abs(st.ze) + ' div = '
+                   + (st.ze > 0 ? '+' : MINUS) + Math.abs(st.ze * lc).toFixed(dp) + ' mm');
+      out('true',  mm(R - zeMm));
+
+      var note;
+      if (R < 0){
+        note = 'The thimble has not even reached the main-scale zero: the circular zero sits '
+             + Math.abs(st.ze) + ' divisions ABOVE the line, so the reading is '
+             + MINUS + '(' + divs + ' ' + MINUS + ' ' + csr + ') ' + '×' + ' L.C.';
+      } else if (st.pos > contact()){
+        note = 'Jaws still open by ' + mm(gap - st.t) + ' more than the object — keep closing.';
+      } else if (st.t > 0){
+        note = 'The ratchet is slipping: the jaws are just gripping the ' + st.name + '.';
+      } else {
+        note = st.ze === 0
+          ? 'Jaws closed on nothing and the scales read zero — no zero error.'
+          : 'Jaws closed on nothing, yet the scales do not read zero — this IS the zero error.';
+      }
+      out('note', note);
+
+      /* drive a nested Three.js micrometer, if the fragment asked for one */
+      var frame3d = root.querySelector('[data-three="screw-gauge"]');
+      if (frame3d && typeof frame3d.__sgUpdate === 'function'){
+        try {
+          frame3d.__sgUpdate({
+            gap: gap,
+            reading: R,
+            csr: csr,
+            thick: st.t,
+            name: st.name || '',
+            ze: st.ze,
+            pitch: pitch,
+            divs: divs,
+            lc: lc
+          });
+        } catch (e) { /* 3D is decoration — never break the panel */ }
+      }
+    }
+
+    function act(btn){
+      var a = btn.getAttribute('data-act');
+      if (a === 'obj'){
+        st.t = num(btn, 'data-thick', 0);
+        st.name = btn.getAttribute('data-name') || '';
+        mark(objBtns, btn);
+        st.pos = clamp(contact() + slack);
+      } else if (a === 'ze'){
+        var was = contact();
+        st.ze = Math.round(num(btn, 'data-val', 0));
+        mark(zeBtns, btn);
+        st.pos = clamp(st.pos + (contact() - was));
+      } else if (a === 'turn'){
+        st.pos = clamp(st.pos + Math.round(num(btn, 'data-val', 0)));
+      } else if (a === 'close'){
+        st.pos = contact();
+      } else if (a === 'open'){
+        st.pos = clamp(contact() + slack);
+      } else if (a === 'orbit' || a === 'view'){
+        var frame3d = root.querySelector('[data-three="screw-gauge"]');
+        if (frame3d){
+          try {
+            if (a === 'orbit' && typeof frame3d.__sgOrbit === 'function'){
+              frame3d.__sgOrbit(num(btn, 'data-yaw', 0), num(btn, 'data-pitch', 0));
+            } else if (a === 'view' && typeof frame3d.__sgView === 'function'){
+              frame3d.__sgView(btn.getAttribute('data-val') || 'reset');
+            }
+          } catch (e) {}
+        }
+        return; /* view-only — do not re-render scale readouts */
+      }
+      render();
+    }
+
+    [].slice.call(root.querySelectorAll('[data-act]')).forEach(function(btn){
+      btn.addEventListener('click', function(){ act(btn); });
+    });
+
+    root.__sgRefresh = render;
+    render();
+  }
+})();
+</script>`;
+
 /* -------------------------------------------------------------- assemble -- */
 const html = `<!doctype html>
 <html lang="en">
@@ -633,8 +799,10 @@ ${lightsFx}
 <!-- anime.js presets on reveal (no-op without [data-anime]) -->
 ${animeFx}
 
-<!-- three.js scenes (no-op without [data-three]) -->
 ${threeFx}
+
+<!-- Screw-gauge instrument (no-op without [data-sim="screw-gauge"]) -->
+${simFx}
 
 <!-- Standalone fallback controller (rule 6) — LAST -->
 ${fallback}
