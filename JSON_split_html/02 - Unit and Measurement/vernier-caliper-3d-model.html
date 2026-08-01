@@ -87,7 +87,18 @@
   button.op.warnon{background:#4a2330; border-color:var(--warn)}
   .slidehead{display:flex; justify-content:space-between; font-size:12.5px; color:var(--dim); margin-top:8px}
   .slidehead b{color:var(--ink); font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%; accent-color:var(--vsd); margin:2px 0}
+  /* click-anywhere gap track.  The presenter forwards taps as el.click() with
+     NO coordinates, so the track is filled with invisible per-value cells —
+     each cell is its own .clickable target.  Dragging still works standalone. */
+  #gaptrack{position:relative; display:flex; height:22px; border-radius:999px; background:#22314f;
+            border:1px solid var(--line); cursor:pointer; margin:4px 0 2px; touch-action:none}
+  .gapcell{flex:1; height:100%}
+  .gapcell:hover{background:rgba(76,201,240,.18)}
+  #gapfill{position:absolute; left:0; top:0; bottom:0; border-radius:999px;
+           background:linear-gradient(90deg,#274168,#3f6ea8); pointer-events:none}
+  #gapthumb{position:absolute; top:50%; transform:translate(-50%,-50%); width:16px; height:16px;
+            border-radius:50%; background:var(--vsd); box-shadow:0 0 0 3px rgba(76,201,240,.25);
+            pointer-events:none}
   /* ── popovers (click to open) ────────────────────────────────────────── */
   .pop{
     position:absolute; right:10px; top:44px; width:336px; max-width:calc(100% - 20px);
@@ -174,8 +185,8 @@
       <button class="op clickable" id="bnewrod" style="display:none">New rod</button>
       <button class="op clickable" id="breveal" style="display:none">Reveal Ø</button>
     </div>
-    <div class="slidehead"><span>Open / close the jaws</span><b id="gapval"></b></div>
-    <input type="range" id="gap" min="0" max="520" step="1" value="247">
+    <div class="slidehead"><span>Open / close the jaws — click anywhere on the bar</span><b id="gapval"></b></div>
+    <div id="gaptrack" class="clickable"><div id="gapfill"></div><div id="gapthumb"></div></div>
   </div>
 
   <div class="pop" id="popconst">
@@ -523,7 +534,9 @@ function updateReadout(){
       : `The rod's diameter is hidden. Close the jaws on it, read the scales${state.Z? ', apply the zero-error correction':''}, then reveal.`);
 
   $('gapval').textContent = fmt(state.G * LC) + ' mm';
-  $('gap').value = Math.round(state.G);
+  const gk = (state.G / MAXG) * 100;
+  $('gapfill').style.width = gk + '%';
+  $('gapthumb').style.left = gk + '%';
   $('bze0').classList.toggle('on', state.Z === 0);
   $('bzep').classList.toggle('warnon', state.Z > 0);
   $('bzen').classList.toggle('warnon', state.Z < 0);
@@ -800,7 +813,41 @@ function updateSegs(){
 }
 
 // --- controls ----------------------------------------------------------------
-$('gap').addEventListener('input', e => { anim = null; setG(+e.target.value, true); });
+// gap track: the presenter forwards a tap as el.click() with no coordinates,
+// so the bar is a row of invisible cells, each snapping the gap to its value.
+// Real pointers (standalone) get pixel-fine dragging on the same track; the
+// browser's trailing click after a drag is suppressed via ptrHandled.
+const track = $('gaptrack');
+let tdrag = false, ptrHandled = false;
+const GCELLS = 27;                                   // one cell every 2 mm
+for(let i = 0; i < GCELLS; i++){
+  const c = document.createElement('div');
+  c.className = 'gapcell clickable';
+  const val = Math.round(i * MAXG / (GCELLS - 1));
+  c.title = (val * LC).toFixed(0) + ' mm';
+  c.addEventListener('click', () => {
+    if(ptrHandled){ ptrHandled = false; return; }    // tail of a standalone drag
+    anim = null; animateG(val, 260);
+  });
+  track.appendChild(c);
+}
+function gapFromEvent(e){
+  const r = track.getBoundingClientRect();
+  const k = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  return k * MAXG;
+}
+track.addEventListener('pointerdown', e => {
+  tdrag = true; ptrHandled = true; track.setPointerCapture(e.pointerId);
+  anim = null; setG(gapFromEvent(e), true);
+});
+track.addEventListener('pointermove', e => {
+  if(!tdrag) return;
+  if(e.buttons === 0){ tdrag = false; setG(Math.round(state.G)); return; }
+  anim = null; setG(gapFromEvent(e), true);
+});
+const tend = () => { if(tdrag){ tdrag = false; setG(Math.round(state.G)); } };
+track.addEventListener('pointerup', tend);
+track.addEventListener('pointercancel', tend);
 $('bmv').addEventListener('click', () => { if(state.G - 1 < minG() - 1e-6) setG(state.G - 1, true); else animateG(state.G - 1, 200); });
 $('bpv').addEventListener('click', () => { animateG(state.G + 1, 200); });
 $('bmm').addEventListener('click', () => { if(state.G - NDIV < minG() - .5) setG(state.G - NDIV, true); animateG(state.G - NDIV, 500); });
