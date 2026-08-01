@@ -24,7 +24,7 @@ export function makeId(prefix = 'id') {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
 }
 
-// Tags used to divide folders by difficulty (for future filtering).
+// Tags used to divide folders by difficulty (library multi-filter).
 export const FOLDER_TAGS = ['Basic', 'Level 1.5', 'Level 2', 'Level 2.5', 'Advance', 'Olympiad']
 
 // A neutral gradient tile used as the default chapter icon.

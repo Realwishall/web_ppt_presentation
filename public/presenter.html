@@ -340,6 +340,12 @@
     color:#fff;background:var(--danger);
   }
   .btn-danger:hover{filter:brightness(1.1)}
+  .btn-primary{
+    padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;
+    color:#fff;background:linear-gradient(135deg,var(--violet),var(--indigo));
+  }
+  .btn-primary:hover{filter:brightness(1.1)}
+  .dialog.wide{width:380px}
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
@@ -489,6 +495,19 @@
     </div>
   </div>
 
+  <!-- Export range confirm (when not on the final page) -->
+  <div class="overlay" id="exportOverlay">
+    <div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+      <h2 id="exportTitle">Include remaining pages?</h2>
+      <p id="exportMsg">Do you want to include the remaining pages in the export?</p>
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelExport">Cancel</button>
+        <button class="btn-ghost" id="exportCurrentOnly">No — up to here</button>
+        <button class="btn-primary" id="exportAllPages">Yes — include all</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -501,7 +520,9 @@
     anim:true,       // false → every page opens with ALL of its steps showing
     pages:[],        // [{ strokes, snap, undo, deckId, deckIndex, stepCount, stepIndex }]
     current:-1,
-    decks:[]         // [{ id, text, count }] — multiple loaded slide files
+    decks:[],        // [{ id, text, count, name, folderId, classId, chapterId, tag }]
+    sessionId:null,  // active teaching-session id (host-assigned)
+    batchId:null
   };
   // the teacher's choice outlives the session — a room with a projector that
   // smears motion should not have to be told again next lesson
@@ -530,6 +551,7 @@
   const rails       = document.querySelectorAll("[data-rail]");
   const actionToast = document.getElementById("actionToast");
   const closeOverlay= document.getElementById("closeOverlay");
+  const exportOverlay= document.getElementById("exportOverlay");
   const snapImg     = document.getElementById("snapImg");
   const snapBox     = document.getElementById("snapBox");
   const snapDeck    = document.getElementById("snapDeck");
@@ -1146,13 +1168,15 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
 <\/script>`;
 
   // Load a deck from raw slides HTML text. `sourceName` is only used for the
-  // toast/title. Returns true if slides were found.
-  function loadDeckFromText(text, sourceName){
+  // toast/title. `meta` carries folder identity so sessions can restore later.
+  // Returns true if slides were found.
+  function loadDeckFromText(text, sourceName, meta, opts){
+    const quiet = !!(opts && opts.quiet);
     const doc = new DOMParser().parseFromString(text, "text/html");
     const pageEls = doc.querySelectorAll(".page");
     const count = pageEls.length;
     if(!count){
-      toast('No slides found — needs <section class="page"> blocks');
+      if(!quiet) toast('No slides found — needs <section class="page"> blocks');
       return false;
     }
     const stepCounts = Array.from(pageEls, pg => pg.querySelectorAll(".step").length);
@@ -1160,7 +1184,15 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     // MULTI-DECK: every loaded deck gets its own iframe — existing decks and
     // pages are kept, new pages append.
     const deckId = "d" + Date.now() + "_" + state.decks.length;
-    state.decks.push({ id:deckId, text, count });
+    const m = meta || {};
+    state.decks.push({
+      id:deckId, text, count,
+      name: sourceName || m.name || "Deck",
+      folderId: m.folderId || null,
+      classId: m.classId || null,
+      chapterId: m.chapterId || null,
+      tag: m.tag || null
+    });
 
     const frame = document.createElement("iframe");
     frame.setAttribute("sandbox", "allow-scripts");
@@ -1181,12 +1213,15 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     }
     board.classList.add("visible");
     emptyState.classList.add("hidden");
-    requestAnimationFrame(() => {
-      if(canvas.width === 0) sizeCanvas();
-      loadPage(startIdx);
-      toast(`Loaded ${count} slide${count>1?"s":""} from ${sourceName}`);
-    });
-    return true;
+    if(!quiet){
+      requestAnimationFrame(() => {
+        if(canvas.width === 0) sizeCanvas();
+        loadPage(startIdx);
+        toast(`Loaded ${count} slide${count>1?"s":""} from ${sourceName}`);
+      });
+    }
+    pingActivity();
+    return { startIdx, count };
   }
 
   function loadDeckFile(file){
@@ -1220,7 +1255,31 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     const d = e.data || {};
     if(d.type === "lf-load-deck" && typeof d.text === "string"){
       libraryAck = true;                 // a deck arrived — no file picker
-      loadDeckFromText(d.text, d.name || "Library");
+      loadDeckFromText(d.text, d.name || "Library", {
+        folderId: d.folderId || null,
+        classId: d.classId || null,
+        chapterId: d.chapterId || null,
+        tag: d.tag || null,
+        name: d.name || null
+      });
+    } else if(d.type === "lf-load-decks" && Array.isArray(d.decks)){
+      libraryAck = true;
+      let firstStart = -1, totalSlides = 0, loaded = 0;
+      d.decks.forEach((deck) => {
+        if(typeof deck.text !== "string") return;
+        const res = loadDeckFromText(deck.text, deck.name || "Library", deck, { quiet:true });
+        if(!res) return;
+        loaded++;
+        totalSlides += res.count;
+        if(firstStart < 0) firstStart = res.startIdx;
+      });
+      if(firstStart >= 0){
+        requestAnimationFrame(() => {
+          if(canvas.width === 0) sizeCanvas();
+          loadPage(firstStart);
+          toast(`Loaded ${loaded} folder${loaded>1?"s":""} (${totalSlides} slide${totalSlides>1?"s":""})`);
+        });
+      }
     } else if(d.type === "lf-library-ack"){
       libraryAck = true;                 // the picker is up; don't fall back
     } else if(d.type === "lf-fullscreen-ack"){
@@ -1229,8 +1288,127 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
       hostFS = !!d.on;
       renderRails();
       requestAnimationFrame(sizeCanvas);
+    } else if(d.type === "lf-session-config"){
+      if(d.batchId) state.batchId = d.batchId;
+      if(d.sessionId) state.sessionId = d.sessionId;
+    } else if(d.type === "lf-restore-session" && d.payload){
+      restoreSession(d.payload);
+      if(d.sessionId) state.sessionId = d.sessionId;
+    } else if(d.type === "lf-request-save"){
+      // Host wants a snapshot (export / inactivity / teach handoff).
+      tellHost({
+        type: "lf-session-state",
+        requestId: d.requestId || null,
+        reason: d.reason || "save",
+        sessionId: state.sessionId,
+        batchId: state.batchId || d.batchId || null,
+        board: serializeBoard(),
+        exportedThrough: d.exportedThrough != null ? d.exportedThrough : -1
+      });
     }
   });
+
+  /* ═══ SESSION SERIALIZE / RESTORE ═════════════ */
+  function serializeBoard(){
+    return {
+      current: state.current,
+      decks: state.decks.map(d => ({
+        id: d.id, text: d.text, count: d.count,
+        name: d.name || "Deck",
+        folderId: d.folderId || null,
+        classId: d.classId || null,
+        chapterId: d.chapterId || null,
+        tag: d.tag || null
+      })),
+      pages: state.pages.map(p => ({
+        strokes: (p.strokes || []).map(s => ({
+          mode: s.mode, color: s.color, width: s.width,
+          pts: (s.pts || []).map(pt => ({ x: pt.x, y: pt.y }))
+        })),
+        snap: p.snap ? {...p.snap} : null,
+        deckId: p.deckId, deckIndex: p.deckIndex,
+        stepCount: p.stepCount || 0, stepIndex: p.stepIndex || 0
+      }))
+    };
+  }
+
+  function clearBoard(){
+    state.pages = []; state.current = -1;
+    state.decks = [];
+    for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
+    clearMedia(() => true);
+    board.classList.remove("visible");
+    emptyState.classList.remove("hidden");
+    positionSnap();
+    updateChrome();
+  }
+
+  // Rebuild the board from a saved unfinished payload (decks + pages + ink).
+  function restoreSession(payload){
+    if(!payload || !Array.isArray(payload.pages)) return;
+    clearBoard();
+
+    const idMap = {};   // old deckId → new deckId
+    for(const deck of (payload.decks || [])){
+      if(typeof deck.text !== "string") continue;
+      const newId = "d" + Date.now() + "_" + state.decks.length;
+      idMap[deck.id] = newId;
+      state.decks.push({
+        id: newId, text: deck.text, count: deck.count,
+        name: deck.name || "Deck",
+        folderId: deck.folderId || null,
+        classId: deck.classId || null,
+        chapterId: deck.chapterId || null,
+        tag: deck.tag || null
+      });
+      const frame = document.createElement("iframe");
+      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("allowtransparency", "true");
+      frame.title = "Restored — " + (deck.name || "Deck");
+      frame.addEventListener("load", syncDeck, { once:true });
+      deckLayer.appendChild(frame);
+      deckFrames[newId] = frame;
+      frame.srcdoc = deck.text + deckController(state.anim);
+    }
+
+    for(const src of payload.pages){
+      const p = blankPage();
+      p.strokes = (src.strokes || []).map(s => ({
+        mode: s.mode, color: s.color, width: s.width,
+        pts: (s.pts || []).map(pt => ({ x: pt.x, y: pt.y }))
+      }));
+      p.snap = src.snap ? {...src.snap} : null;
+      if(p.snap && p.snap.deckId != null && idMap[p.snap.deckId])
+        p.snap.deckId = idMap[p.snap.deckId];
+      p.deckId = src.deckId != null && idMap[src.deckId] ? idMap[src.deckId] : null;
+      p.deckIndex = src.deckIndex;
+      p.stepCount = src.stepCount || 0;
+      p.stepIndex = src.stepIndex || 0;
+      state.pages.push(p);
+    }
+
+    if(!state.pages.length) return;
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    const go = Math.min(Math.max(0, payload.current|0), state.pages.length - 1);
+    requestAnimationFrame(() => {
+      if(canvas.width === 0) sizeCanvas();
+      loadPage(go);
+      toast(`Restored ${state.pages.length} unexported page${state.pages.length>1?"s":""}`);
+    });
+    pingActivity();
+  }
+
+  let activityTimer = 0;
+  function pingActivity(){
+    if(!hosted) return;
+    const now = Date.now();
+    if(now - activityTimer < 2000) return;   // throttle host chatter
+    activityTimer = now;
+    tellHost({ type: "lf-activity" });
+  }
+  ["pointerdown","pointermove","keydown","wheel"].forEach(ev =>
+    document.addEventListener(ev, pingActivity, { passive:true }));
 
   function addPage({duplicate=false} = {}){
     const page = blankPage();
@@ -1453,7 +1631,7 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
       case "first": goTo(0); break;
       case "last":  goTo(state.pages.length - 1); break;
       case "close": closeOverlay.classList.add("show"); break;
-      case "export": exportPDF(); break;
+      case "export": requestExport(); break;
       case "fullscreen": toggleFS(); break;
       case "anim": setAnim(!state.anim); break;
       case "library": openLibrary(); break;
@@ -1461,11 +1639,28 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     }
   }
 
-  /* ═══ EXPORT — PDF of ALL pages ═══════════════
+  /* ═══ EXPORT — PDF of selected pages ══════════
      Builds one printable document: every page becomes a landscape
      sheet containing its loaded slide HTML (all steps revealed),
      its frozen-page snapshot, and its ink strokes rendered to PNG.
-     The browser's print dialog then saves it as a PDF.            */
+     The browser's print dialog then saves it as a PDF.
+
+     If the teacher is not on the final page, a confirm asks whether
+     remaining pages should be included. After export the host is
+     told to persist the board into session history.               */
+  function requestExport(){
+    if(!state.pages.length) return toast("Nothing to export — add a page first");
+    if(state.current < state.pages.length - 1){
+      const left = state.pages.length - state.current - 1;
+      document.getElementById("exportMsg").textContent =
+        `You're on page ${state.current + 1} of ${state.pages.length}. ` +
+        `Do you want to include the remaining ${left} page${left>1?"s":""} in the export?`;
+      exportOverlay.classList.add("show");
+      return;
+    }
+    exportPDF({ through: state.pages.length - 1 });
+  }
+
   function renderPageInk(page, W, H){
     return new Promise(resolve => {
       const c = document.createElement("canvas");
@@ -1510,8 +1705,14 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     return c.toDataURL("image/png");
   }
 
-  async function exportPDF(){
+  async function exportPDF({ through } = {}){
     if(!state.pages.length) return toast("Nothing to export — add a page first");
+    const end = Math.min(
+      through != null ? through : state.pages.length - 1,
+      state.pages.length - 1
+    );
+    if(end < 0) return toast("Nothing to export — add a page first");
+    const exportPages = state.pages.slice(0, end + 1);
     toast("Building PDF — “Save as PDF”, Margins: None, Scale: Default, and leave the paper size as offered");
 
     const r = board.getBoundingClientRect();
@@ -1552,7 +1753,7 @@ html,body{overflow:hidden}
       `if(ps[${i}])ps[${i}].classList.add("__lf-x");<\/script>`;
 
     const sheets = [];
-    for(const page of state.pages){
+    for(const page of exportPages){
       const inkURL = await renderPageInk(page, W, H);
       let embed = "";
       const dd = page.deckId != null ? deckDocs[page.deckId] : null;
@@ -1603,6 +1804,17 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
       setTimeout(() => f.remove(), 60000);   // keep alive while dialog is open
     }, 1400);   // give embedded deck copies + fonts time to render
     f.srcdoc = printDoc;
+
+    // Persist the full board into session history with how far the export reached.
+    tellHost({
+      type: "lf-session-state",
+      reason: "export",
+      sessionId: state.sessionId,
+      batchId: state.batchId,
+      board: serializeBoard(),
+      exportedThrough: end
+    });
+    pingActivity();
   }
 
   /* ═══ PAGE OVERVIEW SHEET ═════════════════════
@@ -1723,14 +1935,30 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     closeOverlay.classList.remove("show"));
   document.getElementById("confirmClose").addEventListener("click", () => {
     closeOverlay.classList.remove("show");
-    state.pages = []; state.current = -1;
-    state.decks = [];
-    for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
-    board.classList.remove("visible");
-    emptyState.classList.remove("hidden");
-    positionSnap();
-    updateChrome();
+    // Save before wiping if the host is tracking a batch session.
+    if(hosted && state.batchId && state.pages.length){
+      tellHost({
+        type: "lf-session-state",
+        reason: "end",
+        sessionId: state.sessionId,
+        batchId: state.batchId,
+        board: serializeBoard(),
+        exportedThrough: -1
+      });
+    }
+    clearBoard();
     toast("Session ended");
+  });
+
+  document.getElementById("cancelExport").addEventListener("click", () =>
+    exportOverlay.classList.remove("show"));
+  document.getElementById("exportAllPages").addEventListener("click", () => {
+    exportOverlay.classList.remove("show");
+    exportPDF({ through: state.pages.length - 1 });
+  });
+  document.getElementById("exportCurrentOnly").addEventListener("click", () => {
+    exportOverlay.classList.remove("show");
+    exportPDF({ through: state.current });
   });
 
   document.getElementById("loadDeckEmpty").addEventListener("click", openLibrary);
@@ -1747,6 +1975,9 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
     else if(e.key === "Escape"){
       if(sheetOpen){ togglePageSheet(false); return; }
+      if(exportOverlay.classList.contains("show")){
+        exportOverlay.classList.remove("show"); return;
+      }
       closeOverlay.classList.remove("show");
     }
   });

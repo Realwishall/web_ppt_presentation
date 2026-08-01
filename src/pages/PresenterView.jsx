@@ -1,11 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Library, X, ChevronRight, Layers, FolderOpen, Loader2,
+  Library, X, ChevronRight, Layers, FolderOpen, Loader2, Check,
 } from 'lucide-react'
-import { listClasses, listChapters, listFolders } from '../lib/content'
+import { listClasses, listChapters, listFolders, FOLDER_TAGS, makeId } from '../lib/content'
+import {
+  findUnfinishedSession,
+  saveTeachingSession,
+  loadSessionForReview,
+} from '../lib/sessions'
+import { useAuth } from '../context/AuthContext'
 import ChapterIcon from '../components/ChapterIcon'
-import { TagBadge } from '../components/ContentPanel'
+
+const INACTIVITY_MS = 15 * 60 * 1000
 
 // Full-screen host for the standalone presenter panel (public/presenter.html).
 // The board gets the whole viewport — no header of our own — so the panel's
@@ -15,31 +22,197 @@ import { TagBadge } from '../components/ContentPanel'
 export default function PresenterView() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [params] = useSearchParams()
+  const { logout } = useAuth()
   const iframeRef = useRef(null)
   const wrapRef = useRef(null)
   const [libOpen, setLibOpen] = useState(false)
+  const [restoreNote, setRestoreNote] = useState('')
   // A folder passed via navigation state (e.g. the "Preview" button on the
   // content panel) is auto-loaded once the presenter iframe is ready.
   const pendingFolder = useRef(location.state?.folder || null)
+  const pendingReview = useRef(location.state?.reviewSession || null)
+  const batchId = params.get('batch') || location.state?.batchId || null
+  const sessionIdRef = useRef(makeId('sess'))
+  const lastActivity = useRef(Date.now())
+  const savingRef = useRef(false)
 
   const post = useCallback((msg) => {
     iframeRef.current?.contentWindow?.postMessage(msg, '*')
   }, [])
 
-  // Post a folder's HTML into the presenter iframe as a new deck.
-  const loadFolder = useCallback((folder) => {
-    post({ type: 'lf-load-deck', text: folder.html || '', name: folder.name || 'Folder' })
-    setLibOpen(false)
-  }, [post])
+  const touchActivity = useCallback(() => {
+    lastActivity.current = Date.now()
+  }, [])
 
-  // When the iframe finishes loading, flush any folder queued from navigation.
-  const onIframeLoad = useCallback(() => {
+  const persistBoard = useCallback(async (msg) => {
+    const bid = msg.batchId || batchId
+    if (!bid || !msg.board) return null
+    if (savingRef.current) return null
+    savingRef.current = true
+    try {
+      const sid = msg.sessionId || sessionIdRef.current
+      let exportedThrough = msg.exportedThrough
+      let createdAt
+      const prior = await loadSessionForReview(bid, sid)
+      if (prior) {
+        createdAt = prior.createdAt
+        if (msg.reason !== 'export' && (exportedThrough == null || exportedThrough < 0)) {
+          exportedThrough = prior.exportedThrough ?? -1
+        }
+      }
+      if (exportedThrough == null) exportedThrough = -1
+
+      const snap = await saveTeachingSession(bid, msg.board, {
+        sessionId: sid,
+        exportedThrough,
+        status: msg.reason === 'timeout' ? 'timeout' : undefined,
+        reason: msg.reason || 'manual',
+        createdAt,
+      })
+      sessionIdRef.current = snap.id
+      post({ type: 'lf-session-config', batchId: bid, sessionId: snap.id })
+      return snap
+    } catch (err) {
+      console.warn('Session save failed:', err)
+      return null
+    } finally {
+      savingRef.current = false
+    }
+  }, [batchId, post])
+
+  // Post one or many folders into the presenter iframe as decks.
+  const loadFolders = useCallback((folders) => {
+    const list = (Array.isArray(folders) ? folders : [folders]).filter(Boolean)
+    if (!list.length) return
+    if (list.length === 1) {
+      const f = list[0]
+      post({
+        type: 'lf-load-deck',
+        text: f.html || '',
+        name: f.name || 'Folder',
+        folderId: f.id || f.folderId || null,
+        classId: f.classId || null,
+        chapterId: f.chapterId || null,
+        tag: f.tag || null,
+      })
+    } else {
+      post({
+        type: 'lf-load-decks',
+        decks: list.map((f) => ({
+          text: f.html || '',
+          name: f.name || 'Folder',
+          folderId: f.id || f.folderId || null,
+          classId: f.classId || null,
+          chapterId: f.chapterId || null,
+          tag: f.tag || null,
+        })),
+      })
+    }
+    setLibOpen(false)
+    touchActivity()
+  }, [post, touchActivity])
+
+  const loadFolder = useCallback((folder) => loadFolders([folder]), [loadFolders])
+
+  // When the iframe finishes loading, configure the session and flush queues.
+  const onIframeLoad = useCallback(async () => {
     post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
+    if (batchId) {
+      post({ type: 'lf-session-config', batchId, sessionId: sessionIdRef.current })
+    }
+
+    // Review an old session (full snapshot) takes priority over auto-restore.
+    if (pendingReview.current) {
+      const review = pendingReview.current
+      pendingReview.current = null
+      const snap = typeof review === 'string'
+        ? await loadSessionForReview(batchId, review)
+        : review
+      if (snap?.pages?.length) {
+        sessionIdRef.current = snap.id || sessionIdRef.current
+        post({ type: 'lf-session-config', batchId: snap.batchId || batchId, sessionId: sessionIdRef.current })
+        post({
+          type: 'lf-restore-session',
+          sessionId: sessionIdRef.current,
+          payload: {
+            decks: snap.decks || [],
+            pages: snap.pages || [],
+            current: Math.max(0, snap.current || 0),
+          },
+        })
+        setRestoreNote('Loaded saved session for review.')
+        return
+      }
+    }
+
     if (pendingFolder.current) {
       loadFolder(pendingFolder.current)
       pendingFolder.current = null
+      return
     }
-  }, [loadFolder, post])
+
+    // Teach: auto-restore unexported / partially exported work from last session.
+    if (batchId) {
+      try {
+        const found = await findUnfinishedSession(batchId)
+        if (found?.payload) {
+          sessionIdRef.current = found.snapshot.id
+          post({ type: 'lf-session-config', batchId, sessionId: sessionIdRef.current })
+          post({
+            type: 'lf-restore-session',
+            sessionId: sessionIdRef.current,
+            payload: found.payload,
+          })
+          const n = found.payload.pages.length
+          setRestoreNote(
+            `Restored ${n} unexported page${n === 1 ? '' : 's'} (with ink) from your last session.`,
+          )
+        }
+      } catch (err) {
+        console.warn('Unfinished session restore failed:', err)
+      }
+    }
+  }, [batchId, loadFolder, post])
+
+  useEffect(() => {
+    if (!restoreNote) return
+    const t = setTimeout(() => setRestoreNote(''), 4000)
+    return () => clearTimeout(t)
+  }, [restoreNote])
+
+  // 15-minute inactivity → save board + logout.
+  useEffect(() => {
+    if (!batchId) return undefined
+    let handled = false
+    const tick = setInterval(async () => {
+      if (handled || Date.now() - lastActivity.current < INACTIVITY_MS) return
+      handled = true
+      clearInterval(tick)
+      const requestId = makeId('idle')
+      let answered = false
+      const finish = async () => {
+        try { await logout() } catch { /* still leave */ }
+        navigate('/login', { replace: true })
+      }
+      const onState = async (e) => {
+        if (e.source !== iframeRef.current?.contentWindow) return
+        const d = e.data || {}
+        if (d.type !== 'lf-session-state' || d.requestId !== requestId) return
+        answered = true
+        window.removeEventListener('message', onState)
+        await persistBoard({ ...d, reason: 'timeout', batchId })
+        await finish()
+      }
+      window.addEventListener('message', onState)
+      post({ type: 'lf-request-save', requestId, reason: 'timeout', batchId })
+      setTimeout(async () => {
+        window.removeEventListener('message', onState)
+        if (!answered) await finish()
+      }, 4000)
+    }, 30_000)
+    return () => clearInterval(tick)
+  }, [batchId, logout, navigate, persistBoard, post])
 
   useEffect(() => {
     const onMessage = (e) => {
@@ -47,6 +220,7 @@ export default function PresenterView() {
       const d = e.data || {}
       if (d.type === 'lf-open-library') {
         setLibOpen(true)
+        touchActivity()
         post({ type: 'lf-library-ack' })   // tells the panel not to fall back
       } else if (d.type === 'lf-exit') {
         navigate(-1)
@@ -58,17 +232,23 @@ export default function PresenterView() {
         post({ type: 'lf-fullscreen-ack' })
         if (d.on) wrapRef.current?.requestFullscreen?.().catch(() => {})
         else if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+      } else if (d.type === 'lf-activity') {
+        touchActivity()
+      } else if (d.type === 'lf-session-state') {
+        touchActivity()
+        persistBoard(d)
       }
     }
-    // whoever ends up owning the request, the panel is told the truth
     const onFsChange = () => post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
+    const onPointer = () => touchActivity()
     window.addEventListener('message', onMessage)
     document.addEventListener('fullscreenchange', onFsChange)
+    wrapRef.current?.addEventListener('pointerdown', onPointer)
     return () => {
       window.removeEventListener('message', onMessage)
       document.removeEventListener('fullscreenchange', onFsChange)
     }
-  }, [navigate, post])
+  }, [navigate, persistBoard, post, touchActivity])
 
   return (
     <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">
@@ -81,13 +261,25 @@ export default function PresenterView() {
         className="h-full w-full border-0"
       />
 
-      {libOpen && <LibraryPicker onClose={() => setLibOpen(false)} onPick={loadFolder} />}
+      {restoreNote && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-xl border border-violet-400/30 bg-violet-950/90 px-4 py-2 text-sm text-violet-100 shadow-lg">
+          {restoreNote}
+        </div>
+      )}
+
+      {libOpen && (
+        <LibraryPicker
+          onClose={() => setLibOpen(false)}
+          onPickMany={loadFolders}
+        />
+      )}
     </div>
   )
 }
 
 // Drill-down picker over every class → chapter → folder in Firestore.
-function LibraryPicker({ onClose, onPick }) {
+// Folder level supports multi-select + multi-category filtering.
+function LibraryPicker({ onClose, onPickMany }) {
   const [cls, setCls] = useState(null)
   const [chapter, setChapter] = useState(null)
 
@@ -109,7 +301,9 @@ function LibraryPicker({ onClose, onPick }) {
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {!cls && <ClassPicker onOpen={setCls} />}
           {cls && !chapter && <ChapterPicker cls={cls} onOpen={setChapter} />}
-          {cls && chapter && <FolderPicker cls={cls} chapter={chapter} onPick={onPick} />}
+          {cls && chapter && (
+            <FolderPicker cls={cls} chapter={chapter} onPickMany={onPickMany} />
+          )}
         </div>
       </div>
     </div>
@@ -159,23 +353,160 @@ function ChapterPicker({ cls, onOpen }) {
   )
 }
 
-function FolderPicker({ cls, chapter, onPick }) {
+function FolderPicker({ cls, chapter, onPickMany }) {
   const items = useList(() => listFolders(cls.id, chapter.id), [cls.id, chapter.id])
+  const [selected, setSelected] = useState(() => new Set())
+  // Empty set = show all categories; otherwise filter to selected tags.
+  const [activeTags, setActiveTags] = useState(() => new Set())
+
+  const availableTags = useMemo(() => {
+    if (!items) return []
+    const present = new Set(items.map((f) => f.tag || FOLDER_TAGS[0]))
+    return FOLDER_TAGS.filter((t) => present.has(t)).concat(
+      [...present].filter((t) => !FOLDER_TAGS.includes(t)),
+    )
+  }, [items])
+
+  // Drop stale category selections when the chapter's tag set changes.
+  useEffect(() => {
+    setActiveTags((prev) => {
+      if (!prev.size) return prev
+      const next = new Set([...prev].filter((t) => availableTags.includes(t)))
+      return next.size === prev.size ? prev : next
+    })
+    setSelected(new Set())
+  }, [availableTags, cls.id, chapter.id])
+
+  const filtered = useMemo(() => {
+    if (!items) return []
+    if (!activeTags.size) return items
+    return items.filter((f) => activeTags.has(f.tag || FOLDER_TAGS[0]))
+  }, [items, activeTags])
+
+  function toggleTag(tag) {
+    setActiveTags((prev) => {
+      const next = new Set(prev)
+      if (next.has(tag)) next.delete(tag)
+      else next.add(tag)
+      return next
+    })
+  }
+
+  function toggleFolder(id) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function loadSelected() {
+    const folders = filtered
+      .filter((f) => selected.has(f.id))
+      .map((f) => ({ ...f, classId: cls.id, chapterId: chapter.id }))
+    if (!folders.length) return
+    onPickMany(folders)
+  }
+
   if (items === null) return <Spinner />
   if (!items.length) return <Empty text="No folders in this chapter." />
+
   return (
-    <ul className="space-y-2">
-      {items.map((f) => (
-        <PickRow key={f.id} onClick={() => onPick(f)}>
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-amber-50 text-amber-600"><FolderOpen className="h-4.5 w-4.5" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold text-slate-900">{f.name}</span>
-            <TagBadge tag={f.tag} />
-          </span>
-          <span className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white">Load</span>
-        </PickRow>
-      ))}
-    </ul>
+    <div className="flex h-full flex-col">
+      {availableTags.length > 0 && (
+        <div className="mb-3">
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Categories
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTags(new Set())}
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                activeTags.size === 0
+                  ? 'bg-violet-600 text-white'
+                  : 'border border-slate-200 bg-slate-50 text-slate-600 hover:border-violet-300'
+              }`}
+            >
+              All
+            </button>
+            {availableTags.map((tag) => {
+              const on = activeTags.has(tag)
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    on
+                      ? 'bg-violet-600 text-white'
+                      : 'border border-slate-200 bg-slate-50 text-slate-600 hover:border-violet-300'
+                  }`}
+                >
+                  {tag}
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-1.5 text-xs text-slate-400">
+            Select one or more categories to filter. Empty categories stay hidden.
+          </p>
+        </div>
+      )}
+
+      {!filtered.length ? (
+        <Empty text="No folders match the selected categories." />
+      ) : (
+        <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+          {filtered.map((f) => {
+            const on = selected.has(f.id)
+            return (
+              <li key={f.id}>
+                <button
+                  type="button"
+                  onClick={() => toggleFolder(f.id)}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left shadow-sm transition ${
+                    on
+                      ? 'border-violet-400 bg-violet-50 ring-2 ring-violet-200'
+                      : 'border-slate-200 bg-white hover:border-violet-200 hover:shadow-md'
+                  }`}
+                >
+                  <span className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
+                    on ? 'border-violet-600 bg-violet-600 text-white' : 'border-slate-300 bg-white'
+                  }`}>
+                    {on && <Check className="h-3.5 w-3.5" />}
+                  </span>
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-amber-50 text-amber-600">
+                    <FolderOpen className="h-4.5 w-4.5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-slate-900">{f.name}</span>
+                    <span className="mt-0.5 inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-500">
+                      {f.tag || FOLDER_TAGS[0]}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <span className="text-xs text-slate-500">
+          {selected.size ? `${selected.size} selected` : 'Select one or more folders'}
+        </span>
+        <button
+          type="button"
+          disabled={!selected.size}
+          onClick={loadSelected}
+          className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Load selected
+        </button>
+      </div>
+    </div>
   )
 }
 
