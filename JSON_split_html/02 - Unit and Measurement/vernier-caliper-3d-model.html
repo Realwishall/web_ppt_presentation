@@ -90,8 +90,10 @@
   /* click-anywhere gap track.  The presenter forwards taps as el.click() with
      NO coordinates, so the track is filled with invisible per-value cells —
      each cell is its own .clickable target.  Dragging still works standalone. */
+  /* the frame is an inset shadow, not a border, so the cells reach the very
+     edge of the bar — a border would leave a 1px dead rim the host can't hit */
   #gaptrack{position:relative; display:flex; height:22px; border-radius:999px; background:#22314f;
-            border:1px solid var(--line); cursor:pointer; margin:4px 0 2px; touch-action:none}
+            box-shadow:inset 0 0 0 1px var(--line); cursor:pointer; margin:4px 0 2px; touch-action:none}
   .gapcell{flex:1; height:100%}
   .gapcell:hover{background:rgba(76,201,240,.18)}
   #gapfill{position:absolute; left:0; top:0; bottom:0; border-radius:999px;
@@ -186,7 +188,10 @@
       <button class="op clickable" id="breveal" style="display:none">Reveal Ø</button>
     </div>
     <div class="slidehead"><span>Open / close the jaws — click anywhere on the bar</span><b id="gapval"></b></div>
-    <div id="gaptrack" class="clickable"><div id="gapfill"></div><div id="gapthumb"></div></div>
+    <!-- the track itself must NOT carry .clickable: the host clicks the FIRST
+         .clickable in document order under the tap, and the track (which has no
+         click handler) would shadow every cell inside it. -->
+    <div id="gaptrack"><div id="gapfill"></div><div id="gapthumb"></div></div>
   </div>
 
   <div class="pop" id="popconst">
