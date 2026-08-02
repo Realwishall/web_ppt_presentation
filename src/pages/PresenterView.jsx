@@ -141,6 +141,8 @@ export default function PresenterView() {
 
   // When the iframe finishes loading, configure the session and flush queues.
   const onIframeLoad = useCallback(async () => {
+    // Prefer board focus so keyboard + clicker keys land in the presenter.
+    try { iframeRef.current?.focus?.() } catch { /* ignore */ }
     post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
     if (batchId) {
       post({ type: 'lf-session-config', batchId, sessionId: sessionIdRef.current })
@@ -265,14 +267,29 @@ export default function PresenterView() {
     }
     const onFsChange = () => post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
     const onPointer = () => touchActivity()
+    // PPT clickers send PageUp/PageDown (and sometimes Space). When focus sits
+    // on the host shell instead of the board iframe, forward those keys in.
+    const NAV_KEYS = new Set([
+      'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' ', 'Spacebar', 'Backspace',
+    ])
+    const onKey = (e) => {
+      if (libOpen) return
+      if (e.target?.matches?.('input,textarea,[contenteditable="true"]')) return
+      if (!NAV_KEYS.has(e.key)) return
+      e.preventDefault()
+      touchActivity()
+      post({ type: 'lf-key', key: e.key })
+    }
     window.addEventListener('message', onMessage)
     document.addEventListener('fullscreenchange', onFsChange)
+    window.addEventListener('keydown', onKey)
     wrapRef.current?.addEventListener('pointerdown', onPointer)
     return () => {
       window.removeEventListener('message', onMessage)
       document.removeEventListener('fullscreenchange', onFsChange)
+      window.removeEventListener('keydown', onKey)
     }
-  }, [navigate, persistBoard, post, touchActivity])
+  }, [navigate, persistBoard, post, touchActivity, libOpen])
 
   return (
     <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">
@@ -283,6 +300,7 @@ export default function PresenterView() {
         allow="fullscreen"
         onLoad={onIframeLoad}
         className="h-full w-full border-0"
+        tabIndex={-1}
       />
 
       {restoreNote && (
