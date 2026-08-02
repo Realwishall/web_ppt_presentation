@@ -613,8 +613,12 @@ math[display="block"]{display:block;margin:.8vmin 0}
   .eq.spot .mark-quantity{background:rgba(217,119,6,.68)!important;color:#fff!important}
   .eq.spot .mark-number  {background:rgba(52,211,153,.45)!important;color:#fff!important}
   .eq.spot .mark-unit    {background:rgba(203,213,225,.45)!important;color:#fff!important}
-  #bg,.kicker-tag,.no-print{display:none!important}
-  body{background:var(--bg-stage)}
+  /* Keep #bg. Hiding it left transparent .page over a CSS-var body paint that
+     nested print iframes (presenter export) often drop → washed-out white. */
+  #bg{display:block!important;background:#080a14!important}
+  #bg:before,#bg:after{display:none!important;animation:none!important}
+  .kicker-tag,.no-print{display:none!important}
+  html,body,.page{background:#080a14!important}
   .page:before{background:none!important;height:0!important}
   /* gradient-clipped text can rasterise blank — print it as solid ink */
   h1.title{color:var(--gold-soft)!important;background:none!important;

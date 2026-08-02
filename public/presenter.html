@@ -1776,24 +1776,40 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     const PW = Math.ceil(W / 96 * 1000) / 1000;
     const PH = Math.ceil(H / 96 * 1000) / 1000;
 
-    // The WHOLE deck document (scripts stripped) is embedded per sheet in
-    // its own iframe — one stripped copy is prepared per loaded deck.
+    // The WHOLE deck document is embedded per sheet in its own iframe —
+    // one sanitized copy per loaded deck. Scripts go (PDF can't run them);
+    // external stylesheets/fonts go too — CDN KaTeX / Google Fonts / Three
+    // leftovers race across many nested iframes and can leave a sheet white.
     const deckDocs = {};
     for(const deck of state.decks){
       const doc = new DOMParser().parseFromString(deck.text, "text/html");
       doc.querySelectorAll("script").forEach(s => s.remove());
+      doc.querySelectorAll(
+        'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+      ).forEach(l => {
+        const href = l.getAttribute("href") || "";
+        if(/^https?:\/\//i.test(href)) l.remove();
+      });
       deckDocs[deck.id] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
     }
 
     // per-sheet controls injected into each embedded copy:
-    // show ONLY that sheet's page, reveal all steps, keep colors
-    const EMBED_STYLE = `<style>
+    // show ONLY that sheet's page, reveal all steps, keep colors.
+    // Solid hex backgrounds (not CSS vars) — nested print iframes often drop
+    // var()/gradient body paints, and deck-base's @media print hides #bg while
+    // .page stays transparent → washed-out white slides.
+    const EMBED_STYLE = `<style id="__lf-export">
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
-html,body{overflow:hidden}
-.page{display:none!important}
-.page.__lf-x{display:block!important;opacity:1!important;transform:none!important}
+html,body{overflow:hidden!important;height:100%!important;min-height:100%!important;background:#080a14!important}
+#bg,#canvas-wrap{display:block!important;visibility:visible!important;opacity:1!important;
+  background:#080a14!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+#bg:before,#bg:after{display:none!important;animation:none!important}
+.page{display:none!important;background:#080a14!important}
+.page.__lf-x{display:block!important;opacity:1!important;transform:none!important;background:#080a14!important}
 .step{opacity:1!important;transform:none!important;visibility:visible!important}
-</style>`;
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+<\/style>`;
 
     const bgURL = renderBoardBg(W, H);
     const showPage = i =>
@@ -1818,9 +1834,9 @@ html,body{overflow:hidden}
         // the sheet is exactly W×H CSS px, so board coordinates are used as-is —
         // no vw/vh, which resolve against the *paper* box when printing
         const wrap = `position:absolute;left:${s.x}px;top:${s.y}px;`
-          + `width:${s.w}px;height:${s.h}px;overflow:hidden;z-index:5`;
+          + `width:${s.w}px;height:${s.h}px;overflow:hidden;z-index:5;background:#080a14`;
         const inner = `position:absolute;left:0;top:0;width:${baseW}px;height:${baseH}px;`
-          + `border:0;transform-origin:0 0;transform:scale(${s.w / baseW},${s.h / baseH});background:transparent`;
+          + `border:0;transform-origin:0 0;transform:scale(${s.w / baseW},${s.h / baseH});background:#080a14`;
         snapEmbed = `<div style="${wrap}"><iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
       }
       sheets.push(
@@ -1839,18 +1855,36 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
 .sheet{position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#0b0f19;page-break-after:always;break-after:page;break-inside:avoid;page-break-inside:avoid}
 .sheet:last-child{page-break-after:auto;break-after:auto}
 .bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0}
-.deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:transparent}
+.deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#080a14}
 .ink-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:10}
 </style></head><body>${sheets.join("")}</body></html>`;
 
     const f = document.createElement("iframe");
-    f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    // Non-zero, off-screen host — a 0×0 print frame leaves nested deck iframes
+    // without a layout box, which prints as solid white on some sheets.
+    f.style.cssText = `position:fixed;left:0;top:0;width:${W}px;height:${H}px;border:0;opacity:0;pointer-events:none;z-index:-1`;
     document.body.appendChild(f);
-    f.onload = () => setTimeout(() => {
-      try{ f.contentWindow.focus(); f.contentWindow.print(); }
-      catch(err){ toast("Print failed — try again"); }
-      setTimeout(() => f.remove(), 60000);   // keep alive while dialog is open
-    }, 1400);   // give embedded deck copies + fonts time to render
+    f.onload = () => {
+      const embeds = Array.from(f.contentDocument?.querySelectorAll("iframe") || []);
+      const waitEmbed = frame => new Promise(resolve => {
+        let done = false;
+        const finish = () => { if(done) return; done = true; resolve(); };
+        try{
+          if(frame.contentDocument?.readyState === "complete"){
+            // already parsed — still give one frame for paint
+            requestAnimationFrame(() => setTimeout(finish, 50));
+          } else {
+            frame.addEventListener("load", () => setTimeout(finish, 50), { once:true });
+          }
+        }catch{ /* opaque / cross-origin */ }
+        setTimeout(finish, 2500); // hard cap per embed
+      });
+      Promise.all(embeds.map(waitEmbed)).then(() => setTimeout(() => {
+        try{ f.contentWindow.focus(); f.contentWindow.print(); }
+        catch(err){ toast("Print failed — try again"); }
+        setTimeout(() => f.remove(), 60000);   // keep alive while dialog is open
+      }, 200));
+    };
     f.srcdoc = printDoc;
 
     // Persist the full board into session history with how far the export reached.

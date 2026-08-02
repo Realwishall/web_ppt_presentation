@@ -218,7 +218,10 @@ forced on. Therefore:
        color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);cursor:pointer}
   @media print{                    /* PDF: flatten reveals, drop on-screen chrome */
     .step{opacity:1!important;transform:none!important}
-    #bg,.no-print{display:none!important}
+    .no-print{display:none!important}
+    /* Keep #bg (or paint .page solid). Hiding #bg with transparent .page
+       washes out to white in nested print iframes during presenter export. */
+    #bg,html,body,.page{background:#0b0f19!important}
   }
 </style>
 
