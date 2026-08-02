@@ -6,8 +6,7 @@ import {
 } from 'lucide-react'
 import { listBatches, createBatch, deleteBatch } from '../lib/content'
 import {
-  listSessionMetas,
-  listSnapshotsLocal,
+  listSessionHistory,
   loadSessionForReview,
   sessionStatusLabel,
 } from '../lib/sessions'
@@ -116,62 +115,58 @@ export default function BatchesPanel() {
 
 function OldSessionsModal({ batch, onClose, onOpen }) {
   const [rows, setRows] = useState(null)
+  const [err, setErr] = useState('')
+  const [opening, setOpening] = useState(null)
 
   useEffect(() => {
     let alive = true
     ;(async () => {
-      const [metas, locals] = await Promise.all([
-        listSessionMetas(batch.id).catch(() => []),
-        listSnapshotsLocal(batch.id).catch(() => []),
-      ])
-      const byId = new Map()
-      for (const m of metas) byId.set(m.id, { ...m, hasLocal: false })
-      for (const s of locals) {
-        const prev = byId.get(s.id) || {}
-        byId.set(s.id, {
-          ...prev,
-          id: s.id,
-          title: s.title || prev.title,
-          status: s.status || prev.status,
-          pageCount: s.pages?.length ?? prev.pageCount ?? 0,
-          exportedThrough: s.exportedThrough ?? prev.exportedThrough ?? -1,
-          updatedAt: s.updatedAt || prev.updatedAt,
-          deckNames: (s.decks || []).map((d) => d.name).filter(Boolean),
-          hasLocal: true,
-        })
+      try {
+        // Single getDoc: batches/{batchId}/meta/sessionHistory
+        const sessions = await listSessionHistory(batch.id)
+        if (alive) setRows(sessions)
+      } catch (e) {
+        console.warn(e)
+        if (alive) {
+          setRows([])
+          setErr(e.message || 'Could not load session history.')
+        }
       }
-      const list = [...byId.values()].sort((a, b) => {
-        const ta = a.updatedAt?.toMillis?.() || a.updatedAt || 0
-        const tb = b.updatedAt?.toMillis?.() || b.updatedAt || 0
-        return tb - ta
-      })
-      if (alive) setRows(list)
     })()
     return () => { alive = false }
   }, [batch.id])
 
   async function openSession(row) {
-    if (!row.hasLocal) {
-      const local = await loadSessionForReview(batch.id, row.id)
-      if (!local) {
-        alert('This session’s board data is not available on this device.')
+    setOpening(row.id)
+    setErr('')
+    try {
+      const full = await loadSessionForReview(batch.id, row.id)
+      if (!full?.pages?.length && !full?.decks?.length) {
+        setErr('This session has no saved board data.')
         return
       }
+      onOpen(row.id)
+    } catch (e) {
+      setErr(e.message || 'Could not open this session.')
+    } finally {
+      setOpening(null)
     }
-    onOpen(row.id)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-950/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="m-auto flex max-h-[80vh] w-[92vw] max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0f1524] shadow-2xl"
+        className="m-auto flex max-h-[85vh] w-[92vw] max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0f1524] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
           <History className="h-4 w-4 text-violet-400" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-slate-100">Old sessions</div>
-            <div className="truncate text-xs text-slate-500">{batch.name}</div>
+            <div className="truncate text-xs text-slate-500">
+              {batch.name}
+              {rows && ` · ${rows.length} session${rows.length === 1 ? '' : 's'} · newest first`}
+            </div>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-white/10 hover:text-slate-200">
             <X className="h-5 w-5" />
@@ -179,6 +174,9 @@ function OldSessionsModal({ batch, onClose, onOpen }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          {err && (
+            <div className="mb-3 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>
+          )}
           {rows === null ? (
             <div className="grid place-items-center py-12 text-slate-500"><Loader2 className="h-6 w-6 animate-spin" /></div>
           ) : rows.length === 0 ? (
@@ -189,28 +187,29 @@ function OldSessionsModal({ batch, onClose, onOpen }) {
           ) : (
             <ul className="space-y-2">
               {rows.map((r) => {
-                const when = formatWhen(r.updatedAt)
+                const when = formatWhen(r.updatedAtMs || r.updatedAt)
                 const pages = r.pageCount || 0
-                const exp = (r.exportedThrough ?? -1) + 1
+                const busy = opening === r.id
                 return (
                   <li key={r.id}>
                     <button
                       type="button"
                       onClick={() => openSession(r)}
-                      disabled={!r.hasLocal}
-                      className="flex w-full flex-col gap-1 rounded-xl border border-white/10 bg-white/4 p-3 text-left transition hover:border-violet-400/40 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!!opening}
+                      className="flex w-full flex-col gap-1 rounded-xl border border-white/10 bg-white/4 p-3 text-left transition hover:border-violet-400/40 hover:bg-white/8 disabled:opacity-60"
                     >
                       <div className="flex items-center gap-2">
                         <span className="min-w-0 flex-1 truncate font-semibold text-slate-100">
                           {r.title || 'Teaching session'}
                         </span>
-                        <StatusPill status={r.status} />
+                        {busy ? <Loader2 className="h-4 w-4 animate-spin text-violet-400" /> : <StatusPill status={r.status} />}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{when}</span>
                         <span>{pages} page{pages === 1 ? '' : 's'}</span>
-                        {exp > 0 && <span>Exported through {exp}</span>}
-                        {!r.hasLocal && <span className="text-amber-400">Not on this device</span>}
+                        {r.reason === 'export' && <span>Exported pages only</span>}
+                        {r.reason === 'timeout' && <span>Full board (auto-save)</span>}
+                        {r.fileCount > 0 && <span>{r.fileCount} file{r.fileCount === 1 ? '' : 's'} saved</span>}
                       </div>
                       {!!r.deckNames?.length && (
                         <div className="truncate text-xs text-slate-400">

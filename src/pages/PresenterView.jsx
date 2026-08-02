@@ -34,6 +34,9 @@ export default function PresenterView() {
   const pendingReview = useRef(location.state?.reviewSession || null)
   const batchId = params.get('batch') || location.state?.batchId || null
   const sessionIdRef = useRef(makeId('sess'))
+  // How far the *live* board has been exported — used so a later timeout
+  // snapshot (full board) can still restore only the unexported tail on Teach.
+  const liveExportedThroughRef = useRef(-1)
   const lastActivity = useRef(Date.now())
   const savingRef = useRef(false)
 
@@ -48,17 +51,31 @@ export default function PresenterView() {
   const persistBoard = useCallback(async (msg) => {
     const bid = msg.batchId || batchId
     if (!bid || !msg.board) return null
+    // End-session: do not archive the full board — only export / timeout persist.
+    if (msg.reason === 'end') return null
+    if (msg.reason !== 'export' && msg.reason !== 'timeout') return null
     if (savingRef.current) return null
     savingRef.current = true
     try {
       const sid = msg.sessionId || sessionIdRef.current
       let exportedThrough = msg.exportedThrough
       let createdAt
-      const prior = await loadSessionForReview(bid, sid)
-      if (prior) {
-        createdAt = prior.createdAt
-        if (msg.reason !== 'export' && (exportedThrough == null || exportedThrough < 0)) {
-          exportedThrough = prior.exportedThrough ?? -1
+
+      if (msg.reason === 'export') {
+        // Freeze how far this live board reached so later timeout restore can skip it.
+        liveExportedThroughRef.current = Math.max(
+          liveExportedThroughRef.current,
+          exportedThrough ?? -1,
+        )
+      } else {
+        // timeout: keep full board, but remember prior export progress
+        const prior = await loadSessionForReview(bid, sid).catch(() => null)
+        if (prior) createdAt = prior.createdAt
+        if (exportedThrough == null || exportedThrough < 0) {
+          exportedThrough = Math.max(
+            liveExportedThroughRef.current,
+            prior?.exportedThrough ?? -1,
+          )
         }
       }
       if (exportedThrough == null) exportedThrough = -1
@@ -67,11 +84,18 @@ export default function PresenterView() {
         sessionId: sid,
         exportedThrough,
         status: msg.reason === 'timeout' ? 'timeout' : undefined,
-        reason: msg.reason || 'manual',
+        reason: msg.reason,
         createdAt,
       })
-      sessionIdRef.current = snap.id
-      post({ type: 'lf-session-config', batchId: bid, sessionId: snap.id })
+
+      if (msg.reason === 'export') {
+        // Leave the export archive alone — continue teaching under a fresh id.
+        sessionIdRef.current = makeId('sess')
+        post({ type: 'lf-session-config', batchId: bid, sessionId: sessionIdRef.current })
+      } else {
+        sessionIdRef.current = snap.id
+        post({ type: 'lf-session-config', batchId: bid, sessionId: snap.id })
+      }
       return snap
     } catch (err) {
       console.warn('Session save failed:', err)
