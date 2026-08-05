@@ -264,6 +264,11 @@ table.data td.num{text-align:right;font-family:var(--font-math)}
 table.data.compact th{padding:1.05vmin 1.3vmin}
 table.data.compact td{padding:1.05vmin 1.3vmin}
 table.data.center td{text-align:center}
+/* Presentation bump: every cell 40% larger (requested on dense unit tables). */
+table.data.fs-140 th{font-size:calc(var(--fs-th) * 1.4)}
+table.data.fs-140 td{font-size:calc(var(--fs-td) * 1.4)}
+table.data.fs-140 td .note,table.data.fs-140 .note,table.data.fs-140 td.note-cell{font-size:calc(var(--fs-note) * 1.4)}
+table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!important;line-height:1.45}
 .ok{color:var(--green);font-weight:900}
 .no{color:var(--red);font-weight:900}
 

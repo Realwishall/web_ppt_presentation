@@ -485,6 +485,7 @@ const animeFx = `<script>
 
      data-three="globe"         wireframe sphere, slow spin
      data-three="stars"         drifting point field
+     data-three="solid-angle"   sphere + pyramidal solid angle (Ω = A/r²)
      data-three="screw-gauge"   procedural micrometer; driven by the sim engine
                                 via frame.__sgUpdate when nested in [data-sim]  */
 const threeFxSrc = fs.readFileSync(path.join(TOOLS, 'fx-three-runtime.js'), 'utf8')

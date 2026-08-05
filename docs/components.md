@@ -143,8 +143,10 @@ Per-**cell** stepping; first column unstepped.
 </table>
 ```
 
-Modifiers: `.compact` (tighter padding, ≥6 columns), `.center` (centre cells).
-Cell helpers: `td.num` (right-aligned, math font), `.ok` (✓ green), `.no` (✗ red).
+Modifiers: `.compact` (tighter padding, ≥6 columns), `.center` (centre cells),
+`.fs-140` (every cell 40% larger — for sparse unit tables on the board).
+Cell helpers: `td.num` (right-aligned, math font), `td.note-cell` (italic muted
+footer row spanning the table), `.ok` (✓ green), `.no` (✗ red).
 
 ### `formula-sheet` / inline math
 
@@ -367,6 +369,7 @@ that element becomes visible.
 | `data-anime="pulse"` | any non-`.step` element | one gentle attention pulse |
 | `data-anime="float"` | a decorative mark | slow endless bob |
 | `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
+| `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
 | `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
 
 ```html

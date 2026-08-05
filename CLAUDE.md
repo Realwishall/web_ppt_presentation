@@ -78,7 +78,7 @@ requested with a data attribute and driven by presets that ship in the build:
 | `data-anime="draw"` on an `<svg>` | its strokes draw themselves on when the figure is revealed |
 | `data-anime="count"` on a number | counts up to the printed value |
 | `data-anime="pulse"` / `"float"` | one attention pulse / a slow bob |
-| `data-three="globe"` / `"stars"` on `.scene-frame` | a slow WebGL scene sized to the box |
+| `data-three="globe"` / `"stars"` / `"solid-angle"` on `.scene-frame` | a slow WebGL scene sized to the box |
 
 Hard limits, learned the expensive way:
 

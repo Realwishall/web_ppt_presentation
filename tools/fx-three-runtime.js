@@ -21,6 +21,7 @@
 
       var kind = (frame.getAttribute('data-three') || 'globe').trim();
       if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
+      if (kind === 'solid-angle') { startSolidAngle(frame, w, h); return; }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -66,6 +67,141 @@
         requestAnimationFrame(loop);
         group.rotation.y += 0.0022;
         group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ---------------------------------------------- solid angle (steradian) ---
+       Sphere of radius r with a square pyramidal solid angle from the centre.
+       Same Ω cuts patch A on the sphere and a larger patch A′ further out at r′.
+       Slow auto-orbit; no OrbitControls (pointer-events are owned by the host). */
+    function startSolidAngle(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 100);
+      camera.position.set(4.6, 2.8, 5.4);
+      camera.lookAt(0.4, 0.2, 0.6);
+
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.55));
+      var key = new T.DirectionalLight(0xffffff, 0.85);
+      key.position.set(4, 6, 5); scene.add(key);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      var r = 2.0, rPrime = 3.35, half = 0.55;
+      var origin = new T.Vector3(0, 0, 0);
+      var axis = new T.Vector3(0.55, 0.35, 1).normalize();
+
+      /* soft filled sphere (classroom blue) */
+      group.add(new T.Mesh(
+        new T.SphereGeometry(r, 48, 32),
+        new T.MeshPhongMaterial({
+          color: 0x1a3a8a, transparent: true, opacity: 0.55,
+          shininess: 28, specular: 0x334466, depthWrite: false
+        })));
+      group.add(new T.LineSegments(
+        new T.WireframeGeometry(new T.SphereGeometry(r * 1.002, 24, 16)),
+        new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.18 })));
+      group.add(new T.Mesh(
+        new T.SphereGeometry(0.06, 16, 12),
+        new T.MeshBasicMaterial({ color: 0x9ad0ff })));
+
+      /* four corner directions of the solid-angle pyramid */
+      var u = new T.Vector3(), v = new T.Vector3();
+      if (Math.abs(axis.y) < 0.9) u.set(0, 1, 0).cross(axis).normalize();
+      else u.set(1, 0, 0).cross(axis).normalize();
+      v.copy(axis).cross(u).normalize();
+      var corners = [
+        axis.clone().add(u.clone().multiplyScalar(half)).add(v.clone().multiplyScalar(half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(-half)).add(v.clone().multiplyScalar(half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(-half)).add(v.clone().multiplyScalar(-half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(half)).add(v.clone().multiplyScalar(-half)).normalize()
+      ];
+
+      var edgeMat = new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.9 });
+      corners.forEach(function(c){
+        var geo = new T.BufferGeometry().setFromPoints([
+          origin, c.clone().multiplyScalar(rPrime * 1.05)
+        ]);
+        group.add(new T.Line(geo, edgeMat));
+      });
+
+      function greatArc(a, b, rad, segs){
+        var start = a.clone().normalize(), end = b.clone().normalize();
+        var rot = new T.Vector3().crossVectors(start, end).normalize();
+        var ang = start.angleTo(end), pts = [];
+        for (var i = 0; i <= segs; i++){
+          pts.push(start.clone().applyAxisAngle(rot, (i / segs) * ang).multiplyScalar(rad));
+        }
+        return pts;
+      }
+
+      function addSphericalPatch(rad, fillColor, fillOpacity, edgeColor){
+        var ring = [];
+        for (var i = 0; i < 4; i++){
+          ring = ring.concat(greatArc(corners[i], corners[(i + 1) % 4], rad, 24));
+        }
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints(ring),
+          new T.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.95 })));
+
+        /* fan triangulation from the patch centre for a soft fill */
+        var mid = new T.Vector3();
+        corners.forEach(function(c){ mid.add(c); });
+        mid.normalize().multiplyScalar(rad);
+        var pos = [];
+        for (var k = 0; k < 4; k++){
+          var arc = greatArc(corners[k], corners[(k + 1) % 4], rad, 16);
+          for (var j = 0; j < arc.length - 1; j++){
+            pos.push(mid.x, mid.y, mid.z,
+                     arc[j].x, arc[j].y, arc[j].z,
+                     arc[j + 1].x, arc[j + 1].y, arc[j + 1].z);
+          }
+        }
+        var g = new T.BufferGeometry();
+        g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+        g.computeVertexNormals();
+        group.add(new T.Mesh(g, new T.MeshBasicMaterial({
+          color: fillColor, transparent: true, opacity: fillOpacity,
+          side: T.DoubleSide, depthWrite: false
+        })));
+      }
+
+      addSphericalPatch(r, 0x3b6fd9, 0.45, 0x8eb6ff);
+      addSphericalPatch(rPrime, 0x9aa3b5, 0.28, 0xc5cad4);
+
+      /* radius arrows r and r′ (gold accents) */
+      function addRadius(len, color){
+        var tip = axis.clone().multiplyScalar(len);
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints([origin, tip]),
+          new T.LineBasicMaterial({ color: color })));
+        var cone = new T.Mesh(
+          new T.ConeGeometry(0.07, 0.22, 10),
+          new T.MeshBasicMaterial({ color: color }));
+        cone.position.copy(tip);
+        cone.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), axis);
+        group.add(cone);
+      }
+      addRadius(r, 0x7c8cff);
+      addRadius(rPrime, 0xf5c542);
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.0035;
         renderer.render(scene, camera);
       })();
     }
