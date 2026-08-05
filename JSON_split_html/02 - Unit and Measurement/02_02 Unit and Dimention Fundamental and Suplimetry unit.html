@@ -136,6 +136,11 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 .wrap.center{align-items:center;justify-content:center;text-align:center}
 .wrap.tight{gap:1.2vmin}
 .wrap.dense{padding:6vmin 5.5vmin 4vmin;gap:1.5vmin}   /* heavy tables/derivations */
+.wrap.fit{overflow:hidden;gap:1.4vmin;padding-top:6.5vmin;padding-bottom:3.5vmin}
+.split-fill{display:grid;grid-template-columns:1fr 1fr;gap:3.2vmin;flex:1;min-height:0;
+            align-items:center;margin-top:.4vmin}
+.split-fill .stack{gap:1.4vmin;justify-content:center}
+.scene-frame.fill{aspect-ratio:auto;height:100%;min-height:28vmin;max-height:58vmin}
 
 .wrap::-webkit-scrollbar{width:.9vmin}
 .wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
@@ -672,252 +677,201 @@ math[display="block"]{display:block;margin:.8vmin 0}
   </div>
 </section>
 
-<!-- Slide 4 — Plane Angle -->
+<!-- Slide 4 — Plane Angle (figure left / facts right, no scroll) -->
 <section class="page">
-  <div class="wrap">
+  <div class="wrap fit">
     <h2 class="heading">Plane Angle</h2>
 
-    <div class="step">
-      <div class="figure-frame">
-        <svg viewBox="0 0 380 300" data-anime="draw" role="img" aria-label="A circle of radius r; two radii cut off an arc and the angle theta between them at the centre">
-          <circle cx="150" cy="160" r="118" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 7" opacity=".55"/>
-          <path d="M150 160 L268 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-          <path d="M150 160 L232 75" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-          <path d="M268 160 A118 118 0 0 0 232 75" fill="none" stroke="#f2d024" stroke-width="7" stroke-linecap="round"/>
-          <path d="M195 160 A45 45 0 0 0 181 128" fill="none" stroke="#38bdf8" stroke-width="3"/>
-          <circle cx="150" cy="160" r="5" fill="currentColor"/>
-          <g fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="26">
-            <text x="196" y="186">&#952;</text>
-            <text x="200" y="136">r</text>
-            <text x="176" y="92">r</text>
-            <text x="122" y="182">O</text>
-          </g>
-          <text x="284" y="102" fill="#f2d024" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="24" font-weight="700">arc</text>
-        </svg>
+    <div class="split-fill">
+      <div class="col">
+        <div class="step">
+          <div class="figure-frame">
+            <svg viewBox="0 0 380 300" data-anime="draw" role="img" aria-label="A circle of radius r; two radii cut off an arc and the angle theta between them at the centre">
+              <circle cx="150" cy="160" r="118" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 7" opacity=".55"/>
+              <path d="M150 160 L268 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <path d="M150 160 L232 75" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <path d="M268 160 A118 118 0 0 0 232 75" fill="none" stroke="#f2d024" stroke-width="7" stroke-linecap="round"/>
+              <path d="M195 160 A45 45 0 0 0 181 128" fill="none" stroke="#38bdf8" stroke-width="3"/>
+              <circle cx="150" cy="160" r="5" fill="currentColor"/>
+              <g fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="26">
+                <text x="196" y="186">&#952;</text>
+                <text x="200" y="136">r</text>
+                <text x="176" y="92">r</text>
+                <text x="122" y="182">O</text>
+              </g>
+              <text x="284" y="102" fill="#f2d024" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="24" font-weight="700">arc</text>
+            </svg>
+          </div>
+          <div class="fig-caption">&theta; = arc / r</div>
+        </div>
       </div>
-      <div class="fig-caption">&theta; is the arc divided by the radius</div>
-    </div>
 
-    <div class="eq big step">&theta; = <span class="frac"><span class="num">arc</span><span class="den">r</span></span></div>
+      <div class="stack">
+        <div class="eq big step">&theta; = <span class="frac"><span class="num">arc</span><span class="den">r</span></span></div>
 
-    <ul class="bullets arrow">
-      <li class="step"><b>Dimension:</b> none &mdash; arc and radius are both lengths, so the ratio is a pure number [M<sup>0</sup>L<sup>0</sup>T<sup>0</sup>].</li>
-      <li class="step"><b>Unit:</b> radian (rad). One radian is the angle whose arc equals the radius.</li>
-    </ul>
+        <ul class="bullets arrow tight">
+          <li class="step"><b>Dimension:</b> none &mdash; [M<sup>0</sup>L<sup>0</sup>T<sup>0</sup>]</li>
+          <li class="step"><b>Unit:</b> radian (rad)</li>
+        </ul>
 
-    <div class="callout callout--note step">
-      <span class="callout-label">Angle of a full circle</span>
-      Arc of a full circle = 2&pi;r, so
-      <div class="eq">&theta; = <span class="frac"><span class="num">2&pi;r</span><span class="den">r</span></span> = 2&pi; rad</div>
-      and therefore <b>2&pi; radians = 360&deg;</b> &nbsp;&rarr;&nbsp; 1 rad &asymp; 57.3&deg;.
+        <div class="callout callout--note step">
+          <span class="callout-label">Full circle</span>
+          Arc = 2&pi;r &nbsp;&rarr;&nbsp; &theta; = 2&pi; rad
+          <div class="eq"><b>2&pi; radians = 360&deg;</b></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Slide 5 — Angle conversions -->
+<!-- Slide 5 — conversions (table left / formulas right) -->
 <section class="page">
-  <div class="wrap dense">
+  <div class="wrap fit">
     <h2 class="heading">Angle Conversions</h2>
 
-    <table class="data compact center">
-      <thead>
-        <tr>
-          <th>Radians</th>
-          <th>Degrees</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="step eq">2&pi;</td>
-          <td class="step">360&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq">&pi;</td>
-          <td class="step">180&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq"><span class="frac"><span class="num">2&pi;</span><span class="den">3</span></span></td>
-          <td class="step">120&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">2</span></span></td>
-          <td class="step">90&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">3</span></span></td>
-          <td class="step">60&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">4</span></span></td>
-          <td class="step">45&deg;</td>
-        </tr>
-        <tr>
-          <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">6</span></span></td>
-          <td class="step">30&deg;</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="info-box step">
-      <h4 class="cell-heading">Conversion formula</h4>
-      <div class="eq-block">
-        <div class="eq big">&theta;(rad) = &theta;(&deg;) &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span></div>
-        <div class="eq big">&theta;(&deg;) = &theta;(rad) &times; <span class="frac"><span class="num">180</span><span class="den">&pi;</span></span></div>
+    <div class="split-fill">
+      <div class="col">
+        <table class="data compact center fs-140">
+          <thead>
+            <tr>
+              <th>Radians</th>
+              <th>Degrees</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="step eq">2&pi;</td>
+              <td class="step">360&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq">&pi;</td>
+              <td class="step">180&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq"><span class="frac"><span class="num">2&pi;</span><span class="den">3</span></span></td>
+              <td class="step">120&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">2</span></span></td>
+              <td class="step">90&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">3</span></span></td>
+              <td class="step">60&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">4</span></span></td>
+              <td class="step">45&deg;</td>
+            </tr>
+            <tr>
+              <td class="step eq"><span class="frac"><span class="num">&pi;</span><span class="den">6</span></span></td>
+              <td class="step">30&deg;</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p class="note">Anchor: 180&deg; = &pi; rad. Scale every other angle from that pair.</p>
+
+      <div class="stack">
+        <div class="info-box step">
+          <h4 class="cell-heading">Conversion formula</h4>
+          <div class="eq-block">
+            <div class="eq big">&theta;(rad) = &theta;(&deg;) &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span></div>
+            <div class="eq big">&theta;(&deg;) = &theta;(rad) &times; <span class="frac"><span class="num">180</span><span class="den">&pi;</span></span></div>
+          </div>
+          <p class="note">Anchor: 180&deg; = &pi; rad</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Slide 6 — Smaller angles -->
+<!-- Slide 6 — smaller angles; example question first, then stepped solution -->
 <section class="page">
-  <div class="wrap">
+  <div class="wrap fit">
     <h2 class="heading">Smaller Angles</h2>
-    <p class="sub step">Angles finer than one degree are split into minutes and seconds &mdash; exactly like time.</p>
 
     <div class="grid3">
       <div class="info-box step">
         <h4 class="cell-heading">Degree</h4>
         <div class="eq big">1&deg;</div>
-        <p class="note">One three-hundred-and-sixtieth of a full turn.</p>
+        <p class="note">1/360 of a full turn</p>
       </div>
       <div class="info-box step">
-        <h4 class="cell-heading">Minute&nbsp;&nbsp;(&prime;)</h4>
+        <h4 class="cell-heading">Minute (&prime;)</h4>
         <div class="eq big">1&prime; = <span class="frac"><span class="num">1</span><span class="den">60</span></span>&deg;</div>
-        <p class="note">Sixty minutes make one degree.</p>
       </div>
       <div class="info-box step">
-        <h4 class="cell-heading">Second&nbsp;&nbsp;(&Prime;)</h4>
-        <div class="eq big">1&Prime; = <span class="frac"><span class="num">1</span><span class="den">60</span></span>&prime;</div>
-        <p class="note">= (1/3600)&deg; &mdash; sixty seconds make one minute.</p>
+        <h4 class="cell-heading">Second (&Prime;)</h4>
+        <div class="eq big">1&Prime; = <span class="frac"><span class="num">1</span><span class="den">60</span></span>&prime; = <span class="frac"><span class="num">1</span><span class="den">3600</span></span>&deg;</div>
       </div>
     </div>
 
     <div class="callout callout--tip step">
       <span class="callout-label">Chain</span>
-      1&deg; = 60&prime; = 3600&Prime; &nbsp;&bull;&nbsp; to convert a mixed angle to radians, first collapse &prime; and &Prime; into degrees, then multiply by &pi;/180.
+      1&deg; = 60&prime; = 3600&Prime;
     </div>
-
-    <div class="glossary">
-      <div class="g-row wide">
-        <span class="label">Example</span>
-        <div>
-          <div class="eq step">6&deg;40&prime;50&Prime; = 6 + <span class="frac"><span class="num">40</span><span class="den">60</span></span> + <span class="frac"><span class="num">50</span><span class="den">3600</span></span> = <span class="frac"><span class="num">481</span><span class="den">72</span></span>&deg;</div>
-          <div class="eq step">= <span class="frac"><span class="num">481</span><span class="den">72</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">481&pi;</span><span class="den">12960</span></span> rad</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Slide 7 — Solid Angle -->
-<section class="page">
-  <div class="wrap">
-    <h2 class="heading">Solid Angle</h2>
-
-    <div class="step">
-      <div class="scene-frame tall" data-three="solid-angle">
-        <div class="scene-fallback">
-          <svg viewBox="0 0 420 320" role="img" aria-label="Sphere with a pyramidal solid angle cutting patches at radius r and r-prime">
-            <defs>
-              <radialGradient id="sa-sphere" cx="38%" cy="40%" r="58%">
-                <stop offset="0%" stop-color="#3b6fd9"/>
-                <stop offset="55%" stop-color="#1a3a8a"/>
-                <stop offset="100%" stop-color="#001a4d"/>
-              </radialGradient>
-            </defs>
-            <circle cx="170" cy="170" r="118" fill="url(#sa-sphere)" opacity=".92"/>
-            <circle cx="170" cy="170" r="118" fill="none" stroke="#7c8cff" stroke-width="1.4" opacity=".35"/>
-            <!-- pyramid edges -->
-            <path d="M170 170 L248 88 L292 48" fill="none" stroke="#d8e2f5" stroke-width="1.6"/>
-            <path d="M170 170 L268 118 L318 92" fill="none" stroke="#d8e2f5" stroke-width="1.6"/>
-            <path d="M170 170 L255 198 L298 218" fill="none" stroke="#d8e2f5" stroke-width="1.6"/>
-            <path d="M170 170 L228 210 L262 248" fill="none" stroke="#d8e2f5" stroke-width="1.6"/>
-            <!-- inner spherical patch -->
-            <path d="M248 88 Q268 100 268 118 Q262 160 255 198 Q240 205 228 210 Q230 150 248 88 Z"
-                  fill="#3b6fd9" fill-opacity=".55" stroke="#8eb6ff" stroke-width="2"/>
-            <!-- outer patch at r' -->
-            <path d="M292 48 Q318 70 318 92 Q310 155 298 218 Q280 235 262 248 Q268 150 292 48 Z"
-                  fill="#9aa3b5" fill-opacity=".28" stroke="#c5cad4" stroke-width="1.8"/>
-            <!-- radii -->
-            <line x1="170" y1="170" x2="248" y2="118" stroke="#7c8cff" stroke-width="2.4"/>
-            <polygon points="248,118 238,114 242,124" fill="#7c8cff"/>
-            <line x1="170" y1="170" x2="300" y2="100" stroke="#f5c542" stroke-width="2.4"/>
-            <polygon points="300,100 290,98 294,108" fill="#f5c542"/>
-            <circle cx="170" cy="170" r="5" fill="#9ad0ff"/>
-            <g fill="#c7d2e1" font-family="Cambria, Georgia, serif" font-style="italic" font-size="24">
-              <text x="200" y="128">r</text>
-              <text x="268" y="88">r&prime;</text>
-              <text x="148" y="190">O</text>
-            </g>
-            <text x="330" y="160" fill="#f5c542" font-family="Cambria, Georgia, serif" font-style="italic" font-size="28">&#937;</text>
-          </svg>
-        </div>
-      </div>
-      <div class="fig-caption">Same solid angle &Omega; cuts area A at radius r and a larger area A&prime; at r&prime;</div>
-    </div>
-
-    <div class="eq big step">&Omega; = <span class="frac"><span class="num">A</span><span class="den">r<sup>2</sup></span></span> &nbsp;=&nbsp; <span class="frac"><span class="num">A&prime;</span><span class="den">(r&prime;)<sup>2</sup></span></span></div>
-
-    <ul class="bullets arrow">
-      <li class="step"><b>Dimension:</b> none &mdash; area / area.</li>
-      <li class="step"><b>Unit:</b> steradian (sr).</li>
-    </ul>
 
     <div class="qa">
-      <div class="q">Solid angle of a full sphere</div>
-      <div class="a step">Surface of the whole sphere: A = 4&pi;r<sup>2</sup></div>
-      <div class="a step">&Omega; = <span class="frac"><span class="num">4&pi;r<sup>2</sup></span><span class="den">r<sup>2</sup></span></span> = <b>4&pi; steradians</b> &asymp; 12.57 sr</div>
+      <div class="q">Example: Convert 6&deg;40&prime;50&Prime; into radian</div>
+      <div class="a step">50&Prime; = <span class="frac"><span class="num">50</span><span class="den">3600</span></span>&deg; &nbsp;&nbsp;and&nbsp;&nbsp; 40&prime; = <span class="frac"><span class="num">40</span><span class="den">60</span></span>&deg;</div>
+      <div class="a step">6&deg;40&prime;50&Prime; = 6 + <span class="frac"><span class="num">40</span><span class="den">60</span></span> + <span class="frac"><span class="num">50</span><span class="den">3600</span></span> = <span class="frac"><span class="num">481</span><span class="den">72</span></span>&deg;</div>
+      <div class="a step"><span class="frac"><span class="num">481</span><span class="den">72</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">481&pi;</span><span class="den">12960</span></span> rad</div>
     </div>
   </div>
 </section>
 
-<!-- Slide 8 — Solid angle of a cone -->
+<!-- Slide 7 — Solid Angle (facts left / 3D right) -->
 <section class="page">
-  <div class="wrap">
-    <h2 class="heading">Solid Angle of a Cone</h2>
+  <div class="wrap fit">
+    <h2 class="heading">Solid Angle</h2>
 
-    <div class="split-6040">
+    <div class="split-fill">
       <div class="stack">
-        <p class="sub step">A right circular cone of semi-vertical angle &alpha; cuts a spherical cap out of a sphere of radius r.</p>
+        <div class="eq big step">&Omega; = <span class="frac"><span class="num">A</span><span class="den">r<sup>2</sup></span></span></div>
 
-        <div class="eq big step">&Omega; = 2&pi;(1 &minus; cos&nbsp;&alpha;)</div>
-
-        <div class="callout callout--tip step">
-          <span class="callout-label">How it appears</span>
-          Cap height h = r(1 &minus; cos&nbsp;&alpha;), so A = 2&pi;rh = 2&pi;r<sup>2</sup>(1 &minus; cos&nbsp;&alpha;).
-          Then &Omega; = A/r<sup>2</sup> = 2&pi;(1 &minus; cos&nbsp;&alpha;).
-        </div>
-
-        <ul class="bullets arrow">
-          <li class="step">If &alpha; = 0 (needle-thin cone): &Omega; = 0</li>
-          <li class="step">If &alpha; = 90&deg; = &pi;/2 (hemisphere): &Omega; = 2&pi; sr</li>
-          <li class="step">If &alpha; = 180&deg; = &pi; (full sphere): &Omega; = 4&pi; sr</li>
+        <ul class="bullets arrow tight">
+          <li class="step"><b>Unit:</b> steradian (sr)</li>
         </ul>
+
+        <div class="callout callout--note step">
+          <span class="callout-label">Full sphere</span>
+          A = 4&pi;r<sup>2</sup>
+          <div class="eq">&Omega; = <span class="frac"><span class="num">4&pi;r<sup>2</sup></span><span class="den">r<sup>2</sup></span></span> = <b>4&pi; sr</b></div>
+        </div>
       </div>
 
       <div class="col">
         <div class="step">
-          <div class="figure-frame tall">
-            <svg viewBox="0 0 340 340" data-anime="draw" role="img" aria-label="Cone of semi-vertical angle alpha cutting a spherical cap">
-              <circle cx="170" cy="170" r="130" fill="none" stroke="currentColor" stroke-width="2" opacity=".55"/>
-              <path d="M170 170 L250 55 A130 130 0 0 1 250 285 Z" fill="#38bdf8" fill-opacity=".16" stroke="none"/>
-              <path d="M170 170 L250 55" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-              <path d="M170 170 L250 285" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-              <path d="M250 55 A130 130 0 0 1 250 285" fill="none" stroke="#f2d024" stroke-width="7" stroke-linecap="round"/>
-              <path d="M170 170 L290 170" fill="none" stroke="#7c8cff" stroke-width="2" stroke-dasharray="5 6"/>
-              <path d="M210 170 A40 40 0 0 0 198 138" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
-              <circle cx="170" cy="170" r="5" fill="currentColor"/>
-              <g fill="currentColor" font-family="Cambria, Georgia, serif" font-style="italic" font-size="24">
-                <text x="148" y="188">O</text>
-                <text x="214" y="152">&#945;</text>
-                <text x="220" y="108">r</text>
-              </g>
-              <text x="268" y="40" fill="#f2d024" font-family="Calibri, Candara, 'Segoe UI', sans-serif" font-size="22" font-weight="700">cap</text>
-            </svg>
+          <div class="scene-frame fill" data-three="solid-angle">
+            <div class="scene-fallback">
+              <p class="note">Solid angle &Omega; = A / r&sup2; (WebGL scene)</p>
+            </div>
           </div>
-          <div class="fig-caption">Semi-vertical angle &alpha; fixes the solid angle of the cone</div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 8 — cone solid angle (3D left / formula only right) -->
+<section class="page">
+  <div class="wrap fit">
+    <h2 class="heading">Solid Angle of a Cone</h2>
+
+    <div class="split-fill">
+      <div class="col">
+        <div class="step">
+          <div class="scene-frame fill" data-three="solid-angle-cone">
+            <div class="scene-fallback">
+              <p class="note">Cone solid angle on a sphere (WebGL scene)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="eq big step">&Omega; = 2&pi;(1 &minus; cos&nbsp;&alpha;)</div>
+        <p class="note step">&alpha; = semi-vertical angle of the cone</p>
       </div>
     </div>
   </div>
@@ -976,47 +930,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
   </div>
 </section>
 
-<!-- Slide 10 — practice conversions -->
-<section class="page">
-  <div class="wrap dense">
-    <h2 class="heading">Question <span class="inline-lead">Convert given angle into radian</span></h2>
 
-    <div class="callout callout--tip step">
-      <span class="callout-label">The only tools needed</span>
-      180&deg; = &pi; rad &nbsp;&bull;&nbsp; 1&prime; = (1/60)&deg; &nbsp;&bull;&nbsp; 1&Prime; = (1/60)&prime; = (1/3600)&deg;
-    </div>
-
-    <p class="sub">Solution</p>
-
-    <div class="glossary">
-      <div class="g-row wide">
-        <span class="label">4&deg; =</span>
-        <div>
-          <div class="eq step">4 &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> rad</div>
-          <div class="eq step">= <span class="frac"><span class="num">&pi;</span><span class="den">45</span></span> rad &nbsp;&asymp;&nbsp; 0.070 rad</div>
-        </div>
-      </div>
-
-      <div class="g-row wide">
-        <span class="label">6&deg;40&prime; =</span>
-        <div>
-          <div class="eq step">40&prime; = <span class="frac"><span class="num">40</span><span class="den">60</span></span>&deg; = <span class="frac"><span class="num">2</span><span class="den">3</span></span>&deg; &nbsp;&rarr;&nbsp; 6&deg;40&prime; = <span class="frac"><span class="num">20</span><span class="den">3</span></span>&deg;</div>
-          <div class="eq step"><span class="frac"><span class="num">20</span><span class="den">3</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">&pi;</span><span class="den">27</span></span> rad &nbsp;&asymp;&nbsp; 0.116 rad</div>
-        </div>
-      </div>
-
-      <div class="g-row wide">
-        <span class="label">6&deg;40&prime;50&Prime; =</span>
-        <div>
-          <div class="eq step">50&Prime; = <span class="frac"><span class="num">50</span><span class="den">3600</span></span>&deg; &nbsp;&rarr;&nbsp; 6 + <span class="frac"><span class="num">40</span><span class="den">60</span></span> + <span class="frac"><span class="num">50</span><span class="den">3600</span></span> = <span class="frac"><span class="num">481</span><span class="den">72</span></span>&deg;</div>
-          <div class="eq step"><span class="frac"><span class="num">481</span><span class="den">72</span></span> &times; <span class="frac"><span class="num">&pi;</span><span class="den">180</span></span> = <span class="frac"><span class="num">481&pi;</span><span class="den">12960</span></span> rad &nbsp;&asymp;&nbsp; 0.117 rad</div>
-        </div>
-      </div>
-    </div>
-
-    <p class="note step">Same recipe every time: drag minutes and seconds down to degrees first, then multiply by &pi;/180 once.</p>
-  </div>
-</section>
 
 <!-- vendored three — inlined, never a CDN (rule 11) -->
 <script data-vendor="three">
@@ -1265,6 +1179,7 @@ g.THREE=THREE;})(typeof globalThis!=="undefined"?globalThis:self);
       var kind = (frame.getAttribute('data-three') || 'globe').trim();
       if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
       if (kind === 'solid-angle') { startSolidAngle(frame, w, h); return; }
+      if (kind === 'solid-angle-cone') { startSolidAngleCone(frame, w, h); return; }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1445,6 +1360,125 @@ g.THREE=THREE;})(typeof globalThis!=="undefined"?globalThis:self);
       (function loop(){
         requestAnimationFrame(loop);
         group.rotation.y += 0.0035;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ----------------------------------------- solid angle of a cone (sr) ---
+       Sphere + right circular cone of semi-vertical angle α from the centre.
+       The cone cuts a spherical cap; slow auto-orbit for the classroom.       */
+    function startSolidAngleCone(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 100);
+      camera.position.set(3.8, 2.2, 4.6);
+      camera.lookAt(0, 0.15, 0);
+
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.55));
+      var key = new T.DirectionalLight(0xffffff, 0.9);
+      key.position.set(4, 6, 5); scene.add(key);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      var r = 2.0, alpha = Math.PI / 5; /* 36° semi-vertical */
+      var axis = new T.Vector3(0.35, 0.55, 1).normalize();
+
+      group.add(new T.Mesh(
+        new T.SphereGeometry(r, 48, 32),
+        new T.MeshPhongMaterial({
+          color: 0x1a3a8a, transparent: true, opacity: 0.42,
+          shininess: 28, specular: 0x334466, depthWrite: false
+        })));
+      group.add(new T.LineSegments(
+        new T.WireframeGeometry(new T.SphereGeometry(r * 1.002, 20, 14)),
+        new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.16 })));
+      group.add(new T.Mesh(
+        new T.SphereGeometry(0.055, 14, 12),
+        new T.MeshBasicMaterial({ color: 0x9ad0ff })));
+
+      /* cone body: apex at origin, axis along +Y then reoriented */
+      var coneH = r * Math.cos(alpha);
+      var coneR = r * Math.sin(alpha);
+      var cone = new T.Mesh(
+        new T.ConeGeometry(coneR, coneH, 48, 1, true),
+        new T.MeshPhongMaterial({
+          color: 0x38bdf8, transparent: true, opacity: 0.28,
+          side: T.DoubleSide, depthWrite: false, shininess: 40
+        }));
+      /* ConeGeometry apex at +y = h/2; shift so apex sits at origin */
+      cone.geometry.translate(0, -coneH / 2, 0);
+      cone.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), axis);
+      group.add(cone);
+
+      /* two silhouette generators + axis */
+      function perpBasis(ax){
+        var u = new T.Vector3();
+        if (Math.abs(ax.y) < 0.9) u.set(0, 1, 0).cross(ax).normalize();
+        else u.set(1, 0, 0).cross(ax).normalize();
+        return u;
+      }
+      var u = perpBasis(axis);
+      var edgeMat = new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.95 });
+      [1, -1].forEach(function(sign){
+        var side = u.clone().multiplyScalar(sign * Math.sin(alpha));
+        var tip = axis.clone().multiplyScalar(Math.cos(alpha)).add(side).normalize().multiplyScalar(r);
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints([new T.Vector3(0, 0, 0), tip]),
+          edgeMat));
+      });
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints([
+          new T.Vector3(0, 0, 0), axis.clone().multiplyScalar(r)
+        ]),
+        new T.LineBasicMaterial({ color: 0xf5c542, transparent: true, opacity: 0.85 })));
+
+      /* spherical cap rim (circle of angular radius α) */
+      var rim = [];
+      var v = new T.Vector3().crossVectors(axis, u).normalize();
+      for (var i = 0; i <= 64; i++){
+        var t = (i / 64) * Math.PI * 2;
+        var dir = axis.clone().multiplyScalar(Math.cos(alpha))
+          .add(u.clone().multiplyScalar(Math.sin(alpha) * Math.cos(t)))
+          .add(v.clone().multiplyScalar(Math.sin(alpha) * Math.sin(t)))
+          .normalize().multiplyScalar(r);
+        rim.push(dir);
+      }
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints(rim),
+        new T.LineBasicMaterial({ color: 0xf2d024, transparent: true, opacity: 0.95 })));
+
+      /* soft cap fill */
+      var capPos = [];
+      var pole = axis.clone().multiplyScalar(r);
+      for (var k = 0; k < rim.length - 1; k++){
+        capPos.push(pole.x, pole.y, pole.z,
+                    rim[k].x, rim[k].y, rim[k].z,
+                    rim[k + 1].x, rim[k + 1].y, rim[k + 1].z);
+      }
+      var capGeo = new T.BufferGeometry();
+      capGeo.setAttribute('position', new T.Float32BufferAttribute(capPos, 3));
+      capGeo.computeVertexNormals();
+      group.add(new T.Mesh(capGeo, new T.MeshBasicMaterial({
+        color: 0xf2d024, transparent: true, opacity: 0.22,
+        side: T.DoubleSide, depthWrite: false
+      })));
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.004;
         renderer.render(scene, camera);
       })();
     }

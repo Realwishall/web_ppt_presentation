@@ -687,6 +687,24 @@ mjx-container svg        {vertical-align:middle}
       box-shadow:0 0 0 .18vmin rgba(245,197,66,.45),0 2.4vmin 8vmin rgba(0,0,0,.7),
                  0 0 10vmin rgba(245,197,66,.16)}
 
+/* ----------------------------------------- host step sentinels (page 1) ---
+   The presenter host counts `.page .step` elements in the RAW file text
+   (DOMParser, before a single script runs) to learn how many presses a page
+   owns. Page 1 drives itself from the SG_GRID state machine and owned no
+   .step at all, so the host read "0 presses" and turned the page on the first
+   Next — the whole four-box sequence was skipped in presentation mode while
+   the standalone fallback controller played it correctly.
+
+   These sentinels are that page's press budget: one per SG_GRID state,
+   zero-size and absolutely positioned so they take no part in the flex/grid
+   layout, and the bridge script at the bottom of the file maps "how many are
+   lit" back onto SG_GRID.paint(). Never display:none — the host needs them
+   laid out to toggle them.                                                   */
+.step-sentinels{position:absolute;left:0;top:0;width:0;height:0;overflow:hidden;
+      pointer-events:none}
+.step-sentinels .step{display:block;width:0;height:0;margin:0;padding:0;border:0;
+      overflow:hidden}
+
 /* --------------------------------------------------- zero-error figure row --- */
 /* minmax(0,1fr) — a plain 1fr track takes its min-width from the widest
    MathJax run inside it, which pushed the row past the viewport and grew a
@@ -744,6 +762,25 @@ mjx-container svg        {vertical-align:middle}
      ========================================================================= -->
 <section class="page" id="sg-grid">
   <div class="zoom-scrim" id="scrim" aria-hidden="true"></div>
+
+  <!-- The page's press budget for the presenter host: 19 sentinels, one per
+       SG_GRID state after the idle one. The host counts these in the raw file
+       text, so they MUST be static markup — injecting them at runtime is too
+       late. Keep the count in step with the data-show / data-flip attributes
+       below; the bridge script warns in the console if the two ever disagree.
+
+         1 pitch in · 2 pitch line · 3 pitch out
+         4 lc in    · 5-8 lc lines · 9 lc out
+        10 read in  · 11-14 read parts · 15 read out
+        16 final in · 17-19 final parts (stays open)                          -->
+  <div class="step-sentinels" id="sg-steps" aria-hidden="true">
+    <i class="step"></i><i class="step"></i><i class="step"></i><i class="step"></i>
+    <i class="step"></i><i class="step"></i><i class="step"></i><i class="step"></i>
+    <i class="step"></i><i class="step"></i><i class="step"></i><i class="step"></i>
+    <i class="step"></i><i class="step"></i><i class="step"></i><i class="step"></i>
+    <i class="step"></i><i class="step"></i><i class="step"></i>
+  </div>
+
   <div class="wrap stage tight">
     <h2 class="heading">Screw Gauge</h2>
 
@@ -1033,7 +1070,104 @@ mjx-container svg        {vertical-align:middle}
     });
   }
 
-  window.SG_GRID = { steps: STATES.length - 1, paint: paint, measure: measure };
+  /* Everything open, nothing zoomed — what the host asks for when the teacher
+     turns animations off, and the same picture @media print produces. */
+  function flat() {
+    stage.classList.remove('has-focus');
+    if (scrim) scrim.classList.remove('on');
+    boxes.forEach(function (box) {
+      box.classList.remove('is-zoom');
+      box.style.transform = '';
+      [].slice.call(box.querySelectorAll('[data-show]')).forEach(function (el) {
+        el.classList.add('on');
+      });
+      [].slice.call(box.querySelectorAll('[data-flip]')).forEach(function (el) {
+        var sw = el.classList.contains('zswap') ? el : el.querySelector('.zswap');
+        if (sw) sw.classList.add('flip');
+      });
+    });
+  }
+
+  window.SG_GRID = { steps: STATES.length - 1, paint: paint, measure: measure,
+                     flat: flat };
+})();
+</script>
+
+<!-- Host bridge — page 1 under the presenter.
+     The host owns the presses: it toggles `.__lf-on` on the .step sentinels of
+     the active page, one per Next. This translates that back into a SG_GRID
+     state, so the four-box sequence plays under the presenter exactly as it
+     does when the file is opened directly.
+
+     It only ever acts when the host controller (<style id="__lf-ctl">) is in
+     the document, so the standalone controller below keeps full ownership when
+     the file is opened in a plain browser. -->
+<script>
+(function () {
+  'use strict';
+
+  var G    = window.SG_GRID,
+      page = document.getElementById('sg-grid'),
+      bank = document.getElementById('sg-steps');
+  if (!G || !page || !bank) return;
+
+  var pips = [].slice.call(bank.querySelectorAll('.step'));
+  if (!pips.length) return;
+  if (pips.length !== G.steps && window.console) {
+    console.warn('[sg-grid] ' + pips.length + ' step sentinels for ' + G.steps +
+                 ' states — the host will run out of presses or overshoot.');
+  }
+
+  /* The host controller is appended AFTER this file, so it does not exist yet
+     while this script parses. Ask every time instead of caching. */
+  function hosted() { return !!document.getElementById('__lf-ctl'); }
+  /* display:none pages measure as 0×0 and the zoom maths would compound on
+     garbage, so never measure a page the host has not turned to yet. */
+  function onStage() { return page.offsetParent !== null; }
+
+  var stale = true, queued = 0;
+
+  function lit() {
+    var n = 0;
+    for (var k = 0; k < pips.length; k++)
+      if (pips[k].classList.contains('__lf-on')) n++;
+    return n;
+  }
+
+  function apply() {
+    queued = 0;
+    if (!hosted() || !onStage()) return;
+    if (document.documentElement.classList.contains('__lf-noanim')) {
+      G.flat();                       // animations off: show the finished page
+      return;
+    }
+    if (stale) { G.measure(); stale = false; }
+    G.paint(Math.min(lit(), G.steps));
+  }
+
+  /* Coalesce: the host toggles several sentinels in one pass, and a page turn
+     lands as a class change on the page plus a class change on each pip.
+     setTimeout, not requestAnimationFrame — a deck iframe the host has parked
+     off-screen still gets timers, and getBoundingClientRect forces the layout
+     it needs anyway. */
+  function schedule() {
+    if (queued) return;
+    queued = setTimeout(apply, 0);
+  }
+  function remeasure() { stale = true; schedule(); }
+
+  new MutationObserver(schedule)
+    .observe(bank, { attributes: true, attributeFilter: ['class'], subtree: true });
+  /* .__lf-active arrives when the host turns to this page, and .__lf-noanim
+     lands on <html> when the teacher toggles animations. */
+  new MutationObserver(remeasure)
+    .observe(page, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(remeasure)
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+  window.addEventListener('resize', remeasure);
+  window.addEventListener('mathjax-done', remeasure);   // boxes resize as math sets
+  window.addEventListener('load', remeasure);
 })();
 </script>
 

@@ -22,6 +22,7 @@
       var kind = (frame.getAttribute('data-three') || 'globe').trim();
       if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
       if (kind === 'solid-angle') { startSolidAngle(frame, w, h); return; }
+      if (kind === 'solid-angle-cone') { startSolidAngleCone(frame, w, h); return; }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -202,6 +203,125 @@
       (function loop(){
         requestAnimationFrame(loop);
         group.rotation.y += 0.0035;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ----------------------------------------- solid angle of a cone (sr) ---
+       Sphere + right circular cone of semi-vertical angle α from the centre.
+       The cone cuts a spherical cap; slow auto-orbit for the classroom.       */
+    function startSolidAngleCone(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 100);
+      camera.position.set(3.8, 2.2, 4.6);
+      camera.lookAt(0, 0.15, 0);
+
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.55));
+      var key = new T.DirectionalLight(0xffffff, 0.9);
+      key.position.set(4, 6, 5); scene.add(key);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      var r = 2.0, alpha = Math.PI / 5; /* 36° semi-vertical */
+      var axis = new T.Vector3(0.35, 0.55, 1).normalize();
+
+      group.add(new T.Mesh(
+        new T.SphereGeometry(r, 48, 32),
+        new T.MeshPhongMaterial({
+          color: 0x1a3a8a, transparent: true, opacity: 0.42,
+          shininess: 28, specular: 0x334466, depthWrite: false
+        })));
+      group.add(new T.LineSegments(
+        new T.WireframeGeometry(new T.SphereGeometry(r * 1.002, 20, 14)),
+        new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.16 })));
+      group.add(new T.Mesh(
+        new T.SphereGeometry(0.055, 14, 12),
+        new T.MeshBasicMaterial({ color: 0x9ad0ff })));
+
+      /* cone body: apex at origin, axis along +Y then reoriented */
+      var coneH = r * Math.cos(alpha);
+      var coneR = r * Math.sin(alpha);
+      var cone = new T.Mesh(
+        new T.ConeGeometry(coneR, coneH, 48, 1, true),
+        new T.MeshPhongMaterial({
+          color: 0x38bdf8, transparent: true, opacity: 0.28,
+          side: T.DoubleSide, depthWrite: false, shininess: 40
+        }));
+      /* ConeGeometry apex at +y = h/2; shift so apex sits at origin */
+      cone.geometry.translate(0, -coneH / 2, 0);
+      cone.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), axis);
+      group.add(cone);
+
+      /* two silhouette generators + axis */
+      function perpBasis(ax){
+        var u = new T.Vector3();
+        if (Math.abs(ax.y) < 0.9) u.set(0, 1, 0).cross(ax).normalize();
+        else u.set(1, 0, 0).cross(ax).normalize();
+        return u;
+      }
+      var u = perpBasis(axis);
+      var edgeMat = new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.95 });
+      [1, -1].forEach(function(sign){
+        var side = u.clone().multiplyScalar(sign * Math.sin(alpha));
+        var tip = axis.clone().multiplyScalar(Math.cos(alpha)).add(side).normalize().multiplyScalar(r);
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints([new T.Vector3(0, 0, 0), tip]),
+          edgeMat));
+      });
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints([
+          new T.Vector3(0, 0, 0), axis.clone().multiplyScalar(r)
+        ]),
+        new T.LineBasicMaterial({ color: 0xf5c542, transparent: true, opacity: 0.85 })));
+
+      /* spherical cap rim (circle of angular radius α) */
+      var rim = [];
+      var v = new T.Vector3().crossVectors(axis, u).normalize();
+      for (var i = 0; i <= 64; i++){
+        var t = (i / 64) * Math.PI * 2;
+        var dir = axis.clone().multiplyScalar(Math.cos(alpha))
+          .add(u.clone().multiplyScalar(Math.sin(alpha) * Math.cos(t)))
+          .add(v.clone().multiplyScalar(Math.sin(alpha) * Math.sin(t)))
+          .normalize().multiplyScalar(r);
+        rim.push(dir);
+      }
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints(rim),
+        new T.LineBasicMaterial({ color: 0xf2d024, transparent: true, opacity: 0.95 })));
+
+      /* soft cap fill */
+      var capPos = [];
+      var pole = axis.clone().multiplyScalar(r);
+      for (var k = 0; k < rim.length - 1; k++){
+        capPos.push(pole.x, pole.y, pole.z,
+                    rim[k].x, rim[k].y, rim[k].z,
+                    rim[k + 1].x, rim[k + 1].y, rim[k + 1].z);
+      }
+      var capGeo = new T.BufferGeometry();
+      capGeo.setAttribute('position', new T.Float32BufferAttribute(capPos, 3));
+      capGeo.computeVertexNormals();
+      group.add(new T.Mesh(capGeo, new T.MeshBasicMaterial({
+        color: 0xf2d024, transparent: true, opacity: 0.22,
+        side: T.DoubleSide, depthWrite: false
+      })));
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.004;
         renderer.render(scene, camera);
       })();
     }

@@ -61,6 +61,7 @@ each data `<td>`, each `<li>`, each equation line, each definition, each answer.
 | `.wrap.center` | Centred both axes — title and section-divider slides. |
 | `.wrap.tight` | Same as `.wrap`, smaller gaps — long bullet lists. |
 | `.wrap.dense` | Reduced padding — full-width tables, long derivations. |
+| `.wrap.fit` | No internal scroll — pair with `.split-fill` for side-by-side boards. |
 
 ```html
 <section class="page">
@@ -370,6 +371,7 @@ that element becomes visible.
 | `data-anime="float"` | a decorative mark | slow endless bob |
 | `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
 | `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
+| `data-three="solid-angle-cone"` | `<div class="scene-frame">` | cone of semi-vertical angle α on a sphere |
 | `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
 
 ```html
@@ -532,7 +534,7 @@ and what the teacher reads if the player is blocked.
 |---|---|
 | `h2.heading` + `<span class="inline-lead">` | Heading with a trailing plain-text lead |
 | `<span class="paren">(contd.)</span>` | Small parenthetical inside a heading |
-| `.two-col` `.split-6040` `.split-4060` `.grid3` `.grid4` | Multi-column layouts |
+| `.two-col` `.split-6040` `.split-4060` `.split-fill` `.grid3` `.grid4` | Multi-column layouts |
 | `.stack` `.row` | Generic vertical / horizontal flow |
 | `.card` | Bordered surface |
 | `.box-grid` + `.info-box` | Focus boxes; each runs grow → content → shrink, one press per beat |
