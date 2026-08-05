@@ -4,25 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Screw Gauge &mdash; Part 2</title>
-<!-- MathJax 3 — LaTeX between $ … $ anywhere in a slide -->
-<script>
-window.MathJax = {
-  tex: {
-    inlineMath : [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']]
-  },
-  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
-  startup: {
-    pageReady: function () {
-      return MathJax.startup.defaultPageReady().then(function () {
-        window.dispatchEvent(new Event('mathjax-done'));
-      });
-    }
-  }
-};
-</script>
-<script id="MathJax-script" async
-        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<!-- No MathJax, and no CDN of any kind. Every expression on these two slides
+     is upright words joined by = + − × and one fraction, so it is written as
+     plain markup in the deck's math font (.frac is the design system's own
+     script-free fraction). PDF export strips every script tag and the classroom
+     may be offline — LaTeX left for a runtime typesetter printed as raw
+     "$\text{...}$" source on both counts. -->
 <style>
 
 /* ============================================================================
@@ -595,15 +582,14 @@ math[display="block"]{display:block;margin:.8vmin 0}
 
 
 /* ==========================================================================
-   Deck additions — MathJax hosting, the vernier split view, the screw-gauge
+   Deck additions — the math line, the vernier split view, the screw-gauge
    title page, the four-box zoom grid and the zero-error figures.
    Everything below is presentation scale and inherits the tokens above.
    ========================================================================== */
 
-/* --------------------------------------------------------------- MathJax --- */
-mjx-container            {color:inherit!important}
-mjx-container[display]   {margin:.7vmin 0!important;text-align:left!important}
-mjx-container svg        {vertical-align:middle}
+/* ------------------------------------------------------------- math lines ---
+   No typesetter runs here any more (see the head): expressions are written as
+   markup in --font-math, with .frac from deck-base for the one fraction.      */
 .mathline                {font-size:var(--fs-eq);color:var(--ink);line-height:1.5}
 .mathline.big            {font-size:clamp(31px,6.5vmin,73px);color:var(--gold-soft);
                           text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
@@ -732,10 +718,30 @@ mjx-container svg        {vertical-align:middle}
 .err-card.plus    {border-left:.5vmin solid var(--gold)}
 .err-card.minus   {border-left:.5vmin solid var(--red)}
 
+/* -------------------------------------------------- script-free rendering ---
+   Page 1 writes itself with JS: .zline and .part start at opacity 0 and only
+   the SG_GRID state machine adds .on. PDF export and the presenter's frozen
+   snapshot box BOTH strip every script tag before rendering, so with nothing to
+   add .on the page exported as four empty boxes.
+
+   `.__lf-x` is the class the host puts on the one page it is rendering in
+   those script-free copies, so it is the exact hook for "no JS will run here":
+   show every line, and resolve each .zswap to its FINAL text. Never show both
+   halves — they share one grid cell, so the two sentences print on top of each
+   other. The @media print block below repeats it for a plain Ctrl-P of the
+   file itself, where no host class exists.                                    */
+.page.__lf-x .zbox,
+.page.__lf-x .zbox .zline,
+.page.__lf-x .zbox .part{opacity:1!important;transform:none!important;filter:none!important}
+.page.__lf-x .zswap>.a{opacity:0!important}
+.page.__lf-x .zswap>.b{opacity:1!important;transform:none!important}
+
 @media print{
   .zbox{opacity:1!important;transform:none!important;filter:none!important}
   .zbox .zline,.zbox .part{opacity:1!important;transform:none!important}
-  .zswap>span{opacity:1!important;position:static!important}
+  .zswap>.a{opacity:0!important}
+  .zswap>.b{opacity:1!important;transform:none!important}
+  .zoom-scrim{display:none!important}
 }
 
 </style>
@@ -809,8 +815,8 @@ mjx-container svg        {vertical-align:middle}
           </div>
           <div class="zline eqline compact" data-show="3" data-flip="4">
             <span class="zswap">
-              <span class="a">$1\ \text{div} =$</span>
-              <span class="b">$\text{Least Count}=\dfrac{\text{Pitch}}{\text{Number of divisions on circular dial}}$</span>
+              <span class="a">1 div =</span>
+              <span class="b">Least Count =<span class="frac"><span class="num">Pitch</span><span class="den">Number of divisions on circular dial</span></span></span>
             </span>
           </div>
         </div>
@@ -821,10 +827,10 @@ mjx-container svg        {vertical-align:middle}
         <h4 class="zbox-title">Reading</h4>
         <div class="zbox-body">
           <div class="zline eqline on">
-            <span class="part" data-show="1">$\text{Reading}=$</span>
-            <span class="part" data-show="2">$\text{Main scale reading}$</span>
-            <span class="part" data-show="3">$+$</span>
-            <span class="part" data-show="4">$(\text{Least count}\times\text{Circular scale reading})$</span>
+            <span class="part" data-show="1">Reading =</span>
+            <span class="part" data-show="2">Main scale reading</span>
+            <span class="part" data-show="3">+</span>
+            <span class="part" data-show="4">(Least count × Circular scale reading)</span>
           </div>
         </div>
       </div>
@@ -834,9 +840,9 @@ mjx-container svg        {vertical-align:middle}
         <h4 class="zbox-title">Final Answer</h4>
         <div class="zbox-body">
           <div class="zline eqline on">
-            <span class="part" data-show="1">$\text{Final Reading}=$</span>
-            <span class="part" data-show="2">$\text{Reading}$</span>
-            <span class="part" data-show="3">$-\ \text{Error}$</span>
+            <span class="part" data-show="1">Final Reading =</span>
+            <span class="part" data-show="2">Reading</span>
+            <span class="part" data-show="3">− Error</span>
           </div>
         </div>
       </div>
@@ -855,143 +861,163 @@ mjx-container svg        {vertical-align:middle}
 
     <div class="err-row">
       <div class="err-card none step">
-        <div class="art" data-fig="none"></div>
+        <div class="art"><svg class="fig" viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="line reads 0" font-family="Calibri, Candara, system-ui, sans-serif">
+          <rect x="8" y="222" width="142" height="56" rx="9" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.28)" stroke-width="1.4"/>
+          <line x1="150" y1="230" x2="150" y2="248" stroke="var(--sub,#dde7f4)" stroke-width="2.6" stroke-linecap="round"/>
+          <text x="150" y="223" fill="var(--ink,#fff)" font-size="18" font-weight="700" text-anchor="middle">0</text>
+          <text x="14" y="302" fill="var(--muted,#b7c5d8)" font-size="15">main scale</text>
+          <line x1="12" y1="250" x2="150" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="150" y1="250" x2="194" y2="250" stroke="var(--gold,#f5c542)" stroke-width="2" stroke-dasharray="5 5" opacity="0.8"/>
+          <text x="12" y="280" fill="var(--gold,#f5c542)" font-size="16">reference line</text>
+          <rect x="150" y="26" width="204" height="428" rx="10" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.24)" stroke-width="1.4"/>
+          <line x1="158" y1="446" x2="178" y2="446" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="432" x2="178" y2="432" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="418" x2="178" y2="418" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="404" x2="178" y2="404" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="390" x2="192" y2="390" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="396" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">90</text>
+          <line x1="158" y1="376" x2="178" y2="376" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="362" x2="178" y2="362" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="348" x2="178" y2="348" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="334" x2="178" y2="334" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="320" x2="192" y2="320" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="326" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">95</text>
+          <line x1="158" y1="306" x2="178" y2="306" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="292" x2="178" y2="292" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="278" x2="178" y2="278" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="264" x2="178" y2="264" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="250" x2="192" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <text x="200" y="256" fill="var(--gold,#f5c542)" font-size="20" font-weight="700">0</text>
+          <line x1="158" y1="236" x2="178" y2="236" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="222" x2="178" y2="222" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="208" x2="178" y2="208" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="194" x2="178" y2="194" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="180" x2="192" y2="180" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="186" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">5</text>
+          <line x1="158" y1="166" x2="178" y2="166" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="152" x2="178" y2="152" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="138" x2="178" y2="138" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="124" x2="178" y2="124" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="110" x2="192" y2="110" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="116" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">10</text>
+          <line x1="158" y1="96" x2="178" y2="96" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="82" x2="178" y2="82" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="68" x2="178" y2="68" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="54" x2="178" y2="54" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="158" cy="250" r="5" fill="var(--gold,#f5c542)"/>
+          <text x="348" y="22" fill="var(--ink,#fff)" font-size="18" text-anchor="end">line reads 0</text></svg>
+        </div>
         <h3>No Error</h3>
-        <div class="verdict">$\text{Zero error}=0$</div>
+        <div class="verdict">Zero error = 0</div>
       </div>
 
       <div class="err-card plus step">
-        <div class="art" data-fig="plus"></div>
+        <div class="art"><svg class="fig" viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="line reads 9" font-family="Calibri, Candara, system-ui, sans-serif">
+          <rect x="8" y="222" width="142" height="56" rx="9" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.28)" stroke-width="1.4"/>
+          <line x1="120" y1="230" x2="120" y2="248" stroke="var(--sub,#dde7f4)" stroke-width="2.6" stroke-linecap="round"/>
+          <text x="120" y="223" fill="var(--ink,#fff)" font-size="18" font-weight="700" text-anchor="middle">0</text>
+          <text x="14" y="302" fill="var(--muted,#b7c5d8)" font-size="15">main scale</text>
+          <line x1="12" y1="250" x2="150" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="150" y1="250" x2="194" y2="250" stroke="var(--gold,#f5c542)" stroke-width="2" stroke-dasharray="5 5" opacity="0.8"/>
+          <text x="12" y="280" fill="var(--gold,#f5c542)" font-size="16">reference line</text>
+          <rect x="150" y="26" width="204" height="428" rx="10" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.24)" stroke-width="1.4"/>
+          <line x1="158" y1="446" x2="192" y2="446" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="452" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">95</text>
+          <line x1="158" y1="432" x2="178" y2="432" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="418" x2="178" y2="418" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="404" x2="178" y2="404" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="390" x2="178" y2="390" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="376" x2="192" y2="376" stroke="var(--green,#34d399)" stroke-width="3.4" stroke-linecap="round"/>
+          <text x="200" y="382" fill="var(--green,#34d399)" font-size="20" font-weight="700">0</text>
+          <line x1="158" y1="362" x2="178" y2="362" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="348" x2="178" y2="348" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="334" x2="178" y2="334" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="320" x2="178" y2="320" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="306" x2="192" y2="306" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="312" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">5</text>
+          <line x1="158" y1="292" x2="178" y2="292" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="278" x2="178" y2="278" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="264" x2="178" y2="264" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="250" x2="178" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="158" y1="236" x2="192" y2="236" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="242" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">10</text>
+          <line x1="158" y1="222" x2="178" y2="222" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="208" x2="178" y2="208" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="194" x2="178" y2="194" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="180" x2="178" y2="180" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="166" x2="192" y2="166" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="172" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">15</text>
+          <line x1="158" y1="152" x2="178" y2="152" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="138" x2="178" y2="138" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="124" x2="178" y2="124" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="110" x2="178" y2="110" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="96" x2="192" y2="96" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="102" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">20</text>
+          <line x1="158" y1="82" x2="178" y2="82" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="68" x2="178" y2="68" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="54" x2="178" y2="54" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="158" cy="250" r="5" fill="var(--gold,#f5c542)"/>
+          <text x="348" y="22" fill="var(--ink,#fff)" font-size="18" text-anchor="end">line reads 9</text></svg>
+        </div>
         <h3>Positive Error</h3>
-        <div class="verdict">$\text{Zero error}=+9\times\text{L.C.}$</div>
+        <div class="verdict">Zero error = +9 × L.C.</div>
       </div>
 
       <div class="err-card minus step">
-        <div class="art" data-fig="minus"></div>
+        <div class="art"><svg class="fig" viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="line reads 89" font-family="Calibri, Candara, system-ui, sans-serif">
+          <rect x="8" y="222" width="142" height="56" rx="9" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.28)" stroke-width="1.4"/>
+          <line x1="166" y1="232" x2="166" y2="248" stroke="var(--red,#fb7185)" stroke-width="2" stroke-dasharray="4 4" opacity="0.75"/>
+          <text x="166" y="226" fill="var(--red,#fb7185)" font-size="16" text-anchor="middle" opacity="0.9">0</text>
+          <text x="14" y="302" fill="var(--red,#fb7185)" font-size="16">main-scale 0 hidden</text>
+          <line x1="12" y1="250" x2="150" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="150" y1="250" x2="194" y2="250" stroke="var(--gold,#f5c542)" stroke-width="2" stroke-dasharray="5 5" opacity="0.8"/>
+          <text x="12" y="280" fill="var(--gold,#f5c542)" font-size="16">reference line</text>
+          <rect x="150" y="26" width="204" height="428" rx="10" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.24)" stroke-width="1.4"/>
+          <line x1="158" y1="446" x2="192" y2="446" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="452" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">75</text>
+          <line x1="158" y1="432" x2="178" y2="432" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="418" x2="178" y2="418" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="404" x2="178" y2="404" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="390" x2="178" y2="390" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="376" x2="192" y2="376" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="382" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">80</text>
+          <line x1="158" y1="362" x2="178" y2="362" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="348" x2="178" y2="348" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="334" x2="178" y2="334" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="320" x2="178" y2="320" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="306" x2="192" y2="306" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="312" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">85</text>
+          <line x1="158" y1="292" x2="178" y2="292" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="278" x2="178" y2="278" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="264" x2="178" y2="264" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="250" x2="178" y2="250" stroke="var(--gold,#f5c542)" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="158" y1="236" x2="192" y2="236" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="242" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">90</text>
+          <line x1="158" y1="222" x2="178" y2="222" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="208" x2="178" y2="208" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="194" x2="178" y2="194" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="180" x2="178" y2="180" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="166" x2="192" y2="166" stroke="var(--sub,#dde7f4)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="200" y="172" fill="var(--sub,#dde7f4)" font-size="17" font-weight="400">95</text>
+          <line x1="158" y1="152" x2="178" y2="152" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="138" x2="178" y2="138" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="124" x2="178" y2="124" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="110" x2="178" y2="110" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="96" x2="192" y2="96" stroke="var(--red,#fb7185)" stroke-width="3.4" stroke-linecap="round"/>
+          <text x="200" y="102" fill="var(--red,#fb7185)" font-size="20" font-weight="700">0</text>
+          <line x1="158" y1="82" x2="178" y2="82" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="68" x2="178" y2="68" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="158" y1="54" x2="178" y2="54" stroke="rgba(255,255,255,.42)" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="158" cy="250" r="5" fill="var(--gold,#f5c542)"/>
+          <text x="348" y="22" fill="var(--ink,#fff)" font-size="18" text-anchor="end">line reads 89</text></svg>
+        </div>
         <h3>Negative Error</h3>
-        <div class="verdict">$\text{Zero error}=-(100-89)\times\text{L.C.}$<br>$=-11\times\text{L.C.}$</div>
+        <div class="verdict">Zero error = −(100 − 89) × L.C.<br>= −11 × L.C.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Zero-error figures: one parametric SVG, three settings -->
-<script>
-(function () {
-  'use strict';
-
-  var GOLD  = 'var(--gold,#f5c542)',
-      INK   = 'var(--ink,#fff)',
-      SUB   = 'var(--sub,#dde7f4)',
-      MUTED = 'var(--muted,#b7c5d8)',
-      GREEN = 'var(--green,#34d399)',
-      RED   = 'var(--red,#fb7185)';
-
-  var W = 360, H = 480,          /* viewBox                                  */
-      REF = 250,                 /* y of the reference line                  */
-      TX  = 150,                 /* x of the thimble edge                    */
-      DIV = 14,                  /* px between two circular-scale divisions  */
-      SPAN = 14;                 /* divisions drawn either side of the line  */
-
-  function el(tag, attrs, text) {
-    var s = '<' + tag;
-    for (var k in attrs) if (attrs[k] !== null) s += ' ' + k + '="' + attrs[k] + '"';
-    return text === undefined ? s + '/>' : s + '>' + text + '</' + tag + '>';
-  }
-
-  /* value        — the division sitting on the reference line
-     hideZero     — true when the thimble covers the main-scale zero
-     accent       — colour of the highlighted division                       */
-  function figure(o) {
-    var p = [], d, y, major, n, x;
-
-    /* ---- sleeve (main scale barrel) ---- */
-    p.push(el('rect', { x: 8, y: REF - 28, width: TX - 8, height: 56, rx: 9,
-                        fill: 'rgba(255,255,255,.10)',
-                        stroke: 'rgba(255,255,255,.28)', 'stroke-width': 1.4 }));
-
-    /* ---- the main-scale zero mark ----
-       Only the zero is drawn: where it sits relative to the thimble edge is the
-       whole story. Flush with the edge = no error; a little to the left = the
-       thimble has over-run it; swallowed by the thimble = negative error.     */
-    if (!o.hideZero) {
-      x = o.zeroX;
-      p.push(el('line', { x1: x, y1: REF - 20, x2: x, y2: REF - 2,
-                          stroke: SUB, 'stroke-width': 2.6, 'stroke-linecap': 'round' }));
-      p.push(el('text', { x: x, y: REF - 27, fill: INK, 'font-size': 18,
-                          'font-weight': 700, 'text-anchor': 'middle' }, '0'));
-      p.push(el('text', { x: 14, y: REF + 52, fill: MUTED, 'font-size': 15 },
-                'main scale'));
-    } else {
-      /* the zero of the main scale is swallowed by the thimble */
-      p.push(el('line', { x1: TX + 16, y1: REF - 18, x2: TX + 16, y2: REF - 2,
-                          stroke: RED, 'stroke-width': 2, 'stroke-dasharray': '4 4',
-                          opacity: .75 }));
-      p.push(el('text', { x: TX + 16, y: REF - 24, fill: RED, 'font-size': 16,
-                          'text-anchor': 'middle', opacity: .9 }, '0'));
-      p.push(el('text', { x: 14, y: REF + 52, fill: RED, 'font-size': 16 },
-                'main-scale 0 hidden'));
-    }
-
-    /* ---- reference line ---- */
-    p.push(el('line', { x1: 12, y1: REF, x2: TX, y2: REF,
-                        stroke: GOLD, 'stroke-width': 3.4, 'stroke-linecap': 'round' }));
-    p.push(el('line', { x1: TX, y1: REF, x2: TX + 44, y2: REF,
-                        stroke: GOLD, 'stroke-width': 2, 'stroke-dasharray': '5 5',
-                        opacity: .8 }));
-    p.push(el('text', { x: 12, y: REF + 30, fill: GOLD, 'font-size': 16 },
-              'reference line'));
-
-    /* ---- thimble (the unrolled circular dial) ---- */
-    p.push(el('rect', { x: TX, y: 26, width: W - TX - 6, height: H - 52, rx: 10,
-                        fill: 'rgba(255,255,255,.07)',
-                        stroke: 'rgba(255,255,255,.24)', 'stroke-width': 1.4 }));
-
-    /* ---- circular-scale divisions (numbers increase upward) ---- */
-    for (d = o.value - SPAN; d <= o.value + SPAN; d++) {
-      y = REF + (o.value - d) * DIV;
-      if (y < 40 || y > H - 34) continue;
-      n = ((d % 100) + 100) % 100;
-      major = n % 5 === 0;
-
-      var isRef  = d === o.value,
-          isZero = n === 0,
-          col    = isRef ? GOLD : (isZero ? o.accent : (major ? SUB : 'rgba(255,255,255,.42)'));
-
-      p.push(el('line', { x1: TX + 8, y1: y, x2: TX + 8 + (major ? 34 : 20), y2: y,
-                          stroke: col, 'stroke-width': isRef || isZero ? 3.4 : 1.8,
-                          'stroke-linecap': 'round' }));
-      if (major) {
-        p.push(el('text', { x: TX + 50, y: y + 6, fill: col,
-                            'font-size': isRef || isZero ? 20 : 17,
-                            'font-weight': isRef || isZero ? 700 : 400 }, n));
-      }
-    }
-
-    /* ---- the call-out that names what the line reads ---- */
-    p.push(el('circle', { cx: TX + 8, cy: REF, r: 5, fill: GOLD }));
-    p.push(el('text', { x: W - 12, y: 22, fill: INK, 'font-size': 18,
-                        'text-anchor': 'end' }, o.note));
-
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" '
-         + 'role="img" aria-label="' + o.note + '" '
-         + 'font-family="Calibri, Candara, system-ui, sans-serif">'
-         + p.join('') + '</svg>';
-  }
-
-  var FIGS = {
-    /* zeroX — where the main-scale zero falls against the thimble edge (TX) */
-    none:  { value: 0,  zeroX: TX,      hideZero: false, accent: GREEN, note: 'line reads 0'  },
-    plus:  { value: 9,  zeroX: TX - 30, hideZero: false, accent: GREEN, note: 'line reads 9'  },
-    minus: { value: 89, zeroX: null,    hideZero: true,  accent: RED,   note: 'line reads 89' }
-  };
-
-  [].slice.call(document.querySelectorAll('[data-fig]')).forEach(function (host) {
-    var cfg = FIGS[host.getAttribute('data-fig')];
-    if (cfg) host.innerHTML = figure(cfg);
-  });
-})();
-</script>
 
 <!-- The four-box zoom sequence: one declarative state per click -->
 <script>
@@ -1166,7 +1192,6 @@ mjx-container svg        {vertical-align:middle}
     .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
   window.addEventListener('resize', remeasure);
-  window.addEventListener('mathjax-done', remeasure);   // boxes resize as math sets
   window.addEventListener('load', remeasure);
 })();
 </script>
@@ -1223,7 +1248,6 @@ mjx-container svg        {vertical-align:middle}
         if (!e.target.closest('.clickable')) next();
       });
       window.addEventListener('resize', function () { needMeasure = true; render(); });
-      window.addEventListener('mathjax-done', function () { needMeasure = true; render(); });
 
       render();
     }, 250);
