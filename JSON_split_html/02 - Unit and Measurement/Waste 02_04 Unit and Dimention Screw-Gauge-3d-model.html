@@ -622,39 +622,24 @@ function drawMag(){
   mx.setLineDash([5,4]); mx.strokeStyle = 'rgba(20,24,29,.55)';
   mx.beginPath(); mx.moveTo(edge, y0); mx.lineTo(Wc-6, y0); mx.stroke();
   mx.setLineDash([]);
-  // main-scale marks.
-  // The thimble edge sits exactly on the reading, so the division being read
-  // lies right ON that edge. Stopping a couple of pixels short of it hid that
-  // mark for the first several least counts after every 0.5 mm step, so the
-  // mark for the current main-scale reading is always drawn, and the region is
-  // clipped just past the edge so the stroke shows in full.
+  // main-scale marks (only those not covered by the thimble)
   const r = readingParts();
-  const msLabels = [];
-  mx.save();
-  mx.beginPath(); mx.rect(0, 0, Math.max(edge + 3, 0), Hc); mx.clip();
   for(let m = 0; m <= 12.5; m += 0.5){
+    if(X(m) > edge - 2) break;
     const whole = Math.abs(m - Math.round(m)) < .01;
     const hot = Math.abs(m - r.msr) < .01 && !r.below;
-    if(!hot && X(m) > edge + 0.75) break;
     mx.strokeStyle = hot ? '#e8b33c' : '#14181d';
-    mx.lineWidth = hot ? 4 : (whole ? 2.4 : 2);
+    mx.lineWidth = hot ? 3.5 : 2;
     mx.beginPath();
     if(whole){ mx.moveTo(X(m), y0); mx.lineTo(X(m), y0 - 30); }
     else     { mx.moveTo(X(m), y0); mx.lineTo(X(m), y0 + 26); }
     mx.stroke();
-    if(hot || (whole && Math.round(m)%5 === 0)) msLabels.push({m, whole, hot});
+    if(whole && Math.round(m)%5 === 0){
+      mx.fillStyle = hot ? '#e8b33c' : '#14181d';
+      mx.font = '600 14px Segoe UI'; mx.textAlign = 'center';
+      mx.fillText(String(Math.round(m)), X(m), y0 - 35);
+    }
   }
-  mx.restore();
-  // numbers drawn after the clip is released, with a light halo so they stay
-  // readable where they overhang the sleeve bar onto the dark background
-  msLabels.forEach(({m, whole, hot}) => {
-    const txt = whole ? String(Math.round(m)) : m.toFixed(1);
-    const ty  = whole ? y0 - 35 : y0 + 46;
-    mx.font = (hot ? '700 15px' : '600 14px') + ' Segoe UI'; mx.textAlign = 'center';
-    mx.lineWidth = 3; mx.lineJoin = 'round';
-    mx.strokeStyle = 'rgba(238,242,246,.92)'; mx.strokeText(txt, X(m), ty);
-    mx.fillStyle = hot ? '#c98a10' : '#14181d'; mx.fillText(txt, X(m), ty);
-  });
   // circular-scale divisions on the thimble edge.
   // Same sense as the 3-D dial: numbers increase UPWARD, closing moves them up.
   mx.save();
@@ -910,23 +895,16 @@ const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 $('bze0').addEventListener('click', () => { state.Z = 0; dirty(); });
 $('bzep').addEventListener('click', () => { state.Z = rnd(2, 5); dirty(); });
 $('bzen').addEventListener('click', () => { state.Z = -rnd(2, 5); dirty(); });
-// a fresh unknown diameter in divisions (1.50 – 7.99 mm), never a repeat of the last one
-function randomWireD(){
-  let d;
-  do { d = 150 + Math.floor(Math.random() * 650); } while(Math.abs(d - state.D) < 40);
-  return d;
-}
 $('bwire').addEventListener('click', () => {
   state.wire = !state.wire;
   if(state.wire){
-    state.D = randomWireD();          // new wire on every switch-on
     state.revealed = false;
     if(state.G < state.D) animateG(state.D + 120, 600);
   }
   rebuildWire(); dirty();
 });
 $('bnewwire').addEventListener('click', () => {
-  state.D = randomWireD();
+  state.D = 150 + Math.floor(Math.random() * 650);
   state.revealed = false;
   if(state.G < state.D) animateG(state.D + 120, 600);
   rebuildWire(); dirty();
