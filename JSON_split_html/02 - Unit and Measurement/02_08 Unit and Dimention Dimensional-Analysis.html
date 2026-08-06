@@ -31,13 +31,13 @@ body.hidecursor,body.hidecursor *{cursor:none}
 .slide.past{transform:translateX(-56px)}
 .slide.sec{justify-content:center;padding:46px 70px}
 
-h1{margin:0;font-size:48px;line-height:1.1;font-weight:800;letter-spacing:-.4px;color:#ffd21f}
-h1 .sub{display:block;font-size:26px;font-weight:600;color:#cfd6e2;margin-top:6px;letter-spacing:0}
+h1{margin:0;font-size:62px;line-height:1.1;font-weight:800;letter-spacing:-.4px;color:#ffd21f}
+h1 .sub{display:block;font-size:34px;font-weight:600;color:#cfd6e2;margin-top:6px;letter-spacing:0}
 .rule{height:5px;width:190px;border-radius:4px;margin:9px 0 14px;
   background:linear-gradient(90deg,#ffd21f,#5b8cff 62%,rgba(46,204,154,0))}
-.sec h1{font-size:74px}
+.sec h1{font-size:96px}
 .sec .rule{width:260px;height:6px;margin-top:14px}
-.sec .lede{margin-top:14px;font-size:27px;color:#9aa4b2;max-width:70%}
+.sec .lede{margin-top:14px;font-size:35px;color:#9aa4b2;max-width:70%}
 
 .body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-start;gap:14px}
 .cols{display:grid;gap:16px;align-items:stretch}
@@ -49,8 +49,8 @@ h1 .sub{display:block;font-size:26px;font-weight:600;color:#cfd6e2;margin-top:6p
 
 /* ============================== cards ============================= */
 .card{position:relative;border-radius:22px;padding:15px 20px 14px;background:rgba(255,255,255,.033);
-  border:1px solid rgba(255,255,255,.10);box-shadow:0 12px 34px rgba(0,0,0,.42);font-size:25px;line-height:1.42}
-.card>.lbl{position:absolute;top:-12px;left:18px;font-size:13px;font-weight:800;letter-spacing:1.5px;
+  border:1px solid rgba(255,255,255,.10);box-shadow:0 12px 34px rgba(0,0,0,.42);font-size:32px;line-height:1.42}
+.card>.lbl{position:absolute;top:-12px;left:18px;font-size:17px;font-weight:800;letter-spacing:1.5px;
   text-transform:uppercase;padding:3px 11px;border-radius:999px;background:#12151a;border:1px solid}
 .card.question{border-color:rgba(91,140,255,.55);background:rgba(91,140,255,.075)}
 .card.question>.lbl{color:#9dbaff;border-color:rgba(91,140,255,.6)}
@@ -77,16 +77,16 @@ ul.arrow li::before{content:"\21D2";position:absolute;left:0;top:0;color:#5b8cff
 .g{color:#2ecc9a;font-weight:700}
 .b{color:#7ea6ff;font-weight:700}
 .muted{color:#9aa4b2}
-.small{font-size:21px}
-.big{font-size:30px}
-.why{font-size:20px;color:#9aa4b2;font-style:italic}
+.small{font-size:27px}
+.big{font-size:39px}
+.why{font-size:26px;color:#9aa4b2;font-style:italic}
 .trap{color:#ff8f8f;font-weight:700}
 
 /* ============================== table ============================= */
-.rtable{width:100%;border-collapse:separate;border-spacing:0;font-size:24px;
+.rtable{width:100%;border-collapse:separate;border-spacing:0;font-size:31px;
   border:1px solid rgba(255,255,255,.13);border-radius:18px;overflow:hidden}
 .rtable th{background:rgba(91,140,255,.20);color:#eaf0ff;font-weight:800;text-align:left;
-  padding:9px 16px;font-size:23px;letter-spacing:.3px}
+  padding:9px 16px;font-size:30px;letter-spacing:.3px}
 .rtable td{padding:7px 16px;border-top:1px solid rgba(255,255,255,.085)}
 .rtable td:nth-child(2),.rtable th:nth-child(2){text-align:center;color:#ffd21f;font-weight:700}
 .rtable td:nth-child(3),.rtable th:nth-child(3){text-align:center;color:#9aa4b2}
@@ -94,14 +94,14 @@ ul.arrow li::before{content:"\21D2";position:absolute;left:0;top:0;color:#5b8cff
 
 /* grouped "same dimension" grid */
 .grp{border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);padding:10px 14px 12px}
-.grp h3{margin:0 0 6px;font-size:22px;color:#ffd21f;letter-spacing:.2px}
-.grp .dim{font-size:18px;color:#9aa4b2;margin:-3px 0 7px}
-.grp .it{font-size:24px;margin:.30em 0}
+.grp h3{margin:0 0 6px;font-size:29px;color:#ffd21f;letter-spacing:.2px}
+.grp .dim{font-size:23px;color:#9aa4b2;margin:-3px 0 7px}
+.grp .it{font-size:31px;margin:.30em 0}
 
 /* mcq boxes */
 .mcq{border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.032);
-  padding:9px 14px;font-size:21px}
-.mcq .t{font-size:16px;letter-spacing:1.3px;text-transform:uppercase;color:#9aa4b2;font-weight:800;margin-bottom:6px}
+  padding:9px 14px;font-size:27px}
+.mcq .t{font-size:21px;letter-spacing:1.3px;text-transform:uppercase;color:#9aa4b2;font-weight:800;margin-bottom:6px}
 .mcq .o{margin:.16em 0}
 .mcq .ok{color:#2ecc9a;font-weight:700}
 
@@ -112,7 +112,7 @@ canvas.fig{width:100%;max-width:820px;display:block;margin:0 auto;border-radius:
   border:1px solid rgba(255,255,255,.12);background:#0a0c0f}
 
 /* ============================== chrome =========================== */
-#hint,#pill{position:fixed;z-index:5;pointer-events:none;font-size:15px;letter-spacing:.6px;
+#hint,#pill{position:fixed;z-index:5;pointer-events:none;font-size:20px;letter-spacing:.6px;
   transition:opacity .8s ease}
 #hint{left:50%;bottom:18px;transform:translateX(-50%);color:#6f7987}
 #pill{right:20px;bottom:18px;color:#0d0f12;background:#ffd21f;font-weight:800;
@@ -121,45 +121,45 @@ canvas.fig{width:100%;max-width:820px;display:block;margin:0 auto;border-radius:
 
 /* ===================== text-size level overrides ================= */
 body[data-lvl="5"] .slide{padding:15px 58px 40px}
-body[data-lvl="5"] .card{font-size:24px;padding:14px 18px 13px}
+body[data-lvl="5"] .card{font-size:31px;padding:14px 18px 13px}
 body[data-lvl="5"] .cols{gap:14px}
 body[data-lvl="5"] .body{gap:12px}
 body[data-lvl="5"] .plain-fig{max-width:700px}
 
 body[data-lvl="6"] .slide{padding:13px 48px 36px}
-body[data-lvl="6"] h1{font-size:44px}
-body[data-lvl="6"] h1 .sub{font-size:24px}
+body[data-lvl="6"] h1{font-size:57px}
+body[data-lvl="6"] h1 .sub{font-size:31px}
 body[data-lvl="6"] .rule{margin:7px 0 11px;height:4px}
-body[data-lvl="6"] .card{font-size:23px;padding:12px 16px 11px;border-radius:19px}
+body[data-lvl="6"] .card{font-size:30px;padding:12px 16px 11px;border-radius:19px}
 body[data-lvl="6"] .cols{gap:12px}
 body[data-lvl="6"] .body{gap:11px}
-body[data-lvl="6"] .rtable{font-size:22px}
+body[data-lvl="6"] .rtable{font-size:29px}
 body[data-lvl="6"] .rtable td{padding:6px 13px}
-body[data-lvl="6"] .rtable th{padding:8px 13px;font-size:21px}
-body[data-lvl="6"] .grp .it{font-size:22px}
-body[data-lvl="6"] .mcq{font-size:21px}
+body[data-lvl="6"] .rtable th{padding:8px 13px;font-size:27px}
+body[data-lvl="6"] .grp .it{font-size:29px}
+body[data-lvl="6"] .mcq{font-size:27px}
 body[data-lvl="6"] .plain-fig{max-width:620px}
-body[data-lvl="6"] .small{font-size:20px}
-body[data-lvl="6"] .big{font-size:27px}
+body[data-lvl="6"] .small{font-size:26px}
+body[data-lvl="6"] .big{font-size:35px}
 
 body[data-lvl="7"] .slide{padding:11px 40px 32px}
-body[data-lvl="7"] h1{font-size:40px}
-body[data-lvl="7"] h1 .sub{font-size:22px}
+body[data-lvl="7"] h1{font-size:52px}
+body[data-lvl="7"] h1 .sub{font-size:29px}
 body[data-lvl="7"] .rule{margin:6px 0 9px;height:4px;width:150px}
-body[data-lvl="7"] .card{font-size:22px;padding:11px 14px 10px;border-radius:17px;line-height:1.36}
-body[data-lvl="7"] .card>.lbl{font-size:12px;top:-11px}
+body[data-lvl="7"] .card{font-size:29px;padding:11px 14px 10px;border-radius:17px;line-height:1.36}
+body[data-lvl="7"] .card>.lbl{font-size:16px;top:-11px}
 body[data-lvl="7"] .cols{gap:10px}
 body[data-lvl="7"] .body{gap:9px}
-body[data-lvl="7"] .rtable{font-size:21px}
+body[data-lvl="7"] .rtable{font-size:27px}
 body[data-lvl="7"] .rtable td{padding:5px 12px}
-body[data-lvl="7"] .rtable th{padding:7px 12px;font-size:20px}
-body[data-lvl="7"] .grp .it{font-size:21px}
-body[data-lvl="7"] .grp h3{font-size:20px}
-body[data-lvl="7"] .mcq{font-size:20px}
+body[data-lvl="7"] .rtable th{padding:7px 12px;font-size:26px}
+body[data-lvl="7"] .grp .it{font-size:27px}
+body[data-lvl="7"] .grp h3{font-size:26px}
+body[data-lvl="7"] .mcq{font-size:26px}
 body[data-lvl="7"] .plain-fig{max-width:560px}
-body[data-lvl="7"] .small{font-size:19px}
-body[data-lvl="7"] .big{font-size:26px}
-body[data-lvl="7"] .sec h1{font-size:64px}
+body[data-lvl="7"] .small{font-size:25px}
+body[data-lvl="7"] .big{font-size:34px}
+body[data-lvl="7"] .sec h1{font-size:83px}
 
 /* fragments */
 .frag{opacity:0;transition:opacity .30s ease}
