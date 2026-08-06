@@ -43,3 +43,4 @@ build/status.csv
 # Local split JSON / HTML data and extra files (excluded from version control)
 JSON_split_data/
 extra_fiels/
+.firebase/hosting.ZGlzdA.cache

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Library, X, ChevronRight, Layers, FolderOpen, Loader2, Check,
+  Library, X, ChevronRight, Layers, FolderOpen, Loader2, Check, Upload,
+  CheckSquare, Square,
 } from 'lucide-react'
 import { listClasses, listChapters, listFolders, FOLDER_TAGS, makeId } from '../lib/content'
 import {
@@ -19,7 +20,8 @@ const INACTIVITY_MS = 15 * 60 * 1000
 // The board gets the whole viewport — no header of our own — so the panel's
 // own control strip asks us for the three things it can't do from inside a
 // sandboxed iframe: open the Library picker, navigate back out, and release
-// full screen. Decks come from Firestore, never from an uploaded file.
+// full screen. Decks normally come from Firestore; the picker's "Upload HTML"
+// button is the one escape hatch for a deck that is still only a local file.
 export default function PresenterView() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -324,6 +326,7 @@ export default function PresenterView() {
         <LibraryPicker
           onClose={() => setLibOpen(false)}
           onPickMany={loadFolders}
+          onNote={setRestoreNote}
         />
       )}
     </div>
@@ -332,9 +335,54 @@ export default function PresenterView() {
 
 // Drill-down picker over every class → chapter → folder in Firestore.
 // Folder level supports multi-select + multi-category filtering.
-function LibraryPicker({ onClose, onPickMany }) {
+// "Upload HTML" side-steps the library entirely: the file is read here and
+// posted into the board as a deck, exactly like a folder that came from
+// Firestore. Nothing is written back to the library.
+function LibraryPicker({ onClose, onPickMany, onNote }) {
   const [cls, setCls] = useState(null)
   const [chapter, setChapter] = useState(null)
+  const fileRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadErr, setUploadErr] = useState('')
+
+  async function onFilesChosen(e) {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''            // so the same file can be picked again later
+    if (!files.length) return
+    setUploadErr('')
+    setUploading(true)
+    try {
+      const decks = []
+      const rejected = []
+      for (const file of files) {
+        let html = null
+        try { html = await file.text() } catch { html = null }
+        // Same contract the board enforces: a deck is <section class="page">s.
+        const ok = html && new DOMParser()
+          .parseFromString(html, 'text/html')
+          .querySelectorAll('.page').length > 0
+        if (!ok) { rejected.push(file.name); continue }
+        decks.push({
+          // No folder id: this deck has no home in the library, and a fake id
+          // would be persisted as a session's sourceFolderId.
+          id: null,
+          name: file.name.replace(/\.html?$/i, ''),
+          html,
+          tag: 'Uploaded',
+        })
+      }
+      if (rejected.length) {
+        const msg = `Skipped ${rejected.join(', ')} — no <section class="page"> slides found.`
+        // Shown in the picker if it stays open; handed to the host toast when
+        // the good decks load and the picker closes underneath it.
+        setUploadErr(msg)
+        if (decks.length) onNote?.(msg)
+      }
+      if (decks.length) onPickMany(decks)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <div className="absolute inset-0 z-10 flex bg-slate-900/70 backdrop-blur-sm" onClick={onClose}>
@@ -347,10 +395,35 @@ function LibraryPicker({ onClose, onPickMany }) {
             {cls && (<><ChevronRight className="h-3.5 w-3.5 text-slate-300" /><Crumb label={cls.name} onClick={() => setChapter(null)} active={!chapter} /></>)}
             {chapter && (<><ChevronRight className="h-3.5 w-3.5 text-slate-300" /><Crumb label={chapter.name} active /></>)}
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".html,.htm,text/html"
+            multiple
+            className="hidden"
+            onChange={onFilesChosen}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            title="Load a deck straight from this computer"
+            className="flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {uploading
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <Upload className="h-4 w-4" />}
+            Upload HTML
+          </button>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
             <X className="h-5 w-5" />
           </button>
         </div>
+        {uploadErr && (
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+            {uploadErr}
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {!cls && <ClassPicker onOpen={setCls} />}
           {cls && !chapter && <ChapterPicker cls={cls} onOpen={setChapter} />}
@@ -454,6 +527,23 @@ function FolderPicker({ cls, chapter, onPickMany }) {
     })
   }
 
+  // "Select all" acts on what is currently visible, so it respects the
+  // category filter rather than quietly picking up hidden folders.
+  const visibleSelected = useMemo(
+    () => filtered.filter((f) => selected.has(f.id)).length,
+    [filtered, selected],
+  )
+  const allVisibleSelected = filtered.length > 0 && visibleSelected === filtered.length
+
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allVisibleSelected) filtered.forEach((f) => next.delete(f.id))
+      else filtered.forEach((f) => next.add(f.id))
+      return next
+    })
+  }
+
   function loadSelected() {
     const folders = filtered
       .filter((f) => selected.has(f.id))
@@ -511,6 +601,21 @@ function FolderPicker({ cls, chapter, onPickMany }) {
       {!filtered.length ? (
         <Empty text="No folders match the selected categories." />
       ) : (
+        <>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {filtered.length} folder{filtered.length === 1 ? '' : 's'}
+          </span>
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-violet-300 hover:text-violet-700"
+          >
+            {allVisibleSelected
+              ? <><Square className="h-3.5 w-3.5" /> Clear all</>
+              : <><CheckSquare className="h-3.5 w-3.5" /> Select all</>}
+          </button>
+        </div>
         <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto">
           {filtered.map((f) => {
             const on = selected.has(f.id)
@@ -544,15 +649,16 @@ function FolderPicker({ cls, chapter, onPickMany }) {
             )
           })}
         </ul>
+        </>
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
         <span className="text-xs text-slate-500">
-          {selected.size ? `${selected.size} selected` : 'Select one or more folders'}
+          {visibleSelected ? `${visibleSelected} selected` : 'Select one or more folders'}
         </span>
         <button
           type="button"
-          disabled={!selected.size}
+          disabled={!visibleSelected}
           onClick={loadSelected}
           className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
         >

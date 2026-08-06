@@ -512,6 +512,24 @@ math[display="block"]{display:block;margin:.8vmin 0}
   box-shadow:0 0 0 .2vmin rgba(245,197,66,.4),0 2.4vmin 7vmin rgba(0,0,0,.65),
              0 0 9vmin rgba(245,197,66,.14);
 }
+
+/* Compact grid for fitting more boxes */
+.box-grid.compact { gap: 1.5vmin; margin-top: 0.5vmin; }
+.box-grid.compact .info-box { padding: 1vmin 1.4vmin; }
+.box-grid.compact .info-box h4.cell-heading { font-size: clamp(18px, 3.2vmin, 34px); margin-bottom: 0.3vmin; }
+.box-grid.compact .info-box p,
+.box-grid.compact .info-box .step { font-size: clamp(17px, 3vmin, 32px); line-height: 1.35; margin-bottom: 0.3vmin; }
+.box-grid.compact .glossary { gap: 0.8vmin; margin-top: 0.5vmin; }
+.box-grid.compact .g-row { gap: 0.8vmin; }
+.box-grid.compact .g-row .label,
+.box-grid.compact .g-row .step { font-size: clamp(17px, 3vmin, 32px); }
+
+/* Keep the zoomed version at the original size by scaling up more */
+.page.has-focus .box-grid.compact .info-box.is-active,
+.box-grid.compact .info-box.is-active {
+  transform: scale(1.85);
+  z-index: 10;
+}
 /* Zero-size sentinel steps injected by tools/build-deck.mjs: one before the
    box's content and one after it, so "grow" and "shrink" are each their own
    press. Never display:none — the fx observer needs an offsetParent to test. */
@@ -737,7 +755,7 @@ mjx-container svg        {vertical-align:middle}
   <div class="wrap dense">
     <h2 class="heading">Rule of SI</h2>
 
-    <div class="box-grid">
+    <div class="box-grid compact">
       <div class="info-box"><i class="step box-zoom" aria-hidden="true"></i>
         <h4 class="cell-heading">Unit in lower case</h4>
         <p class="step">m, g, s &mdash; the symbol is written in small letters.</p>
