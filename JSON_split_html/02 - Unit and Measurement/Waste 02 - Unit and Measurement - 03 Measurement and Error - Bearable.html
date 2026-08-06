@@ -1,0 +1,1485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>02 - Unit and Measurement &#183; 03 Measurement and Error</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0d0f12;}
+body{
+  font-family:"Segoe UI",Calibri,Candara,system-ui,sans-serif;
+  color:#f2f4f8;
+  background:
+    radial-gradient(1100px 640px at 12% -12%, rgba(91,140,255,.13), transparent 62%),
+    radial-gradient(1000px 620px at 92% 112%, rgba(46,204,154,.10), transparent 62%),
+    radial-gradient(900px 520px at 55% 45%, rgba(245,185,66,.045), transparent 70%),
+    #0d0f12;
+}
+body.hidecursor,body.hidecursor *{cursor:none!important}
+#stage{
+  position:absolute;left:50%;top:50%;
+  transform-origin:50% 50%;
+}
+.slide{
+  position:absolute;left:0;top:0;width:100%;height:100%;
+  display:flex;flex-direction:column;
+  padding:17px 70px 46px;
+  opacity:0;pointer-events:none;
+  transform:translateX(46px);
+  transition:opacity .5s cubic-bezier(.22,.7,.25,1),transform .5s cubic-bezier(.22,.7,.25,1);
+}
+.slide.back{transform:translateX(-46px)}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.slide.title{padding:46px 70px 46px;justify-content:center;align-items:center;text-align:center}
+
+h1.h{
+  margin:0 0 4px;font-size:48px;font-weight:800;line-height:1.12;
+  letter-spacing:-.01em;color:#f2f4f8;
+}
+h1.h .lite{color:#9aa4b2;font-weight:600}
+.rule{
+  height:5px;width:132px;border-radius:99px;flex:none;
+  background:linear-gradient(90deg,#5b8cff 0%,#2ecc9a 62%,rgba(46,204,154,0) 100%);
+  margin:0 0 14px;
+}
+.slide.title .rule{margin:16px auto 0}
+.big{font-size:74px;font-weight:800;line-height:1.08;letter-spacing:-.015em}
+.big .g{background:linear-gradient(115deg,#f2f4f8 22%,#5b8cff 92%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.kick{font-size:22px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#5b8cff;margin:0 0 14px}
+
+.content{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-start;gap:14px}
+.cols{display:flex;gap:26px;align-items:flex-start;justify-content:flex-start;flex:0 1 auto;min-height:0}
+.col{display:flex;flex-direction:column;justify-content:flex-start;gap:14px;min-width:0;flex:1 1 0}
+
+.card{
+  border:1px solid rgba(255,255,255,.10);
+  border-left:5px solid #6b7684;
+  border-radius:14px;
+  padding:14px 20px;
+  background:rgba(255,255,255,.035);
+  font-size:27px;line-height:1.42;color:#e7ebf2;
+}
+.card .lbl{display:block;font-size:19px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}
+.card.question{border-left-color:#5b8cff;background:rgba(91,140,255,.10)}
+.card.question .lbl{color:#5b8cff}
+.card.solution{border-left-color:#2ecc9a;background:rgba(46,204,154,.10)}
+.card.solution .lbl{color:#2ecc9a}
+.card.formula{border-left-color:#f5b942;background:rgba(245,185,66,.10)}
+.card.formula .lbl{color:#f5b942}
+.card.warn{border-left-color:#ff6b6b;background:rgba(255,107,107,.10)}
+.card.warn .lbl{color:#ff6b6b}
+.card.plain{border-left-color:#3a4250;background:rgba(255,255,255,.03)}
+
+ul.pts{margin:2px 0 0;padding:0 0 0 4px;list-style:none;display:flex;flex-direction:column;gap:9px}
+ul.pts li{position:relative;padding-left:30px;font-size:27px;line-height:1.4;color:#e7ebf2}
+ul.pts li:before{content:"";position:absolute;left:4px;top:.52em;width:10px;height:10px;border-radius:3px;background:#5b8cff;transform:translateY(-50%)}
+ul.pts.g li:before{background:#2ecc9a}
+ul.pts.a li:before{background:#f5b942}
+ul.pts li em{font-style:normal;color:#f5b942;font-weight:700}
+
+.muted{color:#9aa4b2}
+.acc{color:#5b8cff;font-weight:700}
+.gr{color:#2ecc9a;font-weight:700}
+.am{color:#f5b942;font-weight:700}
+.rd{color:#ff6b6b;font-weight:700}
+.blank{white-space:nowrap;color:#f5b942;font-weight:800;border-bottom:2px solid rgba(245,185,66,.55);padding:0 6px}
+.no{color:#ff6b6b;font-weight:900;font-size:1.05em}
+.yes{color:#2ecc9a;font-weight:900;font-size:1.05em}
+.strike{text-decoration:line-through;text-decoration-color:#ff6b6b;text-decoration-thickness:3px;color:#9aa4b2}
+
+.m{font-family:"Cambria Math",Cambria,Georgia,serif;font-style:italic}
+.m .up{font-style:normal}
+sup{font-size:.62em;vertical-align:super;font-style:normal}
+sub{font-size:.62em;vertical-align:baseline;position:relative;top:.24em;font-style:normal}
+.eq{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:32px;letter-spacing:.01em}
+.eq.sm{font-size:27px}
+
+/* inline fraction */
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .22em;line-height:1.14;font-size:.92em}
+.fr>span{padding:0 .34em;display:block;white-space:nowrap}
+.fr>span:last-child{border-top:2px solid currentColor;margin-top:2px;padding-top:2px}
+
+/* row grid used for worked tables */
+.rows{display:grid;gap:7px}
+.rows .r{display:grid;gap:16px;align-items:center;padding:5px 2px}
+.rows .r+.r{border-top:1px solid rgba(255,255,255,.07)}
+.rows .hd{font-size:20px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa4b2}
+.rows .r>*{min-width:0}
+
+.arw{color:#5b8cff;font-weight:800;padding:0 .35em}
+
+figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+figure img,figure svg{display:block;max-width:100%;height:auto}
+figure svg{width:100%}
+figcaption{font-size:20px;color:#9aa4b2;text-align:center}
+
+.frag{opacity:0;transform:translateY(12px);transition:opacity .38s ease,transform .38s ease}
+.frag.on{opacity:1;transform:none}
+
+#hint{
+  position:fixed;left:0;right:0;bottom:16px;text-align:center;
+  font-size:15px;letter-spacing:.14em;color:rgba(154,164,178,.62);
+  transition:opacity .9s ease;pointer-events:none;z-index:9;
+}
+#badge{
+  position:fixed;right:20px;bottom:18px;z-index:9;pointer-events:none;
+  font-size:15px;font-weight:700;letter-spacing:.05em;color:#cfd6e2;
+  background:rgba(20,24,31,.9);border:1px solid rgba(255,255,255,.14);
+  padding:7px 14px;border-radius:99px;opacity:0;transition:opacity .35s ease;
+}
+#badge.on{opacity:1}
+
+/* ---- dense slides: many stacked blocks, tighter rhythm ---- */
+.slide.dense{padding-bottom:28px}
+.slide.dense .rule{margin-bottom:10px}
+.slide.dense h1.h{font-size:45px}
+.slide.dense .card{font-size:24px;padding:12px 17px;line-height:1.36}
+.slide.dense .card .lbl{font-size:17px;margin-bottom:4px}
+.slide.dense ul.pts li{font-size:24px}
+.slide.dense ul.pts{gap:7px}
+.slide.dense .eq{font-size:28px}
+.slide.dense .eq.sm{font-size:24px}
+.slide.dense .rows .r{font-size:24px;padding:4px 2px}
+.slide.dense .rows{gap:5px}
+.slide.dense .rows .hd{font-size:18px}
+.slide.dense .content,.slide.dense .col{gap:11px}
+.slide.dense figcaption{font-size:18px}
+.slide.dense figure{max-width:85%}
+
+/* ---- level overrides: buy room for bigger apparent text ---- */
+body[data-lvl="5"] .slide{padding:15px 52px 34px}
+body[data-lvl="5"] .content,body[data-lvl="5"] .col{gap:12px}
+body[data-lvl="5"] .cols{gap:22px}
+body[data-lvl="5"] h1.h{font-size:45px}
+body[data-lvl="5"] .rule{margin-bottom:11px}
+body[data-lvl="5"] figure{max-width:96%}
+body[data-lvl="5"] .slide.dense .card{font-size:23px;padding:10px 15px}
+body[data-lvl="5"] .slide.dense ul.pts li{font-size:23px}
+body[data-lvl="5"] .slide.dense .rows .r{font-size:23px}
+body[data-lvl="5"] .slide.dense .content,body[data-lvl="5"] .slide.dense .col{gap:9px}
+body[data-lvl="5"] .slide.dense figure{max-width:83%}
+
+body[data-lvl="6"] .slide{padding:13px 40px 28px}
+body[data-lvl="6"] .content,body[data-lvl="6"] .col{gap:10px}
+body[data-lvl="6"] .cols{gap:18px}
+body[data-lvl="6"] h1.h{font-size:43px}
+body[data-lvl="6"] .rule{width:112px;margin-bottom:9px}
+body[data-lvl="6"] .card{padding:12px 17px}
+body[data-lvl="6"] .big{font-size:68px}
+body[data-lvl="6"] figure{max-width:90%}
+body[data-lvl="6"] .slide.dense .card{font-size:22px;padding:9px 14px}
+body[data-lvl="6"] .slide.dense .card .lbl{font-size:16px}
+body[data-lvl="6"] .slide.dense ul.pts li{font-size:22px}
+body[data-lvl="6"] .slide.dense .eq{font-size:26px}
+body[data-lvl="6"] .slide.dense .eq.sm{font-size:23px}
+body[data-lvl="6"] .slide.dense .rows .r{font-size:22px}
+body[data-lvl="6"] .slide.dense .content,body[data-lvl="6"] .slide.dense .col{gap:8px}
+body[data-lvl="6"] .slide.dense figure{max-width:79%}
+
+body[data-lvl="7"] .slide{padding:11px 30px 22px}
+body[data-lvl="7"] .content,body[data-lvl="7"] .col{gap:9px}
+body[data-lvl="7"] .cols{gap:15px}
+body[data-lvl="7"] h1.h{font-size:41px}
+body[data-lvl="7"] .rule{width:96px;height:4px;margin-bottom:8px}
+body[data-lvl="7"] .card{padding:11px 15px}
+body[data-lvl="7"] ul.pts li{padding-left:27px}
+body[data-lvl="7"] .big{font-size:62px}
+body[data-lvl="7"] figure{max-width:84%}
+body[data-lvl="7"] figcaption{font-size:18px}
+body[data-lvl="7"] .slide.dense .card{font-size:21px;padding:8px 13px;line-height:1.32}
+body[data-lvl="7"] .slide.dense .card .lbl{font-size:15px;margin-bottom:3px}
+body[data-lvl="7"] .slide.dense ul.pts li{font-size:21px}
+body[data-lvl="7"] .slide.dense .eq{font-size:25px}
+body[data-lvl="7"] .slide.dense .eq.sm{font-size:22px}
+body[data-lvl="7"] .slide.dense .rows .r{font-size:21px}
+body[data-lvl="7"] .slide.dense .content,body[data-lvl="7"] .slide.dense .col{gap:7px}
+body[data-lvl="7"] .slide.dense figure{max-width:74%}
+body[data-lvl="7"] .slide.dense figcaption{font-size:16px}
+</style>
+</head>
+<body data-lvl="5">
+<div id="stage">
+<section class="slide title">
+  <div>
+    <div class="kick">Unit &amp; Measurement &#183; 03</div>
+    <div class="big"><span class="g">Measurement &amp; Error</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">order of magnitude &#183; significant figures &#183; error analysis</p>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Order of magnitude</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">The rule</span>
+      Write the number as <span class="eq m">a &#215; 10<sup>b</sup></span>&nbsp; where&nbsp;
+      <span class="eq m">0.5 &#8804; a &lt; 5</span>. Then <span class="am eq m">b</span> is the order of magnitude.
+    </div>
+    <div class="card plain">
+      <div class="rows" style="font-size:30px">
+        <div class="r frag" style="grid-template-columns:1fr 1.15fr .9fr">
+          <span class="eq">3.7 &#215; 10<sup>11</sup></span>
+          <span class="muted"></span>
+          <span class="eq am">order = 11</span>
+        </div>
+        <div class="r frag" style="grid-template-columns:1fr 1.15fr .9fr">
+          <span class="eq">7.7 &#215; 10<sup>11</sup></span>
+          <span class="eq muted">= 0.77 &#215; 10<sup>12</sup></span>
+          <span class="eq am">order = 12</span>
+        </div>
+        <div class="r frag" style="grid-template-columns:1fr 1.15fr .9fr">
+          <span class="eq">50</span>
+          <span class="eq muted">= 0.5 &#215; 10<sup>2</sup></span>
+          <span class="eq am">order = 2</span>
+        </div>
+      </div>
+    </div>
+    <div class="card question frag"><span class="lbl">Notice</span>
+      7.7 is <span class="acc">not</span> less than 5 &#8212; so it must first be pushed into the
+      <span class="eq m">0.5 &#8211; 5</span> window, and the order goes <span class="am">up by one.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Round off</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col" style="flex:1.35 1 0">
+        <div class="card plain">
+          If the digit to the right of the last digit you want to keep is
+          <span class="acc">less than 5</span>, simply drop all the digits to the right.
+        </div>
+        <div class="card plain frag">
+          If that digit is <span class="acc">greater than 5</span> (or 5 followed by something),
+          add 1 to the last remaining digit, then drop the rest.
+        </div>
+        <div class="card warn frag"><span class="lbl">Galti mat karna</span>
+          If that digit is <span class="rd">exactly 5</span> and nothing follows it &#8212;
+          look at the last remaining digit.<br>
+          <span class="gr">Even</span> &#8594; simply drop.&nbsp;&nbsp;
+          <span class="am">Odd</span> &#8594; increment it.
+        </div>
+      </div>
+      <div class="col" style="flex:.8 1 0">
+        <div class="card plain">
+          <div class="rows" style="font-size:29px">
+            <div class="r" style="grid-template-columns:1fr auto 1fr">
+              <span class="eq">3.71</span><span class="arw">&#10230;</span><span class="eq am">3.7</span>
+            </div>
+            <div class="r frag" style="grid-template-columns:1fr auto 1fr">
+              <span class="eq">3.66</span><span class="arw">&#10230;</span><span class="eq am">3.7</span>
+            </div>
+          </div>
+        </div>
+        <div class="card warn frag">
+          <div class="rows" style="font-size:29px">
+            <div class="r" style="grid-template-columns:1fr auto 1fr">
+              <span class="eq">3.7<span class="rd">5</span></span><span class="arw">&#10230;</span><span class="eq am">3.8</span>
+            </div>
+            <div class="r" style="grid-template-columns:1fr auto 1fr">
+              <span class="eq">3.8<span class="rd">5</span></span><span class="arw">&#10230;</span><span class="eq am">3.8</span>
+            </div>
+            <div class="r" style="grid-template-columns:1fr auto 1fr">
+              <span class="eq">3.85<span class="rd">4</span></span><span class="arw">&#10230;</span><span class="eq am">3.9</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Parallax method</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col" style="flex:1.05 1 0">
+        <div class="card question"><span class="lbl">Used for</span>
+          Measuring <span class="acc">very large lengths</span> &#8212; up to about
+          <span class="am">100 light years.</span>
+        </div>
+        <div class="card formula frag"><span class="lbl">Angle</span>
+          <span class="eq m">&#952; =
+            <span class="fr"><span>arc</span><span>radius</span></span>
+          </span>
+          &nbsp;&nbsp;<span class="muted" style="font-size:.8em">&#952; must be in radian</span>
+        </div>
+        <div class="card solution frag"><span class="lbl">If the angle is in D&#183;M&#183;S</span>
+          <span class="eq m">&#952; = 4<sup>&#176;</sup>2&#8242;6&#8243;</span><br>
+          <span class="eq m">use = <span style="font-style:normal">(</span>4 +
+            <span class="fr"><span>2</span><span>60</span></span> +
+            <span class="fr"><span>6</span><span>3600</span></span><span style="font-style:normal">)</span>
+            <span class="fr"><span>&#960;</span><span>180</span></span>
+          </span>
+        </div>
+      </div>
+      <div class="col frag" style="flex:.85 1 0">
+        <figure><svg viewBox="0 0 480 330" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60,190 L400,70" stroke="#cfd6e2" stroke-width="2.6" fill="none"/>
+          <path d="M60,190 L360,300" stroke="#cfd6e2" stroke-width="2.6" fill="none"/>
+          <path d="M400,70 A330,330 0 0 1 360,300" stroke="#f5b942" stroke-width="3.2" fill="none"/>
+          <path d="M112,171 A56,56 0 0 1 108,208" stroke="#5b8cff" stroke-width="2.4" fill="none"/>
+          <text x="132" y="200" fill="#5b8cff" font-size="27" font-family="Cambria,Georgia,serif" font-style="italic">&#952;</text>
+          <text x="250" y="120" fill="#9aa4b2" font-size="22" font-family="Cambria,Georgia,serif" font-style="italic">radius</text>
+          <text x="418" y="196" fill="#f5b942" font-size="22" font-family="Cambria,Georgia,serif" font-style="italic">arc</text>
+          <circle cx="60" cy="190" r="6" fill="#cfd6e2"/>
+          <text x="20" y="196" fill="#9aa4b2" font-size="21">eye</text>
+        </svg><figcaption>The far object subtends a small angle at the observer.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Significant figures <span class="lite">&#183; the rules</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <ul class="pts">
+      <li>All <span class="acc">non&#8209;zero</span> digits are significant.</li>
+      <li class="frag">Zeros <span class="acc">between</span> non&#8209;zero digits are significant.</li>
+      <li class="frag">Right&#8209;side zeros <span class="rd">without</span> a decimal point are <span class="rd">not</span> significant.</li>
+      <li class="frag">Right&#8209;side zeros <span class="gr">with</span> a decimal point <span class="gr">are</span> significant.</li>
+      <li class="frag">Left&#8209;side (leading) zeros are <span class="rd">never</span> significant.</li>
+      <li class="frag">The <span class="am">power of 10</span> does not matter.</li>
+      <li class="frag">Fixed digits and counted numbers have <span class="am">&#8734;</span> significant figures.</li>
+    </ul>
+    <div class="card warn frag"><span class="lbl">Note</span>
+      If an integer is written <span class="rd">without any unit</span> and you have no idea about it,
+      assume it is a <span class="am">count</span>.
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Significant figures <span class="lite">&#183; count them</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="rows">
+      <div class="r hd" style="grid-template-columns:1fr 1fr 1.5fr"><span>Number</span><span>S.F.</span><span>Why</span></div>
+      <div class="r" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">3.657 m</span><span class="eq">4</span><span class="muted">all non&#8209;zero</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">3.65007 m</span><span class="eq">6</span><span class="muted">zeros inside count</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">365700 m</span><span class="eq">4</span><span class="muted">no decimal &#8594; right zeros out</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">30.0 m</span><span class="eq">3</span><span class="muted">decimal &#8594; right zeros in</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">0.003657 m</span><span class="eq">4</span><span class="muted">leading zeros out</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">3 rod &#183; 4 boys &#183; 3.5 rupee &#183; 5 &#183; &#960;</span><span class="eq">&#8734;</span><span class="muted">counted / fixed</span></div>
+      <div class="r frag" style="grid-template-columns:1fr 1fr 1.5fr"><span class="eq am">3.2 &#215; 10<sup>12</sup> m</span><span class="eq">2</span><span class="muted">power of 10 ignored</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Significant figures <span class="lite">&#183; in calculation</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">In + and &#8722;</span>
+      Keep the <span class="am">least decimal place</span><br>
+      <span class="eq">3.1507 + 3.2 = 6.3507 = <span class="am">6.4</span></span>
+    </div>
+    <div class="card formula frag"><span class="lbl">In &#215; and &#247;</span>
+      Keep the <span class="am">least significant figure</span><br>
+      <span class="eq">3.6507 &#215; 3.3 = 12.04731 = <span class="am">12</span></span>
+    </div>
+    <div class="card question frag"><span class="lbl">Note</span>
+      If a calculation <span class="acc">can</span> be done by addition, it will be done by addition only.
+    </div>
+    <div class="card solution frag"><span class="lbl">Vocabulary</span>
+      The last significant digit is also called the <span class="gr">uncertain digit</span>.
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Question</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      How many <span class="acc">significant zeros</span> are there in
+      <span class="eq am">0.00003002320</span> ?
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <span class="eq" style="font-size:1.15em">0.<span class="strike">0000</span>3<span class="am">00</span>232<span class="am">0</span></span><br>
+      <span class="muted" style="font-size:.85em">leading zeros &#8212; never significant &#183; two zeros inside &#183; one trailing zero after the decimal</span>
+    </div>
+    <div class="card formula frag"><span class="lbl">Answer</span>
+      <span class="eq am" style="font-size:1.1em">3 significant zeros</span>
+      &nbsp;&nbsp;<span class="muted" style="font-size:.8em">(the number itself has 7 significant figures)</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">NCERT question <span class="lite">&#183; 1.31</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      How many significant figures should be present in the answer of the following calculations?
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card plain">
+          <span class="eq">(i)&nbsp;
+            <span class="fr"><span>0.02856 &#215; 298.15 &#215; 0.112</span><span>0.5785</span></span>
+          </span>
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          <span class="eq sm">4 &#183; 5 &#183; <span class="am">3</span> &#183; 4</span> &#8594; least is
+          <span class="am eq">3</span> &#8594; answer has <span class="gr">3 S.F.</span>
+        </div>
+        <div class="card plain frag">
+          <span class="eq">(iii)&nbsp; 0.0125 + 0.7864 + 0.0215</span>
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          Addition &#8594; least decimal place = <span class="am">4</span> &#8594;
+          <span class="eq">0.8204</span> &#8594; <span class="gr">4 S.F.</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card plain">
+          <span class="eq">(ii)&nbsp; 5 &#215; 5.364</span>
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          5 is an <span class="am">exact count</span> (&#8734; S.F.) &#8594; answer has <span class="gr">4 S.F.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide title">
+  <div>
+    <div class="kick">Part 2</div>
+    <div class="big"><span class="g">Errors in measurement</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">positive &amp; negative &#183; random &#183; systematic</p>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Positive and negative error</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Positive error</span>
+          The measured value comes out <span class="acc">more</span> than the true value.
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn frag"><span class="lbl">Negative error</span>
+          The measured value comes out <span class="rd">less</span> than the true value.
+        </div>
+      </div>
+    </div>
+    <div class="card formula frag"><span class="lbl">Two families</span>
+      <span class="am">Random error</span> &#8212; sign and size keep changing &nbsp;&#183;&nbsp;
+      <span class="am">Systematic error</span> &#8212; same sign and size every time.
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Random error</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col" style="flex:1.1 1 0">
+        <div class="card question"><span class="lbl">Definition</span>
+          If the error&#8217;s <span class="acc">magnitude and sign can change randomly</span>
+          from reading to reading.
+        </div>
+        <div class="card plain frag"><span class="lbl">Sources</span>
+          <ul class="pts">
+            <li>Any random fluctuation</li>
+            <li>Least count error</li>
+          </ul>
+        </div>
+        <div class="card formula frag"><span class="lbl">Key result</span>
+          <span class="eq m">Random error &#8733;
+            <span class="fr"><span>1</span><span>number of observations</span></span>
+          </span>
+        </div>
+      </div>
+      <div class="col frag" style="flex:.9 1 0">
+        <figure><svg viewBox="0 0 460 210" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="60" width="440" height="92" rx="5" fill="#e8ecf2" stroke="#8d95a3" stroke-width="2"/>
+          <g stroke="#2b3240" stroke-width="2.4">
+            <line x1="30" y1="60" x2="30" y2="106"/><line x1="52" y1="60" x2="52" y2="90"/>
+            <line x1="74" y1="60" x2="74" y2="90"/><line x1="96" y1="60" x2="96" y2="90"/>
+            <line x1="118" y1="60" x2="118" y2="90"/><line x1="140" y1="60" x2="140" y2="106"/>
+            <line x1="162" y1="60" x2="162" y2="90"/><line x1="184" y1="60" x2="184" y2="90"/>
+            <line x1="206" y1="60" x2="206" y2="90"/><line x1="228" y1="60" x2="228" y2="90"/>
+            <line x1="250" y1="60" x2="250" y2="106"/><line x1="272" y1="60" x2="272" y2="90"/>
+            <line x1="294" y1="60" x2="294" y2="90"/><line x1="316" y1="60" x2="316" y2="90"/>
+            <line x1="338" y1="60" x2="338" y2="90"/><line x1="360" y1="60" x2="360" y2="106"/>
+            <line x1="382" y1="60" x2="382" y2="90"/><line x1="404" y1="60" x2="404" y2="90"/>
+            <line x1="426" y1="60" x2="426" y2="90"/>
+          </g>
+          <text x="30" y="140" fill="#2b3240" font-size="26" text-anchor="middle" font-family="Georgia,serif">0</text>
+          <text x="140" y="140" fill="#2b3240" font-size="26" text-anchor="middle" font-family="Georgia,serif">1</text>
+          <text x="250" y="140" fill="#2b3240" font-size="26" text-anchor="middle" font-family="Georgia,serif">2</text>
+          <text x="360" y="140" fill="#2b3240" font-size="26" text-anchor="middle" font-family="Georgia,serif">3</text>
+          <rect x="30" y="26" width="196" height="26" rx="3" fill="rgba(91,140,255,.85)"/>
+          <line x1="226" y1="20" x2="226" y2="60" stroke="#f5b942" stroke-width="2.4" stroke-dasharray="5 4"/>
+          <text x="240" y="22" fill="#f5b942" font-size="21">edge falls between marks</text>
+        </svg><figcaption>The last digit is always a guess &#8212; that is least count error.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Systematic error</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Definition</span>
+      If the error has the <span class="acc">same magnitude and same sign</span> in every reading.
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card plain frag"><span class="lbl">Instrumental error</span>
+          <span class="am">Zero error</span> &#8212; an empty weighing machine already showing
+          <span class="eq">5 kg</span>.
+        </div>
+        <div class="card plain frag"><span class="lbl">Personal error</span>
+          Comes from a habit &#8212; like <span class="am">parallax</span> while reading a scale.
+        </div>
+      </div>
+      <div class="col">
+        <div class="card plain frag"><span class="lbl">Imperfect technique</span>
+          The method itself is not right for the job.
+        </div>
+        <div class="card warn frag"><span class="lbl">Backlash error</span>
+          Lash or play in the screw threads &#8212;
+          <span class="rd">cannot be removed completely.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Question <span class="lite">&#183; the difference that matters</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Question</span>
+          <span class="am">Random</span> error in 50 readings is <span class="eq m">x</span>.
+          Find the random error in 150 readings.
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          <span class="eq sm m">error &#8733; <span class="fr"><span>1</span><span>N</span></span></span>
+          &nbsp;&#8594;&nbsp;
+          <span class="eq sm m"><span class="fr"><span>x</span><span>x&#8242;</span></span> =
+          <span class="fr"><span>150</span><span>50</span></span></span><br>
+          <span class="eq gr">x&#8242; = <span class="fr"><span>x</span><span>3</span></span></span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card question"><span class="lbl">Question</span>
+          <span class="am">Zero</span> error in 50 readings is <span class="eq m">x</span>.
+          Find the zero error in 150 readings.
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          Zero error is <span class="gr">systematic</span> &#8212; same in every single reading.<br>
+          <span class="eq gr" style="font-size:1.1em">error = x</span>
+        </div>
+      </div>
+    </div>
+    <div class="card formula frag"><span class="lbl">Takeaway</span>
+      More readings kill <span class="am">random</span> error. They do <span class="rd">nothing</span> to a systematic one.
+    </div>
+  </div>
+</section>
+<section class="slide title">
+  <div>
+    <div class="kick">Part 3</div>
+    <div class="big"><span class="g">Calculating error</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">mean value &#183; absolute &#183; relative &#183; percentage</p>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Mean value</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Let the length of a rod be</span>
+      <span class="eq am m">l = 3.77 m, 3.75 m, 3.73 m</span>
+    </div>
+    <div class="card solution frag"><span class="lbl">Mean</span>
+      <span class="eq m">&#8658; l<sub>mean</sub> =
+        <span class="fr"><span>3.77 + 3.75 + 3.73</span><span>3</span></span>
+      </span>
+    </div>
+    <div class="card formula frag"><span class="lbl">So</span>
+      <span class="eq m" style="font-size:1.1em">&#8658; l<sub>mean</sub> = <span class="am">3.75 m</span></span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Mean absolute error</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Same rod</span>
+      <span class="eq am m">l = 3.77 m, 3.75 m, 3.73 m</span> &nbsp;&#183;&nbsp;
+      <span class="eq m">l<sub>mean</sub> = 3.75 m</span>
+    </div>
+    <div class="card solution frag"><span class="lbl">Step 1</span>
+      <span class="eq sm m">&#8658; &#916;l<sub>mean</sub> =
+        <span class="fr"><span>|3.75 &#8722; 3.77| + |3.75 &#8722; 3.75| + |3.75 &#8722; 3.73|</span><span>3</span></span>
+      </span>
+    </div>
+    <div class="card solution frag"><span class="lbl">Step 2</span>
+      <span class="eq sm m">&#8658; &#916;l<sub>mean</sub> =
+        <span class="fr"><span>0.02 + 0 + 0.02</span><span>3</span></span>
+        =
+        <span class="fr"><span>0.04</span><span>3</span></span>
+      </span>
+    </div>
+    <div class="cols frag">
+      <div class="col" style="flex:1.1 1 0">
+        <div class="card formula"><span class="lbl">Report it as</span>
+          <span class="eq m" style="font-size:1.1em">&#8658; l = 3.75 &#177;
+            <span class="fr"><span>0.04</span><span>3</span></span> m
+          </span>
+        </div>
+      </div>
+      <div class="col" style="flex:.9 1 0">
+        <div class="card warn"><span class="lbl">Note</span>
+          Error is <span class="rd">always taken positive</span> &#8212; that is why the modulus is there.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Four names for one idea</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="rows">
+      <div class="r" style="grid-template-columns:.85fr 2fr">
+        <span class="eq am" style="font-size:1.25em">l</span>
+        <span>length &#8212; the <span class="acc">measured value</span></span>
+      </div>
+      <div class="r frag" style="grid-template-columns:.85fr 2fr">
+        <span class="eq am" style="font-size:1.25em">&#916;l</span>
+        <span><span class="gr">absolute error</span> &#183; uncertainty &#183; gross error &#183; permissible error</span>
+      </div>
+      <div class="r frag" style="grid-template-columns:.85fr 2fr">
+        <span class="eq am" style="font-size:1.15em"><span class="fr"><span>&#916;l</span><span>l</span></span></span>
+        <span><span class="gr">relative error</span> &#183; fractional error</span>
+      </div>
+      <div class="r frag" style="grid-template-columns:.85fr 2fr">
+        <span class="eq am" style="font-size:1.15em"><span class="fr"><span>&#916;l</span><span>l</span></span> &#215; 100</span>
+        <span><span class="gr">percentage error</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Question</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      <span class="eq am m">I = 200 &#177; 3</span> &nbsp;&#183;&nbsp;
+      find the absolute error, the relative error and the percentage error.
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Absolute error</span>
+          <span class="eq am" style="font-size:1.1em">= 3</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Relative error</span>
+          <span class="eq m">=
+            <span class="fr"><span>3</span><span>200</span></span> = <span class="am">0.015</span>
+          </span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Percentage error</span>
+          <span class="eq m">= 0.015 &#215; 100 = <span class="am">1.5%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">When the error is not given</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">Rule 1</span>
+      If the error is not given, the <span class="am">least count</span> of the instrument becomes the error.
+    </div>
+    <div class="card plain frag">
+      A stop watch has a least count of <span class="eq">0.2 s</span> and it measures
+      <span class="eq">17 s</span> &#8594; the reading is
+      <span class="eq am" style="font-size:1.05em">17 &#177; 0.2 s</span>
+    </div>
+    <div class="card formula frag"><span class="lbl">Rule 2</span>
+      If the least count is also not given, the error is <span class="am">1 at the last significant place</span>.
+    </div>
+    <div class="card plain frag">
+      <div class="rows">
+        <div class="r" style="grid-template-columns:1fr auto 1.4fr">
+          <span class="eq">3.09</span><span class="arw">&#10230;</span><span class="eq am">3.09 &#177; 0.01</span>
+        </div>
+        <div class="r" style="grid-template-columns:1fr auto 1.4fr">
+          <span class="eq">3.0900</span><span class="arw">&#10230;</span><span class="eq am">3.0900 &#177; 0.0001</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Warning question</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      The least count of a stop watch is <span class="am">1 second</span>. The time of
+      <span class="am">20 oscillations</span> of a pendulum is measured to be
+      <span class="am">25 seconds</span>.
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <div class="rows">
+        <div class="r hd" style="grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr">
+          <span></span><span>Reading</span><span>Absolute error</span><span>Relative error</span><span>Percentage error</span>
+        </div>
+        <div class="r" style="grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr">
+          <span class="am">Measured time</span>
+          <span class="eq">25 s</span>
+          <span class="eq">1 s</span>
+          <span class="eq"><span class="fr"><span>1</span><span>25</span></span></span>
+          <span class="eq"><span class="fr"><span>1</span><span>25</span></span>&#215;100 = <span class="gr">4%</span></span>
+        </div>
+        <div class="r" style="grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr">
+          <span class="am">Time period</span>
+          <span class="eq"><span class="fr"><span>25</span><span>20</span></span>s</span>
+          <span class="eq"><span class="fr"><span>1</span><span>20</span></span>s</span>
+          <span class="eq"><span class="fr"><span>1/20</span><span>25/20</span></span>=<span class="fr"><span>1</span><span>25</span></span></span>
+          <span class="eq"><span class="fr"><span>1</span><span>25</span></span>&#215;100 = <span class="gr">4%</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="card warn frag"><span class="lbl">The trap</span>
+      Dividing by 20 shrinks the <span class="rd">absolute</span> error &#8212; but the
+      <span class="am">relative and percentage error do not change.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide title">
+  <div>
+    <div class="kick">Part 4</div>
+    <div class="big"><span class="g">Combination of errors</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">sum &amp; difference &#183; product &amp; quotient &#183; large errors</p>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Error combination <span class="lite">&#183; important</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">General method</span>
+      <ul class="pts a">
+        <li>Find the value</li>
+        <li>Then find the maximum value</li>
+        <li>The difference is the absolute error</li>
+      </ul>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card question frag"><span class="lbl">Addition and subtraction</span>
+          <span class="acc">Absolute errors add up</span>, using the same formula.
+        </div>
+      </div>
+      <div class="col">
+        <div class="card question frag"><span class="lbl">Multiplication and division</span>
+          For a small change (<span class="am">less than 5%</span>),
+          <span class="acc">percentage errors add up.</span>
+        </div>
+      </div>
+    </div>
+    <div class="card solution frag"><span class="lbl">General method for small change</span>
+      Use <span class="gr">differentiation</span>.
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Sum and difference <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If <span class="eq am m">z = 3x &#8722; y</span>, &nbsp;
+      <span class="eq am m">x = 10 &#177; 1</span>, &nbsp;
+      <span class="eq am m">y = 10 &#177; 2</span>.
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <span class="eq m">&#916;z = 3&#916;x + &#916;y</span><br>
+      <span class="eq m">&#916;z = 3 &#215; 1 + 2</span><br>
+      <span class="eq m" style="font-size:1.08em">&#916;z = <span class="am">5</span></span>
+    </div>
+    <div class="card formula frag"><span class="lbl">So</span>
+      <span class="eq m" style="font-size:1.08em">z = 20 &#177; 5</span>
+      &nbsp;&nbsp;<span class="muted" style="font-size:.8em">the minus sign in the formula never subtracts errors &#8212; they always add</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Sum and difference <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      A rod of length <span class="eq am m">l = 30 &#177; 1</span>, out of which he sold
+      <span class="eq am m">10 &#177; 2</span>. The remaining length will be?
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <span class="eq m">l = (30 &#177; 1) &#8722; (10 &#177; 2)</span><br>
+      <span class="eq m" style="font-size:1.1em">l = <span class="am">20 &#177; 3</span></span>
+    </div>
+    <div class="card warn frag"><span class="lbl">Remember</span>
+      Value subtracts. <span class="rd">Error still adds.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in <span class="eq m">R</span> is <span class="am">2%</span> and in
+      <span class="eq m">I</span> it is <span class="am">3%</span>, find the percentage error in voltage.
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Short way</span>
+          <span class="eq m">V = IR</span><br>
+          <span class="eq m">&#948;V = &#948;I + &#948;R</span><br>
+          <span class="eq m">&#948;V = 2 + 3 = <span class="am">5%</span></span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card plain frag"><span class="lbl">Or the long way</span>
+          <span class="eq sm m"><span class="fr"><span>&#916;V</span><span>V</span></span> =
+            <span class="fr"><span>&#916;I</span><span>I</span></span> +
+            <span class="fr"><span>&#916;R</span><span>R</span></span></span><br>
+          <span class="eq sm m"><span class="fr"><span>&#916;V</span><span>V</span></span>&#215;100 =
+            <span class="fr"><span>&#916;I</span><span>I</span></span>&#215;100 +
+            <span class="fr"><span>&#916;R</span><span>R</span></span>&#215;100 = <span class="am">5%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in <span class="eq m">m<sub>1</sub></span> is <span class="am">2%</span>,
+      in <span class="eq m">m<sub>2</sub></span> it is <span class="am">3%</span> and
+      <span class="am">1%</span> in distance, find the percentage error in force.
+      &nbsp;&nbsp;<span class="eq m">F = <span class="fr"><span>Gm<sub>1</sub>m<sub>2</sub></span><span>r<sup>2</sup></span></span></span>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          <span class="eq m">&#948;F = &#948;m<sub>1</sub> + &#948;m<sub>2</sub> + 2&#948;r</span><br>
+          <span class="eq m">&#948;F = 2 + 3 + 2 &#215; 1</span><br>
+          <span class="eq m" style="font-size:1.08em">&#948;F = <span class="am">7%</span></span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card plain frag"><span class="lbl">Or</span>
+          <span class="eq sm m"><span class="fr"><span>&#916;F</span><span>F</span></span> =
+            <span class="fr"><span>&#916;m<sub>1</sub></span><span>m<sub>1</sub></span></span> +
+            <span class="fr"><span>&#916;m<sub>2</sub></span><span>m<sub>2</sub></span></span> +
+            2<span class="fr"><span>&#916;r</span><span>r</span></span></span><br>
+          <span class="muted" style="font-size:.8em">a power in the formula becomes a multiplier on the percentage error</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in <span class="eq m">m</span> is <span class="am">1%</span> and in
+      <span class="eq m">v</span> it is <span class="am">3%</span>, find the percentage error in momentum.
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <span class="eq m">P = mv</span><br>
+      <span class="eq m">&#948;P = &#948;m + &#948;v = 1 + 3</span><br>
+      <span class="eq m" style="font-size:1.08em">&#948;P = <span class="am">4%</span></span>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in <span class="eq m">m</span> is <span class="am">1%</span> and in
+      <span class="eq m">v</span> it is <span class="am">3%</span>, find the percentage error in kinetic energy.
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <span class="eq m">K.E. = <span class="fr"><span>1</span><span>2</span></span> mv<sup>2</sup></span><br>
+      <span class="eq m">&#948;K.E. = &#948;m + 2&#948;v = 1 + 2 &#215; 3</span><br>
+      <span class="eq m" style="font-size:1.08em">= <span class="am">7%</span></span>
+    </div>
+    <div class="card formula frag"><span class="lbl">Note</span>
+      The constant <span class="eq m"><span class="fr"><span>1</span><span>2</span></span></span>
+      is exact &#8212; it carries <span class="am">no error at all.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Question</span>
+          If <span class="eq m">P = <span class="fr"><span>a<sup>3</sup>b<sup>2</sup></span><span>&#8730;c&#183;d</span></span></span>
+          and the % errors in <span class="eq m">a, b, c, d</span> are
+          <span class="am">1%, 1%, 2%</span> and <span class="am">2%</span>, find the percentage error in
+          <span class="eq m">P</span>.
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          <span class="eq sm m">&#948;P = 3&#948;a + 2&#948;b +
+            <span class="fr"><span>1</span><span>2</span></span>&#948;c + &#948;d</span><br>
+          <span class="eq sm m">= 3&#215;1 + 2&#215;1 +
+            <span class="fr"><span>1</span><span>2</span></span>&#215;2 + 2</span><br>
+          <span class="eq m" style="font-size:1.08em">= <span class="am">8%</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="card formula frag"><span class="lbl">Pattern</span>
+      Power <span class="eq m">n</span> &#8594; multiply that percentage error by
+      <span class="am eq m">n</span>. A square root is just <span class="eq m">n =
+      <span class="fr"><span>1</span><span>2</span></span></span>.
+    </div>
+  </div>
+</section>
+<section class="slide dense">
+  <h1 class="h">When the percentage error is <span class="lite">large</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in <span class="eq m">m</span> is <span class="am">10%</span> and in
+      <span class="eq m">v</span> it is <span class="am">20%</span>, find the percentage error in momentum.
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="card warn frag"><span class="lbl">Tempting &#8212; and wrong</span>
+          <span class="eq m strike">&#948;P = &#948;m + &#948;v = 10 + 20 = 30%</span><br>
+          <span class="rd">As the error is large, the additive shortcut breaks.</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Using the general method</span>
+          <span class="eq sm m">&#8658; P<sub>value</sub> = mv</span><br>
+          <span class="eq sm m">&#8658; P<sub>max</sub> = 1.1m &#215; 1.2v = 1.32 mv</span><br>
+          <span class="eq sm m">For percentage change use (n &#8722; 1) &#215; 100</span><br>
+          <span class="eq m" style="font-size:1.08em">= <span class="am">32%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">When the percentage error is <span class="lite">large</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the % error in velocity is <span class="am">10%</span>, find the percentage error in kinetic energy.
+    </div>
+    <div class="card solution frag"><span class="lbl">Using the general method</span>
+      <span class="eq m">&#8658; K.E. = <span class="fr"><span>1</span><span>2</span></span> mv<sup>2</sup></span><br>
+      <span class="eq m">&#8658; K.E.<sub>max</sub> = (1.1)<sup>2</sup> times = 1.21 times</span>
+    </div>
+    <div class="card formula frag"><span class="lbl">Percentage change</span>
+      <span class="eq m">(n &#8722; 1) &#215; 100 = (1.21 &#8722; 1) &#215; 100 =
+      <span class="am" style="font-size:1.08em">21%</span></span>
+      &nbsp;&nbsp;<span class="muted" style="font-size:.8em">the shortcut would have said 20%</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Proper error reporting</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col" style="flex:1.15 1 0">
+        <div class="card question"><span class="lbl">Question</span>
+          In an experiment to measure the focal length of an equiconvex lens, the following
+          measurements were made: <span class="eq m">|u| = 0.30 cm</span>,
+          <span class="eq m">|v| = 0.60 cm</span>. The image formed is real.
+          The focal length of the lens within error limits is
+        </div>
+        <div class="card plain">
+          <div class="rows" style="font-size:.95em">
+            <div class="r" style="grid-template-columns:1fr 1fr">
+              <span class="eq">(A) (0.20 &#177; 0.01) cm</span>
+              <span class="eq">(B) (0.20 &#177; 0.02) cm</span>
+            </div>
+            <div class="r" style="grid-template-columns:1fr 1fr">
+              <span class="eq">(C) (0.20 &#177; 0.0055) cm</span>
+              <span class="eq">(D) (0.20 &#177; 0.005) cm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="flex:.9 1 0">
+        <div class="card solution frag"><span class="lbl">Value</span>
+          <span class="eq sm m"><span class="fr"><span>1</span><span>f</span></span> =
+            <span class="fr"><span>1</span><span>v</span></span> &#8722;
+            <span class="fr"><span>1</span><span>u</span></span></span>
+          &nbsp;&#8594;&nbsp;<span class="eq sm m">f = <span class="am">0.20 cm</span></span>
+        </div>
+        <div class="card solution frag"><span class="lbl">Error</span>
+          <span class="eq sm m"><span class="fr"><span>&#916;f</span><span>f<sup>2</sup></span></span> =
+            <span class="fr"><span>&#916;u</span><span>u<sup>2</sup></span></span> +
+            <span class="fr"><span>&#916;v</span><span>v<sup>2</sup></span></span></span><br>
+          <span class="eq sm m">&#916;f = 0.04 &#215; 0.1389 = <span class="rd">0.0055</span></span>
+        </div>
+        <div class="card warn frag"><span class="lbl">Report it properly</span>
+          The measurement itself is known only to <span class="am">2 decimal places</span> &#8212;
+          the error cannot be quoted more precisely than the value.<br>
+          <span class="eq gr" style="font-size:1.05em">0.0055 &#10230; 0.01</span>
+          &nbsp;<span class="gr" style="font-weight:800">so the answer is (A)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Question <span class="lite">&#183; absolute vs percentage</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Question</span>
+          If diameter is <span class="eq am m">60 &#177; 2</span>, then the radius is
+          <ul class="pts"><li><span class="eq">30 &#177; 2</span></li><li><span class="eq">30 &#177; 1</span></li></ul>
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          <span class="eq m">r = <span class="fr"><span>d</span><span>2</span></span></span> &#8594;
+          the <span class="acc">absolute</span> error is halved too.<br>
+          <span class="eq gr" style="font-size:1.05em">30 &#177; 1</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card question"><span class="lbl">Question</span>
+          If diameter is <span class="eq am m">60 &#177; 2%</span>, then the radius is
+          <ul class="pts"><li><span class="eq">30 &#177; 2%</span></li><li><span class="eq">30 &#177; 1%</span></li></ul>
+        </div>
+        <div class="card solution frag"><span class="lbl">Solution</span>
+          Dividing by an exact 2 changes nothing in the ratio &#8212;
+          the <span class="acc">percentage</span> error stays.<br>
+          <span class="eq gr" style="font-size:1.05em">30 &#177; 2%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Note <span class="lite">&#183; for reciprocal sums</span></h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">For this case</span>
+      <span class="eq m">&#8658; <span class="fr"><span>1</span><span>R<sub>eff</sub></span></span> =
+        <span class="fr"><span>1</span><span>R<sub>1</sub></span></span> +
+        <span class="fr"><span>1</span><span>R<sub>2</sub></span></span></span>
+    </div>
+    <div class="card solution frag"><span class="lbl">The error goes</span>
+      <span class="eq m">&#8658; <span class="fr"><span>&#916;R<sub>eff</sub></span><span>R<sub>eff</sub><sup>2</sup></span></span> =
+        <span class="fr"><span>&#916;R<sub>1</sub></span><span>R<sub>1</sub><sup>2</sup></span></span> +
+        <span class="fr"><span>&#916;R<sub>2</sub></span><span>R<sub>2</sub><sup>2</sup></span></span></span>
+    </div>
+    <div class="card question frag"><span class="lbl">Same formula works in</span>
+      <span class="eq m"><span class="fr"><span>1</span><span>f</span></span> =
+        <span class="fr"><span>1</span><span>v</span></span> +
+        <span class="fr"><span>1</span><span>u</span></span></span>
+    </div>
+  </div>
+</section>
+
+<section class="slide title">
+  <div>
+    <div class="kick">Part 5</div>
+    <div class="big"><span class="g">Accuracy &amp; precision</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">two different questions about the same reading</p>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Accuracy and precision</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <figure style="max-width:42%"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="92" fill="#eef1f6" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="66" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="40" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="15" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <g fill="#2c62e8">
+            <circle cx="92" cy="96" r="6"/><circle cx="112" cy="104" r="6"/><circle cx="86" cy="118" r="6"/>
+            <circle cx="108" cy="86" r="6"/><circle cx="120" cy="118" r="6"/><circle cx="98" cy="126" r="6"/>
+            <circle cx="76" cy="100" r="6"/>
+          </g>
+        </svg><figcaption>accurate, not precise</figcaption></figure>
+        <div class="card question"><span class="lbl">Accuracy</span>
+          How <span class="acc">close</span> a set of measurements is to the
+          <span class="acc">true value</span>.
+        </div>
+        <div class="card solution frag"><span class="lbl">Steps to check accuracy</span>
+          <ul class="pts g"><li>First by percentage error</li><li>Then by absolute error</li></ul>
+        </div>
+      </div>
+      <div class="col">
+        <figure style="max-width:42%"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="92" fill="#eef1f6" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="66" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="40" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <circle cx="100" cy="100" r="15" fill="none" stroke="#8d95a3" stroke-width="2"/>
+          <g fill="#2c62e8">
+            <circle cx="52" cy="46" r="6"/><circle cx="64" cy="52" r="6"/><circle cx="58" cy="60" r="6"/>
+            <circle cx="70" cy="42" r="6"/><circle cx="46" cy="56" r="6"/><circle cx="68" cy="62" r="6"/>
+            <circle cx="56" cy="36" r="6"/>
+          </g>
+        </svg><figcaption>precise, not accurate</figcaption></figure>
+        <div class="card question"><span class="lbl">Precision</span>
+          How <span class="acc">close or dispersed</span> the measurements are
+          <span class="acc">to each other</span>.
+        </div>
+        <div class="card solution frag"><span class="lbl">Steps to check precision</span>
+          <ul class="pts g"><li>The number with more decimal places</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Question</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      If the length of a rod is <span class="eq am m">4 m</span>, then what is the order of
+      accuracy and precision?
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution</span>
+      <div class="rows">
+        <div class="r hd" style="grid-template-columns:1.4fr 1fr 1fr"><span>Reading</span><span>Accuracy</span><span>Precision</span></div>
+        <div class="r" style="grid-template-columns:1.4fr 1fr 1fr">
+          <span class="eq m">l = 4 m</span><span class="gr">1 &#8212; most accurate</span><span class="eq">4</span>
+        </div>
+        <div class="r" style="grid-template-columns:1.4fr 1fr 1fr">
+          <span class="eq m">l = 3.94 m</span><span class="eq">2</span><span class="eq">3</span>
+        </div>
+        <div class="r" style="grid-template-columns:1.4fr 1fr 1fr">
+          <span class="eq m">l = 3.734 m</span><span class="eq">3</span><span class="eq">2</span>
+        </div>
+        <div class="r" style="grid-template-columns:1.4fr 1fr 1fr">
+          <span class="eq m">l = 2.32323734 m</span><span class="eq">4</span><span class="gr">1 &#8212; most precise</span>
+        </div>
+      </div>
+    </div>
+    <div class="card warn frag"><span class="lbl">The point</span>
+      A long tail of decimals looks impressive &#8212; but
+      <span class="rd">precision is not accuracy.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Question</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Question</span>
+      Which one is more accurate?
+    </div>
+    <div class="card solution frag"><span class="lbl">Solution &#8212; compare the percentage error</span>
+      <div class="rows">
+        <div class="r" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <span class="eq">(A) 4.0 &#177; 0.1</span>
+          <span class="eq">(B) 400 &#177; 1</span>
+          <span class="eq">(C) 0.4 &#177; 0.1</span>
+          <span class="eq">(D) 40. &#177; 1</span>
+        </div>
+        <div class="r" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <span class="eq muted">2.5%</span>
+          <span class="eq gr">0.25% &nbsp;<span class="yes">&#10003;</span></span>
+          <span class="eq muted">25%</span>
+          <span class="eq muted">2.5%</span>
+        </div>
+      </div>
+    </div>
+    <div class="card formula frag"><span class="lbl">Answer</span>
+      <span class="eq gr" style="font-size:1.08em">(B) 400 &#177; 1</span> &#8212;
+      smallest percentage error, so the most accurate.
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Minimizing error</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card formula"><span class="lbl">In a calculation</span>
+      The quantity with the <span class="am">least magnitude</span> must be kept the
+      <span class="am">most accurate and most precise</span>.
+    </div>
+    <div class="card question frag"><span class="lbl">Why</span>
+      The same absolute error on a small number is a
+      <span class="acc">much bigger percentage error</span> &#8212; and percentage errors are what add up.
+    </div>
+    <div class="card solution frag"><span class="lbl">Example</span>
+      <span class="eq">0.4 &#177; 0.1 = 25%</span> &nbsp;versus&nbsp;
+      <span class="eq">400 &#177; 1 = 0.25%</span> &#8212;
+      <span class="gr">same 0.1&#8211;1 sized slip, hundred&#8209;fold difference.</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide title">
+  <div>
+    <div class="kick">Part 6</div>
+    <div class="big"><span class="g">Measuring length, mass &amp; time</span></div>
+    <div class="rule"></div>
+    <p style="margin:22px 0 0;font-size:28px;color:#9aa4b2">instruments, ranges and the odd units</p>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">The ranges we work in</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="card question"><span class="lbl">Measurement of length</span>
+      <span class="eq am m">10<sup>&#8722;15</sup> m &nbsp;to&nbsp; 10<sup>26</sup> m</span>
+    </div>
+    <div class="card question frag"><span class="lbl">Measurement of mass</span>
+      <span class="eq am m">10<sup>&#8722;30</sup> kg &nbsp;to&nbsp; 10<sup>55</sup> kg</span>
+    </div>
+    <div class="card question frag"><span class="lbl">Measurement of time</span>
+      <span class="eq am m">10<sup>&#8722;17</sup> s &nbsp;to&nbsp; 10<sup>24</sup> s</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Measurement of length</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Large</span>
+          <ul class="pts"><li>Parallax method</li></ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Small</span>
+          <ul class="pts g"><li>Scale</li><li>Vernier calliper</li><li>Screw gauge</li></ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card formula frag"><span class="lbl">Very small</span>
+          <ul class="pts a"><li>Microscope &#8212; optical, electron, tunnelling</li><li>Volumetric</li></ul>
+          <div style="margin-top:8px"><span class="eq sm m">t =
+            <span class="fr"><span>volume</span><span>area</span></span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1 class="h">Measurement of mass and time</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <div class="card question"><span class="lbl">Mass</span>
+          <ul class="pts">
+            <li>Small mass &#8212; <span class="am">mass spectrograph</span></li>
+            <li>Normal mass &#8212; <span class="am">Newton&#8217;s formula</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card solution frag"><span class="lbl">Time</span>
+          <ul class="pts g">
+            <li>Atomic clock accuracy &#8212;
+              <span class="eq m">1 part in 10<sup>13</sup></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dense">
+  <h1 class="h">Different types of unit</h1>
+  <div class="rule"></div>
+  <div class="content">
+    <div class="cols">
+      <div class="col">
+        <ul class="pts a">
+          <li>1 amu in terms of energy is <span class="eq m">931 MeV</span></li>
+          <li>CSL <span class="eq m">2.8 &#215; 10<sup>30</sup> kg</span></li>
+          <li>Solar mass <span class="eq m">1.99 &#215; 10<sup>30</sup> kg</span></li>
+          <li>Light year <span class="eq m">9.46 &#215; 10<sup>15</sup> m</span></li>
+          <li>Astronomical unit <span class="eq m">1.496 &#215; 10<sup>11</sup> m</span></li>
+          <li>Parsec &#8212; 3.26 light year,
+            <span class="eq m">3.09 &#215; 10<sup>16</sup> m</span> (parallactic second)</li>
+          <li>Ton = 1000 kg</li>
+        </ul>
+      </div>
+      <div class="col frag">
+        <ul class="pts a">
+          <li>Quintal = 100 kg</li>
+          <li>Shake = 10 nanosecond</li>
+          <li>Sidereal day = 24 hours &#8722; 4 min</li>
+          <li>Barn (nuclear area) = <span class="eq m">10<sup>&#8722;28</sup> m<sup>2</sup></span></li>
+          <li>Lunar month = 27.3 days</li>
+          <li>Slug = 14.593 kg</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<div id="hint">&#8592; &#8594; &nbsp;&#183;&nbsp; press 1 &#8211; 7 for text size</div>
+<div id="badge"></div>
+<script>
+(function(){
+  var W=[1600,1500,1400,1300,1200,1120,1040];
+  var PCT=[100,107,114,123,133,143,154];
+  var stage=document.getElementById('stage');
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var badge=document.getElementById('badge');
+  var hint=document.getElementById('hint');
+  var lvl=5, si=0, fi=0, badgeT=null, curT=null;
+
+  try{var s=localStorage.getItem('dbLvl'); if(s){var n=parseInt(s,10); if(n>=1&&n<=7) lvl=n;}}catch(e){}
+
+  function frags(i){return [].slice.call(slides[i].querySelectorAll('.frag'));}
+
+  function fit(){
+    var w=W[lvl-1], h=w*9/16;
+    stage.style.width=w+'px';
+    stage.style.height=h+'px';
+    document.body.setAttribute('data-lvl',String(lvl));
+    var s=Math.min(window.innerWidth/w, window.innerHeight/h);
+    stage.style.transform='translate(-50%,-50%) scale('+s+')';
+    guard();
+  }
+
+  /* safety net: never clip. shrink the content block if it would overflow. */
+  function guard(){
+    slides.forEach(function(sl){
+      var c=sl.querySelector('.content')||sl;
+      c.style.zoom='';
+      var z=1, pass=0;
+      while(pass<4 && c.scrollHeight>c.clientHeight+3 && z>0.6){
+        z=Math.max(0.6, z*Math.min(1, (c.clientHeight-2)/c.scrollHeight));
+        c.style.zoom=z;
+        pass++;
+      }
+    });
+  }
+
+  function render(back){
+    slides.forEach(function(sl,k){
+      sl.classList.toggle('active',k===si);
+      sl.classList.toggle('back',!!back&&k!==si);
+    });
+    frags(si).forEach(function(f,k){f.classList.toggle('on',k<fi);});
+  }
+
+  function next(){
+    var n=frags(si).length;
+    if(fi<n){fi++;}
+    else if(si<slides.length-1){si++;fi=0;}
+    else return;
+    render(false);
+  }
+  function prev(){
+    if(fi>0){fi--;}
+    else if(si>0){si--;fi=frags(si).length;}
+    else return;
+    render(true);
+  }
+
+  function setLvl(n){
+    lvl=Math.min(7,Math.max(1,n));
+    try{localStorage.setItem('dbLvl',String(lvl));}catch(e){}
+    fit();
+    badge.textContent='Text size '+lvl+' / 7 · '+PCT[lvl-1]+'%';
+    badge.classList.add('on');
+    clearTimeout(badgeT);
+    badgeT=setTimeout(function(){badge.classList.remove('on');},1600);
+  }
+
+  document.addEventListener('keydown',function(e){
+    var k=e.key;
+    if(k==='ArrowRight'||k===' '||k==='PageDown'){e.preventDefault();next();}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();prev();}
+    else if(k==='Home'){e.preventDefault();si=0;fi=0;render(true);}
+    else if(k==='End'){e.preventDefault();si=slides.length-1;fi=frags(si).length;render(false);}
+    else if(k>='1'&&k<='7'){e.preventDefault();setLvl(parseInt(k,10));}
+    else if(k==='+'||k==='='){e.preventDefault();setLvl(lvl+1);}
+    else if(k==='-'||k==='_'){e.preventDefault();setLvl(lvl-1);}
+  });
+
+  function wake(){
+    document.body.classList.remove('hidecursor');
+    clearTimeout(curT);
+    curT=setTimeout(function(){document.body.classList.add('hidecursor');},2500);
+  }
+  document.addEventListener('mousemove',wake);
+  document.addEventListener('mousedown',wake);
+  wake();
+
+  window.addEventListener('resize',fit);
+  window.addEventListener('load',function(){fit();setTimeout(guard,120);setTimeout(guard,600);});
+
+  document.body.setAttribute('data-lvl',String(lvl));
+  fit();
+  render(false);
+  setTimeout(function(){hint.style.opacity='0';},4000);
+})();
+</script>
+</body>
+</html>

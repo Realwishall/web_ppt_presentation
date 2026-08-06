@@ -741,21 +741,78 @@
 
   /* A frozen box can carry the slide's HTML too: strip the deck's scripts,
      show only the frozen slide index and reveal its steps up to stepIndex.
-     Rendered in a sandboxed iframe scaled to fit the box. */
+     Rendered in a sandboxed iframe scaled to fit the box.
+
+     Stripping the scripts is what makes this safe (no second WebGL context, no
+     preset replaying inside the box the teacher is writing on) — but the deck's
+     runtime is also what paints STATE, not just motion: tools/build-deck.mjs
+     ships revealFx (the .info-box holding the floor grows to 120% and dims its
+     neighbours) and lightsFx (a revealed [data-lights] cue lights its [data-lit]
+     words). Strip those and a focus-box slide freezes flat and undimmed — it is
+     not the slide that was on the board. Both states are a pure function of
+     which steps are revealed, so they are replayed statically below instead. */
   function buildFrozenSrcdoc(text, index, step){
     const doc = new DOMParser().parseFromString(text, "text/html");
     doc.querySelectorAll("script").forEach(s => s.remove());
+    /* Same reason as the PDF export: this iframe has an opaque origin and the
+       room may be offline. A CDN sheet or webfont that resolves late re-flows
+       the slide AFTER the box was composed, and .wrap.fit clips on overflow —
+       so the frozen slide silently loses its last rows. */
+    doc.querySelectorAll(
+      'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+    ).forEach(l => {
+      const href = l.getAttribute("href") || "";
+      if(/^https?:\/\//i.test(href)) l.remove();
+    });
     const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
-    const style = `<style>
-html,body{overflow:hidden;margin:0}
+    const style = `<style id="__lf-frozen">
+/* .page and .wrap are height:100%; a deck that does not ship deck-base.css has
+   no full-height root of its own, and they collapse against an auto body. */
+html,body{overflow:hidden!important;margin:0!important;height:100%!important;min-height:100%!important}
+#bg:before,#bg:after{animation:none!important}   /* a frozen frame does not breathe */
 .page{display:none!important}
 .page.__lf-x{display:block!important;opacity:1!important;transform:none!important}
-.step{opacity:0!important;transform:none!important}
+.step{opacity:0!important;transform:none!important;transition:none!important}
 .step.__lf-on{opacity:1!important;visibility:visible!important}
+/* scripts are gone, so nothing ever sets .is-live or paints into a canvas —
+   show the same static figure the PDF export prints instead of an empty frame */
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+[data-video] iframe{visibility:hidden!important}
 <\/style>`;
-    const script = `<script>(function(){var ps=document.querySelectorAll(".page");var a=ps[${index}];`
-      + `if(a){a.classList.add("__lf-x");var st=a.querySelectorAll(".step");`
-      + `for(var k=0;k<st.length;k++){if(k<${step})st[k].classList.add("__lf-on");}}})();<\/script>`;
+    const script = `<script>(function(){
+var ps=document.querySelectorAll(".page"),a=ps[${index}];if(!a)return;
+a.classList.add("__lf-x");
+var st=a.querySelectorAll(".step");
+for(var k=0;k<st.length;k++) if(k<${step}) st[k].classList.add("__lf-on");
+var on=function(el){return !!el&&el.classList.contains("__lf-on")};
+/* replay revealFx: the box between its two revealed .box-zoom sentinels is the
+   one holding the floor, so it freezes grown with its neighbours dimmed */
+var boxes=a.querySelectorAll(".info-box"),lit=null;
+for(var i=0;i<boxes.length;i++){
+  var z; try{ z=boxes[i].querySelectorAll(":scope > .box-zoom"); }
+  catch(e){ z=boxes[i].querySelectorAll(".box-zoom"); }
+  var open;
+  if(z.length<2){                       // uninstrumented box: open on any step
+    open=false;
+    var s2=boxes[i].querySelectorAll(".step");
+    for(var j=0;j<s2.length;j++){ if(on(s2[j])){ open=true; break; } }
+  } else open = on(z[0]) && !on(z[z.length-1]);
+  if(open) lit=boxes[i];
+}
+if(lit){ lit.classList.add("is-active"); a.classList.add("has-focus"); }
+/* replay lightsFx: a revealed [data-lights] cue lights its [data-lit] words */
+var cues=a.querySelectorAll("[data-lights]");
+for(var i=0;i<cues.length;i++){
+  if(!on(cues[i])) continue;
+  var keys=(cues[i].getAttribute("data-lights")||"").split(/\\s+/);
+  for(var j=0;j<keys.length;j++){
+    if(!keys[j]) continue;
+    var hits=a.querySelectorAll('[data-lit~="'+keys[j]+'"]');
+    for(var m=0;m<hits.length;m++) hits[m].classList.add("is-lit");
+  }
+}
+})();<\/script>`;
     return base + style + script;
   }
 
