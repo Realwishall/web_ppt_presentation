@@ -216,7 +216,7 @@ async function readSessionFile(batchId, sessionId, fileId) {
 
 /**
  * Export saves: keep ONLY the pages/files included in that export.
- * Timeout saves: keep the full live board (for auto-restore after idle logout).
+ * Idle saves: keep the full live board (for auto-restore on the next Teach).
  */
 function boardForReason(boardState, reason, exportedThrough) {
   const pagesIn = boardState.pages || []
@@ -475,7 +475,7 @@ export function sessionStatusLabel(status) {
   switch (status) {
     case 'complete': return 'Exported'
     case 'partial': return 'Partially exported'
-    case 'timeout': return 'Auto-saved (timeout)'
+    case 'timeout': return 'Auto-saved (idle)'
     case 'active': return 'In progress'
     default: return status || 'Unknown'
   }

@@ -9,9 +9,10 @@ import {
   saveTeachingSession,
   loadSessionForReview,
 } from '../lib/sessions'
-import { useAuth } from '../context/AuthContext'
 import ChapterIcon from '../components/ChapterIcon'
 
+// No pointer / key / board activity for this long → snapshot the session.
+// The user is never signed out and never navigated away; teaching continues.
 const INACTIVITY_MS = 15 * 60 * 1000
 
 // Full-screen host for the standalone presenter panel (public/presenter.html).
@@ -23,7 +24,6 @@ export default function PresenterView() {
   const navigate = useNavigate()
   const location = useLocation()
   const [params] = useSearchParams()
-  const { logout } = useAuth()
   const iframeRef = useRef(null)
   const wrapRef = useRef(null)
   const [libOpen, setLibOpen] = useState(false)
@@ -207,38 +207,46 @@ export default function PresenterView() {
     return () => clearTimeout(t)
   }, [restoreNote])
 
-  // 15-minute inactivity → save board + logout.
+  // 15-minute inactivity → quietly save the current board. Nothing else:
+  // the session stays open, full screen is kept, the user stays signed in.
+  // Saved once per idle stretch; a new save arms again after the next activity.
   useEffect(() => {
     if (!batchId) return undefined
-    let handled = false
-    const tick = setInterval(async () => {
-      if (handled || Date.now() - lastActivity.current < INACTIVITY_MS) return
-      handled = true
-      clearInterval(tick)
+    let savedForThisIdle = false
+    const cleanups = new Set()
+    const tick = setInterval(() => {
+      if (Date.now() - lastActivity.current < INACTIVITY_MS) {
+        savedForThisIdle = false          // activity resumed — arm the next save
+        return
+      }
+      if (savedForThisIdle || savingRef.current) return
+      savedForThisIdle = true
+
       const requestId = makeId('idle')
-      let answered = false
-      const finish = async () => {
-        try { await logout() } catch { /* still leave */ }
-        navigate('/login', { replace: true })
+      let giveUp
+      const done = () => {
+        window.removeEventListener('message', onState)
+        clearTimeout(giveUp)
+        cleanups.delete(done)
       }
       const onState = async (e) => {
         if (e.source !== iframeRef.current?.contentWindow) return
         const d = e.data || {}
         if (d.type !== 'lf-session-state' || d.requestId !== requestId) return
-        answered = true
-        window.removeEventListener('message', onState)
+        done()
         await persistBoard({ ...d, reason: 'timeout', batchId })
-        await finish()
       }
+      // If the panel never answers, drop the listener and try again next idle.
+      giveUp = setTimeout(() => { done(); savedForThisIdle = false }, 8000)
+      cleanups.add(done)
       window.addEventListener('message', onState)
       post({ type: 'lf-request-save', requestId, reason: 'timeout', batchId })
-      setTimeout(async () => {
-        window.removeEventListener('message', onState)
-        if (!answered) await finish()
-      }, 4000)
     }, 30_000)
-    return () => clearInterval(tick)
-  }, [batchId, logout, navigate, persistBoard, post])
+    return () => {
+      clearInterval(tick)
+      cleanups.forEach((fn) => fn())
+    }
+  }, [batchId, persistBoard, post])
 
   useEffect(() => {
     const onMessage = (e) => {
@@ -261,6 +269,9 @@ export default function PresenterView() {
       } else if (d.type === 'lf-activity') {
         touchActivity()
       } else if (d.type === 'lf-session-state') {
+        // Idle snapshots are answered by the inactivity effect's own listener,
+        // and they are not user activity — they must not restart the idle clock.
+        if (d.reason === 'timeout') return
         touchActivity()
         persistBoard(d)
       }
