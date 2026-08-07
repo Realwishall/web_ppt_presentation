@@ -696,6 +696,26 @@
   }
   function renderRails(){ rails.forEach(r => r.innerHTML = railHTML()); }
 
+  /* ═══ DECK RE-FIT ═════════════════════════════
+     Tell every loaded deck to re-measure itself. Entering full screen is not
+     one event but a sequence — fullscreenchange fires while innerHeight is
+     still the windowed value, the board animates to its new size, and the
+     compositor settles a frame or two later. A single notification would be
+     read at the wrong moment, which is exactly why the first full screen
+     used to come out wrong and the second one right. So: a short burst. */
+  function refitDecks(){
+    Object.keys(deckFrames).forEach((id) => {
+      const f = deckFrames[id];
+      try{ f && f.contentWindow && f.contentWindow.postMessage({ type:"lf-refit" }, "*"); }
+      catch(err){ /* a frame mid-load simply catches the next tick */ }
+    });
+  }
+  let refitTimers = [];
+  function refitDecksBurst(){
+    refitTimers.forEach(clearTimeout);
+    refitTimers = [0, 60, 180, 400, 800, 1400].map(d => setTimeout(refitDecks, d));
+  }
+
   /* ═══ RENDERING ═══════════════════════════════ */
   function sizeCanvas(){
     const r = board.getBoundingClientRect();
@@ -1109,6 +1129,20 @@ html.__lf-noanim *,html.__lf-noanim *::before,html.__lf-noanim *::after{
 }
 html.__lf-noanim .scene-frame canvas{display:none!important}
 html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
+
+/* ── NO SCROLLING, EVER ───────────────────────────────────────────────────
+   A slide is a fixed frame, not a document. Nothing inside a deck may ever
+   present a scrollbar or a scroll offset: the auto-fit engine below is what
+   makes the content match the frame, so a scrollbar can only ever mean the
+   fit has not run yet. Deck authors keep writing \`overflow:auto\` — this
+   overrides it under the presenter without touching a single deck file. */
+html,body{overflow:hidden!important;height:100%!important;max-height:100%!important}
+html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+
+/* The fitted wrapper is driven from JS. A deck's own max-height must not
+   fight the height the engine hands it. */
+.wrap.__lf-fitted{max-height:none!important}
 <\/style>
 <script>
 (function(){
@@ -1150,6 +1184,171 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     }catch(err){ /* a frozen library must never blank a slide */ }
   }
 
+  /* ── AUTO-FIT ENGINE ───────────────────────────────────────────────────
+     Why this exists: a deck sizes itself with vmin/clamp (or a fixed px
+     canvas), which is only correct if the browser has already settled on
+     the final viewport. Entering full screen does NOT satisfy that — the
+     board resizes across several frames, web fonts swap in after first
+     layout, and a page that is display:none at that moment cannot be
+     measured at all. That is the "fits only on the second try" bug.
+
+     So nothing here trusts the viewport. Every time the ACTIVE page could
+     have changed size we measure the real content and hand the slide's
+     .wrap a CSS zoom:
+
+        zoom: k   on the .wrap
+
+     zoom is doing real work here, not decoration. Inside a zoomed element
+     the browser resolves percentage heights, ch measures and vmin/clamp
+     type against the zoomed box, so a .wrap that is height:100% still
+     renders exactly the height of the page — it simply has k times more
+     (or less) room to lay the slide out in. The text genuinely re-wraps at
+     the new size; nothing is squashed, stretched or clipped.
+
+     The fit only ever shrinks. A slide that already fits is left at the size
+     its author chose — decks are designed at presentation scale, and blowing
+     a sparse slide up to fill the board changes how it was written to read.  */
+  var LF_GROW_MAX = 1;      /* never enlarge: authored size is the ceiling  */
+  var LF_SHRINK_MIN = 0.32; /* floor, so a runaway page still shows something */
+  var fitRaf = 0, fitTimers = [];
+
+  function baseStyle(el){
+    if(el.__lfBase === undefined) el.__lfBase = el.getAttribute("style") || "";
+    return el.__lfBase;
+  }
+  function clearFit(el){
+    var b = baseStyle(el);
+    if(b) el.setAttribute("style", b); else el.removeAttribute("style");
+    el.classList.remove("__lf-fitted");
+  }
+  function applyFit(el, k){
+    el.classList.add("__lf-fitted");
+    el.style.zoom = k;
+  }
+  /* Kill the scroll, not the layout. Only a box that would actually hand the
+     teacher a scrollbar gets clamped; a deck that lets a heading sit outside
+     its own column on purpose keeps doing that, because clamping every box
+     would newly clip designs that were fine. */
+  function hardenScroll(el){
+    var cs = window.getComputedStyle(el);
+    if(/auto|scroll/.test(cs.overflowY + " " + cs.overflowX)) el.style.overflow = "hidden";
+  }
+
+  function fitPage(page){
+    if(!page || document.body.hasAttribute("data-lf-nofit")) return;
+    var wrap = page.querySelector(".wrap");
+    if(!wrap) return;
+
+    clearFit(wrap);                       /* always measure from the deck's own CSS */
+
+    /* LAYOUT pixels only — offsetHeight / clientHeight, never a client rect.
+       A deck may already sit under a scale of its own (the fixed-canvas decks
+       scale a #stage to the viewport), and a rect would hand back that scale
+       baked in, so the two would multiply. */
+    var pageH  = page.clientHeight;
+    var availH = wrap.offsetHeight;
+    /* A .wrap that is height:auto (rather than the usual height:100%) still
+       owns the rest of the page — let it use that room instead of hugging. */
+    if(pageH && availH < pageH * 0.6)
+      availH = Math.max(availH, pageH - wrap.offsetTop);
+    if(!(availH > 8)) return;
+
+    /* Solve for the zoom at which the slide's natural height is exactly the
+       height of the board. One shot is not enough: at a different zoom the
+       column is a different number of characters wide, so the text re-wraps
+       and asks for a different height. Measure, correct, repeat — it settles
+       in two or three rounds. */
+    var k = 1;
+    for(var pass = 0; pass < 4; pass++){
+      wrap.style.height = "auto";
+      wrap.style.maxHeight = "none";
+      var natural = Math.max(wrap.scrollHeight, wrap.offsetHeight);
+      wrap.style.height = "";
+      wrap.style.maxHeight = "";
+      if(!(natural > 0)) break;
+      var want = Math.min(LF_GROW_MAX, Math.max(LF_SHRINK_MIN, availH / natural));
+      if(!isFinite(want) || want <= 0) break;
+      var next = k + (want - k) * 0.85;          /* damped: don't ring */
+      if(Math.abs(next - k) < 0.004){ k = next; break; }
+      k = next;
+      applyFit(wrap, k);
+    }
+    if(Math.abs(k - 1) < 0.005) clearFit(wrap); else applyFit(wrap, k);
+
+    /* Safety net. A flex child that fills, a figure with a min-height, a late
+       font — anything the estimate could not see. Whatever the reason, the
+       slide does not get to overflow: give back scale until it fits. */
+    for(var guard = 0; guard < 3; guard++){
+      if(wrap.scrollHeight - wrap.clientHeight <= 1) break;
+      k = Math.max(LF_SHRINK_MIN,
+                   k * (wrap.clientHeight / wrap.scrollHeight) * 0.99);
+      applyFit(wrap, k);
+    }
+    hardenScroll(wrap);
+    hardenScroll(page);
+  }
+
+  function fitActive(){
+    try{ fitPage(document.querySelector(".page.__lf-active")); }catch(err){}
+  }
+  /* One synchronous fit (so an unfitted frame is never painted) plus a short
+     tail of re-fits: the full-screen resize lands over several frames, and
+     fonts / images / WebGL canvases settle after that. */
+  function scheduleFit(){
+    fitActive();
+    scheduleFitLater();
+  }
+  /* Same tail without the immediate pass — for things whose effect on layout
+     lands after the event (a deck's own key handler, an interactive figure). */
+  function scheduleFitLater(){
+    if(fitRaf) cancelAnimationFrame(fitRaf);
+    fitRaf = requestAnimationFrame(function(){ fitActive(); sendRects(); sendMedia(); });
+    for(var i = 0; i < fitTimers.length; i++) clearTimeout(fitTimers[i]);
+    fitTimers = [80, 260, 650, 1300].map(function(d){
+      return setTimeout(function(){ fitActive(); sendRects(); sendMedia(); }, d);
+    });
+  }
+
+  /* ── EXPORT SNAPSHOT ───────────────────────────────────────────────────
+     The PDF export cannot run scripts (a deck's own page controller would
+     fight the export's choice of page, and half-loaded CDN leftovers race
+     across the nested print frames). So it used to rebuild each sheet from
+     the deck's SOURCE TEXT with every script element stripped — and any deck
+     whose layout is made by script exported blank. The fixed-canvas
+     decks size their #stage entirely in JS: no script, no stage, no slide.
+
+     Fix: the export asks the deck, which is alive and on screen, to hand
+     back its CURRENT DOM. Everything script did is already in it — the
+     stage's size, the text-size level, rendered maths, the fitted zoom. The
+     page is then printable as plain markup, with no scripts at all. */
+  function sendExportDoc(requestId){
+    var ps = document.querySelectorAll(".page");
+    var cur = 0, curStep = 0;
+    for(var a = 0; a < ps.length; a++){
+      if(!ps[a].classList.contains("__lf-active")) continue;
+      cur = a;
+      curStep = ps[a].querySelectorAll(".step.__lf-on").length;
+    }
+    var html = "";
+    try{
+      /* Bake every page, not just the visible one: activate each in turn,
+         reveal its steps, let the fit engine size it, and leave the zoom
+         behind as an inline style. A page that is display:none cannot be
+         measured, which is exactly why this has to happen here. */
+      for(var i = 0; i < ps.length; i++){
+        for(var j = 0; j < ps.length; j++) ps[j].classList.toggle("__lf-active", j === i);
+        var steps = ps[i].querySelectorAll(".step");
+        for(var s = 0; s < steps.length; s++) steps[s].classList.add("__lf-on");
+        fitActive();
+      }
+      /* Leave no page marked active: the export decides which one shows. */
+      for(var c = 0; c < ps.length; c++) ps[c].classList.remove("__lf-active");
+      html = "<!DOCTYPE html>" + document.documentElement.outerHTML;
+    }catch(err){ html = ""; }
+    show(cur, curStep);                 // put the board back as it was
+    parent.postMessage({ type:"lf-export-doc", requestId:requestId, html:html }, "*");
+  }
+
   function show(i, step){
     var ps = document.querySelectorAll(".page");
     for(var k=0;k<ps.length;k++) ps[k].classList.toggle("__lf-active", k===i);
@@ -1158,6 +1357,9 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
       var steps = act.querySelectorAll(".step");
       for(var k=0;k<steps.length;k++) steps[k].classList.toggle("__lf-on", k < step);
     }
+    /* A page that was display:none could not be measured while hidden, so it
+       is fitted here — synchronously, before this frame is painted. */
+    scheduleFit();
     setTimeout(sendRects, 60);
     setTimeout(sendRects, 700);   // again after CSS transitions settle
     setTimeout(sendMedia, 60);
@@ -1213,14 +1415,40 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
       show(d.index, d.step || 0);
     }
     if(d.type === "lf-click") doClick(d.x, d.y);
+    /* The host fires this whenever the board could have changed size —
+       full-screen enter/exit above all, where the resize event inside this
+       frame is unreliable and arrives before the viewport has settled. */
+    if(d.type === "lf-refit") scheduleFit();
+    if(d.type === "lf-export-snap") sendExportDoc(d.requestId);
   });
-  window.addEventListener("resize", function(){
-    setTimeout(sendRects, 120);
-    setTimeout(sendMedia, 120);
-  });
+
+  /* Every signal that the frame's usable size or content metrics changed. */
+  window.addEventListener("resize", scheduleFit);
+  window.addEventListener("orientationchange", scheduleFit);
+  if(window.visualViewport)
+    window.visualViewport.addEventListener("resize", scheduleFit);
+  if(window.ResizeObserver){
+    try{ new ResizeObserver(scheduleFit).observe(document.documentElement); }catch(err){}
+  }
+  /* A web font swapping in after first layout is the other half of the
+     "fits on the second try" bug — the first fit measured Times New Roman. */
+  if(document.fonts && document.fonts.ready)
+    document.fonts.ready.then(scheduleFit).catch(function(){});
+  /* Late images / SVG likewise change the height they ask for. */
+  document.addEventListener("load", function(e){
+    var t = e.target;
+    if(t && (t.tagName === "IMG" || t.tagName === "IFRAME")) scheduleFit();
+  }, true);
+  /* A deck may re-lay itself out in response to input of its own — the
+     fixed-canvas decks bind 1-7 / +/- to a text-size level, and an
+     interactive figure can grow when it is clicked. Re-fit after, not
+     during: the deck's own handler has to run first. */
+  document.addEventListener("keydown", scheduleFitLater, true);
+  document.addEventListener("click", scheduleFitLater, true);
+
   applyAnim(animOn);
   // the preset runtime installs itself on load; re-assert after it exists
-  window.addEventListener("load", function(){ applyAnim(animOn); });
+  window.addEventListener("load", function(){ applyAnim(animOn); scheduleFit(); });
   show(0, 0);
 })();
 <\/script>`;
@@ -1346,6 +1574,7 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
       hostFS = !!d.on;
       renderRails();
       requestAnimationFrame(sizeCanvas);
+      refitDecksBurst();                 // the board just changed size
     } else if(d.type === "lf-session-config"){
       if(d.batchId) state.batchId = d.batchId;
       if(d.sessionId) state.sessionId = d.sessionId;
@@ -1766,6 +1995,33 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     exportPDF({ through: state.pages.length - 1 });
   }
 
+  /* Ask one deck's live frame for its current DOM. Resolves to null — never
+     rejects, never hangs — so a silent frame only costs the fallback. */
+  function requestDeckSnapshot(deck){
+    const frame = deckFrames[deck.id];
+    if(!frame || !frame.contentWindow) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const requestId = "snap_" + deck.id + "_" + Date.now();
+      let settled = false;
+      const finish = (html) => {
+        if(settled) return;
+        settled = true;
+        window.removeEventListener("message", onMsg);
+        clearTimeout(giveUp);
+        resolve(html || null);
+      };
+      const onMsg = (e) => {
+        if(e.source !== frame.contentWindow) return;
+        const d = e.data || {};
+        if(d.type === "lf-export-doc" && d.requestId === requestId) finish(d.html);
+      };
+      window.addEventListener("message", onMsg);
+      const giveUp = setTimeout(() => finish(null), 6000);
+      try{ frame.contentWindow.postMessage({ type:"lf-export-snap", requestId }, "*"); }
+      catch(err){ finish(null); }
+    });
+  }
+
   function renderPageInk(page, W, H){
     return new Promise(resolve => {
       const c = document.createElement("canvas");
@@ -1838,8 +2094,13 @@ html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
     // external stylesheets/fonts go too — CDN KaTeX / Google Fonts / Three
     // leftovers race across many nested iframes and can leave a sheet white.
     const deckDocs = {};
-    for(const deck of state.decks){
-      const doc = new DOMParser().parseFromString(deck.text, "text/html");
+    // What the board is SHOWING beats what the file says — see the note on
+    // sendExportDoc in the deck controller. A deck that does not answer
+    // (an old snapshot restored without a live frame) falls back to its text.
+    const live = await Promise.all(state.decks.map(requestDeckSnapshot));
+    for(let di = 0; di < state.decks.length; di++){
+      const deck = state.decks[di];
+      const doc = new DOMParser().parseFromString(live[di] || deck.text, "text/html");
       doc.querySelectorAll("script").forEach(s => s.remove());
       doc.querySelectorAll(
         'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
@@ -2133,11 +2394,14 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     }
   });
 
-  window.addEventListener("resize", sizeCanvas);
+  window.addEventListener("resize", () => { sizeCanvas(); refitDecksBurst(); });
+  if(window.visualViewport)
+    window.visualViewport.addEventListener("resize", refitDecksBurst);
   ["fullscreenchange","webkitfullscreenchange"].forEach(ev =>
     document.addEventListener(ev, () => {
       renderRails();                       // swap between enter/exit icon
       requestAnimationFrame(sizeCanvas);   // board size changes with fullscreen
+      refitDecksBurst();                   // …and so does every deck's frame
     })
   );
 
