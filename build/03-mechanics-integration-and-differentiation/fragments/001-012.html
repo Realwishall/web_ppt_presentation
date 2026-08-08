@@ -1,0 +1,385 @@
+<!-- Slide 1 — the map of the whole topic. Differentiate forward along the road
+     r -> v -> a; integrate to come back. The two braces of the source slide
+     become the two labels: the chain is the shortcut, the three formulas are
+     the general tool. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Differentiation and integration <span class="inline-lead">the road between position, velocity and acceleration</span></h2>
+
+    <div class="g-row wide">
+      <span class="label">For easy numerical&nbsp;:</span>
+      <div class="stack">
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="r"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node"><span data-tex="v"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node"><span data-tex="a"></span></span>
+        </div>
+
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="v"></span></span>
+          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus"><span data-tex="\Delta r"></span></span>
+        </div>
+
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="a"></span></span>
+          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus"><span data-tex="\Delta v"></span></span>
+        </div>
+
+        <p class="note step">Going forward you differentiate; coming back you integrate, and integration hands you a <i>change</i> &mdash; &Delta;r, &Delta;v &mdash; not the quantity itself.</p>
+      </div>
+    </div>
+
+    <div class="g-row wide">
+      <span class="label">Will work in all case&nbsp;:</span>
+      <div class="eq-block">
+        <div class="eq step">v = <span class="frac"><span class="num">d<span class="vec">r</span></span><span class="den">dt</span></span></div>
+        <div class="eq step">a = <span class="frac"><span class="num">d<span class="vec">v</span></span><span class="den">dt</span></span></div>
+        <div class="eq step">a = v <span class="frac"><span class="num">d<span class="vec">v</span></span><span class="den">dr</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 2 — first two differentiation questions. Question always visible,
+     every line of the solution its own press. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Differentiation <span class="paren">(one variable)</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="x = 3t^2 - 18"></span>, find velocity</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="x = 3t^2 - 18"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec v = 6t"></span></span>
+        </div>
+        <p class="note step">The constant &minus;18 differentiates to zero &mdash; it shifts the position, it never shows up in the velocity.</p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="x = 3t^2 - 18t"></span>, find the time at which velocity is zero</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="x = 3t^2 - 18t"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec v = 6t - 18"></span></span>
+        </div>
+        <div class="derivation">
+          <div class="line step"><span data-tex="6t - 18 = 0"></span></div>
+          <div class="line step"><span data-tex="6t = 18"></span></div>
+        </div>
+        <div class="result step"><span data-tex="t = 3"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 3 — the same operation on vectors: differentiate each component
+     on its own. Three questions, one reveal each. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Differentiation <span class="paren">(in vector form)</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If&nbsp; <span data-tex="\vec r = 3t^2\hat\imath + 4\hat\jmath"></span>, find velocity</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="\vec r = 3t^2\hat\imath + 4\hat\jmath"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec v = 6t\,\hat\imath + 0\,\hat\jmath"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If&nbsp; <span data-tex="\vec v = 2t^2\hat\imath + 4t\hat\jmath"></span>, find acceleration</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="\vec v = 2t^2\hat\imath + 4t\hat\jmath"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec a = 4t\,\hat\imath + 4\,\hat\jmath"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If&nbsp; <span data-tex="\vec r = 6t^2\hat\imath"></span>, find acceleration</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="\vec r = 6t^2\hat\imath"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node"><span data-tex="\vec v = 12t\,\hat\imath"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec a = 12\,\hat\imath"></span></span>
+        </div>
+        <p class="note step">Two presses of <span data-tex="d/dt"></span> and nothing else &mdash; each component is differentiated separately.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 4 — velocity given as a function of x, not of t. This is the slide
+     where the third formula of slide 1 earns its keep. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">When there is no <i>t</i> in the question</h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="v = 2x^2"></span>, find acceleration</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="v(x)"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dx</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="a"></span></span>
+        </div>
+
+        <div class="derivation">
+          <div class="line step"><span data-tex="v = 2x^2"></span></div>
+          <div class="line step"><span data-tex="a = v * \dfrac{dv}{dx} = (2x^2)(4x)"></span>
+            <span class="why">t never appears, so use a = v dv/dx</span></div>
+        </div>
+        <div class="result step"><span data-tex="a = 8x^3"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 5 — one chain, two links: position to velocity to acceleration. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Both in one question</h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="x = 4t^2 - 5t"></span>, find <span data-tex="v"></span> and <span data-tex="a"></span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="x = 4t^2 - 5t"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec v = 8t - 5"></span></span>
+        </div>
+        <div class="op-chain step">
+          <span class="op-node"><span data-tex="\vec v = 8t - 5"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="\vec a = 8"></span></span>
+        </div>
+        <p class="note step">Acceleration came out a plain number &mdash; the motion is uniformly accelerated.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 6 — the question is handed to you upside down: t as a function of x.
+     Differentiate what you were given, then invert. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Time given in terms of position</h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="t = 4x^2 - 5x"></span>, find <span data-tex="v"></span>
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="t(x)"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dx</span></span></span></span>
+          <span class="op-node"><span data-tex="\dfrac{dt}{dx}"></span></span>
+          <span class="op-arrow int"><span class="op-label">invert</span></span>
+          <span class="op-node is-focus"><span data-tex="v"></span></span>
+        </div>
+
+        <div class="derivation">
+          <div class="line step"><span data-tex="t = 4x^2 - 5x"></span></div>
+          <div class="line step"><span data-tex="\dfrac{dt}{dx} = 8x - 5"></span>
+            <span class="why">differentiate what you were given</span></div>
+          <div class="line step"><span data-tex="v = \dfrac{dx}{dt} = \left(\dfrac{dt}{dx}\right)^{-1}"></span>
+            <span class="why">velocity is the reciprocal</span></div>
+        </div>
+        <div class="result step"><span data-tex="v = (8x - 5)^{-1}"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 7 — the same trick, one step further: differentiate v with respect
+     to t, which needs the chain rule and dx/dt = v again. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Time given in terms of position <span class="paren">(now find a)</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="t = x^2 - x"></span>, find <span data-tex="a"></span>
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="t(x)"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dx</span></span></span></span>
+          <span class="op-node"><span data-tex="v"></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span data-tex="a"></span></span>
+        </div>
+
+        <div class="two-col">
+          <div class="derivation">
+            <div class="line step"><span data-tex="t = x^2 - x"></span>
+              <span class="why">let's find d/dx</span></div>
+            <div class="line step"><span data-tex="\dfrac{dt}{dx} = 2x - 1"></span></div>
+            <div class="line step"><span data-tex="v = (2x - 1)^{-1}"></span></div>
+          </div>
+          <div class="derivation">
+            <div class="line step"><span data-tex="a = \dfrac{dv}{dt}"></span>
+              <span class="why">now d/dt</span></div>
+            <div class="line step"><span data-tex="a = -1\,(2x-1)^{-2} \times 2\,\dfrac{dx}{dt}"></span></div>
+            <div class="line step"><span data-tex="= -2 * v^2 * v"></span>
+              <span class="why">(2x&minus;1)<sup>&minus;1</sup> is v, and dx/dt is v</span></div>
+          </div>
+        </div>
+        <div class="result step"><span data-tex="a = -2v^3"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 8 — section divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Integration based question</h1>
+  </div>
+</section>
+
+<!-- Slide 9 — the road back: acceleration to velocity, separating the
+     variables before integrating. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Integration <span class="inline-lead">from a back to v</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="a = 6t^2"></span>, find <span data-tex="v"></span> as <span data-tex="f(t)"></span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="a"></span></span>
+          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus"><span data-tex="v"></span></span>
+        </div>
+
+        <div class="derivation">
+          <div class="line step"><span data-tex="\Rightarrow a = 6t^2"></span></div>
+          <div class="line step"><span data-tex="\Rightarrow \dfrac{dv}{dt} = 6t^2"></span>
+            <span class="why">write a as dv/dt</span></div>
+          <div class="line step"><span data-tex="\Rightarrow dv = (6t^2)\,dt"></span>
+            <span class="why">separate the variables</span></div>
+          <div class="line step"><span data-tex="\Rightarrow v = \dfrac{6t^3}{3} + c"></span></div>
+        </div>
+        <div class="result step"><span data-tex="v = 2t^3 + c"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 10 — the same route with two terms; each term is integrated on its
+     own and there is still exactly one constant. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Integration <span class="paren">(term by term)</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="a = 12t^2 - 6"></span>, find velocity as <span data-tex="f(t)"></span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="a = 12t^2 - 6"></span></span>
+          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus"><span data-tex="v(t)"></span></span>
+        </div>
+
+        <div class="derivation">
+          <div class="line step"><span data-tex="\Rightarrow a = 12t^2 - 6"></span></div>
+          <div class="line step"><span data-tex="\Rightarrow \dfrac{dv}{dt} = 12t^2 - 6"></span></div>
+          <div class="line step"><span data-tex="\Rightarrow dv = (12t^2)\,dt - (6)\,dt"></span>
+            <span class="why">one term at a time</span></div>
+          <div class="line step"><span data-tex="\Rightarrow v = \dfrac{12t^3}{3} - 6t + c"></span></div>
+        </div>
+        <div class="result step"><span data-tex="v = 4t^3 - 6t + c"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 11 — section divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Can solve easy question</h1>
+  </div>
+</section>
+
+<!-- Slide 12 — acceleration depending on velocity itself. Separate v from t,
+     integrate both sides, then unwrap the logarithm. -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">When a depends on v <span class="paren">(a = 3 &minus; v)</span></h2>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span data-tex="a = 3 - v"></span>, find <span data-tex="v"></span> in terms of <span data-tex="t"></span>
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span data-tex="\dfrac{dv}{3-v} = dt"></span></span>
+          <span class="op-arrow int"><span class="op-label">&int;</span></span>
+          <span class="op-node is-focus"><span data-tex="v(t)"></span></span>
+        </div>
+
+        <div class="two-col">
+          <div class="derivation">
+            <div class="line step"><span data-tex="a = 3 - v"></span></div>
+            <div class="line step"><span data-tex="\Rightarrow \dfrac{dv}{dt} = 3 - v"></span></div>
+            <div class="line step"><span data-tex="\Rightarrow \dfrac{dv}{3 - v} = dt"></span>
+              <span class="why">v on one side, t on the other</span></div>
+            <div class="line step"><span data-tex="\Rightarrow \left.-\ln(3 - v)\right|_0^{v} = t"></span></div>
+            <div class="line step"><span data-tex="\Rightarrow -\ln\left(\dfrac{3 - v}{3}\right) = t"></span></div>
+          </div>
+          <div class="derivation">
+            <div class="line step"><span data-tex="\Rightarrow \ln\left(\dfrac{3 - v}{3}\right) = -t"></span></div>
+            <div class="line step"><span data-tex="\Rightarrow \dfrac{3 - v}{3} = e^{-t}"></span>
+              <span class="why">undo the logarithm</span></div>
+            <div class="line step"><span data-tex="\Rightarrow 3 - v = 3e^{-t}"></span></div>
+          </div>
+        </div>
+        <div class="result step"><span data-tex="v = 3 - 3e^{-t}"></span></div>
+        <p class="note step">At t = 0 the body is at rest and as t grows the exponential dies away, so v creeps up towards 3 &mdash; the speed at which a = 3 &minus; v becomes zero.</p>
+      </div>
+    </div>
+  </div>
+</section>

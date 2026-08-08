@@ -663,3 +663,68 @@ math[display="block"]{display:block;margin:.8vmin 0}
   .sim-stage,.sim-panel{box-shadow:none!important}
   .sim-stage svg{max-height:58vh}
 }
+
+/* ============================================================================
+   Operator chain — the calculus road between quantities
+   ----------------------------------------------------------------------------
+   This chapter's whole idea is a two-way street: differentiate forward
+   (r -> v -> a), integrate back. The component draws it as quantity nodes
+   joined by an arrow that carries its operator above the shaft — the same
+   figure the source PowerPoint draws by hand.
+
+   Gold arrow = differentiate.  Cyan arrow (.int) = integrate.
+   Pure CSS, no script, so it survives PDF export (rule 11).
+   ========================================================================== */
+.op-chain{display:flex;align-items:center;flex-wrap:wrap;gap:1.2vmin;row-gap:4.2vmin;
+  margin:.6vmin 0}
+.op-node{display:inline-flex;align-items:center;padding:.7vmin 1.9vmin;
+  border-radius:1.2vmin;background:var(--card-flat);
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip);
+  font-family:var(--font-math);font-style:normal;font-size:var(--fs-eq);
+  color:var(--ink);line-height:1.25}
+.op-node.is-focus{color:var(--gold-soft);border-color:rgba(245,197,66,.55);
+  background:linear-gradient(180deg,rgba(245,197,66,.15),rgba(245,197,66,.035))}
+.op-node math{font-size:inherit}
+.op-arrow{position:relative;flex:0 0 auto;display:inline-block;align-self:center;
+  min-width:12vmin;height:.24vmin;border-radius:99px;margin:0 .7vmin;
+  color:var(--gold);background:currentColor;
+  box-shadow:0 0 1.6vmin rgba(245,197,66,.35)}
+.op-arrow:after{content:"";position:absolute;right:-.15vmin;top:50%;
+  transform:translateY(-50%);border-left:1.2vmin solid currentColor;
+  border-top:.66vmin solid transparent;border-bottom:.66vmin solid transparent}
+.op-arrow .op-label{position:absolute;left:50%;bottom:.9vmin;transform:translateX(-50%);
+  font-family:var(--font-math);font-style:normal;white-space:nowrap;line-height:1;
+  font-size:var(--fs-small);color:var(--gold)}
+.op-arrow .op-label math{font-size:inherit}
+.op-arrow.int{color:var(--cyan);box-shadow:0 0 1.6vmin rgba(86,204,242,.35)}
+.op-arrow.int .op-label{color:var(--cyan)}
+.op-chain.mini{row-gap:3.2vmin;margin-bottom:1.4vmin}
+.op-chain.mini .op-node{padding:.35vmin 1.35vmin;font-size:var(--fs-small)}
+.op-chain.mini .op-arrow{min-width:8.5vmin}
+.op-chain.mini .op-arrow .op-label{font-size:var(--fs-note);bottom:.7vmin}
+
+/* --------------------------------------------------- Q&A heads and flags ---
+   The source decks label the two halves "Question" / "Solution". Both are
+   labels, never reveals (rule 17). Inline math inside a question or an answer
+   sits at the surrounding text size, not at --fs-eq.                         */
+.qa .q-head,.qa .a-head{display:block;margin-bottom:.5vmin;
+  font-family:var(--font-ui);font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;font-size:clamp(12px,1.9vmin,21px)}
+.qa .q-head{color:var(--gold-deep)}
+.qa .a-head{color:var(--muted)}
+.qa .q math,.qa .a math{font-size:inherit}
+
+/* a question the source deck flags as worth extra attention */
+.tag-hot{display:inline-flex;align-items:center;margin-left:1.2vmin;
+  padding:.2vmin 1.4vmin;border-radius:99px;vertical-align:middle;
+  font-family:var(--font-ui);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;font-size:clamp(12px,1.8vmin,20px);color:#ffd8a6;
+  border:.12vmin solid rgba(251,146,60,.5);
+  background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(217,119,6,.1))}
+
+@media print{
+  .op-arrow{box-shadow:none!important}
+  .op-node{background:none!important;box-shadow:none!important}
+  .op-node.is-focus{background:none!important}
+  .tag-hot{background:none!important}
+}

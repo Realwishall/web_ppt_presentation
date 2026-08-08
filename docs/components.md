@@ -569,3 +569,47 @@ stable position, away from where the teacher writes. Never use `<input>`,
 
 Recipes: reveal (`.answer-box.step`), toggle
 (`onclick="this.classList.toggle('open')"`), pick-one (`.option.picked`).
+
+### `operator-chain` — the calculus road between quantities
+
+A quantity, an arrow carrying its **operator above the shaft**, and the quantity
+it turns into — the figure a mechanics deck draws by hand when it explains
+r &rarr; v &rarr; a. Gold arrow = differentiate; `.op-arrow.int` (cyan) =
+integrate. Pure CSS, so it prints.
+
+The **chain** is the `.step`; the nodes and arrows inside it never are. Put
+`.is-focus` on the node the chain is producing so the eye lands on the answer.
+
+```html
+<div class="op-chain step">
+  <span class="op-node"><span data-tex="x = 3t^2 - 18"></span></span>
+  <span class="op-arrow"><span class="op-label">
+    <span class="frac"><span class="num">d</span><span class="den">dt</span></span>
+  </span></span>
+  <span class="op-node is-focus"><span data-tex="\vec v = 6t"></span></span>
+</div>
+```
+
+`.op-chain.mini` is the same thing at note size — use it above a derivation as a
+one-line route map ("this question travels a &rarr; v"), never as the carrier of
+the answer. Inline math inside `.op-node` / `.op-label` sits at the surrounding
+size, so write `<span data-tex="…">` there, not `<span class="eq" data-tex="…">`.
+
+### Q&A heads and the "tough" flag
+
+`.qa .q-head` / `.qa .a-head` are the small uppercase "QUESTION" / "SOLUTION"
+labels the source decks print above each half. Both are **labels, never
+reveals** (rule 17). `.tag-hot` is a chip for a question the source deck flags
+as worth extra attention.
+
+```html
+<div class="qa">
+  <span class="q-head">Question</span>
+  <div class="q">If <span data-tex="t = 4x^2 - 5x"></span>, find <span data-tex="v"></span>
+    <span class="tag-hot">Tough</span></div>
+  <div class="a">
+    <span class="a-head">Solution</span>
+    <div class="derivation"><div class="line step">…</div></div>
+  </div>
+</div>
+```

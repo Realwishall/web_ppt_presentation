@@ -2017,36 +2017,6 @@
     <!-- 2 ============================================================= -->
     <section class="page">
       <div class="wrap">
-        <h1>What are dimensions?</h1>
-        <div class="rule"></div>
-        <div class="body">
-          <div class="card formula"><span class="lbl">Definition</span>
-            <p class="step"><b>Dimensions</b> of a physical quantity are the <span class="k">powers</span> to which the fundamental
-              units are raised to obtain that quantity.</p>
-          </div>
-          <div class="cols c22">
-            <div class="card step">
-              <p style="text-align:center" class="big">\(\text{Area} \;=\; [L^{2}]\)</p>
-            </div>
-            <div class="card note tight"><span class="lbl">Read it</span>
-              <ul class="arrow">
-                <li class="step">the whole bracket \([L^{2}]\) is the <span class="k">dimensional formula</span></li>
-                <li class="step">the <span class="k">2</span> is the dimension of length in area</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card note step"><span class="lbl">Why it matters</span>
-            <p>A dimension is a <i>recipe</i>, not a number. \(5\ \text{m}^2\) and \(50000\ \text{cm}^2\) are the same
-              area, so the number changes but \([L^2]\) never does — which is exactly why dimensions survive a change of
-              units.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3 ============================================================= -->
-    <section class="page">
-      <div class="wrap">
         <h1>The seven fundamental quantities</h1>
         <div class="rule"></div>
         <div class="body">
@@ -2100,14 +2070,44 @@
       </div>
     </section>
 
+    <!-- 3 ============================================================= -->
+    <section class="page">
+      <div class="wrap">
+        <h1>What are dimensions?</h1>
+        <div class="rule"></div>
+        <div class="body">
+          <div class="card formula step"><span class="lbl">Definition</span>
+            <p class="step"><b>Dimensions</b> of a physical quantity are the <span class="k">powers</span> to which the fundamental
+              units are raised to obtain that quantity.</p>
+          </div>
+          <div class="cols c22">
+            <div class="card step">
+              <p style="text-align:center" class="big">\(\text{Area} \;=\; [L^{2}]\)</p>
+            </div>
+            <div class="card note tight step"><span class="lbl">Read it</span>
+              <ul class="arrow">
+                <li class="step">the whole bracket \([L^{2}]\) is the <span class="k">dimensional formula</span></li>
+                <li class="step">the <span class="k">2</span> is the dimension of length in area</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card note step"><span class="lbl">Why it matters</span>
+            <p>A dimension is a <i>recipe</i>, not a number. \(5\ \text{m}^2\) and \(50000\ \text{cm}^2\) are the same
+              area, so the number changes but \([L^2]\) never does — which is exactly why dimensions survive a change of
+              units.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 4 ============================================================= -->
     <section class="page">
       <div class="wrap">
-        <h1>Finding dimension<span class="sub step">Always start from a formula you already trust</span></h1>
-        <div class="rule"></div>
-        <div class="body">
+        <h1 class="step">Finding dimension<span class="sub step">Always start from a formula you already trust</span></h1>
+        <div class="rule step"></div>
+        <div class="body step">
           <div class="cols c2">
-            <div class="card tight">
+            <div class="card tight step">
               <p><span class="k">Velocity</span> \(=\dfrac{\text{distance}}{\text{time}}\)
                 <span class="step">\(\;\Rightarrow\;[LT^{-1}]\)</span>
               </p>
@@ -2121,7 +2121,7 @@
                 <span class="step">\(\;\Rightarrow\;[ML^{-1}T^{-2}]\)</span>
               </p>
             </div>
-            <div class="card tight">
+            <div class="card tight step">
               <p><span class="k">Energy</span> \(=F\cdot d\)
                 <span class="step">\(\;\Rightarrow\;[ML^{2}T^{-2}]\)</span>
               </p>
@@ -2150,22 +2150,22 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card tight">
-              <p><span class="k">\(G\,?\)</span>&nbsp; \(F=\dfrac{Gm_1m_2}{r^{2}}\Rightarrow G=\dfrac{Fr^{2}}{m_1m_2}\)
+            <div class="card tight step">
+              <p><span class="k step">\(G\,?\)</span><span class="step">&nbsp; \(F=\dfrac{Gm_1m_2}{r^{2}}\Rightarrow G=\dfrac{Fr^{2}}{m_1m_2}\)</span>
               </p>
-              <p class="step">\(=\dfrac{[MLT^{-2}][L^{2}]}{[M][M]}=\;\)<span class="g">\([M^{-1}L^{3}T^{-2}]\)</span></p>
+              <p class="step"><span class="step">\(=\dfrac{[MLT^{-2}][L^{2}]}{[M][M]}\)</span><span class="step">\(=\;\)<span class="g">\([M^{-1}L^{3}T^{-2}]\)</span></span></p>
             </div>
-            <div class="card tight">
-              <p><span class="k">\(R\,?\)</span>&nbsp; \(P=I^{2}R\Rightarrow R=\dfrac{P}{I^{2}}\)</p>
-              <p class="step">\(=\dfrac{[ML^{2}T^{-3}]}{[A^{2}]}=\;\)<span class="g">\([ML^{2}T^{-3}A^{-2}]\)</span></p>
+            <div class="card tight step">
+              <p><span class="k step">\(R\,?\)</span><span class="step">&nbsp; \(P=I^{2}R\Rightarrow R=\dfrac{P}{I^{2}}\)</span></p>
+              <p class="step"><span class="step">\(=\dfrac{[ML^{2}T^{-3}]}{[A^{2}]}\)</span><span class="step">\(=\;\)<span class="g">\([ML^{2}T^{-3}A^{-2}]\)</span></span></p>
             </div>
-            <div class="card tight">
-              <p><span class="k">\(Q\,?\)</span>&nbsp; \(I=\dfrac{Q}{t}\Rightarrow Q=It\)</p>
-              <p class="step">\(=\;\)<span class="g">\([AT]\)</span></p>
+            <div class="card tight step">
+              <p><span class="k step">\(Q\,?\)</span><span class="step">&nbsp; \(I=\dfrac{Q}{t}\Rightarrow Q=It\)</span></p>
+              <p class="step"><span class="step">\(=\;\)</span><span class="step"><span class="g">\([AT]\)</span></span></p>
             </div>
-            <div class="card tight">
-              <p><span class="k">\(h\,?\)</span>&nbsp; \(E=h\nu\Rightarrow h=\dfrac{E}{\nu}\)</p>
-              <p class="step">\(=\dfrac{[ML^{2}T^{-2}]}{[T^{-1}]}=\;\)<span class="g">\([ML^{2}T^{-1}]\)</span></p>
+            <div class="card tight step">
+              <p><span class="k step">\(h\,?\)</span><span class="step">&nbsp; \(E=h\nu\Rightarrow h=\dfrac{E}{\nu}\)</span></p>
+              <p class="step"><span class="step">\(=\dfrac{[ML^{2}T^{-2}]}{[T^{-1}]}\)</span><span class="step">\(=\;\)<span class="g">\([ML^{2}T^{-1}]\)</span></span></p>
             </div>
           </div>
           <div class="card note tight step"><span class="lbl">Note</span>
@@ -2183,17 +2183,17 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c3">
-            <div class="card tight"><span class="lbl">Single</span>
+            <div class="card tight step"><span class="lbl">Single</span>
               <p class="step">\(\eta\qquad \varepsilon_o\qquad B\)</p>
               <p class="step">\(E\qquad \mu_o\qquad C\)</p>
               <p class="step">\(L\qquad h\qquad \hbar\)</p>
             </div>
-            <div class="card tight"><span class="lbl">Combination</span>
+            <div class="card tight step"><span class="lbl">Combination</span>
               <p class="step">\(X_C\qquad X_L\qquad RC\)</p>
               <p class="step">\(\dfrac{L}{R}\qquad \dfrac{E}{B}\qquad \varepsilon_o\mu_o\)</p>
               <p class="step">\(hc\)</p>
             </div>
-            <div class="card tight"><span class="lbl">Energy-like</span>
+            <div class="card tight step"><span class="lbl">Energy-like</span>
               <p class="step">\(\tfrac12\varepsilon_o E^{2}\qquad \tfrac12\dfrac{B^{2}}{\mu_o}\)</p>
               <p class="step">\(\tfrac12 CV^{2}\qquad \tfrac12\dfrac{Q^{2}}{C}\)</p>
               <p class="step">\(\tfrac12 LI^{2}\)</p>
@@ -2214,7 +2214,7 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c3">
-            <div class="card question"><span class="lbl">Q1</span>
+            <div class="card question step"><span class="lbl">Q1</span>
               <p>\(\dfrac{mv^{2}}{gh}\)</p>
               <div>
                 <p class="step small muted">multiply and divide by \(m\):</p>
@@ -2222,7 +2222,7 @@
                 <p class="step">\(=\dfrac{E}{E}\,m\;=\;\)<span class="g">\([M]\)</span></p>
               </div>
             </div>
-            <div class="card question"><span class="lbl">Q2</span>
+            <div class="card question step"><span class="lbl">Q2</span>
               <p>Linear mass density</p>
               <div>
                 <p class="step">\(=\dfrac{M}{l}\;=\;\)<span class="g">\([ML^{-1}]\)</span></p>
@@ -2232,7 +2232,7 @@
                 <p class="step">\(=\dfrac{M}{n}\;=\;\)<span class="g">\([M\,\text{mol}^{-1}]\)</span></p>
               </div>
             </div>
-            <div class="card question"><span class="lbl">Q3</span>
+            <div class="card question step"><span class="lbl">Q3</span>
               <p>Electromotive force</p>
               <div>
                 <p class="step trap">It is <b>not</b> a force.</p>
@@ -2242,7 +2242,7 @@
               </div>
             </div>
           </div>
-          <div class="card question tight"><span class="lbl">Q4</span>
+          <div class="card question tight step"><span class="lbl">Q4</span>
             <p>\(R\) in \(PV=nRT\)&nbsp; \(\Rightarrow R=\dfrac{PV}{nT}\)
               <span class="step">\(\;\Rightarrow\;\)<span
                   class="g">\([ML^{2}T^{-2}K^{-1}\,\text{mol}^{-1}]\)</span></span>
@@ -2260,7 +2260,7 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c21">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p>Find the dimension of the <span class="k">velocity gradient</span>.</p>
               <div>
                 <ul class="arrow">
@@ -2270,7 +2270,7 @@
                 </ul>
               </div>
             </div>
-            <div class="card note"><span class="lbl">Generalise</span>
+            <div class="card note step"><span class="lbl">Generalise</span>
               <p class="step">…gradient \(\Rightarrow\) divide by length</p>
               <p class="step">Potential gradient \(=\) electric field \(\Rightarrow [MLT^{-3}A^{-1}]\)</p>
               <p class="step">Temperature gradient \(\Rightarrow [KL^{-1}]\)</p>
@@ -2288,21 +2288,21 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c3">
-            <div class="grp">
+            <div class="grp step">
               <h3>Time</h3>
               <div class="dim">\([T]\)</div>
               <p class="it step">\(RC\)</p>
               <p class="it step">\(L/R\)</p>
               <p class="it step">\(\sqrt{LC}\)</p>
             </div>
-            <div class="grp">
+            <div class="grp step">
               <h3>Energy density / Pressure</h3>
               <div class="dim">\([ML^{-1}T^{-2}]\)</div>
               <p class="it step">\(\tfrac12\varepsilon_o E^{2}\)</p>
               <p class="it step">\(\tfrac12 B^{2}/\mu_o\)</p>
               <p class="it step">Stress · Modulus of elasticity</p>
             </div>
-            <div class="grp">
+            <div class="grp step">
               <h3>Energy</h3>
               <div class="dim">\([ML^{2}T^{-2}]\)</div>
               <p class="it step">\(\tfrac12 CV^{2}\)</p>
@@ -2325,28 +2325,28 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="grp">
+            <div class="grp step">
               <h3>Velocity</h3>
               <div class="dim">\([LT^{-1}]\)</div>
               <p class="it step">\(E/B\)</p>
               <p class="it step">\(1/\sqrt{\varepsilon_o\mu_o}=c\)</p>
               <p class="it step">\(\sqrt{T/\mu}\;\)<span class="small muted">(wave on a string)</span></p>
             </div>
-            <div class="grp">
+            <div class="grp step">
               <h3>Resistance</h3>
               <div class="dim">\([ML^{2}T^{-3}A^{-2}]\)</div>
               <p class="it step">\(X_L=\omega L\)</p>
               <p class="it step">\(X_C=1/\omega C\)</p>
               <p class="it step">\(\sqrt{L/C}\;\cdot\;\sqrt{\mu_o/\varepsilon_o}\)</p>
             </div>
-            <div class="grp">
+            <div class="grp step">
               <h3>Force</h3>
               <div class="dim">\([MLT^{-2}]\)</div>
               <p class="it step">\(qE\)</p>
               <p class="it step">\(qvB\;\cdot\;BIl\)</p>
               <p class="it step">Surface tension \(\times\) length</p>
             </div>
-            <div class="grp">
+            <div class="grp step">
               <h3>Height (length)</h3>
               <div class="dim">\([L]\)</div>
               <p class="it step">\(v^{2}/g\)</p>
@@ -2374,7 +2374,7 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card formula"><span class="lbl">Definition</span>
+            <div class="card formula step"><span class="lbl">Definition</span>
               <p class="step">A dimensionless quantity is one to which <span class="k">no physical dimension</span> is assigned —
                 its dimensional formula is \([M^{0}L^{0}T^{0}]\).</p>
               <ul class="tick" style="margin-top:.35em">
@@ -2386,7 +2386,7 @@
                 <li class="step">Strain · Poisson's ratio</li>
               </ul>
             </div>
-            <div class="card note"><span class="lbl">Four rules</span>
+            <div class="card note step"><span class="lbl">Four rules</span>
               <ul class="arrow">
                 <li class="step">A dimensionless quantity <span class="k">may or may not</span> have a unit
                   <span class="small muted">(radian, degree)</span>
@@ -2410,14 +2410,14 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c21">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p>If \(\alpha t^{2}\) is dimensionless, find \([\alpha]\).</p>
               <div>
                 <p class="step">\(\alpha t^{2}=1\)</p>
                 <p class="step">\(\alpha=\dfrac{1}{t^{2}}\;=\;\)<span class="g">\([T^{-2}]\)</span></p>
               </div>
             </div>
-            <div class="card note"><span class="lbl">Where this appears</span>
+            <div class="card note step"><span class="lbl">Where this appears</span>
               <p class="step">Anything sitting inside \(\sin\), \(\cos\), \(e^{x}\), \(\log\) is dimensionless —
                 that single fact solves most "find the dimension of the constant" questions.</p>
               <p class="step">\(y=A\sin(\omega t)\Rightarrow[\omega]=[T^{-1}]\)</p>
@@ -2444,14 +2444,14 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card formula"><span class="lbl">Rules</span>
-              <p class="step">\([L]+[L]=[L]\)</p>
-              <p class="step">\([L]-[L]=[L]\)</p>
-              <p class="step">\([L]\times[T]=[LT]\)</p>
-              <p class="step">\([L]/[T]=[LT^{-1}]\)</p>
-              <p class="step">\([L]+[T]=\;\)<span class="trap">not allowed</span></p>
+            <div class="card formula step"><span class="lbl">Rules</span>
+              <p class="step">\([L]+[L]\)<span class="step">\(=[L]\)</span></p>
+              <p class="step">\([L]-[L]\)<span class="step">\(=[L]\)</span></p>
+              <p class="step">\([L]\times[T]\)<span class="step">\(=[LT]\)</span></p>
+              <p class="step">\([L]/[T]\)<span class="step">\(=[LT^{-1}]\)</span></p>
+              <p class="step">\([L]+[T]=\;\)<span class="step trap">not allowed</span></p>
             </div>
-            <div class="card note"><span class="lbl">Principle of homogeneity</span>
+            <div class="card note step"><span class="lbl">Principle of homogeneity</span>
               <p class="step">\(\displaystyle\int,\;\Delta,\;\sum,\;d\) have <span class="k">no effect</span> on dimension.</p>
               <p class="step">If any of these symbols joins two sides, both sides must have the same dimension:</p>
               <p class="step big" style="text-align:center">\(=\quad +\quad -\quad &gt;\quad &lt;\quad \le\quad \ge\)</p>
@@ -2468,62 +2468,53 @@
 
     <!-- 16 ============================================================ -->
     <section class="page">
-      <div class="wrap">
-        <h1>Question<span class="sub step">\(y\) is pressure, \(x\) is distance</span></h1>
-        <div class="rule"></div>
+      <div class="wrap" style="justify-content: center;">
+
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
+              <p>\(y\) is pressure, \(x\) is distance</p>
               <p style="text-align:center" class="big">\(\left[\dfrac{d^{2}y}{dx^{2}}\right]=\;?\)</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">\(\dfrac{d^{2}y}{dx^{2}}\) behaves as \(\dfrac{y}{x^{2}}\)</p>
               <p class="step">\(=\dfrac{[ML^{-1}T^{-2}]}{[L^{2}]}\)</p>
               <p class="step">\(=\;\)<span class="g">\([ML^{-3}T^{-2}]\)</span></p>
             </div>
-          </div>
-          <div class="card note tight step"><span class="lbl">Why</span>
-            <p>Differentiating twice with respect to \(x\) divides by \(x\) twice — the order of the derivative is the
-              power of the length you remove.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 17 ============================================================ -->
-    <section class="page">
-      <div class="wrap">
-        <h1>Question<span class="sub step">\(y\) is pressure, \(x\) is distance</span></h1>
-        <div class="rule"></div>
-        <div class="body">
-          <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
+              <p>\(y\) is pressure, \(x\) is distance</p>
               <p style="text-align:center" class="big">\(\left[\displaystyle\int y\,dx\right]=\;?\)</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">\(\displaystyle\int y\,dx\) behaves as \([yx]\)</p>
               <p class="step">\(=[ML^{-1}T^{-2}][L]\)</p>
               <p class="step">\(=\;\)<span class="g">\([ML^{0}T^{-2}]\)</span></p>
             </div>
           </div>
-          <div class="card note tight step"><span class="lbl">Sanity check</span>
+          <div class="cols c2">
+            <div class="card note tight step"><span class="lbl">Why</span>
+            <p>Differentiating twice with respect to \(x\) divides by \(x\) twice — the order of the derivative is the
+              power of the length you remove.</p>
+          </div>
+            <div class="card note tight step"><span class="lbl">Sanity check</span>
             <p>Pressure \(\times\) length \(=\) force per unit area \(\times\) length \(=\) force per unit length —
               exactly \([MT^{-2}]\), which is also the dimension of surface tension.</p>
           </div>
+          </div>
         </div>
+
       </div>
     </section>
-
-    <!-- 18 ============================================================ -->
+<!-- 18 ============================================================ -->
     <section class="page">
       <div class="wrap">
         <h1>Question<span class="sub step">True or false</span></h1>
         <div class="rule"></div>
         <div class="body">
-          <div class="card question"><span class="lbl">Question</span>
+          <div class="card question step"><span class="lbl">Question</span>
             <p>Two terms can <b>always</b> be added if they have the same dimension. True or false?</p>
           </div>
-          <div class="card solution"><span class="lbl">Solution</span>
+          <div class="card solution step"><span class="lbl">Solution</span>
             <p class="step"><span class="g">False.</span></p>
             <ul class="arrow">
               <li class="step">Same dimension is a <span class="k">necessary</span>, not a sufficient condition</li>
@@ -2559,22 +2550,25 @@
         <h1>1 · Dimension of an unknown<span class="sub step">Every "+" sign is a free equation</span></h1>
         <div class="rule"></div>
         <div class="body">
-          <div class="card question"><span class="lbl">Question</span>
+          <div class="card question step"><span class="lbl">Question</span>
             <p>\(v\) is speed, \(t\) is time, \(x\) is distance. Find \([A],[B],[C]\) in
               &nbsp;\(\dfrac{A}{v+C}+t=Bx\)</p>
           </div>
           <div class="cols c3">
             <div class="card solution step"><span class="lbl">C</span>
-              <p>\(v+C\) must be addable</p>
+              <div class="step"><p>\(v+C\) must be addable</p>
               <p>\([C]=[v]=\;\)<span class="g">\([LT^{-1}]\)</span></p>
             </div>
+            </div>
             <div class="card solution step"><span class="lbl">A</span>
-              <p>\(\left[\dfrac{A}{v}\right]=[t]\)</p>
+              <div class="step"><p>\(\left[\dfrac{A}{v}\right]=[t]\)</p>
               <p>\([A]=[vt]=\;\)<span class="g">\([L]\)</span></p>
             </div>
+            </div>
             <div class="card solution step"><span class="lbl">B</span>
-              <p>\([Bx]=[t]\)</p>
+              <div class="step"><p>\([Bx]=[t]\)</p>
               <p>\([B]=\left[\dfrac{t}{x}\right]=\;\)<span class="g">\([L^{-1}T]\)</span></p>
+            </div>
             </div>
           </div>
           <div class="card note tight step"><span class="lbl">Order of attack</span>
@@ -2592,11 +2586,11 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p style="text-align:center" class="big">\(y=A\sin(\alpha x)\)</p>
               <p>Find \([\alpha]\).</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">Whatever sits inside \(\sin\) is dimensionless</p>
               <p class="step">\([\alpha x]=1\)</p>
               <p class="step">\([\alpha]=\dfrac{1}{[x]}=\;\)<span class="g">\([L^{-1}]\)</span></p>
@@ -2614,15 +2608,15 @@
         <div class="rule"></div>
         <div class="body">
           <div class="stack">
-            <div class="card tight">
+            <div class="card tight step">
               <p>\(F=mv^{2}\)&nbsp;&nbsp;<span class="step muted">— cannot be true, the dimensions
                   do not match &nbsp;<span class="trap">✗</span></span></p>
             </div>
-            <div class="card tight">
+            <div class="card tight step">
               <p>\(F=3ma\)&nbsp;&nbsp;<span class="step muted">— dimensions are fine, but the
                   relation is still wrong</span></p>
             </div>
-            <div class="card tight">
+            <div class="card tight step">
               <p>\(F=ma\)&nbsp;&nbsp;<span class="step muted">— dimensions fine and the relation
                   is right &nbsp;<span class="g">✓</span></span></p>
             </div>
@@ -2643,47 +2637,20 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c3">
-            <div class="card formula"><span class="lbl">Master rule</span>
+            <div class="card formula step"><span class="lbl">Master rule</span>
               <p class="step" style="text-align:center">\(n_1u_1=n_2u_2\)</p>
               <p class="step" style="text-align:center">\(n_2=n_1\dfrac{u_1}{u_2}\)</p>
               <p class="step why">Bigger unit \(\Rightarrow\) smaller number. The product never changes.</p>
             </div>
-            <div class="card question"><span class="lbl">Convert 2 m to cm</span>
+            <div class="card question step"><span class="lbl">Convert 2 m to cm</span>
               <p class="step">\(=2\times\dfrac{\text{m}}{\text{cm}}\)</p>
               <p class="step">\(=2\times 100\)</p>
               <p class="step">\(=\;\)<span class="g">\(200\ \text{cm}\)</span></p>
             </div>
-            <div class="card question"><span class="lbl">Convert 20 m/s to km/h</span>
+            <div class="card question step"><span class="lbl">Convert 20 m/s to km/h</span>
               <p class="step">\(=20\times\dfrac{\text{m s}^{-1}}{\text{km h}^{-1}}\)</p>
               <p class="step">\(=20\times\dfrac{1/1000}{1/3600}\)</p>
               <p class="step">\(=20\times\tfrac{18}{5}=\;\)<span class="g">\(72\ \text{km h}^{-1}\)</span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 24 ============================================================ -->
-    <section class="page">
-      <div class="wrap">
-        <h1>Why \(n\,u\) stays constant<span class="sub step">Same slab of space, two different rulers</span></h1>
-        <div class="rule"></div>
-        <div class="body">
-          <div class="cols c22">
-            <div class="step figwrap"><canvas class="fig" id="cubeCanvas" width="740" height="356"></canvas></div>
-            <div class="stack">
-              <div class="card formula tight"><span class="lbl">Live count</span>
-                <p class="step">unit of length \(u=\) <span class="k" id="ro-u">1 m</span></p>
-                <p class="step">along one edge \(n=\) <span class="k" id="ro-n">4</span></p>
-                <p class="step">for the volume \(n=\) <span class="k" id="ro-v">64</span></p>
-              </div>
-              <div class="card note tight step"><span class="lbl">Watch</span>
-                <p>The block never changes. Only the ruler does — and the <span class="k">count</span> follows.</p>
-              </div>
-              <div class="card note tight step"><span class="lbl">Consequence</span>
-                <p>Double the unit of length and a volume number falls by \(2^{3}=8\): the exponent in the dimensional
-                  formula <i>is</i> the conversion factor.</p>
-              </div>
             </div>
           </div>
         </div>
@@ -2697,11 +2664,11 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p>\(1\ \text{N}=?\) in cgs</p>
               <p class="step">\([F]=[MLT^{-2}]\)</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">\(=1\times\left[\dfrac{\text{kg}}{\text{g}}\right]\left[\dfrac{\text{m}}{\text{cm}}\right]
                 \left[\dfrac{\text{s}}{\text{s}}\right]^{-2}\)</p>
               <p class="step">\(=1\times 10^{3}\times 10^{2}\times 1\)</p>
@@ -2723,11 +2690,11 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p>\(1\ \text{J}=?\) in cgs</p>
               <p class="step">\([E]=[ML^{2}T^{-2}]\)</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">
                 \(=1\times\left[\dfrac{\text{kg}}{\text{g}}\right]\left[\dfrac{\text{m}}{\text{cm}}\right]^{2}
                 \left[\dfrac{\text{s}}{\text{s}}\right]^{-2}\)</p>
@@ -2745,7 +2712,7 @@
         <h1>Question<span class="sub step">An invented system of units</span></h1>
         <div class="rule"></div>
         <div class="body">
-          <div class="card question"><span class="lbl">Question</span>
+          <div class="card question step"><span class="lbl">Question</span>
             <p>Convert \(1\ \text{N}\) to a system in which the unit of length is \(10\ \text{m}\),
               the unit of time is \(1\ \text{min}\) and the unit of mass is \(2\ \text{kg}\).</p>
           </div>
@@ -2774,12 +2741,12 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Setup</span>
+            <div class="card question step"><span class="lbl">Setup</span>
               <p>Suppose kinetic energy depends on mass and velocity.</p>
               <p>\([K.E.]\propto[m]^{a}[v]^{b}\)</p>
               <p class="step">\([ML^{2}T^{-2}]=[M]^{a}[LT^{-1}]^{b}\)</p>
             </div>
-            <div class="card solution"><span class="lbl">Compare powers</span>
+            <div class="card solution step"><span class="lbl">Compare powers</span>
               <p class="step">from \(M\): &nbsp;\(a=1\)</p>
               <p class="step">from \(L\): &nbsp;\(b=2\)</p>
               <p class="step">from \(T\): &nbsp;\(-2=-b\Rightarrow b=2\) &nbsp;<span
@@ -2799,11 +2766,11 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question</span>
+            <div class="card question step"><span class="lbl">Question</span>
               <p>The period of a pendulum may depend on \(l\), \(g\), \(m\) and the amplitude angle \(\theta\).
                 Find the relation.</p>
             </div>
-            <div class="card solution"><span class="lbl">Solution</span>
+            <div class="card solution step"><span class="lbl">Solution</span>
               <p class="step">\([T]=[L]^{a}[LT^{-2}]^{b}[M]^{c}\)</p>
               <p class="step">from \(M\): \(c=0\)&nbsp;&nbsp; from \(L\): \(a+b=0\)</p>
               <p class="step">from \(T\): \(-2b=1\Rightarrow b=-\tfrac12,\;a=\tfrac12\)</p>
@@ -2826,14 +2793,14 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card question"><span class="lbl">Question 1</span>
+            <div class="card question step"><span class="lbl">Question 1</span>
               <p>If the units of length, velocity and mass are all doubled, what happens to the unit of force?</p>
               <div>
                 <p class="step">\([F]=\left[\dfrac{mv^{2}}{l}\right]\)</p>
                 <p class="step">\(F=\dfrac{2\times 2^{2}}{2}=\;\)<span class="g">\(4\) times</span></p>
               </div>
             </div>
-            <div class="card question"><span class="lbl">Question 2</span>
+            <div class="card question step"><span class="lbl">Question 2</span>
               <p>If the units of mass and velocity are doubled, what happens to the unit of energy?</p>
               <div>
                 <p class="step">\(K.E.=\tfrac12 mv^{2}\Rightarrow[K.E.]=[mv^{2}]\)</p>
@@ -2864,15 +2831,15 @@
         <h1>Limitations</h1>
         <div class="rule"></div>
         <div class="body">
-          <div class="card"><span class="lbl">1</span>
+          <div class="card step"><span class="lbl">1</span>
             <p class="step"><span class="k">It cannot find a constant.</span></p>
             <p class="step">\(T=\underbrace{2\pi}_{\text{invisible}}\sqrt{\dfrac{l}{g}}\qquad\qquad F=ma\)</p>
           </div>
-          <div class="card"><span class="lbl">2</span>
+          <div class="card step"><span class="lbl">2</span>
             <p class="step"><span class="k">It does not work on anything but a product.</span></p>
             <p class="step">\(s=ut+\tfrac12at^{2}\) — a sum of terms cannot be produced by comparing powers.</p>
           </div>
-          <div class="card"><span class="lbl">3</span>
+          <div class="card step"><span class="lbl">3</span>
             <p class="step"><span class="k">It fails when more than three quantities are involved</span> <span class="muted small">(in
                 mechanics — only three equations, M, L, T, are available).</span></p>
             <p class="step">\(E=\dfrac{Fv^{2}t^{2}}{l}\) is dimensionally fine yet undetermined.</p>
@@ -2887,12 +2854,12 @@
         <h1>Limitations <span class="sub step">continued</span></h1>
         <div class="rule"></div>
         <div class="body">
-          <div class="card"><span class="lbl">4</span>
+          <div class="card step"><span class="lbl">4</span>
             <p class="step"><span class="k">If two of the quantities share a dimension, it cannot separate them.</span></p>
             <p class="step">\(V=lbh\) — three lengths, one dimension \([L]\)</p>
             <p class="step">\(R=\dfrac{\rho l}{A}\) — \(l\) and \(\sqrt{A}\) are both lengths</p>
           </div>
-          <div class="card"><span class="lbl">5</span>
+          <div class="card step"><span class="lbl">5</span>
             <p class="step"><span class="k">It cannot handle relations between dimensionless things.</span></p>
             <p class="step">\(y=A\sin(\omega t)\) — the form of \(\sin\) can never be derived from a bracket</p>
           </div>
@@ -2912,28 +2879,28 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="mcq">
+            <div class="mcq step">
               <div class="t">Version 1</div>
               <p class="o">1 &gt; \(s=ut+\tfrac12at^{2}\)</p>
               <p class="o">2 &gt; \(y=A\sin(\omega t)\)</p>
               <p class="o">3 &gt; \(F=ma\)</p>
               <p class="o step ok">4 &gt; None of these ✓</p>
             </div>
-            <div class="mcq">
+            <div class="mcq step">
               <div class="t">Version 2</div>
               <p class="o">1 &gt; \(s=ut+\tfrac12at^{2}\)</p>
               <p class="o">2 &gt; \(y=A\sin(\omega t)\)</p>
               <p class="o">3 &gt; \(R=\rho l/A\)</p>
               <p class="o step ok">4 &gt; \(T=2\pi\sqrt{l/g}\) ✓</p>
             </div>
-            <div class="mcq">
+            <div class="mcq step">
               <div class="t">Version 3</div>
               <p class="o">1 &gt; \(s=ut+\tfrac12at^{2}\)</p>
               <p class="o">2 &gt; \(y=A\sin(\omega t)\)</p>
               <p class="o step ok">3 &gt; \(F=ma\) ✓</p>
               <p class="o">4 &gt; \(T=2\pi\sqrt{l/g}\)</p>
             </div>
-            <div class="mcq">
+            <div class="mcq step">
               <div class="t">Version 4 — the clean one</div>
               <p class="o">1 &gt; \(s=ut+\tfrac12at^{2}\)</p>
               <p class="o">2 &gt; \(y=A\sin(\omega t)\)</p>
@@ -2956,7 +2923,7 @@
         <div class="rule"></div>
         <div class="body">
           <div class="cols c2">
-            <div class="card formula"><span class="lbl">Do</span>
+            <div class="card formula step"><span class="lbl">Do</span>
               <ul class="tick">
                 <li class="step">Derive a dimension from a formula, never from memory</li>
                 <li class="step">Use every \(+\), \(=\), \(&lt;\) as a free equation</li>
@@ -2965,7 +2932,7 @@
                 <li class="step">Unit conversion: \(n_2=n_1\,u_1/u_2\) — old over new</li>
               </ul>
             </div>
-            <div class="card note"><span class="lbl">Don't</span>
+            <div class="card note step"><span class="lbl">Don't</span>
               <ul class="tick">
                 <li class="step">Expect a numerical constant — \(2\pi\) is invisible</li>
                 <li class="step">Add two quantities just because the brackets match</li>
