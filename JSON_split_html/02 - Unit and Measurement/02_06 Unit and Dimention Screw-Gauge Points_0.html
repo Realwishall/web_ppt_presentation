@@ -163,36 +163,36 @@ body[data-lvl="7"] .page.dense .eq{font-size:32px}
 body[data-lvl="7"] .page.dense .content,body[data-lvl="7"] .page.dense .col{gap:7px}
 body[data-lvl="7"] .page.dense figure{max-width:74%}
 body[data-lvl="7"] .page.dense figcaption{font-size:21px}
-</style>
-<!-- BEGIN math-font:upright -->
-<style data-mathfont="upright">
+
+/* BEGIN math-font:upright */
 /* ---- upright math typography (rule 17) ---------------------------------
-   Cambria Math is a true math face -- real Greek, real operators, digits on
-   the baseline. It was never the font that looked wrong, only the italic.
-   System fonts only: no @font-face, no CDN, works with no classroom
-   network (rule 2).                                                      */
+   Cambria Math is a true math face: real Greek, real operators, digits that
+   sit on the baseline. It was never the font that read wrong here, only the
+   italic -- and the Georgia fallback underneath it. System fonts only, so a
+   deck still sets correctly with no classroom network (rule 2).          */
 :root{
-  --math-stack:"Cambria Math",Cambria,"STIX Two Math","STIX Two Text","Times New Roman",Georgia,serif;
+  --math-stack:'Cambria Math',Cambria,'STIX Two Math','Times New Roman',serif;
   --font-math:var(--math-stack);
   --math:var(--math-stack);
 }
-/* plain (not :where) so these beat the original .m / .eq declarations */
+/* plain selectors (not :where) so these beat the deck's own .m / .eq rules */
 .m,.eq,.fr,.frac,.radical,.scene-readout .ro b{
   font-family:var(--math-stack);
   font-style:normal;
 }
 .m em,.m i,.eq em,.eq i,.m .up,.eq .up,sup,sub{font-style:normal}
-/* MathML: browsers auto-italicise single-letter <mi> via text-transform:math-auto */
+/* MathML: the UA sheet italicises a single-letter <mi> through
+   text-transform:math-auto, which font-style does not override. */
 math{font-family:var(--math-stack)}
 math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
-/* zero-specificity so existing .am / .gr / .acc bold spans still win */
+/* zero-specificity so .am / .gr / .acc bold spans still win */
 :where(.m,.eq,.fr,.frac,.radical){
   font-weight:500;
   font-variant-numeric:lining-nums;
   text-rendering:optimizeLegibility;
 }
+/* END math-font:upright */
 </style>
-<!-- END math-font:upright -->
 </head>
 <body data-lvl="5">
 <div id="stage">
