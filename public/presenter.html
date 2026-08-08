@@ -1142,31 +1142,90 @@
 
   const escAttr = s => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-  /* A frozen box can carry the slide's HTML too: strip the deck's scripts,
-     show only the frozen slide index and reveal its steps up to stepIndex.
-     Rendered in a sandboxed iframe scaled to fit the box.
+  /* A frozen box carries the slide's HTML too, rendered script-free in a
+     sandboxed iframe that is laid out at the board size it was frozen at and
+     then CSS-scaled into the box — so the layout never re-solves as the
+     teacher drags or resizes it, and no second WebGL context or replaying
+     preset runs next to the ink.
 
-     Stripping the scripts is what makes this safe (no second WebGL context, no
-     preset replaying inside the box the teacher is writing on) — but the deck's
-     runtime is also what paints STATE, not just motion: tools/build-deck.mjs
-     ships revealFx (the .info-box holding the floor grows to 120% and dims its
-     neighbours) and lightsFx (a revealed [data-lights] cue lights its [data-lit]
-     words). Strip those and a focus-box slide freezes flat and undimmed — it is
-     not the slide that was on the board. Both states are a pure function of
-     which steps are revealed, so they are replayed statically below instead. */
-  function buildFrozenSrcdoc(text, index, step){
+     Preferred source is the BAKE the live deck hands over at freeze time
+     (buildFrozenBaked). Rebuilding from source text is the fallback, and the
+     reason the bake exists: the deck's runtime paints STATE, not just motion. */
+
+  /* Parse the deck once and take out everything that must not run or fetch
+     inside a frozen box: its scripts, and any absolute stylesheet/webfont.
+     Same reason as the PDF export — this iframe has an opaque origin and the
+     room may be offline. A CDN sheet or webfont that resolves late re-flows
+     the slide AFTER the box was composed, and .wrap.fit clips on overflow, so
+     the frozen slide silently loses its last rows. */
+  function frozenDoc(text){
     const doc = new DOMParser().parseFromString(text, "text/html");
     doc.querySelectorAll("script").forEach(s => s.remove());
-    /* Same reason as the PDF export: this iframe has an opaque origin and the
-       room may be offline. A CDN sheet or webfont that resolves late re-flows
-       the slide AFTER the box was composed, and .wrap.fit clips on overflow —
-       so the frozen slide silently loses its last rows. */
     doc.querySelectorAll(
       'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
     ).forEach(l => {
       const href = l.getAttribute("href") || "";
       if(/^https?:\/\//i.test(href)) l.remove();
     });
+    return doc;
+  }
+
+  /* ── the baked path (what a freeze records today) ──────────────────────
+     snap.body is the ACTIVE page as the LIVE deck had it: fitted zoom, the
+     stage size and transform a fixed-canvas deck builds in JS, rendered
+     KaTeX, generated SVG, the revealed steps and every is-active / is-lit
+     class already on the elements. So there is nothing to replay here and no
+     script in the box at all — only the deck's own head, the baked body, and
+     the rules below that hold it still. */
+  const FROZEN_CSS = `<style id="__lf-frozen">
+/* .page and .wrap are height:100%; a deck that does not ship deck-base.css has
+   no full-height root of its own, and they collapse against an auto body. */
+html,body{overflow:hidden!important;margin:0!important;height:100%!important;min-height:100%!important}
+html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+/* A frozen frame does not breathe. Durations go to 1ms rather than
+   \`animation:none\` so a keyframe that ENDS somewhere (fill-mode:forwards)
+   still lands there — the same trick the deck controller's noanim path uses. */
+*,*::before,*::after{
+  animation-duration:1ms!important;animation-delay:0s!important;
+  animation-iteration-count:1!important;
+  transition-duration:1ms!important;transition-delay:0s!important;
+}
+.wrap.__lf-fitted{max-height:none!important}
+[data-video] iframe{visibility:hidden!important}
+/* nothing paints into a canvas here — a scene shows the same static figure
+   the PDF export prints; any other canvas was baked to an <img> at freeze */
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+<\/style>`;
+
+  function buildFrozenBaked(text, snap){
+    const doc = frozenDoc(text);
+    const head = doc.head ? doc.head.innerHTML : "";
+    /* Only what the deck controller itself owns is restated here. A step's
+       TRANSFORM is deliberately left alone: a deck may put an inline one on
+       its steps, and the board shows it — forcing transform:none would move
+       every revealed step by the offset the teacher was looking at. */
+    const page = `<style id="__lf-frozen-page">
+.page{display:none!important}
+.page.__lf-active{display:block!important;opacity:1!important}
+.page .step{opacity:0!important;transition:none!important}
+.page .step.__lf-on{opacity:1!important;visibility:visible!important}
+<\/style>`;
+    return `<!DOCTYPE html><html class="${escAttr(snap.rootClass || "")}"`
+         + (snap.rootStyle ? ` style="${escAttr(snap.rootStyle)}"` : "")
+         + `><head>${head}${FROZEN_CSS}${page}</head>${snap.body}</html>`;
+  }
+
+  /* ── the legacy path ───────────────────────────────────────────────────
+     Sessions frozen before the bake existed (and any deck that failed to
+     answer) still carry only slide + step, so the slide is rebuilt from the
+     deck text and the two states its runtime paints are replayed statically:
+     revealFx (the .info-box holding the floor grows and dims its neighbours)
+     and lightsFx (a revealed [data-lights] cue lights its [data-lit] words).
+     Both are a pure function of which steps are revealed. */
+  function buildFrozenSrcdoc(text, index, step){
+    const doc = frozenDoc(text);
     const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
     const style = `<style id="__lf-frozen">
 /* .page and .wrap are height:100%; a deck that does not ship deck-base.css has
@@ -1219,6 +1278,17 @@ for(var i=0;i<cues.length;i++){
     return base + style + script;
   }
 
+  /* The one place that decides how a frozen box is rendered — the live box,
+     the page-sheet thumbnail and the PDF sheet all go through here, so they
+     can never disagree about what a frozen page looks like. */
+  function frozenSrcdoc(snap){
+    if(!snap || snap.deckId == null) return "";
+    const deck = state.decks.find(d => d.id === snap.deckId);
+    if(!deck) return "";
+    return snap.body ? buildFrozenBaked(deck.text, snap)
+                     : buildFrozenSrcdoc(deck.text, snap.deckIndex, snap.stepIndex);
+  }
+
   let snapDeckKey = null;   // guards against reloading the iframe on every drag
   // boxW/boxH are the box in board PIXELS — snap.w/h themselves are fractions.
   function syncSnapDeck(snap, boxW, boxH){
@@ -1232,10 +1302,13 @@ for(var i=0;i<cues.length;i++){
     snapDeck.style.height = baseH + "px";
     snapDeck.style.transform = `scale(${boxW / baseW}, ${boxH / baseH})`;
     snapDeck.style.display = "block";
-    const key = snap.deckId + ":" + snap.deckIndex + ":" + snap.stepIndex;
+    /* uid, not slide+step: two pages can be frozen from the same slide and
+       only one of them may carry a bake. Re-rendering costs a full iframe
+       load, so it happens on a real change of content and never on a drag. */
+    const key = (snap.uid || (snap.deckId + ":" + snap.deckIndex + ":" + snap.stepIndex))
+              + (snap.body ? ":b" : ":t");
     if(key !== snapDeckKey){
-      const deck = state.decks.find(d => d.id === snap.deckId);
-      snapDeck.srcdoc = deck ? buildFrozenSrcdoc(deck.text, snap.deckIndex, snap.stepIndex) : "";
+      snapDeck.srcdoc = frozenSrcdoc(snap);
       snapDeckKey = key;
     }
   }
@@ -1735,6 +1808,72 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      back its CURRENT DOM. Everything script did is already in it — the
      stage's size, the text-size level, rendered maths, the fitted zoom. The
      page is then printable as plain markup, with no scripts at all. */
+  /* ── FREEZE SNAPSHOT (duplicate & freeze) ──────────────────────────────
+     Same lesson as the export above, for the same reason. A frozen box used
+     to be rebuilt from the deck's SOURCE TEXT with the scripts stripped — so
+     everything script had already done to the slide was thrown away: the
+     fit engine's zoom, a fixed-canvas deck's #stage size and transform, the
+     KaTeX it rendered, the SVG figures it generated, the text-size level.
+     Those decks froze as an unscaled, unrendered pile.
+
+     So the host asks the live deck for the ACTIVE page as it stands. Only
+     that one page is kept (the payload is one slide, not a whole deck) and
+     the head — fonts, the deck's CSS — still comes from the source text the
+     host already holds, so nothing is stored twice. */
+  function sendFrozenBody(requestId){
+    var out = "";
+    try{
+      fitActive();                       // settle the zoom before it is baked
+      var live = document.querySelectorAll(".page"), keep = -1;
+      for(var i = 0; i < live.length; i++)
+        if(live[i].classList.contains("__lf-active")) keep = i;
+      var body = document.body.cloneNode(true);
+      var copies = body.querySelectorAll(".page");
+      for(var j = 0; j < copies.length; j++)
+        if(j !== keep && copies[j].parentNode) copies[j].parentNode.removeChild(copies[j]);
+      /* A cloned <canvas> is blank. A .scene-frame has a .scene-fallback the
+         frozen sheet shows instead; anything else would simply disappear, so
+         its pixels are baked into an <img> while the original is still live.
+         Both lists are read from the SAME page — the live one and its clone —
+         so index k is the same canvas on both sides. */
+      var liveKeep = keep >= 0 ? live[keep] : null;
+      var cloneKeep = body.querySelector(".page.__lf-active");
+      var srcCans = liveKeep  ? liveKeep.querySelectorAll("canvas")  : [];
+      var cans    = cloneKeep ? cloneKeep.querySelectorAll("canvas") : [];
+      for(var k = 0; k < cans.length; k++){
+        if(cans[k].closest && cans[k].closest(".scene-frame")) continue;
+        var src = srcCans[k]; if(!src) continue;
+        try{
+          if(!(src.width > 0 && src.height > 0)) continue;
+          var url = src.toDataURL("image/png");
+          if(!url || url.length > 700000) continue;      // keep the payload sane
+          var img = document.createElement("img");
+          /* id and class come along so the deck's own CSS still applies to it;
+             the box is then pinned to the size the canvas actually occupied,
+             because a canvas sized by its width/height attributes has no CSS
+             box of its own and would otherwise come back at its bitmap size. */
+          for(var a = 0; a < cans[k].attributes.length; a++){
+            var at = cans[k].attributes[a];
+            if(at.name === "width" || at.name === "height" || at.name === "src") continue;
+            try{ img.setAttribute(at.name, at.value); }catch(e){}
+          }
+          img.src = url;
+          img.style.display = "block";
+          img.style.width  = src.offsetWidth  + "px";
+          img.style.height = src.offsetHeight + "px";
+          cans[k].parentNode.replaceChild(img, cans[k]);
+        }catch(err){ /* tainted or WebGL — the CSS hides it */ }
+      }
+      body.querySelectorAll("script,noscript").forEach(function(s){ s.remove(); });
+      out = body.outerHTML;
+    }catch(err){ out = ""; }
+    parent.postMessage({
+      type: "lf-frozen-body", requestId: requestId, html: out,
+      rootClass: document.documentElement.className || "",
+      rootStyle: document.documentElement.getAttribute("style") || ""
+    }, "*");
+  }
+
   function sendExportDoc(requestId){
     var ps = document.querySelectorAll(".page");
     var cur = 0, curStep = 0;
@@ -1833,6 +1972,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
        full-screen enter/exit above all, where the resize event inside this
        frame is unreliable and arrives before the viewport has settled. */
     if(d.type === "lf-refit") scheduleFit();
+    if(d.type === "lf-freeze-snap") sendFrozenBody(d.requestId);
     if(d.type === "lf-export-snap") sendExportDoc(d.requestId);
   });
 
@@ -2157,10 +2297,17 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     try{
       localStorage.setItem(RECOVER_KEY, JSON.stringify(wrap));
     }catch(err){
-      // over quota — the decks are recoverable from the Library, the ink is not
+      // over quota — the decks are recoverable from the Library, the ink is not.
+      // A frozen page's baked slide goes with them: it is styled by its deck's
+      // head, so it is worth nothing once the deck text is gone.
       try{
         wrap.trimmed = true;
-        wrap.board = { ...board0, decks: board0.decks.map(d => ({ ...d, text: "" })) };
+        wrap.board = {
+          ...board0,
+          decks: board0.decks.map(d => ({ ...d, text: "" })),
+          pages: board0.pages.map(p => p.snap && p.snap.body
+            ? { ...p, snap: { ...p.snap, body: null } } : p)
+        };
         localStorage.setItem(RECOVER_KEY, JSON.stringify(wrap));
       }catch(err2){ /* nothing more to try — the session save still covers it */ }
     }
@@ -2218,27 +2365,73 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   ["pointerdown","pointermove","keydown","wheel"].forEach(ev =>
     document.addEventListener(ev, pingActivity, { passive:true }));
 
-  function addPage({duplicate=false} = {}){
+  /* Ask the live deck to hand back the slide exactly as it stands. One
+     serialize of ONE page, once, on the press — nothing is asked of the deck
+     while it is being presented. The timeout is the whole failure story: a
+     deck that does not answer (an old file, a frame still loading) simply
+     leaves the box to rebuild from source text, as it always did. */
+  /* One slide's markup is 4–40 KB. A bake far past that is a slide carrying
+     inlined photos, which the source text already holds and rebuilds fine —
+     so it falls back rather than storing the same base64 twice per freeze. */
+  const FREEZE_MAX = 600000;    // chars
+  function requestFrozenBody(frame, ms = 900){
+    return new Promise(resolve => {
+      if(!frame || !frame.contentWindow) return resolve(null);
+      const requestId = "fz" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      let settled = false;
+      const done = v => {
+        if(settled) return;
+        settled = true;
+        window.removeEventListener("message", onMsg);
+        resolve(v);
+      };
+      const onMsg = e => {
+        const d = e.data || {};
+        if(d.type !== "lf-frozen-body" || d.requestId !== requestId) return;
+        done(d.html && d.html.length <= FREEZE_MAX
+          ? { body:d.html, rootClass:d.rootClass || "", rootStyle:d.rootStyle || "" }
+          : null);
+      };
+      window.addEventListener("message", onMsg);
+      frame.contentWindow.postMessage({ type:"lf-freeze-snap", requestId }, "*");
+      setTimeout(() => done(null), ms);
+    });
+  }
+
+  async function addPage({duplicate=false} = {}){
     const page = blankPage();
-    if(duplicate && state.current >= 0){
-      const cur = state.pages[state.current];
+    /* Where this page lands is decided BEFORE the deck is asked anything:
+       the freeze below is awaited, and a clicker press in that moment must
+       not drop the new page somewhere else in the lesson. */
+    let at = state.current;
+    if(duplicate && at >= 0){
+      const cur = state.pages[at];
       const r = board.getBoundingClientRect();
       const url = composeCurrent(false);   // ink only — HTML comes from the frozen deck iframe
+      const baked = cur.deckId != null
+        ? await requestFrozenBody(deckFrames[cur.deckId])
+        : null;
       page.snap = {
         // fractions of the board, centred at 62% — see NORMALISED INK
         url, x:.19, y:.19, w:.62, h:.62,
         baseW: r.width, baseH: r.height,
-        // Freeze the slide HTML into the box: remember which deck slide/step this
-        // page showed so the box can re-render it, scaled to the box (not full-screen).
-        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: shownStep(cur)
+        uid: "s" + Date.now() + "_" + Math.random().toString(36).slice(2),
+        // Freeze the slide HTML into the box. `body` is the live slide as it
+        // was on the board; slide/step stay recorded either way, both as the
+        // fallback for a deck that did not answer and as what the box means.
+        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: shownStep(cur),
+        body: baked ? baked.body : null,
+        rootClass: baked ? baked.rootClass : "",
+        rootStyle: baked ? baked.rootStyle : ""
       };
     }
-    state.pages.splice(state.current + 1, 0, page);
+    if(!duplicate) at = state.current;
+    state.pages.splice(at + 1, 0, page);
     board.classList.add("visible");
     emptyState.classList.add("hidden");
     requestAnimationFrame(() => {
       sizeCanvas();          // idempotent — no-op when the size is already right
-      loadPage(state.current + 1);
+      loadPage(at + 1);
       scheduleRecover();
       toast(duplicate
         ? "Page frozen onto a new page — drag or resize it"
@@ -3326,6 +3519,16 @@ html,body{overflow:hidden!important;height:100%!important;min-height:100%!import
 canvas{display:none!important}
 .scene-frame .scene-fallback{display:flex!important}
 <\/style>`;
+    /* A frozen box printed from its own bake already carries the right page,
+       the right steps and the right zoom — print only needs the colours held
+       down. EMBED_STYLE would fight it (its .page rules key off __lf-x). */
+    const SNAP_PRINT = `<style id="__lf-snap-print">
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{background:#080a14!important}
+#bg,#canvas-wrap{display:block!important;visibility:visible!important;opacity:1!important}
+#bg:before,#bg:after{display:none!important;animation:none!important}
+.page.__lf-active{display:block!important;background:#080a14!important}
+<\/style>`;
 
     // One markup string reused on every sheet — the logo is identical each time.
     const badge = buildLogoBadge();
@@ -3357,8 +3560,13 @@ canvas{display:none!important}
       // Frozen box that carries slide HTML → a scaled iframe placed at the box.
       let snapEmbed = "";
       const s = page.snap;
-      if(s && s.deckId != null && s.deckIndex != null && deckDocs[s.deckId]){
-        const srcdoc = deckDocs[s.deckId] + EMBED_STYLE + showPage(s.deckIndex);
+      if(s && s.deckId != null && s.deckIndex != null && (s.body || deckDocs[s.deckId])){
+        /* A freeze that recorded the live slide prints exactly that — its own
+           step, its own zoom. SNAP_PRINT only re-asserts the colours print
+           needs; EMBED_STYLE would fight the baked sheet's own page rules. */
+        const srcdoc = s.body
+          ? frozenSrcdoc(s) + SNAP_PRINT
+          : deckDocs[s.deckId] + EMBED_STYLE + showPage(s.deckIndex);
         const baseW = s.baseW || W, baseH = s.baseH || H;
         // the box is stored in board fractions; the sheet is exactly W×H CSS px,
         // so it multiplies out to plain px here — no vw/vh, which would resolve
@@ -3492,7 +3700,7 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     const boxW = s.w * tw, boxH = s.h * th;                 // s.* are fractions
     const wrap = `left:${s.x * tw}px;top:${s.y * th}px;width:${boxW}px;height:${boxH}px`;
     const inner = `width:${baseW}px;height:${baseH}px;transform:scale(${boxW / baseW},${boxH / baseH})`;
-    const srcdoc = buildFrozenSrcdoc(deck.text, s.deckIndex, s.stepIndex);
+    const srcdoc = frozenSrcdoc(s);
     return `<div class="pt-snap" style="${wrap}">`
       + `<iframe sandbox="allow-scripts" scrolling="no" style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
   }
