@@ -345,7 +345,57 @@
     color:#fff;background:linear-gradient(135deg,var(--violet),var(--indigo));
   }
   .btn-primary:hover{filter:brightness(1.1)}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none}
   .dialog.wide{width:380px}
+
+  /* ── EXPORT VARIABLES DIALOG ────────────────────
+     Filled in every time Export is pressed; its values are substituted into
+     the batch's uploaded Starting / Ending pages. Lives inside the panel (not
+     the React host) so it still works when the board is full screen. */
+  .dialog.form{width:min(560px,92vw);max-height:88vh;overflow:auto;padding:22px}
+  .dialog.form p{margin-bottom:14px}
+  .field{margin-bottom:14px}
+  .field>label{
+    display:block;font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+  }
+  .field input[type=text],.field input[type=number],.field select,.field textarea{
+    width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:var(--text);
+    background:rgba(2,6,16,.6);border:1px solid var(--border);border-radius:10px;
+    padding:9px 11px;outline:none;
+  }
+  .field textarea{resize:vertical;min-height:56px;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{
+    border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,58,237,.22);
+  }
+  .field .hint{display:block;margin-top:5px;font-size:11px;color:var(--muted)}
+  .field-row{display:flex;gap:12px}
+  .field-row>.field{flex:1;min-width:0}
+  /* Lecture 1–10 is the everyday range: one tap. 11–40 stays reachable. */
+  .lec-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:7px}
+  .lec-chip{
+    padding:8px 0;border-radius:9px;font-size:13px;font-weight:700;color:var(--icon);
+    background:rgba(148,163,184,.09);border:1px solid transparent;transition:all .12s ease;
+  }
+  .lec-chip:hover{background:rgba(148,163,184,.18);color:var(--text)}
+  .lec-chip.on{
+    background:linear-gradient(135deg,var(--violet),var(--indigo));color:#fff;
+    box-shadow:0 4px 14px rgba(124,58,237,.4);
+  }
+  .topic-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .topic-chip{
+    padding:6px 11px;border-radius:999px;font-size:12.5px;color:var(--icon);
+    background:rgba(148,163,184,.09);border:1px solid var(--border);transition:all .12s ease;
+    text-align:left;
+  }
+  .topic-chip:hover{border-color:#475569;color:var(--text)}
+  .topic-chip.on{background:rgba(124,58,237,.22);border-color:var(--violet);color:#fff}
+  .topic-chip.on::before{content:"✓ ";font-weight:700}
+  .cfg-note{
+    font-size:11.5px;color:var(--muted);background:rgba(148,163,184,.07);
+    border:1px solid var(--border);border-radius:9px;padding:8px 10px;margin-bottom:14px;
+  }
+  .cfg-note b{color:var(--text)}
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
@@ -508,6 +558,58 @@
     </div>
   </div>
 
+  <!-- Export variables — filled into the batch's Starting / Ending pages -->
+  <div class="overlay" id="varsOverlay">
+    <div class="dialog form" role="dialog" aria-modal="true" aria-labelledby="varsTitle">
+      <h2 id="varsTitle">Details for this export</h2>
+      <p>These values are written into your Starting and Ending pages before the PDF is built.</p>
+      <div class="cfg-note" id="varsCfgNote"></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="vBatchCode">Batch code</label>
+          <input type="text" id="vBatchCode" autocomplete="off" placeholder="e.g. JEE-2027-A">
+          <span class="hint" id="vBatchHint">Pre-filled from your last export — edit if it changed.</span>
+        </div>
+        <div class="field" style="flex:0 0 46%">
+          <label for="vChapter">Pick a chapter</label>
+          <select id="vChapter"></select>
+          <span class="hint">From this batch's chapter &amp; topic map.</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="flex:0 0 30%">
+          <label for="vChapterNo">Chapter no.</label>
+          <input type="number" id="vChapterNo" min="1" max="99" step="1" placeholder="4">
+        </div>
+        <div class="field">
+          <label for="vChapterName">Chapter name</label>
+          <input type="text" id="vChapterName" autocomplete="off" placeholder="e.g. Laws of Motion">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="vLecture">Lecture number <span style="text-transform:none;font-weight:400">(1 – 40)</span></label>
+        <div class="lec-grid" id="vLecGrid"></div>
+        <input type="number" id="vLecture" min="1" max="40" step="1" placeholder="or type 11 – 40">
+        <span class="hint" id="vLecHint"></span>
+      </div>
+
+      <div class="field">
+        <label for="vTopics">Topic list</label>
+        <div class="topic-chips" id="vTopicChips"></div>
+        <textarea id="vTopics" rows="2" placeholder="Comma-separate topics, or tap them above"></textarea>
+        <span class="hint">Tap a chapter's topics to add them; anything typed here is used as-is.</span>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelVars">Cancel</button>
+        <button class="btn-primary" id="confirmVars">Build PDF</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -522,7 +624,12 @@
     current:-1,
     decks:[],        // [{ id, text, count, name, folderId, classId, chapterId, tag }]
     sessionId:null,  // active teaching-session id (host-assigned)
-    batchId:null
+    batchId:null,
+    /* Export settings pushed by the host (lf-export-config): the global
+       chapter/topic map, the uploaded Starting/Ending pages, the global logo,
+       and this batch's memory of the last export. Null until the host answers
+       — export still works without it, it just skips the covers and badge. */
+    exportCfg:null
   };
   // the teacher's choice outlives the session — a room with a projector that
   // smears motion should not have to be told again next lesson
@@ -553,6 +660,7 @@
   const actionToast = document.getElementById("actionToast");
   const closeOverlay= document.getElementById("closeOverlay");
   const exportOverlay= document.getElementById("exportOverlay");
+  const varsOverlay = document.getElementById("varsOverlay");
   const snapImg     = document.getElementById("snapImg");
   const snapBox     = document.getElementById("snapBox");
   const snapDeck    = document.getElementById("snapDeck");
@@ -1578,6 +1686,11 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     } else if(d.type === "lf-session-config"){
       if(d.batchId) state.batchId = d.batchId;
       if(d.sessionId) state.sessionId = d.sessionId;
+    } else if(d.type === "lf-export-config"){
+      // Global settings (chapters/topics, cover pages, logo) plus this batch's
+      // export memory. Re-sent whenever the host reloads them, so the export
+      // form is never stale.
+      state.exportCfg = d.config || null;
     } else if(d.type === "lf-restore-session" && d.payload){
       restoreSession(d.payload);
       if(d.sessionId) state.sessionId = d.sessionId;
@@ -1992,7 +2105,437 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       exportOverlay.classList.add("show");
       return;
     }
-    exportPDF({ through: state.pages.length - 1 });
+    beginExport(state.pages.length - 1);
+  }
+
+  /* ═══ EXPORT VARIABLES ════════════════════════
+     Between "how many pages" and the PDF sits one form: batch code, chapter,
+     lecture number and topics. Those values are substituted into the batch's
+     uploaded Starting / Ending pages ({{BATCH_CODE}} and friends) and they
+     name the PDF, so the form is worth showing even with no covers uploaded.
+
+     A panel opened without a batch (no host, or Preview from the library)
+     has nothing to fill in and nowhere to remember it — it exports straight
+     through, exactly as it did before.                                     */
+  const vBatchCode  = document.getElementById("vBatchCode");
+  const vBatchHint  = document.getElementById("vBatchHint");
+  const vChapter    = document.getElementById("vChapter");
+  const vChapterNo  = document.getElementById("vChapterNo");
+  const vChapterName= document.getElementById("vChapterName");
+  const vLecture    = document.getElementById("vLecture");
+  const vLecGrid    = document.getElementById("vLecGrid");
+  const vLecHint    = document.getElementById("vLecHint");
+  const vTopics     = document.getElementById("vTopics");
+  const vTopicChips = document.getElementById("vTopicChips");
+  const varsCfgNote = document.getElementById("varsCfgNote");
+  let pendingThrough = -1;
+  /* What the previous export from this batch used. The chapter is the key:
+     re-exporting the same chapter offers the next lecture, any other chapter
+     starts again at 1. Set once per open, in openExportVars. */
+  let lastChapterKey = "";
+  let lastLecture    = 0;
+  let lastTopicsText = "";
+
+  const chapterList = () =>
+    (state.exportCfg && Array.isArray(state.exportCfg.chapters)) ? state.exportCfg.chapters : [];
+  const splitTopics = s =>
+    String(s || "").split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+
+  // 1–10 as one-tap chips (nearly every lecture); 11–40 through the number box.
+  for(let n = 1; n <= 10; n++){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "lec-chip"; b.textContent = String(n);
+    b.addEventListener("click", () => { vLecture.value = String(n); syncLecChips(); });
+    vLecGrid.appendChild(b);
+  }
+  function syncLecChips(){
+    const cur = Number(vLecture.value);
+    Array.from(vLecGrid.children).forEach((b, i) => b.classList.toggle("on", i + 1 === cur));
+  }
+  vLecture.addEventListener("input", syncLecChips);
+
+  function renderTopicChips(){
+    const num = vChapterNo.value;
+    const ch = chapterList().find(c => String(c.number) === String(num));
+    const topics = (ch && ch.topics) || [];
+    vTopicChips.innerHTML = "";
+    if(!topics.length){
+      const s = document.createElement("span");
+      s.className = "hint";
+      s.textContent = chapterList().length
+        ? "No topics saved for this chapter — type them below."
+        : "No chapter & topic map yet — add one in Batch settings → Chapters.";
+      vTopicChips.appendChild(s);
+      return;
+    }
+    const chosen = new Set(splitTopics(vTopics.value));
+    topics.forEach(t => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "topic-chip" + (chosen.has(t) ? " on" : "");
+      b.textContent = t;
+      b.addEventListener("click", () => {
+        const list = splitTopics(vTopics.value);
+        const at = list.indexOf(t);
+        if(at >= 0) list.splice(at, 1); else list.push(t);
+        vTopics.value = list.join(", ");
+        renderTopicChips();
+      });
+      vTopicChips.appendChild(b);
+    });
+  }
+  vTopics.addEventListener("input", renderTopicChips);
+
+  /* Lecture numbering follows the CHAPTER, not the calendar.
+     Staying on the chapter the last export used offers the next lecture;
+     moving to any other chapter restarts that chapter at lecture 1 and drops
+     the remembered topics, so nothing from the previous lecture leaks into a
+     new one. Everything else the teacher typed is left alone.              */
+  function applyLectureForChapter(){
+    const raw  = vChapterNo.value.trim();
+    const now  = raw === "" ? "" : String(Number(raw));
+    const same = now !== "" && now === lastChapterKey;
+    if(same){
+      vLecture.value = String(Math.min(40, (lastLecture || 0) + 1));
+      vTopics.value  = lastTopicsText;
+      vLecHint.textContent = lastLecture
+        ? `Same chapter as your last export (lecture ${lastLecture}) — offering the next one.`
+        : "First export for this chapter.";
+    } else {
+      vLecture.value = "1";
+      vTopics.value  = "";
+      vLecHint.textContent = lastChapterKey
+        ? "Different chapter from your last export — the count restarts at 1."
+        : "First export for this batch.";
+    }
+    syncLecChips();
+    renderTopicChips();
+  }
+
+  // The select is only a shortcut: it fills the number and name boxes, which
+  // stay editable for a chapter that is not in the map yet.
+  vChapter.addEventListener("change", () => {
+    const ch = chapterList().find(c => String(c.number) === vChapter.value);
+    if(!ch) return;
+    vChapterNo.value = String(ch.number);
+    vChapterName.value = ch.name;
+    applyLectureForChapter();
+  });
+  vChapterNo.addEventListener("input", () => {
+    const ch = chapterList().find(c => String(c.number) === vChapterNo.value);
+    if(ch){ vChapter.value = String(ch.number); vChapterName.value = ch.name; }
+    else vChapter.value = "";
+    applyLectureForChapter();
+  });
+
+  function renderChapterSelect(prefer){
+    const chapters = chapterList();
+    vChapter.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = chapters.length ? "— pick a chapter —" : "— no map saved —";
+    vChapter.appendChild(blank);
+    chapters.forEach(c => {
+      const o = document.createElement("option");
+      o.value = String(c.number);
+      o.textContent = c.number + ". " + c.name;
+      vChapter.appendChild(o);
+    });
+    const hit = chapters.find(c => String(c.number) === String(prefer));
+    if(hit){
+      vChapter.value = String(hit.number);
+      vChapterNo.value = String(hit.number);
+      vChapterName.value = hit.name;
+    } else {
+      vChapter.value = "";
+      vChapterNo.value = prefer == null ? "" : String(prefer);
+      vChapterName.value = "";
+    }
+  }
+
+  function openExportVars(through){
+    pendingThrough = through;
+    const cfg  = state.exportCfg || {};
+    const last = cfg.lastExport || {};
+
+    // Everything the last export used comes back filled in; only the lecture
+    // number moves on, and only while the chapter stays the same.
+    lastChapterKey = last.chapterNumber == null ? "" : String(Number(last.chapterNumber));
+    lastLecture    = Number(last.lectureNumber) > 0 ? Number(last.lectureNumber) : 0;
+    lastTopicsText = Array.isArray(last.topics) ? last.topics.join(", ") : "";
+
+    vBatchCode.value = last.batchCode || "";
+    vBatchHint.textContent = last.batchCode
+      ? "Pre-filled from your last export — edit it if the batch changed."
+      : "First export for this batch — whatever you type is remembered for next time.";
+
+    renderChapterSelect(last.chapterNumber);
+    // A chapter that was typed by hand last time is not in the map, so the
+    // select could not restore its name — the remembered one still can.
+    if(!vChapterName.value && last.chapterName) vChapterName.value = last.chapterName;
+    applyLectureForChapter();
+
+    const nStart = coverPages(cfg, "start").length;
+    const nEnd   = coverPages(cfg, "end").length;
+    const bits = [];
+    bits.push(nStart ? `<b>${nStart} starting page${nStart === 1 ? "" : "s"}</b>` : "no Starting page");
+    bits.push(nEnd ? `<b>${nEnd} ending page${nEnd === 1 ? "" : "s"}</b>` : "no Ending page");
+    bits.push(cfg.logo ? "<b>logo</b> on every slide" : "no logo");
+    varsCfgNote.innerHTML = bits.join(" &nbsp;·&nbsp; ")
+      + " — change these in Global settings on the dashboard.";
+
+    varsOverlay.classList.add("show");
+    setTimeout(() => { try{ vBatchCode.focus(); }catch(err){} }, 60);
+  }
+
+  function beginExport(through){
+    if(!state.batchId) return exportPDF({ through });
+    openExportVars(through);
+  }
+
+  document.getElementById("cancelVars").addEventListener("click", () =>
+    varsOverlay.classList.remove("show"));
+
+  document.getElementById("confirmVars").addEventListener("click", () => {
+    const lec = Number(vLecture.value);
+    if(vLecture.value !== "" && (!Number.isInteger(lec) || lec < 1 || lec > 40)){
+      vLecture.focus();
+      return toast("Lecture number must be a whole number from 1 to 40");
+    }
+    const values = {
+      batchCode: vBatchCode.value.trim(),
+      chapterNumber: vChapterNo.value === "" ? null : Number(vChapterNo.value),
+      chapterName: vChapterName.value.trim(),
+      lectureNumber: vLecture.value === "" ? null : lec,
+      topics: splitTopics(vTopics.value),
+      date: new Date().toLocaleDateString()
+    };
+    varsOverlay.classList.remove("show");
+    // Host-side so the next export pre-fills; fire-and-forget.
+    if(state.batchId) tellHost({ type:"lf-export-vars", batchId: state.batchId, values });
+    exportPDF({ through: pendingThrough, vars: values });
+  });
+
+  /* ── {{VARIABLE}} substitution for the uploaded cover pages ──
+     Unknown names are LEFT IN PLACE: a typo should be visible in the PDF,
+     not silently blanked out. Mirrors substituteVariables in
+     src/lib/globalSettings.js — keep the two in step.                      */
+  const escHtmlText = s => String(s).replace(/[&<>"]/g,
+    c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+  function substituteVars(html, v, pageCount){
+    const vals = v || {};
+    const topics = vals.topics || [];
+    // Escaped, because each value is dropped into someone's HTML page: a topic
+    // like "Pulleys & <strings>" must not become markup. TOPIC_LIST_HTML is the
+    // one exception — it is markup, assembled here from escaped parts.
+    const map = {
+      BATCH_CODE:      escHtmlText(vals.batchCode || ""),
+      CHAPTER_NUMBER:  vals.chapterNumber != null ? String(vals.chapterNumber) : "",
+      CHAPTER_NAME:    escHtmlText(vals.chapterName || ""),
+      LECTURE_NUMBER:  vals.lectureNumber != null ? String(vals.lectureNumber) : "",
+      TOPIC_LIST:      escHtmlText(topics.join(", ")),
+      TOPIC_LIST_HTML: topics.length
+        ? "<ul>" + topics.map(t => "<li>" + escHtmlText(t) + "</li>").join("") + "</ul>"
+        : "",
+      TOPIC_COUNT:     String(topics.length),
+      DATE:            escHtmlText(vals.date || new Date().toLocaleDateString()),
+      PAGE_COUNT:      String(pageCount)
+    };
+    return String(html || "").replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (whole, name) => {
+      const hit = map[name.toUpperCase()];
+      return hit === undefined ? whole : hit;
+    });
+  }
+
+  /* The cover pages for one end of the PDF, in print order.
+     `startPages` / `endPages` are the current (many-per-end) shape; the old
+     single `startHtml` / `endHtml` is still accepted so a host that has not
+     been reloaded yet keeps exporting its covers. */
+  function coverPages(cfg, role){
+    const list = role === "end" ? cfg.endPages : cfg.startPages;
+    if(Array.isArray(list)) return list.filter(p => p && p.html);
+    const html = role === "end" ? cfg.endHtml : cfg.startHtml;
+    return html ? [{ html, fit:"fill", name:role }] : [];
+  }
+
+  /* Lay an untouched copy of a cover page out off-screen and read the size it
+     actually wants, plus a background colour to pad any gap with. Never
+     rejects and never hangs: a cover that will not settle falls back to the
+     sheet's own size, which is what the export always used to assume. */
+  function measureCover(srcdoc, W, H){
+    return new Promise(resolve => {
+      const f = document.createElement("iframe");
+      f.setAttribute("aria-hidden", "true");
+      f.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;height:${H}px;`
+        + "border:0;visibility:hidden;pointer-events:none";
+      let settled = false;
+      let giveUp;
+      const finish = (r) => {
+        if(settled) return;
+        settled = true;
+        clearTimeout(giveUp);
+        try{ f.remove(); }catch(err){}
+        resolve(r);
+      };
+      const read = () => {
+        try{
+          const d  = f.contentDocument;
+          const de = d.documentElement, b = d.body;
+          let w = Math.max(de.scrollWidth || 0, b ? b.scrollWidth : 0, b ? b.offsetWidth : 0);
+          let h = Math.max(de.scrollHeight || 0, b ? b.scrollHeight : 0, b ? b.offsetHeight : 0);
+          /* Prefer the AUTHORED SHEET over the viewport. A cover written like
+             a deck is a fixed 1280×720 `.slide` inside a 100vw/100vh wrapper
+             that a script normally scales to fit; with scripts stripped for
+             print, the wrapper measures as the whole board and the slide would
+             print at its natural size in the corner with bars around it. The
+             slide is the box that has to be scaled onto the sheet. */
+          let root = null;
+          for(const sel of [".slide", ".page", "#stage", ".sheet"]){
+            const el = d.querySelector(sel);
+            if(el && (el.offsetWidth || 0) > 40 && (el.offsetHeight || 0) > 40){ root = el; break; }
+          }
+          if(root){ w = root.offsetWidth; h = root.offsetHeight; }
+
+          /* No sheet element and nothing in flow either — a cover that hides
+             its content until a script runs. Fall back to the biggest element
+             box; on a normal page the body metrics above are already right and
+             an oversized decorative element must not shrink the cover. */
+          if(w < 40 || h < 40){
+            const els = d.querySelectorAll("body *");
+            let mw = 0, mh = 0;
+            for(let k = 0; k < els.length; k++){
+              const ow = els[k].offsetWidth || 0, oh = els[k].offsetHeight || 0;
+              if(ow > mw && ow <= 8000) mw = ow;
+              if(oh > mh && oh <= 8000) mh = oh;
+            }
+            w = Math.max(w, mw);
+            h = Math.max(h, mh);
+          }
+          let bg = "#ffffff";
+          try{
+            const cs = getComputedStyle(b || de).backgroundColor;
+            if(cs && cs !== "transparent" && !/^rgba\(0,\s*0,\s*0,\s*0\)$/.test(cs)) bg = cs;
+          }catch(err){}
+          finish({ w: w > 20 ? w : W, h: h > 20 ? h : H, bg });
+        }catch(err){ finish({ w:W, h:H, bg:"#ffffff" }); }
+      };
+      f.onload = () => setTimeout(read, 60);
+      giveUp = setTimeout(() => finish({ w:W, h:H, bg:"#ffffff" }), 2500);
+      document.body.appendChild(f);
+      f.srcdoc = srcdoc;
+    });
+  }
+
+  /* An uploaded cover page → one full sheet. Sanitised exactly like a deck
+     (no scripts, no remote CSS/fonts) because the PDF cannot run scripts and
+     a CDN stylesheet that never resolves prints a white page.
+
+     The page is measured at its NATURAL size and then transformed onto the
+     sheet, because cover pages are authored at whatever size their author had
+     in mind — A4, 1920×1080, a phone-width column. Forcing the document to
+     100%×100% (what this used to do) left a small cover stranded in the
+     corner and cropped a tall one; scaling makes every cover fill the whole
+     PDF page. `fit` picks how: "fill" scales until the sheet is covered,
+     "contain" keeps the whole page visible, "stretch" matches both axes. */
+  async function buildCoverSheet(rawHtml, vars, pageCount, badge, fit, W, H){
+    if(!rawHtml) return "";
+    let doc;
+    try{ doc = new DOMParser().parseFromString(substituteVars(rawHtml, vars, pageCount), "text/html"); }
+    catch(err){ return ""; }
+    doc.querySelectorAll("script").forEach(s => s.remove());
+    doc.querySelectorAll(
+      'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+    ).forEach(l => {
+      const href = l.getAttribute("href") || "";
+      if(/^https?:\/\//i.test(href)) l.remove();
+    });
+    const COVER_STYLE = `<style id="__lf-cover">
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{margin:0!important;padding:0!important}
+<\/style>`;
+    const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML + COVER_STYLE;
+
+    /* One uploaded file often holds SEVERAL authored slides — these pages are
+       written like decks, with an @media print rule giving each its own page.
+       Rendering the file into one sheet would silently drop every slide after
+       the first, so each becomes its own sheet, exactly as its author meant. */
+    let sel = null, count = 1;
+    for(const s of [".slide", ".page"]){
+      const found = doc.querySelectorAll(s).length;
+      if(found > 1){ sel = s; count = found; break; }
+    }
+    // Scripts were stripped above; this one is ours, and runs inside the print
+    // frame the same way the deck sheets' page-picker script does.
+    const keepOnly = (i) =>
+      `<script>(function(){var xs=document.querySelectorAll(${JSON.stringify(sel)});`
+      + `for(var k=xs.length-1;k>=0;k--){if(k!==${i}&&xs[k].parentNode)xs[k].parentNode.removeChild(xs[k]);}`
+      + `var t=xs[${i}];if(t){t.style.setProperty("opacity","1","important");`
+      + `t.style.setProperty("visibility","visible","important");`
+      + `t.style.setProperty("transform","none","important");}})();<\/script>`;
+
+    // Measured once: every slide in a file shares its sheet size.
+    const m = await measureCover(base + (sel ? keepOnly(0) : ""), W, H);
+    const baseW = m.w, baseH = m.h;
+    let sx, sy;
+    if(fit === "stretch"){ sx = W / baseW; sy = H / baseH; }
+    else if(fit === "contain"){ sx = sy = Math.min(W / baseW, H / baseH); }
+    else { sx = sy = Math.max(W / baseW, H / baseH); }        // "fill" — the default
+    // Centred, so a "fill" crop takes evenly off both edges instead of
+    // guillotining the bottom of the page.
+    const left = Math.round((W - baseW * sx) / 2);
+    const top  = Math.round((H - baseH * sy) / 2);
+    const inner = `position:absolute;left:${left}px;top:${top}px;width:${baseW}px;height:${baseH}px;`
+      + `border:0;transform-origin:0 0;transform:scale(${sx},${sy});background:${m.bg};z-index:1`;
+
+    const out = [];
+    for(let i = 0; i < count; i++){
+      const srcdoc = base + (sel ? keepOnly(i) : "");
+      out.push(`<div class="sheet" style="background:${m.bg}">`
+        + `<iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe>${badge}</div>`);
+    }
+    return out.join("");
+  }
+
+  /* Every cover page for one end, concatenated in order. Sequential on
+     purpose: each one mounts a measuring iframe, and a dozen at once is how
+     you get a browser to drop layout on half of them. */
+  async function buildCoverSheets(pages, vars, pageCount, badge, W, H){
+    const out = [];
+    for(const p of pages){
+      out.push(await buildCoverSheet(p.html, vars, pageCount, badge, p.fit || "fill", W, H));
+    }
+    return out.join("");
+  }
+
+  /* The global logo as a positioned <img> for one sheet, placed from the
+     global branding settings (anchor + inward nudge) and sitting under the
+     ink so it can never hide a teacher's annotation. Percentages of the
+     sheet, so one setting looks identical on any board size. Empty string
+     when branding is off or unset. */
+  function buildLogoBadge(){
+    const logo = state.exportCfg && state.exportCfg.logo;
+    if(!logo || !logo.dataUrl) return "";
+    const size = Number(logo.sizePct) > 0 ? Number(logo.sizePct) : 8;
+    const op   = Math.min(1, Math.max(0.05, (Number(logo.opacity) || 100) / 100));
+    const clamp = v => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.min(45, Math.max(-10, n)) : 1.8;
+    };
+    const anchor = typeof logo.anchor === "string" && logo.anchor ? logo.anchor : "top-left";
+    const vert = anchor === "center" ? "middle" : anchor.split("-")[0];
+    const horz = anchor === "center" ? "center" : (anchor.split("-")[1] || "left");
+    const x = clamp(logo.offsetXPct), y = clamp(logo.offsetYPct);
+    const css = ["width:" + size + "%", "opacity:" + op];
+    const shift = [];
+    if(horz === "left")       css.push("left:" + x + "%");
+    else if(horz === "right") css.push("right:" + x + "%");
+    else { css.push("left:50%"); shift.push("translateX(-50%)"); }
+    if(vert === "top")         css.push("top:" + y + "%");
+    else if(vert === "bottom") css.push("bottom:" + y + "%");
+    else { css.push("top:50%"); shift.push("translateY(-50%)"); }
+    if(shift.length) css.push("transform:" + shift.join(" "));
+    return `<img class="logo-badge" src="${escAttr(logo.dataUrl)}" alt="" style="${css.join(";")}">`;
   }
 
   /* Ask one deck's live frame for its current DOM. Resolves to null — never
@@ -2066,7 +2609,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     return c.toDataURL("image/png");
   }
 
-  async function exportPDF({ through } = {}){
+  async function exportPDF({ through, vars } = {}){
     if(!state.pages.length) return toast("Nothing to export — add a page first");
     const end = Math.min(
       through != null ? through : state.pages.length - 1,
@@ -2130,6 +2673,8 @@ canvas{display:none!important}
 <\/style>`;
 
     const bgURL = renderBoardBg(W, H);
+    // One markup string reused on every sheet — the logo is identical each time.
+    const badge = buildLogoBadge();
     const showPage = i =>
       `<script>var ps=document.querySelectorAll(".page");` +
       `if(ps[${i}])ps[${i}].classList.add("__lf-x");<\/script>`;
@@ -2158,11 +2703,32 @@ canvas{display:none!important}
         snapEmbed = `<div style="${wrap}"><iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
       }
       sheets.push(
-        `<div class="sheet"><img class="bg-layer" src="${bgURL}">${embed}${snapEmbed}<img class="ink-overlay" src="${inkURL}"></div>`);
+        `<div class="sheet"><img class="bg-layer" src="${bgURL}">${embed}${snapEmbed}${badge}<img class="ink-overlay" src="${inkURL}"></div>`);
     }
 
+    /* Covers wrap the lesson: every Starting Page first, in the order set in
+       Global settings, then the board, then every Ending Page. Each cover is
+       scaled to fill the whole sheet, so the PDF stays one consistent shape
+       whatever size its author drew it at. Their {{VARIABLE}}s were filled in
+       by the form that opened when Export was pressed. */
+    const cfg        = state.exportCfg || {};
+    const coverBadge = cfg.logoOnCovers ? badge : "";
+    const startSheets = await buildCoverSheets(
+      coverPages(cfg, "start"), vars, exportPages.length, coverBadge, W, H);
+    const endSheets = await buildCoverSheets(
+      coverPages(cfg, "end"), vars, exportPages.length, coverBadge, W, H);
+    const allSheets = startSheets + sheets.join("") + endSheets;
+
+    // Browsers offer the document title as the PDF's file name.
+    const titleBits = [];
+    if(vars && vars.batchCode)          titleBits.push(vars.batchCode);
+    if(vars && vars.chapterNumber != null) titleBits.push("Ch " + vars.chapterNumber);
+    if(vars && vars.chapterName)        titleBits.push(vars.chapterName);
+    if(vars && vars.lectureNumber != null) titleBits.push("Lecture " + vars.lectureNumber);
+    const docTitle = titleBits.length ? titleBits.join(" · ") : "LessonForge export";
+
     const printDoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>LessonForge export</title>
+<title>${escHtmlText(docTitle)}</title>
 <style>
 /* One PDF page == one board, pixel for pixel: the paper carries the board's
    own aspect ratio, so the export looks like the presentation instead of
@@ -2174,8 +2740,11 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
 .sheet:last-child{page-break-after:auto;break-after:auto}
 .bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 .deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#080a14}
+/* Cover pages are positioned and scaled inline per sheet — see buildCoverSheet. */
+/* Under the ink (z-10): a badge must never cover what the teacher wrote. */
+.logo-badge{position:absolute;height:auto;max-height:22%;object-fit:contain;z-index:8}
 .ink-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:10}
-</style></head><body>${sheets.join("")}</body></html>`;
+</style></head><body>${allSheets}</body></html>`;
 
     const f = document.createElement("iframe");
     // Non-zero, off-screen host — a 0×0 print frame leaves nested deck iframes
@@ -2354,16 +2923,18 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     exportOverlay.classList.remove("show"));
   document.getElementById("exportAllPages").addEventListener("click", () => {
     exportOverlay.classList.remove("show");
-    exportPDF({ through: state.pages.length - 1 });
+    beginExport(state.pages.length - 1);
   });
   document.getElementById("exportCurrentOnly").addEventListener("click", () => {
     exportOverlay.classList.remove("show");
-    exportPDF({ through: state.current });
+    beginExport(state.current);
   });
 
   document.getElementById("loadDeckEmpty").addEventListener("click", openLibrary);
 
   function handleNavKey(key){
+    // A clicker press forwarded by the host must not flip pages behind a dialog.
+    if(varsOverlay.classList.contains("show")) return true;
     if(key === "ArrowLeft" || key === "PageUp" || key === "Backspace"){
       prevAction();
       return true;
@@ -2376,6 +2947,17 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
   }
 
   document.addEventListener("keydown", e => {
+    // The export form owns the keyboard while it is up: Esc closes it, Enter
+    // submits from anywhere except the multi-line topic box, and board
+    // shortcuts (arrows, n, p, e…) must not run behind it.
+    if(varsOverlay.classList.contains("show")){
+      if(e.key === "Escape"){ e.preventDefault(); varsOverlay.classList.remove("show"); }
+      else if(e.key === "Enter" && e.target !== vTopics){
+        e.preventDefault();
+        document.getElementById("confirmVars").click();
+      }
+      return;
+    }
     if(e.target.matches("input,textarea")) return;
     // Arrows + PowerPoint-style clicker keys (PageUp/PageDown/Space)
     if(handleNavKey(e.key)){ e.preventDefault(); return; }
@@ -2386,6 +2968,9 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     else if(e.key.toLowerCase() === "a" && !e.ctrlKey && !e.metaKey) handleAction("anim");
     else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
     else if(e.key === "Escape"){
+      if(varsOverlay.classList.contains("show")){
+        varsOverlay.classList.remove("show"); return;
+      }
       if(sheetOpen){ togglePageSheet(false); return; }
       if(exportOverlay.classList.contains("show")){
         exportOverlay.classList.remove("show"); return;

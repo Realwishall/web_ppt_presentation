@@ -10,6 +10,7 @@ import {
   saveTeachingSession,
   loadSessionForReview,
 } from '../lib/sessions'
+import { loadPresenterExportConfig, rememberExportValues } from '../lib/batchSettings'
 import ChapterIcon from '../components/ChapterIcon'
 
 // No pointer / key / board activity for this long → snapshot the session.
@@ -35,6 +36,9 @@ export default function PresenterView() {
   const pendingFolder = useRef(location.state?.folder || null)
   const pendingReview = useRef(location.state?.reviewSession || null)
   const batchId = params.get('batch') || location.state?.batchId || null
+  // "Fresh teach" on the dashboard: same presenter, empty board — the last
+  // session's unexported pages are left in history instead of being restored.
+  const freshStart = params.get('fresh') === '1' || location.state?.fresh === true
   const sessionIdRef = useRef(makeId('sess'))
   // How far the *live* board has been exported — used so a later timeout
   // snapshot (full board) can still restore only the unexported tail on Teach.
@@ -141,6 +145,21 @@ export default function PresenterView() {
 
   const loadFolder = useCallback((folder) => loadFolders([folder]), [loadFolders])
 
+  // Everything the export flow needs: the global chapter/topic map, the
+  // global Starting/Ending pages and logo, plus this batch's memory of the
+  // last export. Pushed into the panel so the export dialog can be built
+  // entirely inside the iframe (which keeps working in full screen).
+  const pushExportConfig = useCallback(async (bid) => {
+    if (!bid) return
+    try {
+      const config = await loadPresenterExportConfig(bid)
+      post({ type: 'lf-export-config', config })
+    } catch (err) {
+      console.warn('Export config load failed:', err)
+      post({ type: 'lf-export-config', config: null })
+    }
+  }, [post])
+
   // When the iframe finishes loading, configure the session and flush queues.
   const onIframeLoad = useCallback(async () => {
     // Prefer board focus so keyboard + clicker keys land in the presenter.
@@ -148,6 +167,7 @@ export default function PresenterView() {
     post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
     if (batchId) {
       post({ type: 'lf-session-config', batchId, sessionId: sessionIdRef.current })
+      pushExportConfig(batchId)
     }
 
     // Review an old session (full snapshot) takes priority over auto-restore.
@@ -180,6 +200,13 @@ export default function PresenterView() {
       return
     }
 
+    // Fresh teach: start on a clean board and say so, rather than silently
+    // leaving the teacher wondering where last lecture's pages went.
+    if (freshStart) {
+      setRestoreNote('Fresh session — last session’s pages were not reloaded.')
+      return
+    }
+
     // Teach: auto-restore unexported / partially exported work from last session.
     if (batchId) {
       try {
@@ -201,7 +228,7 @@ export default function PresenterView() {
         console.warn('Unfinished session restore failed:', err)
       }
     }
-  }, [batchId, loadFolder, post])
+  }, [batchId, freshStart, loadFolder, post, pushExportConfig])
 
   useEffect(() => {
     if (!restoreNote) return
@@ -270,6 +297,15 @@ export default function PresenterView() {
         else if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
       } else if (d.type === 'lf-activity') {
         touchActivity()
+      } else if (d.type === 'lf-export-vars') {
+        // The teacher just filled in the export form — remember the batch code
+        // (and chapter/lecture) so the next export starts pre-filled.
+        touchActivity()
+        const bid = d.batchId || batchId
+        if (bid && d.values) {
+          rememberExportValues(bid, d.values).catch((err) =>
+            console.warn('Could not remember export values:', err))
+        }
       } else if (d.type === 'lf-session-state') {
         // Idle snapshots are answered by the inactivity effect's own listener,
         // and they are not user activity — they must not restart the idle clock.
@@ -302,7 +338,7 @@ export default function PresenterView() {
       document.removeEventListener('fullscreenchange', onFsChange)
       window.removeEventListener('keydown', onKey)
     }
-  }, [navigate, persistBoard, post, touchActivity, libOpen])
+  }, [batchId, navigate, persistBoard, post, touchActivity, libOpen])
 
   return (
     <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">

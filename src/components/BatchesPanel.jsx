@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   GraduationCap, Presentation, History, Settings, Plus, Trash2, Loader2, Users,
-  X, Clock, FileText,
+  X, Clock, FileText, Sparkles,
 } from 'lucide-react'
 import { listBatches, createBatch, deleteBatch } from '../lib/content'
 import {
@@ -10,6 +10,7 @@ import {
   loadSessionForReview,
   sessionStatusLabel,
 } from '../lib/sessions'
+import BatchSettingsPanel from './BatchSettingsPanel'
 
 // Right half of the dashboard: every batch with Teach / Old Session / Setting.
 export default function BatchesPanel() {
@@ -19,6 +20,7 @@ export default function BatchesPanel() {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   const [sessionsFor, setSessionsFor] = useState(null) // batch {id,name} or null
+  const [settingsFor, setSettingsFor] = useState(null) // batch {id,name} or null
 
   const load = useCallback(async () => setItems(await listBatches()), [])
   useEffect(() => { load() }, [load])
@@ -83,13 +85,18 @@ export default function BatchesPanel() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <ActionBtn primary icon={Presentation} label="Teach"
                     onClick={() => navigate(`/teach?batch=${encodeURIComponent(b.id)}`)} />
+                  {/* Same presenter, but ?fresh=1 tells it to skip the
+                      auto-restore of the last session's unexported pages. */}
+                  <ActionBtn icon={Sparkles} label="Fresh teach"
+                    title="Open the teaching panel on an empty board — do not reload the last session"
+                    onClick={() => navigate(`/teach?batch=${encodeURIComponent(b.id)}&fresh=1`)} />
                   <ActionBtn icon={History} label="Old session"
                     onClick={() => setSessionsFor(b)} />
                   <ActionBtn icon={Settings} label="Setting"
-                    onClick={() => setNote('Batch settings are coming soon.')} />
+                    onClick={() => setSettingsFor(b)} />
                 </div>
               </li>
             ))}
@@ -108,6 +115,10 @@ export default function BatchesPanel() {
             })
           }}
         />
+      )}
+
+      {settingsFor && (
+        <BatchSettingsPanel batch={settingsFor} onClose={() => setSettingsFor(null)} />
       )}
     </div>
   )
@@ -253,9 +264,9 @@ function formatWhen(v) {
   }
 }
 
-function ActionBtn({ icon: Icon, label, onClick, primary }) {
+function ActionBtn({ icon: Icon, label, onClick, primary, title }) {
   return (
-    <button onClick={onClick}
+    <button onClick={onClick} title={title || label}
       className={`inline-flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-semibold transition ${
         primary
           ? 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:brightness-110'

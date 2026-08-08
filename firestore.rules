@@ -45,6 +45,20 @@ service cloud.firestore {
       }
     }
 
+    // ------- app-wide settings -------
+    // The global chapter & topic map, the Start/End cover pages (with their
+    // chunk sub-collections for large HTML) and the export logo. Shared by
+    // every batch. Any signed-in teacher may read them — the presenter needs
+    // them at export time — and writes are teachers too, matching how the
+    // rest of this single-institute tool is gated.
+    match /appSettings/{docId} {
+      allow read, write: if isAuthenticated();
+
+      match /{document=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
     // ------- default deny -------
     // Anything not matched above is denied for everyone.
     match /{document=**} {
