@@ -50,6 +50,17 @@ Decks are taught live to ~100 students on a dark board with a white pen.
   turns it green. Step the reasoning, not the options.
 - **Don't add alternative methods** (matrix tricks, shortcuts) unless asked.
 - Prose in the Calibri UI stack; the math serif only for symbol-only equations.
+- **Math is upright, never italic, and never a webfont (rule 17).** New files use
+  the `--font-math` token from `tools/deck-base.css` —
+  `'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif` at
+  `font-style: normal`. Georgia is deliberately out of that stack: its italic is
+  what made the older decks look tilted. MathML needs
+  `math mi, math mn, math mo, math mtext, math ms { text-transform: none }` on
+  top, because the UA sheet italicises single-letter `<mi>` through
+  `text-transform`, not `font-style`. Never add a Google Fonts `<link>` or an
+  `@font-face` for it — `validate-deck.mjs` warns on an external stylesheet and a
+  network-less classroom would silently get a different face. Italic still belongs
+  on prose asides (`.note`, `.example`, `.eq-note`, `td.note-cell`, `.why`).
 - No logo, badge or watermark anywhere (rule 17).
 
 ## Ask before starting a conversion

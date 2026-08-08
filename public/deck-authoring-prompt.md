@@ -320,8 +320,30 @@ When the deck is being converted from a PowerPoint (or any source slides):
   that use Office's default theme font. Set the body font-family to
   **`Calibri, Candara, 'Segoe UI', system-ui, sans-serif`** (Calibri first) instead of a generic
   `system-ui` stack, so text reads like the original slide on any Windows teaching device where
-  Calibri is installed. Keep a separate serif/italic stack (e.g. `'Cambria Math', Georgia, serif`)
-  only for equations.
+  Calibri is installed. Equations use a separate math serif — see the next bullet.
+- **Math is UPRIGHT, never italic, and always a real math font.** Use the
+  `--font-math` token from `tools/deck-base.css`:
+  **`'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif`** with
+  **`font-style: normal`**. Never write `font-style: italic` on `.eq`, `.frac`,
+  `.radical`, `math`, or any span holding symbols.
+  - *Why upright:* the old stack fell through to **Georgia italic**, whose
+    slanted old-style digits made `0.5 ≤ a < 5` and `Δl/l` read as decoration
+    rather than as numbers. Cambria Math is a true math face — real Greek, real
+    operators, digits on the baseline — and ships with Windows/Office, so the
+    teaching PC already has it. Keep Georgia **out** of the math stack.
+  - *MathML needs an extra line.* Browsers italicise a single-letter `<mi>` via
+    `text-transform: math-auto` in the UA stylesheet, which `font-style` does
+    **not** override. `deck-base.css` turns it off with
+    `math mi, math mn, math mo, math mtext, math ms { text-transform: none }` —
+    if you ever hand-roll a deck outside the pipeline, carry that line across or
+    your `data-tex` formulas will lean while your `.eq` runs stay upright.
+  - *No webfont, ever.* Do **not** add a Google Fonts `<link>` or an
+    `@font-face` for the math face. `validate-deck.mjs` warns on an external
+    stylesheet (rule 2) and a classroom with no network would silently fall back
+    to a different face mid-lesson. System fonts only.
+  - Italic still belongs on **prose asides** — `.note`, `.example`, `.eq-note`,
+    `td.note-cell`, the `.why` column of a `.derivation`. Those are sentences,
+    not symbols. Leave them alone.
 - **Tables — reveal one cell at a time, not a full row.** This overrides the generic "put `.step`
   on every `<tr>`" guidance in rule 16 for this project: put `class="step"` on each individual
   `<td>` of data (in left-to-right, top-to-bottom order) instead of on the `<tr>`. Keep the row's
@@ -398,7 +420,10 @@ expensive to rediscover.
 **Typography**
 
 - **Prose is the UI font. Only symbol-only equations get the math serif.** A
-  sentence set in Cambria italic looks wrong at the back of a room.
+  sentence set in the math serif looks wrong at the back of a room.
+- **Never italicise math** (rule 17). `.eq`, `.frac`, `.radical` and `math` are
+  upright; if a formula is leaning, something re-declared `font-style: italic`
+  or a MathML `<mi>` escaped the `text-transform: none` rule.
 - **Never put words inside `data-tex`.** `\text{constant}` renders as ugly mixed
   type; write `n × u = constant` as a normal `.callout` or `.lead` instead.
   `data-tex` is for `n_1 u_1 = n_2 u_2`, `n \propto \frac{1}{u}`, `A = l^2`.

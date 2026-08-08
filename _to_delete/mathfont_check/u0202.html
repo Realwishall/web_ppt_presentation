@@ -616,15 +616,17 @@ table.data th .keep-case{text-transform:none}
   .video-fallback{font-size:var(--fs-small)}
 }
 </style>
-<!-- BEGIN math-font:upright -->
-<style data-mathfont="upright">
-/* ---- upright math typography (rule 17) ---------------------------------
-   Cambria Math is a true math face -- real Greek, real operators, digits on
-   the baseline. It was never the font that looked wrong, only the italic.
-   System fonts only: no @font-face, no CDN, works with no classroom
-   network (rule 2).                                                      */
+<!-- BEGIN math-font:stix2 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:wght@400;500;600;700&display=swap">
+<style data-mathfont="stix2">
+/* ---- upright math typography -------------------------------------------
+   STIX Two Text is a math-grade serif: real Greek, real operators, and
+   digits that sit on the baseline instead of leaning. Falls back to the
+   old Cambria Math stack if the webfont cannot load (e.g. offline).      */
 :root{
-  --math-stack:"Cambria Math",Cambria,"STIX Two Math","STIX Two Text","Times New Roman",Georgia,serif;
+  --math-stack:"STIX Two Text","STIX Two Math","Cambria Math",Cambria,"Times New Roman",Georgia,serif;
   --font-math:var(--math-stack);
   --math:var(--math-stack);
 }
@@ -644,7 +646,7 @@ math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal
   text-rendering:optimizeLegibility;
 }
 </style>
-<!-- END math-font:upright -->
+<!-- END math-font:stix2 -->
 </head>
 <body>
 

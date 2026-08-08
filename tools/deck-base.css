@@ -18,7 +18,8 @@
      rule 9  — dark stage, presentation-scale type via clamp()
      rule 10 — vmin/clamp everywhere; no fixed px for anything that must scale
      rule 11 — @media print block at the bottom; nothing depends on JS
-     rule 17 — Calibri stack; equations in Cambria Math; NO logo/brand styles
+     rule 17 — Calibri stack; equations in Cambria Math, UPRIGHT (never italic);
+              NO logo/brand styles
    ========================================================================== */
 
 /* ---------------------------------------------------------------- tokens -- */
@@ -70,7 +71,12 @@
 
   /* fonts (rule 17) */
   --font-ui:      Calibri, Candara, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
-  --font-math:    'Cambria Math', Cambria, Georgia, serif;
+  /* UPRIGHT math face. Cambria Math ships with Windows/Office and is a real
+     math font (true Greek, true operators, digits on the baseline). Georgia
+     is deliberately NOT in this stack: its italic is what made older decks
+     look tilted and wrong. System fonts only — no @font-face, no CDN, so a
+     deck still sets correctly with no classroom network (rule 2). */
+  --font-math:    'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif;
 
   /* rhythm */
   --gap:          2.2vmin;
@@ -281,7 +287,7 @@ table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!imp
    Two mechanisms, both script-free so they survive PDF export (rule 11):
      1. .eq / .frac / .radical  — hand-built markup for inline symbol math
      2. MathML emitted by tools/build-deck.mjs from LaTeX in the slide plan   */
-.eq{font-family:var(--font-math);font-style:italic;color:var(--ink);font-size:var(--fs-eq);
+.eq{font-family:var(--font-math);font-style:normal;color:var(--ink);font-size:var(--fs-eq);
     display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em;letter-spacing:.005em}
 .eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
 .eq-note{font-style:italic;color:var(--muted);font-size:var(--fs-note)}
@@ -302,8 +308,12 @@ table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!imp
 .vec:after{content:"\2192";position:absolute;left:0;right:0;top:-.62em;
            font-size:.72em;text-align:center;font-style:normal}
 
-/* MathML rendered at build time — inherit the deck's math font */
+/* MathML rendered at build time — inherit the deck's math font.
+   Browsers italicise a single-letter <mi> via `text-transform: math-auto` in
+   the UA sheet, which `font-style` does NOT override — it has to be turned
+   off explicitly or MathML formulas lean while hand-built .eq does not.   */
 math{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink)}
+math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
 math[display="block"]{display:block;margin:.8vmin 0}
 .eq math{font-size:inherit}
 

@@ -735,6 +735,35 @@ mjx-container svg        {vertical-align:middle}
 }
 
 </style>
+<!-- BEGIN math-font:upright -->
+<style data-mathfont="upright">
+/* ---- upright math typography (rule 17) ---------------------------------
+   Cambria Math is a true math face -- real Greek, real operators, digits on
+   the baseline. It was never the font that looked wrong, only the italic.
+   System fonts only: no @font-face, no CDN, works with no classroom
+   network (rule 2).                                                      */
+:root{
+  --math-stack:"Cambria Math",Cambria,"STIX Two Math","STIX Two Text","Times New Roman",Georgia,serif;
+  --font-math:var(--math-stack);
+  --math:var(--math-stack);
+}
+/* plain (not :where) so these beat the original .m / .eq declarations */
+.m,.eq,.fr,.frac,.radical,.scene-readout .ro b{
+  font-family:var(--math-stack);
+  font-style:normal;
+}
+.m em,.m i,.eq em,.eq i,.m .up,.eq .up,sup,sub{font-style:normal}
+/* MathML: browsers auto-italicise single-letter <mi> via text-transform:math-auto */
+math{font-family:var(--math-stack)}
+math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
+/* zero-specificity so existing .am / .gr / .acc bold spans still win */
+:where(.m,.eq,.fr,.frac,.radical){
+  font-weight:500;
+  font-variant-numeric:lining-nums;
+  text-rendering:optimizeLegibility;
+}
+</style>
+<!-- END math-font:upright -->
 </head>
 <body>
 

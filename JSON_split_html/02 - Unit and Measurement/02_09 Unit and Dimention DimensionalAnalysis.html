@@ -196,6 +196,35 @@ body[data-lvl="7"] .page.dense .content,body[data-lvl="7"] .page.dense .col{gap:
 body[data-lvl="7"] .page.dense figure{max-width:74%}
 body[data-lvl="7"] .page.dense figcaption{font-size:16px}
 </style>
+<!-- BEGIN math-font:upright -->
+<style data-mathfont="upright">
+/* ---- upright math typography (rule 17) ---------------------------------
+   Cambria Math is a true math face -- real Greek, real operators, digits on
+   the baseline. It was never the font that looked wrong, only the italic.
+   System fonts only: no @font-face, no CDN, works with no classroom
+   network (rule 2).                                                      */
+:root{
+  --math-stack:"Cambria Math",Cambria,"STIX Two Math","STIX Two Text","Times New Roman",Georgia,serif;
+  --font-math:var(--math-stack);
+  --math:var(--math-stack);
+}
+/* plain (not :where) so these beat the original .m / .eq declarations */
+.m,.eq,.fr,.frac,.radical,.scene-readout .ro b{
+  font-family:var(--math-stack);
+  font-style:normal;
+}
+.m em,.m i,.eq em,.eq i,.m .up,.eq .up,sup,sub{font-style:normal}
+/* MathML: browsers auto-italicise single-letter <mi> via text-transform:math-auto */
+math{font-family:var(--math-stack)}
+math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
+/* zero-specificity so existing .am / .gr / .acc bold spans still win */
+:where(.m,.eq,.fr,.frac,.radical){
+  font-weight:500;
+  font-variant-numeric:lining-nums;
+  text-rendering:optimizeLegibility;
+}
+</style>
+<!-- END math-font:upright -->
 </head>
 <body data-lvl="5">
 <div id="stage">
@@ -298,13 +327,13 @@ body[data-lvl="7"] .page.dense figcaption{font-size:16px}
   </div>
 </section>
 
-<section class="page">
+<section class="page dense">
   <div class="wrap">
   <h1 class="h">Parallax method</h1>
   <div class="rule"></div>
   <div class="content">
     <div class="cols">
-      <div class="col" style="flex:1.05 1 0">
+      <div class="col" style="flex:1 1 0">
         <div class="card question"><span class="lbl">Used for</span>
           <span class="step">Measuring <span class="acc">very large lengths</span> &#8212; up to about
           <span class="am">100 light years.</span></span>
@@ -323,10 +352,8 @@ body[data-lvl="7"] .page.dense figcaption{font-size:16px}
             <span class="fr"><span>&#960;</span><span>180</span></span>
           </span></span>
         </div>
-      </div>
-      <div class="col" style="flex:.85 1 0">
         <div class="step">
-        <figure><svg viewBox="0 0 480 330" xmlns="http://www.w3.org/2000/svg">
+        <figure><svg style="width:50%" viewBox="8 52 452 266" xmlns="http://www.w3.org/2000/svg">
           <path d="M60,190 L400,70" stroke="#cfd6e2" stroke-width="2.6" fill="none"/>
           <path d="M60,190 L360,300" stroke="#cfd6e2" stroke-width="2.6" fill="none"/>
           <path d="M400,70 A330,330 0 0 1 360,300" stroke="#f5b942" stroke-width="3.2" fill="none"/>
@@ -336,8 +363,92 @@ body[data-lvl="7"] .page.dense figcaption{font-size:16px}
           <text x="418" y="196" fill="#f5b942" font-size="22" font-family="Cambria,Georgia,serif" font-style="italic">arc</text>
           <circle cx="60" cy="190" r="6" fill="#cfd6e2"/>
           <text x="20" y="196" fill="#9aa4b2" font-size="21">eye</text>
-        </svg><figcaption>The far object subtends a small angle at the observer.</figcaption></figure>
+        </svg><figcaption>A far object subtends a small angle.</figcaption></figure>
         </div>
+      </div>
+      <div class="col" style="flex:1.2 1 0">
+
+        <div class="step">
+        <figure><svg style="width:97%" viewBox="0 2 460 216" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="p4earth" cx="34%" cy="30%" r="74%">
+              <stop offset="0" stop-color="#8fb0ff"/><stop offset="1" stop-color="#22407f"/>
+            </radialGradient>
+            <radialGradient id="p4sun" cx="36%" cy="32%" r="74%">
+              <stop offset="0" stop-color="#ffeaa9" /><stop offset="1" stop-color="#dd8a15"/>
+            </radialGradient>
+            <marker id="p4gy" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto-start-reverse">
+              <path d="M0,0 L9,4 L0,8 z" fill="#9aa4b2"/>
+            </marker>
+            <marker id="p4gn" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto-start-reverse">
+              <path d="M0,0 L9,4 L0,8 z" fill="#2ecc9a"/>
+            </marker>
+          </defs>
+          <text x="8" y="18" fill="#6b7684" font-size="15">not to scale</text>
+          <circle cx="400" cy="110" r="48" fill="#f5b942" opacity=".13"/>
+          <circle cx="400" cy="110" r="30" fill="url(#p4sun)" stroke="#f5b942" stroke-width="1.5"/>
+          <circle cx="100" cy="110" r="48" fill="url(#p4earth)" stroke="#5b8cff" stroke-width="1.6"/>
+          <line x1="100" y1="62" x2="400" y2="110" stroke="#cfd6e2" stroke-width="2.3"/>
+          <line x1="100" y1="158" x2="400" y2="110" stroke="#cfd6e2" stroke-width="2.3"/>
+          <circle cx="400" cy="110" r="3.6" fill="#3a2705"/>
+          <line x1="100" y1="62" x2="100" y2="158" stroke="#2ecc9a" stroke-width="3.4"/>
+          <circle cx="100" cy="62" r="5.6" fill="#2ecc9a"/>
+          <circle cx="100" cy="158" r="5.6" fill="#2ecc9a"/>
+          <text x="120" y="54" fill="#2ecc9a" font-size="21" font-family="Cambria,Georgia,serif" font-style="italic">A</text>
+          <text x="126" y="176" fill="#2ecc9a" font-size="21" font-family="Cambria,Georgia,serif" font-style="italic">B</text>
+          <line x1="96" y1="62" x2="56" y2="62" stroke="#2ecc9a" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>
+          <line x1="96" y1="158" x2="56" y2="158" stroke="#2ecc9a" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>
+          <line x1="48" y1="64" x2="48" y2="156" stroke="#2ecc9a" stroke-width="1.7" marker-start="url(#p4gn)" marker-end="url(#p4gn)"/>
+          <text x="30" y="117" fill="#2ecc9a" font-size="24" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">b</text>
+          <path d="M301.3,94.2 A100,100 0 0 0 301.3,125.8" stroke="#5b8cff" stroke-width="2.4" fill="none"/>
+          <text x="284" y="120" fill="#5b8cff" font-size="26" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">&#952;</text>
+          <text x="78" y="190" fill="#9aa4b2" font-size="20" text-anchor="middle">Earth</text>
+          <text x="400" y="176" fill="#f5b942" font-size="20" text-anchor="middle">Sun</text>
+          <line x1="100" y1="198" x2="100" y2="212" stroke="#9aa4b2" stroke-width="1.2"/>
+          <line x1="400" y1="198" x2="400" y2="212" stroke="#9aa4b2" stroke-width="1.2"/>
+          <line x1="102" y1="205" x2="398" y2="205" stroke="#9aa4b2" stroke-width="1.7" marker-start="url(#p4gy)" marker-end="url(#p4gy)"/>
+          <text x="250" y="197" fill="#9aa4b2" font-size="24" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">d</text>
+        </svg><figcaption>Distance to the Sun &#183; baseline <span class="m">b</span>, parallax angle <span class="m">&#952;</span> &#8594; <span class="m">d</span> = <span class="m">b</span>/<span class="m">&#952;</span></figcaption></figure>
+        </div>
+
+        <div class="step">
+        <figure><svg style="width:97%" viewBox="0 2 478 232" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="p5earth" cx="34%" cy="30%" r="74%">
+              <stop offset="0" stop-color="#8fb0ff"/><stop offset="1" stop-color="#22407f"/>
+            </radialGradient>
+            <radialGradient id="p5sun" cx="36%" cy="32%" r="74%">
+              <stop offset="0" stop-color="#ffeaa9"/><stop offset="1" stop-color="#dd8a15"/>
+            </radialGradient>
+            <marker id="p5gy" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto-start-reverse">
+              <path d="M0,0 L9,4 L0,8 z" fill="#9aa4b2"/>
+            </marker>
+            <marker id="p5am" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto-start-reverse">
+              <path d="M0,0 L9,4 L0,8 z" fill="#8a5606"/>
+            </marker>
+          </defs>
+          <circle cx="400" cy="118" r="66" fill="#f5b942" opacity=".11"/>
+          <circle cx="400" cy="118" r="48" fill="url(#p5sun)" stroke="#f5b942" stroke-width="1.5"/>
+          <circle cx="46" cy="118" r="24" fill="url(#p5earth)" stroke="#5b8cff" stroke-width="1.5"/>
+          <text x="46" y="160" fill="#9aa4b2" font-size="20" text-anchor="middle">Earth</text>
+          <line x1="72" y1="118" x2="400" y2="118" stroke="#6b7684" stroke-width="1.2" stroke-dasharray="5 5"/>
+          <line x1="72" y1="118" x2="400" y2="70" stroke="#cfd6e2" stroke-width="2.3"/>
+          <line x1="72" y1="118" x2="400" y2="166" stroke="#cfd6e2" stroke-width="2.3"/>
+          <circle cx="72" cy="118" r="5.5" fill="#2ecc9a"/>
+          <text x="82" y="98" fill="#2ecc9a" font-size="20">observer</text>
+          <path d="M159.1,105.3 A88,88 0 0 1 159.1,130.7" stroke="#5b8cff" stroke-width="2.4" fill="none"/>
+          <text x="177" y="128" fill="#5b8cff" font-size="26" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">&#945;</text>
+          <line x1="400" y1="70" x2="400" y2="166" stroke="#8a5606" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <line x1="400" y1="116" x2="400" y2="72" stroke="#8a5606" stroke-width="1.8" marker-end="url(#p5am)"/>
+          <text x="417" y="96" fill="#7a4a00" font-size="24" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">R</text>
+          <text x="400" y="200" fill="#f5b942" font-size="20" text-anchor="middle">Sun</text>
+          <line x1="72" y1="215" x2="72" y2="229" stroke="#9aa4b2" stroke-width="1.2"/>
+          <line x1="400" y1="215" x2="400" y2="229" stroke="#9aa4b2" stroke-width="1.2"/>
+          <line x1="74" y1="222" x2="398" y2="222" stroke="#9aa4b2" stroke-width="1.7" marker-start="url(#p5gy)" marker-end="url(#p5gy)"/>
+          <text x="236" y="214" fill="#9aa4b2" font-size="24" font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">d</text>
+        </svg><figcaption>Radius of the Sun &#183; angular diameter <span class="m">&#945;</span> &#8594; <span class="m">R</span> = <span class="m">&#945;d</span>/2</figcaption></figure>
+        </div>
+
       </div>
     </div>
   </div>

@@ -34,6 +34,14 @@ Two consequences for authors: a bare `<span>` inside a `.g-row` is already set
 at body scale, and symbol-only working lines should be `<div class="eq step">`
 so they land in the math serif rather than the UI font.
 
+**Math is upright (rule 17).** `--font-math` is
+`'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif` at
+`font-style: normal`. Never add `font-style: italic` to `.eq`, `.frac`,
+`.radical` or `math`, and never load a webfont for it — no Google Fonts `<link>`,
+no `@font-face` (rule 2: the deck must set correctly with no classroom network).
+Italic stays on prose asides only: `.note`, `.example`, `.eq-note`,
+`td.note-cell`, `.derivation .why`.
+
 ---
 
 ## Stepping law (rules 16–17) — read before anything else
@@ -169,6 +177,11 @@ Primitives: `.eq` (inline math run), `.eq.small` / `.eq.big`, `.frac` + `.num`/`
 `<span class="eq" data-tex="\vec{F} = \frac{dp}{dt}"></span>`; the build script
 converts `data-tex` to MathML at build time. Never emit `\(…\)` for a runtime
 renderer — scripts are stripped on export and the equation would come out blank.
+
+The MathML this produces is upright too, but only because `deck-base.css`
+carries `math mi, math mn, math mo, math mtext, math ms { text-transform: none }`
+— browsers italicise single-letter `<mi>` through `text-transform: math-auto`,
+which `font-style: normal` does not reach. Do not remove that rule.
 
 ### Annotated example (colour-coded expression)
 
