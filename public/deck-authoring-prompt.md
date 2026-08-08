@@ -356,6 +356,16 @@ When the deck is being converted from a PowerPoint (or any source slides):
   on the definition/description/explanation that follows it, so the two never appear in the same
   reveal. This mirrors the existing Q&A pattern (question always visible, answer stepped) — apply
   that same pattern consistently to every label/definition pairing in the deck.
+- **Never invent a slide heading.** If the source slide carries no title of its own, the
+  converted page gets **no `h2.heading`** — it opens straight into the content. A heading you
+  composed is editorialising: it labels a page the class is meant to read as a bare question, it
+  usually just restates what the question already says, and it eats the top of the board the
+  teacher writes on. Only a slide that genuinely carries a title gets one, and it is the source's
+  own words (a section-divider slide stays an `h1.title`). The failure mode to watch for is a run
+  of manufactured titles — "Differentiation (one variable)", "Integration (term by term)" — one on
+  every page of a deck whose source slides were untitled. If you find yourself *composing* a
+  title, delete it. A head-less `.wrap` is a supported layout; `deck-base.css` gives it the top
+  clearance the heading used to provide.
 - **No logo / brand badge anywhere.** Do not add a "PW" (or any other) logo badge, watermark, or
   brand mark to the deck — not as a persistent corner badge, not inside individual slides, not in
   print/PDF styles. Slides should contain only the lesson content (kicker/topic tag text is fine;
@@ -416,6 +426,12 @@ expensive to rediscover.
 - Reveal one idea per press, and **light the thing you are naming at the same
   moment you name it** (`data-lights` / `data-lit`) — the definition and its
   highlight are one beat, not two.
+
+**Headings**
+
+- **A heading must come from the source slide.** No title on the slide, no
+  `h2.heading` on the page (rule 17). Summarising the page in a title you wrote
+  is the single most common cosmetic drift in a conversion.
 
 **Typography**
 

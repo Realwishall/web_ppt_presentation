@@ -728,3 +728,14 @@ math[display="block"]{display:block;margin:.8vmin 0}
   .op-node.is-focus{background:none!important}
   .tag-hot{background:none!important}
 }
+
+/* ------------------------------------------------- head-less pages (rule 21) --
+   A page whose source slide carried no title has no h1/h2 at all. Give its
+   first block the clearance the heading used to provide, so it never crowds
+   the kicker tag in the top-left corner.                                     */
+.wrap:not(:has(> h1)):not(:has(> h2)){padding-top:10vmin}
+.wrap.dense:not(:has(> h1)):not(:has(> h2)){padding-top:8.5vmin}
+/* the operator label floats above the shaft — reserve room for it so it never
+   sits on the line above (e.g. the "Solution" head of a .qa) */
+.op-chain{margin:2.8vmin 0 .8vmin}
+.op-chain.mini{margin:2.4vmin 0 1.4vmin}

@@ -735,6 +735,17 @@ math[display="block"]{display:block;margin:.8vmin 0}
   .op-node.is-focus{background:none!important}
   .tag-hot{background:none!important}
 }
+
+/* ------------------------------------------------- head-less pages (rule 21) --
+   A page whose source slide carried no title has no h1/h2 at all. Give its
+   first block the clearance the heading used to provide, so it never crowds
+   the kicker tag in the top-left corner.                                     */
+.wrap:not(:has(> h1)):not(:has(> h2)){padding-top:10vmin}
+.wrap.dense:not(:has(> h1)):not(:has(> h2)){padding-top:8.5vmin}
+/* the operator label floats above the shaft — reserve room for it so it never
+   sits on the line above (e.g. the "Solution" head of a .qa) */
+.op-chain{margin:2.8vmin 0 .8vmin}
+.op-chain.mini{margin:2.4vmin 0 1.4vmin}
 </style>
 </head>
 <body>
@@ -759,8 +770,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      the general tool. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Differentiation and integration <span class="inline-lead">the road between position, velocity and acceleration</span></h2>
-
     <div class="g-row wide">
       <span class="label">For easy numerical&nbsp;:</span>
       <div class="stack">
@@ -803,8 +812,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      every line of the solution its own press. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Differentiation <span class="paren">(one variable)</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18</annotation></semantics></math></span>, find velocity</div>
@@ -843,8 +850,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      on its own. Three questions, one reveal each. -->
 <section class="page">
   <div class="wrap dense">
-    <h2 class="heading">Differentiation <span class="paren">(in vector form)</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If&nbsp; <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 3t^2\hat\imath + 4\hat\jmath</annotation></semantics></math></span>, find velocity</div>
@@ -893,8 +898,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      where the third formula of slide 1 earns its keep. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">When there is no <i>t</i> in the question</h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">v = 2x^2</annotation></semantics></math></span>, find acceleration</div>
@@ -921,8 +924,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
 <!-- Slide 5 — one chain, two links: position to velocity to acceleration. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Both in one question</h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>4</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 4t^2 - 5t</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span> and <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></div>
@@ -948,8 +949,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      Differentiate what you were given, then invert. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Time given in terms of position</h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>4</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>x</mi></mrow><annotation encoding="application/x-tex">t = 4x^2 - 5x</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span>
@@ -982,8 +981,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      to t, which needs the chain rule and dx/dt = v again. -->
 <section class="page">
   <div class="wrap dense">
-    <h2 class="heading">Time given in terms of position <span class="paren">(now find a)</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">t = x^2 - x</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span>
@@ -1031,8 +1028,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      variables before integrating. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Integration <span class="inline-lead">from a back to v</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a = 6t^2</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span> as <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(t)</annotation></semantics></math></span></div>
@@ -1063,8 +1058,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      own and there is still exactly one constant. -->
 <section class="page">
   <div class="wrap">
-    <h2 class="heading">Integration <span class="paren">(term by term)</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>12</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">a = 12t^2 - 6</annotation></semantics></math></span>, find velocity as <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(t)</annotation></semantics></math></span></div>
@@ -1101,8 +1094,6 @@ math[display="block"]{display:block;margin:.8vmin 0}
      integrate both sides, then unwrap the logarithm. -->
 <section class="page">
   <div class="wrap dense">
-    <h2 class="heading">When a depends on v <span class="paren">(a = 3 &minus; v)</span></h2>
-
     <div class="qa">
       <span class="q-head">Question</span>
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>3</mn><mo>−</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">a = 3 - v</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span> in terms of <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span>

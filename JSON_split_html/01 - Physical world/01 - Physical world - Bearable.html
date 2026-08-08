@@ -1,0 +1,444 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Physical World — LessonForge Deck</title>
+<style>
+  html,body{height:100%;margin:0}
+  :root{
+    --yellow:#f2d024;
+    --ink:#f1f5f9;
+    --sub:#cbd5e1;
+    --accent:#6366f1;
+    --accent2:#8b5cf6;
+    --blue:#4472c4;
+    --green:#22c55e;
+    --red:#ef4444;
+  }
+  body{background:#05060a;font-family:Calibri,Candara,'Segoe UI',system-ui,sans-serif}
+
+  /* ---------- persistent layers (outside .page, siblings) ---------- */
+  #bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+      background:
+        radial-gradient(1100px 650px at 12% -12%, rgba(255,255,255,.035), transparent 60%),
+        radial-gradient(900px 600px at 105% 105%, rgba(99,102,241,.06), transparent 60%),
+        #0a0b0f;}
+  #bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+  .kicker-tag{position:fixed;left:2.8vmin;top:2.8vmin;z-index:5;color:var(--sub);
+      font-size:1.7vmin;letter-spacing:.08em;text-transform:uppercase;opacity:.55;pointer-events:none}
+
+  /* ---------- page / wrap ---------- */
+  /* NOTE: no display:none on .page anywhere — file must render standalone (rule 1). */
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;color:var(--ink)}
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;padding:9vmin 7.5vmin 6vmin;
+        display:flex;flex-direction:column;gap:2.2vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+
+  h1.title{margin:0;font-size:clamp(36px,8.6vmin,98px);color:#fff;font-weight:700}
+  h2.heading{margin:0 0 1vmin;font-size:clamp(26px,5.6vmin,60px);color:var(--yellow);font-weight:700}
+  h3.sub-heading{margin:0 0 .6vmin;font-size:clamp(22px,4.4vmin,46px);color:var(--yellow);font-weight:700}
+  .inline-lead{color:var(--ink);font-weight:400;font-size:clamp(19px,3.8vmin,42px);margin-left:1.2vmin}
+  p{margin:0;font-size:clamp(19px,3.3vmin,38px);line-height:1.45;color:var(--ink)}
+  .sub{color:var(--sub)}
+
+  .step{opacity:1} /* panel/fallback controls hidden->shown transition */
+
+  /* ---------- glossary (slide 1) ---------- */
+  .glossary{display:flex;flex-direction:column;gap:2.4vmin;margin-top:1vmin}
+  .g-row{display:grid;grid-template-columns:24vmin 1fr;gap:2vmin;align-items:start}
+  .label{color:var(--yellow);font-weight:700;font-size:clamp(19px,3.3vmin,38px)}
+  .g-row .sub-list{margin-top:.6vmin;display:flex;flex-direction:column;gap:.3vmin}
+  .g-row .sub-list span{display:block;font-size:clamp(17px,2.8vmin,32px);color:var(--sub);padding-left:2vmin}
+
+  /* ---------- two-column layout ---------- */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
+  .col p{margin-bottom:1.2vmin}
+  .example{color:var(--sub);font-style:italic}
+  .example b{color:var(--ink);font-style:normal}
+
+  /* ---------- bullets ---------- */
+  ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.4vmin}
+  ul.bullets li{position:relative;padding-left:2.6vmin;font-size:clamp(19px,3.3vmin,38px);line-height:1.4}
+  ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--yellow);font-size:.7em}
+  ul.bullets.box li:before{content:"\2b1c";color:var(--yellow);font-size:.6em;top:.15em}
+  ul.bullets.arrow li:before{content:"\27a4";color:var(--yellow);font-size:.7em}
+
+  /* ---------- 3-col grid (scope of physics) ---------- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:3vmin;margin-top:.5vmin}
+  .cell h4{margin:0 0 .8vmin;color:var(--yellow);font-size:clamp(19px,3.4vmin,36px)}
+  .cell h4 small{color:var(--sub);font-weight:400;font-size:.6em}
+  .cell p{font-size:clamp(17px,2.8vmin,32px);color:var(--sub)}
+  .note{color:var(--sub);font-style:italic;font-size:clamp(17px,2.6vmin,30px)}
+
+  /* ---------- Q&A ---------- */
+  .qa{margin-bottom:1.6vmin}
+  .qa .q{color:var(--yellow);font-weight:700;font-size:clamp(18px,2.9vmin,32px)}
+  .qa .a{margin-top:.5vmin;padding-left:2.4vmin;color:var(--sub);font-size:clamp(17px,2.7vmin,30px)}
+
+  /* ---------- equations ---------- */
+  .eq{font-family:'Cambria Math','Georgia',serif;font-style:italic;color:var(--ink);
+      font-size:clamp(20px,3.9vmin,44px);display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em}
+  .eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;line-height:1.15}
+  .frac .num{border-bottom:.09em solid currentColor;padding:0 .18em .06em}
+  .frac .den{padding:.06em .18em 0}
+  .radical{display:inline-flex;align-items:flex-start}
+  .radical .sym{font-size:1.25em;line-height:.9;margin-right:-.06em}
+  .radical .content{border-top:.09em solid currentColor;padding:0 .16em}
+  .eq-note{font-style:italic;color:var(--sub);font-size:clamp(16px,2.6vmin,28px)}
+
+  /* ---------- table ---------- */
+  table.forces{border-collapse:collapse;width:100%;margin-top:1vmin}
+  table.forces th{background:var(--blue);color:var(--yellow);font-weight:700;text-align:left;
+      padding:1.2vmin 1.4vmin;font-size:clamp(16px,2.4vmin,26px);border:1px solid rgba(255,255,255,.15)}
+  table.forces td{padding:1.3vmin 1.4vmin;font-size:clamp(15px,2.3vmin,25px);border-bottom:1px solid rgba(255,255,255,.06);
+      vertical-align:top}
+  table.forces td.prop{color:var(--yellow);font-weight:700}
+  .ok{color:var(--green);font-weight:900}
+  .no{color:var(--red);font-weight:900}
+
+  /* ---------- MCQ ---------- */
+  .options{display:flex;flex-direction:column;gap:1.4vmin;margin-top:1vmin}
+  .option{border:.14vmin solid rgba(255,255,255,.25);border-radius:1vmin;padding:1.4vmin 2vmin;
+      font-size:clamp(18px,3vmin,34px);cursor:pointer;min-height:44px;box-sizing:border-box;
+      background:rgba(255,255,255,.02);transition:border-color .25s,background .25s}
+  .option.picked{border-color:var(--accent2);background:rgba(139,92,246,.12)}
+  .answer-box{margin-top:1vmin;padding:1.4vmin 2vmin;border-left:.35vmin solid var(--green);
+      background:rgba(34,197,94,.08);font-size:clamp(17px,2.8vmin,32px)}
+  .answer-box .ok{margin-right:.6vmin}
+  .answer-box i{color:var(--sub)}
+
+  /* ---------- buttons (generic, if ever needed) ---------- */
+  .btn{border:0;border-radius:1vmin;padding:1.2vmin 2.2vmin;font:700 2.4vmin Calibri,system-ui;color:#fff;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer}
+
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    #bg,.kicker-tag,.no-print{display:none!important}
+    body{background:#0a0b0f}
+  }
+</style>
+</head>
+<body>
+
+<!-- Persistent layers: visible on EVERY slide, OUTSIDE any .page -->
+<div id="bg" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="hex" width="70" height="121" patternUnits="userSpaceOnUse">
+        <polygon points="35,0 70,20.2 70,60.6 35,80.8 0,60.6 0,20.2" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1.4"/>
+        <polygon points="35,80.8 70,101 70,141.4 35,161.6 0,141.4 0,101" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1.4"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#hex)"/>
+  </svg>
+</div>
+<div class="kicker-tag">Physical World</div>
+
+<!-- ================= SLIDE 1 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">What is physics&hellip; <span class="inline-lead">It is study of nature</span></h2>
+    <div class="glossary">
+      <div class="g-row"><span class="label">Hypothesis:</span><span class="step">An educated guess or thought</span></div>
+      <div class="g-row"><span class="label">Postulate:</span><span class="step">An essential presupposition, condition</span></div>
+      <div class="g-row"><span class="label">Axiom:</span><span class="step">Self evident truth</span></div>
+      <div class="g-row"><span class="label">Model:</span><span class="step">It&rsquo;s aim to make thing easier to understand or simulate</span></div>
+      <div class="g-row"><span class="label">Laws:</span>
+        <div>
+          <div class="step">Experimentally observed that are assumed to be true</div>
+          <div class="sub-list"><span class="step">Can be verified</span><span class="step">Can not be proven</span></div>
+        </div>
+      </div>
+      <div class="g-row"><span class="label">Theory:</span><span class="step">To explain law</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 2 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Trust of physics</h2>
+    <ul class="bullets">
+      <li class="step">Unification</li>
+      <li class="step">Reduction</li>
+    </ul>
+    <div class="two-col">
+      <div class="col">
+        <h3 class="sub-heading">Unification</h3>
+        <p class="step">Process of finding a theory which can explain two different concepts</p>
+        <p class="example step"><b>Motion of planet</b> &amp; <b>Fall of an apple</b> &rarr; Same theory</p>
+        <p class="example step"><b>Electromagnetism</b> &amp; <b>Optics</b> &rarr; Unified by Maxwell</p>
+      </div>
+      <div class="col">
+        <h3 class="sub-heading">Reduction</h3>
+        <p class="step">Explain complex theory by some simple theory</p>
+        <p class="example step">Temperature is nothing but velocity of atom / molecules</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 3 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Scope of physics</h2>
+    <div class="grid3">
+      <div class="cell"><h4>Macroscopic <small>(done in lab)</small></h4><p class="step">Large size object</p></div>
+      <div class="cell"><h4>Microscopic</h4><p class="step">Very small size object</p></div>
+      <div class="cell"><h4>Mesoscopic <small>(surface tension)</small></h4><p class="step">In between the macro and micro</p></div>
+    </div>
+    <p class="note step">Different type of theory in physics</p>
+    <div class="grid3">
+      <div class="cell"><h4>Classical</h4><p class="step">Normal daily size object<br>At normal speed</p></div>
+      <div class="cell"><h4>Quantum</h4><p class="step">Very small size object</p></div>
+      <div class="cell"><h4>Relativity</h4><p class="step">At high speed</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 4 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Conservation laws</h2>
+    <div class="two-col">
+      <div class="col">
+        <div class="qa">
+          <div class="q">Mass is conserved. True or false?</div>
+          <div class="a step">False, mass can be converted into energy &mdash; <span class="eq">E = mc<sup>2</sup></span></div>
+        </div>
+        <div class="qa">
+          <div class="q">Kinetic energy is conserved. True or false?</div>
+          <div class="a step">No, type of energy is conserved</div>
+        </div>
+        <div class="qa">
+          <div class="q">Mechanical energy is conserved. True or false?</div>
+          <div class="a step">No, type of energy is conserved</div>
+        </div>
+        <div class="qa">
+          <div class="q">Volume is conserved. True or false?</div>
+          <div class="a step"><i>Volume can be changed</i></div>
+        </div>
+      </div>
+      <div class="col">
+        <p>The only conserved quantity are</p>
+        <ul class="bullets" style="margin-top:1.4vmin">
+          <li class="step">Charge</li>
+          <li class="step">Total energy</li>
+          <li class="step">Linear momentum</li>
+          <li class="step">Angular momentum</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 5 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Who discovered what?</h2>
+    <div class="qa">
+      <div class="q">Who discovered Law of inertia</div>
+      <div class="a step">Galileo</div>
+    </div>
+    <div class="qa">
+      <div class="q">Who discovered Photoelectric effect</div>
+      <div class="a step">Heinrich Hertz</div>
+    </div>
+    <div class="qa">
+      <div class="q">Who performed Rutherford experiment</div>
+      <div class="a step">Geiger and Marsden</div>
+    </div>
+    <div class="qa">
+      <div class="q">Who found value of G</div>
+      <div class="a step">Henry Cavendish</div>
+    </div>
+    <div class="qa">
+      <div class="q">Who first found antiparticle</div>
+      <div class="a step">Paul Dirac (first predicted antiparticle) &mdash; Positron<br>Carl Anderson (first observed / suggested)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 6 (section title) ================= -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Fundamental forces</h1>
+  </div>
+</section>
+
+<!-- ================= SLIDE 7 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Fundamental forces</h2>
+    <table class="forces">
+      <thead>
+        <tr>
+          <th>Properties</th><th>Gravitational force</th><th>Electromagnetic force</th>
+          <th>Strong&ndash;Nuclear force</th><th>Weak nuclear force</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="prop">Between</td><td class="step">mass</td><td class="step">charge</td><td class="step">Proton &amp; neutron</td><td class="step">Leptons &amp; mesons</td></tr>
+        <tr><td class="prop">Range</td><td class="step">&infin;</td><td class="step">&infin;</td><td class="step">10<sup>&minus;15</sup></td><td class="step">10<sup>&minus;16</sup></td></tr>
+        <tr><td class="prop">Strength</td><td class="step">10<sup>&minus;39</sup> <i>(weakest)</i></td><td class="step">10<sup>&minus;3</sup></td><td class="step">1 <i>(strongest)</i></td><td class="step">10<sup>&minus;13</sup></td></tr>
+        <tr><td class="prop">Formula</td><td class="step">Known</td><td class="step">Known</td><td class="step">&mdash;</td><td class="step">&mdash;</td></tr>
+        <tr><td class="prop">Nature</td><td class="step">Attractive</td><td class="step">Attractive / Repulsive</td><td class="step">Attractive, but repulsive if distance &lt; 0.8&nbsp;fermi</td><td class="step">Neither attractive nor repulsive</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= SLIDE 8 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Fundamental forces <span class="inline-lead" style="font-size:.55em">(contd.)</span></h2>
+    <table class="forces">
+      <thead>
+        <tr>
+          <th>Properties</th><th>Gravitational force</th><th>Electromagnetic force</th>
+          <th>Strong&ndash;Nuclear force</th><th>Weak nuclear force</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="prop">Central</td><td class="ok step">&#10003;</td><td class="ok step">&#10003;</td><td class="no step">&#10007;</td><td class="no step">&#10007;</td></tr>
+        <tr><td class="prop">Conservative <span class="eq" style="font-size:.6em">(U.E + K.E = C)</span></td><td class="ok step">&#10003;</td><td class="ok step">&#10003;</td><td class="no step">&#10007;</td><td class="no step">&#10007;</td></tr>
+        <tr><td class="prop">Follows inverse square law <span class="eq" style="font-size:.6em">(F &prop; 1/r&sup2;)</span></td><td class="ok step">&#10003;</td><td class="ok step">&#10003;</td><td class="no step">&#10007;</td><td class="no step">&#10007;</td></tr>
+        <tr><td class="prop">Mediating particle</td><td class="step"><i>gravitons</i></td><td class="step"><i>photon</i></td><td class="step"><i>&pi;&ndash;mesons</i></td><td class="step"><i>W and Z boson</i></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= SLIDE 9 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Extra information</h2>
+    <ul class="bullets box">
+      <li class="step">Strong nuclear force is also known as quark&ndash;quark interaction</li>
+      <li class="step">Gluons are the mediating particle for quark&ndash;quark interaction</li>
+      <li class="step">Gravitational force acts on all particles, even light &mdash; it can even bend space and time</li>
+      <li class="step">Friction force, tension, normal reaction, van der Waal forces are examples of electromagnetic force</li>
+      <li class="step">Strong nuclear force is experienced by hadrons, not by leptons (for example, electron)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SLIDE 10 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Extra information <span class="inline-lead" style="font-size:.55em">(contd.)</span></h2>
+    <ul class="bullets box">
+      <li class="step">Strong nuclear force is the reason for stable and finite size of nuclei</li>
+      <li class="step">Weak nuclear force plays a part in radioactive decay (can change particle)</li>
+      <li class="step">Weak nuclear and electromagnetic together are known as electroweak</li>
+      <li class="step">Mesons and baryons are part of hadrons</li>
+      <li class="step">Grand unification theory unifies all (other than gravitational)</li>
+      <li class="step">Theory of everything tries to unify all</li>
+      <li class="step">Pseudo force is not included in this, as it is not a real force</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= SLIDE 11 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Relativity <span class="inline-lead" style="font-size:.5em">(just have idea)</span></h2>
+    <div class="step">
+      <p>Speed of light in vacuum is constant</p>
+      <p>Mass, length and time depend on velocity</p>
+    </div>
+    <div class="eq-block step">
+      <div class="eq">
+        m&nbsp;=&nbsp;<span class="frac"><span class="num">m<sub>0</sub></span><span class="den"><span class="radical"><span class="sym">&radic;</span><span class="content">1&minus;(v/c)<sup>2</sup></span></span></span></span>
+        &nbsp;&nbsp; t&nbsp;=&nbsp;<span class="frac"><span class="num">t<sub>0</sub></span><span class="den"><span class="radical"><span class="sym">&radic;</span><span class="content">1&minus;(v/c)<sup>2</sup></span></span></span></span>
+      </div>
+      <div class="eq">
+        l&nbsp;=&nbsp;l<sub>0</sub><span class="radical"><span class="sym">&radic;</span><span class="content">1&minus;(v/c)<sup>2</sup></span></span>
+        &nbsp;&nbsp; K.E.&nbsp;=&nbsp;mc<sup>2</sup>&nbsp;&minus;&nbsp;m<sub>0</sub>c<sup>2</sup>
+      </div>
+      <div class="eq-note">here m<sub>0</sub> is rest mass</div>
+    </div>
+    <p class="step">Tachyon: They have speed greater than speed of light and do not exist</p>
+  </div>
+</section>
+
+<!-- ================= SLIDE 12 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Home work <span class="inline-lead" style="font-size:.5em">(can skip as out of course)</span></h2>
+    <p>On close observation, if velocity is doubled then momentum will become:</p>
+    <div class="options">
+      <div class="option clickable" onclick="this.classList.toggle('picked')">It will be doubled</div>
+      <div class="option clickable" onclick="this.classList.toggle('picked')">It will be more than doubled</div>
+      <div class="option clickable" onclick="this.classList.toggle('picked')">It will be less than doubled</div>
+    </div>
+    <div class="answer-box step"><span class="ok">&#10003;</span>It will be more than doubled &mdash; <i>as mass will be slightly increased</i></div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 13 ================= -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">On what velocity is kinetic energy the same as rest energy of the particle?</h2>
+    <div class="two-col">
+      <div class="col">
+        <div class="eq step">&rArr; K.E. = mc<sup>2</sup> &minus; m<sub>0</sub>c<sup>2</sup></div>
+        <div class="eq step">&rArr; m<sub>0</sub>c<sup>2</sup> = mc<sup>2</sup> &minus; m<sub>0</sub>c<sup>2</sup></div>
+        <div class="eq step">&rArr; 2m<sub>0</sub>c<sup>2</sup> = mc<sup>2</sup></div>
+        <div class="eq step">&rArr; 2m<sub>0</sub> = m</div>
+        <div class="eq step">&rArr; 2m<sub>0</sub> = <span class="frac"><span class="num">m<sub>0</sub></span><span class="den"><span class="radical"><span class="sym">&radic;</span><span class="content">1&minus;(v/c)<sup>2</sup></span></span></span></span></div>
+        <div class="eq step">&rArr; 2 = <span class="frac"><span class="num">1</span><span class="den"><span class="radical"><span class="sym">&radic;</span><span class="content">1&minus;(v/c)<sup>2</sup></span></span></span></span></div>
+      </div>
+      <div class="col">
+        <div class="eq step">&rArr; 1&minus;(v/c)<sup>2</sup> = <span class="frac"><span class="num">1</span><span class="den">4</span></span></div>
+        <div class="eq step">&rArr; 1&minus;<span class="frac"><span class="num">1</span><span class="den">4</span></span> = (v/c)<sup>2</sup></div>
+        <div class="eq step">&rArr; v = <span class="frac"><span class="num">&radic;3</span><span class="den">2</span></span> c</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 14 ================= -->
+<section class="page">
+  <div class="wrap center">
+    <div class="step" style="font-weight:700;font-size:clamp(24px,5.4vmin,58px);line-height:1.5">
+      Don&rsquo;t invest too much time in finding<br>meaning of all terms &mdash;<br>we will see them in our course
+    </div>
+  </div>
+</section>
+
+<!-- ================= Standalone fallback controller (rule 6) — required so this file is not blank outside the host ================= -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present → stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -43,6 +43,9 @@ Decks are taught live to ~100 students on a dark board with a white pen.
 
 - **One press, one idea.** Statement first → the terms → each definition *with*
   its word lighting up → the relation that follows.
+- **No invented headings.** A page gets an `h2.heading` only if the source slide
+  actually had a title; otherwise it starts with the content. Section-divider
+  slides keep their `h1.title`.
 - **Graphs and figures come last**, after the words and the algebra.
 - **Definitions that deserve equal weight go in `.info-box` focus boxes** — the
   box grows, teaches, shrinks, then the next one starts.

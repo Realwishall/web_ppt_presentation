@@ -56,6 +56,10 @@ Visible from the first moment, **never** `.step`:
 Everything else is its own `.step`, revealed one at a time in reading order:
 each data `<td>`, each `<li>`, each equation line, each definition, each answer.
 
+Headings are **inherited, never authored**: if the source slide had no title,
+the page has no `h2.heading` and `.wrap` opens on the content. Only a real
+section divider carries `h1.title`.
+
 > A term and its definition must never appear in the same reveal.
 
 ---
