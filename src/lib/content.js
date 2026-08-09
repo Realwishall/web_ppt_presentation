@@ -1,24 +1,39 @@
-// Data layer for the new authoring model:
+// Data layer for the authoring model — ALL OF IT UNDER ONE USER:
 //
-//   classes/{classId}
-//     └─ chapters/{chapterId}      { name, svgIcon, info }
-//          └─ folders/{folderId}   { name, tag, html }
+//   users/{uid}/classes/{classId}
+//     └─ chapters/{chapterId}      { name, svgIcon, info, visible }
+//          └─ folders/{folderId}   { name, tag, code, version, pageCount, visible }
 //
-// A "folder" stores one single-page HTML document (its own CSS & JS inline).
-// That HTML is what the presenter loads when you Teach — the same
-// `<section class="page">` format the presenter already understands.
+// Every path below is built with the helpers in userScope.js, so one teacher's
+// classes, chapters, folders and batches are invisible to another teacher
+// signed into the same deployment.
+//
+// A "folder" is a *shelf label*, not the document. The HTML itself lives once
+// in the content registry under a permanent code (see contentStore.js); the
+// folder holds `code` plus the version it currently points at. Teaching a
+// folder resolves the code to HTML; a session then stores only the code, the
+// version, the page number and the ink.
+//
+// Nothing in this tree is hard-deleted. Deleting flips `visible` to false, so
+// a session recorded months ago still resolves every reference it holds.
 
 import {
-  collection,
-  doc,
+  getDoc,
   getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
   serverTimestamp,
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { ucol, udoc } from './userScope'
+import {
+  createContent,
+  addContentVersion,
+  updateContentMeta,
+  setContentVisible,
+  readContent,
+} from './contentStore'
 
 export function makeId(prefix = 'id') {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
@@ -26,6 +41,10 @@ export function makeId(prefix = 'id') {
 
 // Tags used to divide folders by difficulty (library multi-filter).
 export const FOLDER_TAGS = ['Basic', 'Level 1.5', 'Level 2', 'Level 2.5', 'Advance', 'Olympiad']
+
+/** Where decks uploaded straight from a laptop are filed. */
+export const UPLOAD_CLASS_NAME = 'Random'
+export const UPLOAD_TAG = 'Uploaded'
 
 // A neutral gradient tile used as the default chapter icon.
 export const DEFAULT_CHAPTER_SVG =
@@ -83,66 +102,173 @@ export function extractHtmlTitle(html, fallback = 'Imported HTML') {
 
 const bySortOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.name || '').localeCompare(b.name || '')
 
-async function listCol(path) {
-  const snap = await getDocs(collection(db, ...path))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort(bySortOrder)
+/** Hidden rows are soft-deleted: they stay readable by old sessions. */
+const isVisible = (r) => r.visible !== false
+
+async function listCol(path, { includeHidden = false } = {}) {
+  const snap = await getDocs(ucol(...path))
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((r) => includeHidden || isVisible(r))
+    .sort(bySortOrder)
 }
 
 // ---------- classes ----------
-export const listClasses = () => listCol(['classes'])
+export const listClasses = (opts) => listCol(['classes'], opts)
 
 export async function createClass(name, order = 0) {
   const id = makeId('class')
-  await setDoc(doc(db, 'classes', id), { id, name: name.trim(), order, createdAt: serverTimestamp() })
+  await setDoc(udoc('classes', id), {
+    id, name: name.trim(), order, visible: true, createdAt: serverTimestamp(),
+  })
   return id
 }
-export const renameClass = (id, name) => updateDoc(doc(db, 'classes', id), { name: name.trim() })
-export const deleteClass = (id) => deleteDoc(doc(db, 'classes', id))
+export const renameClass = (id, name) => updateDoc(udoc('classes', id), { name: name.trim() })
+
+/** Soft delete — the class leaves the panel, its content keeps resolving. */
+export const deleteClass = (id) =>
+  updateDoc(udoc('classes', id), { visible: false, hiddenAtMs: Date.now() })
+export const restoreClass = (id) =>
+  updateDoc(udoc('classes', id), { visible: true, hiddenAtMs: null })
 
 // ---------- chapters ----------
-export const listChapters = (classId) => listCol(['classes', classId, 'chapters'])
+export const listChapters = (classId, opts) => listCol(['classes', classId, 'chapters'], opts)
 
 export async function createChapter(classId, { name, svgIcon, info }, order = 0) {
   const id = makeId('chap')
-  await setDoc(doc(db, 'classes', classId, 'chapters', id), {
+  await setDoc(udoc('classes', classId, 'chapters', id), {
     id,
     name: (name || '').trim(),
     svgIcon: svgIcon || DEFAULT_CHAPTER_SVG,
     info: (info || '').trim(),
     order,
+    visible: true,
     createdAt: serverTimestamp(),
   })
   return id
 }
 export const updateChapter = (classId, chapterId, data) =>
-  updateDoc(doc(db, 'classes', classId, 'chapters', chapterId), data)
+  updateDoc(udoc('classes', classId, 'chapters', chapterId), data)
 export const deleteChapter = (classId, chapterId) =>
-  deleteDoc(doc(db, 'classes', classId, 'chapters', chapterId))
+  updateDoc(udoc('classes', classId, 'chapters', chapterId), {
+    visible: false, hiddenAtMs: Date.now(),
+  })
+export const restoreChapter = (classId, chapterId) =>
+  updateDoc(udoc('classes', classId, 'chapters', chapterId), { visible: true, hiddenAtMs: null })
 
 // ---------- folders ----------
-export const listFolders = (classId, chapterId) =>
-  listCol(['classes', classId, 'chapters', chapterId, 'folders'])
+const folderRef = (classId, chapterId, folderId) =>
+  udoc('classes', classId, 'chapters', chapterId, 'folders', folderId)
 
+export const listFolders = (classId, chapterId, opts) =>
+  listCol(['classes', classId, 'chapters', chapterId, 'folders'], opts)
+
+/**
+ * A new folder mints a content code for its HTML. The folder row afterwards
+ * carries only the reference — `code` plus the `version` it points at.
+ */
 export async function createFolder(classId, chapterId, { name, tag, html }, order = 0) {
   const id = makeId('folder')
   const cleanName = (name || 'New folder').trim()
-  await setDoc(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', id), {
+  const cleanTag = tag || FOLDER_TAGS[0]
+  const body = html ?? defaultFolderHtml(cleanName)
+
+  const { code, version, pageCount } = await createContent({
+    name: cleanName,
+    tag: cleanTag,
+    html: body,
+    home: { classId, chapterId, folderId: id },
+    origin: 'library',
+  })
+
+  await setDoc(folderRef(classId, chapterId, id), {
     id,
     name: cleanName,
-    tag: tag || FOLDER_TAGS[0],
-    html: html ?? defaultFolderHtml(cleanName),
+    tag: cleanTag,
+    code,
+    version,
+    pageCount,
     order,
+    visible: true,
+    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
-  return id
+  return { id, code, version }
 }
-export const updateFolder = (classId, chapterId, folderId, data) =>
-  updateDoc(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', folderId), {
-    ...data,
-    updatedAt: serverTimestamp(),
+
+/** The HTML behind a folder row, at the version the folder points at. */
+export async function readFolderHtml(folder) {
+  if (!folder?.code) return ''
+  const c = await readContent(folder.code, folder.version)
+  return c?.html || ''
+}
+
+/**
+ * Save an edit. Changing the HTML mints a NEW version and re-points the
+ * folder at it — every session pinned to an earlier version is untouched.
+ */
+export async function updateFolder(classId, chapterId, folderId, data) {
+  const { html, ...rest } = data
+  const patch = { ...rest, updatedAt: serverTimestamp() }
+
+  if (html != null) {
+    const snap = await getDoc(folderRef(classId, chapterId, folderId))
+    const folder = snap.exists() ? snap.data() : null
+    if (folder?.code) {
+      const { version, pageCount } = await addContentVersion(folder.code, html, {
+        name: rest.name ?? folder.name,
+        tag: rest.tag ?? folder.tag,
+      })
+      patch.version = version
+      patch.pageCount = pageCount
+    } else {
+      // A row that predates the registry: mint its code now.
+      const { code, version, pageCount } = await createContent({
+        name: rest.name ?? folder?.name ?? 'Deck',
+        tag: rest.tag ?? folder?.tag ?? FOLDER_TAGS[0],
+        html,
+        home: { classId, chapterId, folderId },
+        origin: 'library',
+      })
+      patch.code = code
+      patch.version = version
+      patch.pageCount = pageCount
+    }
+  } else if (rest.name != null || rest.tag != null) {
+    // Metadata-only edit — no new version, but keep the registry label in sync.
+    const snap = await getDoc(folderRef(classId, chapterId, folderId))
+    const code = snap.exists() ? snap.data().code : null
+    if (code) {
+      const meta = {}
+      if (rest.name != null) meta.name = rest.name
+      if (rest.tag != null) meta.tag = rest.tag
+      await updateContentMeta(code, meta).catch(() => {})
+    }
+  }
+
+  return updateDoc(folderRef(classId, chapterId, folderId), patch)
+}
+
+/**
+ * Soft delete. The folder leaves the Library and its content is marked hidden,
+ * but neither is removed: sessions that taught this deck still replay it.
+ */
+export async function deleteFolder(classId, chapterId, folderId) {
+  const snap = await getDoc(folderRef(classId, chapterId, folderId))
+  const code = snap.exists() ? snap.data().code : null
+  await updateDoc(folderRef(classId, chapterId, folderId), {
+    visible: false,
+    hiddenAtMs: Date.now(),
   })
-export const deleteFolder = (classId, chapterId, folderId) =>
-  deleteDoc(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', folderId))
+  if (code) await setContentVisible(code, false).catch(() => {})
+}
+
+export async function restoreFolder(classId, chapterId, folderId) {
+  const snap = await getDoc(folderRef(classId, chapterId, folderId))
+  const code = snap.exists() ? snap.data().code : null
+  await updateDoc(folderRef(classId, chapterId, folderId), { visible: true, hiddenAtMs: null })
+  if (code) await setContentVisible(code, true).catch(() => {})
+}
 
 // Persist a new folder order in one write: `orderedIds` is the list as the
 // teacher arranged it, and each folder's `order` becomes its index (what
@@ -150,17 +276,90 @@ export const deleteFolder = (classId, chapterId, folderId) =>
 export function reorderFolders(classId, chapterId, orderedIds) {
   const batch = writeBatch(db)
   orderedIds.forEach((folderId, order) => {
-    batch.update(doc(db, 'classes', classId, 'chapters', chapterId, 'folders', folderId), { order })
+    batch.update(folderRef(classId, chapterId, folderId), { order })
   })
   return batch.commit()
 }
 
+// ---------- uploaded decks: class "Random" → chapter "MM-YYYY" ----------
+
+/** "08-2026" — the month a laptop upload arrived. */
+export function uploadChapterName(when = new Date()) {
+  return `${String(when.getMonth() + 1).padStart(2, '0')}-${when.getFullYear()}`
+}
+
+/**
+ * Find (or create) the shelf that decks uploaded from a laptop are filed on:
+ * class "Random", chapter "MM-YYYY" for the current month. Uploads are real
+ * library rows — visible, editable, teachable again next week.
+ */
+export async function ensureUploadHome(when = new Date()) {
+  const classes = await listClasses({ includeHidden: true })
+  let cls = classes.find((c) => (c.name || '').trim().toLowerCase() === UPLOAD_CLASS_NAME.toLowerCase())
+  if (!cls) {
+    // Sorted last, so it never pushes the real classes down the panel.
+    const id = await createClass(UPLOAD_CLASS_NAME, 9_000)
+    cls = { id, name: UPLOAD_CLASS_NAME }
+  } else if (cls.visible === false) {
+    await restoreClass(cls.id)
+  }
+
+  const wantChapter = uploadChapterName(when)
+  const chapters = await listChapters(cls.id, { includeHidden: true })
+  let chapter = chapters.find((c) => (c.name || '').trim() === wantChapter)
+  if (!chapter) {
+    const id = await createChapter(
+      cls.id,
+      { name: wantChapter, info: 'Decks uploaded straight from a laptop', svgIcon: DEFAULT_CHAPTER_SVG },
+      chapters.length,
+    )
+    chapter = { id, name: wantChapter }
+  } else if (chapter.visible === false) {
+    await restoreChapter(cls.id, chapter.id)
+  }
+
+  return { classId: cls.id, chapterId: chapter.id, chapterName: wantChapter }
+}
+
+/**
+ * An HTML file dropped into the presenter's "Upload HTML" button. It gets a
+ * code like anything else — so the session can reference it instead of
+ * copying it — and a real home under Random / MM-YYYY.
+ */
+export async function registerUploadedDeck({ name, html }) {
+  const home = await ensureUploadHome()
+  const existing = await listFolders(home.classId, home.chapterId, { includeHidden: true })
+  const cleanName = (name || 'Uploaded deck').trim()
+  const { id, code, version } = await createFolder(
+    home.classId,
+    home.chapterId,
+    { name: cleanName, tag: UPLOAD_TAG, html },
+    existing.length,
+  )
+  return {
+    id,
+    code,
+    version,
+    name: cleanName,
+    tag: UPLOAD_TAG,
+    classId: home.classId,
+    chapterId: home.chapterId,
+  }
+}
+
 // ---------- batches ----------
-export const listBatches = () => listCol(['batches'])
+export const listBatches = (opts) => listCol(['batches'], opts)
 
 export async function createBatch(name) {
   const id = makeId('batch')
-  await setDoc(doc(db, 'batches', id), { id, name: name.trim(), createdAt: serverTimestamp() })
+  await setDoc(udoc('batches', id), {
+    id, name: name.trim(), visible: true, createdAt: serverTimestamp(),
+  })
   return id
 }
-export const deleteBatch = (id) => deleteDoc(doc(db, 'batches', id))
+
+/** Soft delete — a removed batch keeps its session history intact. */
+export const deleteBatch = (id) =>
+  updateDoc(udoc('batches', id), { visible: false, hiddenAtMs: Date.now() })
+export const restoreBatch = (id) =>
+  updateDoc(udoc('batches', id), { visible: true, hiddenAtMs: null })

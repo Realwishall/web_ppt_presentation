@@ -2,15 +2,15 @@ import { useRef, useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth'
-import { Atom, Mail, Lock, LogIn, Phone, KeyRound, ArrowLeft } from 'lucide-react'
+import { Atom, Mail, Lock, LogIn, Phone, KeyRound, ArrowLeft, UserPlus, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../firebase'
 
 export default function Login() {
-  const { user, login } = useAuth()
+  const { user, login, signup } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [mode, setMode] = useState('email') // 'email' | 'phone'
+  const [mode, setMode] = useState('email') // 'email' | 'signup' | 'phone'
 
   const from = location.state?.from?.pathname || '/'
   if (user) return <Navigate to={from} replace />
@@ -36,23 +36,31 @@ export default function Login() {
         </div>
 
         {/* Mode switch */}
-        <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-black/30 p-1">
-          <TabButton active={mode === 'email'} onClick={() => setMode('email')} icon={Mail} label="Email" />
+        <div className="mb-6 grid grid-cols-3 gap-1 rounded-xl bg-black/30 p-1">
+          <TabButton active={mode === 'email'} onClick={() => setMode('email')} icon={Mail} label="Sign in" />
+          <TabButton active={mode === 'signup'} onClick={() => setMode('signup')} icon={UserPlus} label="Sign up" />
           <TabButton active={mode === 'phone'} onClick={() => setMode('phone')} icon={Phone} label="Phone" />
         </div>
 
-        {mode === 'email' ? (
+        {mode === 'email' && (
           <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
             <EmailForm login={login} onSuccess={goHome} />
           </motion.div>
-        ) : (
+        )}
+        {mode === 'signup' && (
+          <motion.div key="signup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+            <SignupForm signup={signup} onSuccess={goHome} />
+          </motion.div>
+        )}
+        {mode === 'phone' && (
           <motion.div key="phone" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
             <PhoneForm onSuccess={goHome} />
           </motion.div>
         )}
 
         <p className="mt-6 text-center text-xs text-slate-500">
-          Accounts are created by your institute. Contact your teacher for access.
+          Every account gets its own private library, batches and settings —
+          nothing you create is visible to anyone else.
         </p>
       </motion.div>
 
@@ -122,6 +130,94 @@ function EmailForm({ login, onSuccess }) {
 
       <PrimaryButton busy={busy} icon={LogIn}>
         {busy ? 'Signing in…' : 'Sign in'}
+      </PrimaryButton>
+    </form>
+  )
+}
+
+/**
+ * Create a new account. Signing up leaves the teacher signed in on a
+ * completely empty app — their own classes, batches and global settings — so
+ * it drops straight onto the dashboard exactly like a sign-in does.
+ */
+function SignupForm({ signup, onSuccess }) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    // Checked here rather than left to Firebase so the message names the field
+    // the teacher has to fix.
+    if (password.length < 6) {
+      setError('Choose a password of at least 6 characters.')
+      return
+    }
+    if (password !== confirm) {
+      setError('The two passwords do not match.')
+      return
+    }
+    setBusy(true)
+    try {
+      await signup(email.trim(), password, name)
+      onSuccess()
+    } catch (err) {
+      setError(friendlyError(err.code) || 'Could not create the account. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Field label="Your name" icon={User}>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Optional"
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Email" icon={Mail}>
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Password" icon={Lock}>
+        <input
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="At least 6 characters"
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Confirm password" icon={Lock}>
+        <input
+          type="password"
+          required
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder="••••••••"
+          className={inputCls}
+        />
+      </Field>
+
+      {error && <ErrorText>{error}</ErrorText>}
+
+      <PrimaryButton busy={busy} icon={UserPlus}>
+        {busy ? 'Creating account…' : 'Create account'}
       </PrimaryButton>
     </form>
   )
@@ -289,6 +385,12 @@ function friendlyError(code) {
       return 'Incorrect email or password.'
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a moment and try again.'
+    case 'auth/email-already-in-use':
+      return 'That email already has an account — use Sign in instead.'
+    case 'auth/weak-password':
+      return 'That password is too weak. Use at least 6 characters.'
+    case 'auth/operation-not-allowed':
+      return 'Email sign-up is switched off for this project. Enable Email/Password in Firebase Authentication.'
     case 'auth/invalid-phone-number':
       return 'That phone number looks invalid. Use international format, e.g. +91…'
     case 'auth/missing-phone-number':

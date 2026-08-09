@@ -1,24 +1,22 @@
-// App-wide (global) settings — everything the export pipeline needs that is
-// NOT specific to one batch:
+// Account-wide settings — everything the export pipeline needs that is NOT
+// specific to one batch, held once per signed-in teacher:
 //
-//   appSettings/curriculum                       { chapters[], rawMap }
-//   appSettings/exportPages                      { starts[], ends[], logoOnCovers, migratedAt }
-//   appSettings/exportPages/pages/{pageId}       { role, name, fit, html | chunks }
-//   appSettings/exportPages/pages/{pageId}/parts/{i}   ← chunks for big HTML
-//   appSettings/branding                         { logo…, anchor, offsetXPct, offsetYPct }
+//   users/{uid}/appSettings/curriculum                     { chapters[], rawMap }
+//   users/{uid}/appSettings/exportPages                    { starts[], ends[], logoOnCovers }
+//   users/{uid}/appSettings/exportPages/pages/{pageId}     { role, name, fit, html | chunks }
+//   users/{uid}/appSettings/exportPages/pages/{pageId}/parts/{i}  ← chunks for big HTML
+//   users/{uid}/appSettings/branding                       { logo…, anchor, offsetXPct, offsetYPct }
 //
-// These used to live under batches/{batchId}/meta/*. They are global now
-// because one teacher runs every batch off the same chapter map, the same
-// cover pages and the same logo — keeping three copies in sync by hand was
-// the actual bug. `migrateFromBatches()` lifts any existing per-batch data
-// into these docs once, without deleting anything from the batch documents.
+// "Global" here means global to ONE ACCOUNT: one teacher runs every one of
+// their batches off the same chapter map, the same cover pages and the same
+// logo, so keeping a copy per batch was the actual bug. Another teacher signing
+// into the same deployment gets their own set of all three — their logo never
+// lands on your export.
 //
 // Only the roster and the "what did I type last export" memory stay per-batch.
 
 import {
-  collection,
   deleteDoc,
-  doc,
   getDoc,
   getDocs,
   setDoc,
@@ -27,6 +25,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { makeId } from './content'
+import { ucol, udoc } from './userScope'
 
 /** Firestore caps a document at 1 MB; stay well under it. */
 const CHUNK_CHARS = 700_000
@@ -39,14 +38,14 @@ export const MAX_LOGO_CHARS = 600_000
 /** More cover pages than this is a mistake, not a workflow. */
 export const MAX_COVER_PAGES = 12
 
-const curriculumRef = () => doc(db, 'appSettings', 'curriculum')
-const pagesIndexRef = () => doc(db, 'appSettings', 'exportPages')
-const pagesCol = () => collection(db, 'appSettings', 'exportPages', 'pages')
-const pageRef = (pageId) => doc(db, 'appSettings', 'exportPages', 'pages', pageId)
-const partsCol = (pageId) => collection(db, 'appSettings', 'exportPages', 'pages', pageId, 'parts')
+const curriculumRef = () => udoc('appSettings', 'curriculum')
+const pagesIndexRef = () => udoc('appSettings', 'exportPages')
+const pagesCol = () => ucol('appSettings', 'exportPages', 'pages')
+const pageRef = (pageId) => udoc('appSettings', 'exportPages', 'pages', pageId)
+const partsCol = (pageId) => ucol('appSettings', 'exportPages', 'pages', pageId, 'parts')
 const partRef = (pageId, i) =>
-  doc(db, 'appSettings', 'exportPages', 'pages', pageId, 'parts', String(i))
-const brandingRef = () => doc(db, 'appSettings', 'branding')
+  udoc('appSettings', 'exportPages', 'pages', pageId, 'parts', String(i))
+const brandingRef = () => udoc('appSettings', 'branding')
 
 // ───────────────────────── chapter & topic map ─────────────────────────
 
@@ -255,7 +254,6 @@ export async function getCoverPages() {
       starts: take('start', index.starts),
       ends: take('end', index.ends),
       logoOnCovers: !!index.logoOnCovers,
-      migratedAt: index.migratedAt || null,
     }
   } catch (err) {
     console.warn('Cover pages read failed:', err)
@@ -582,89 +580,4 @@ export function findPlaceholders(html) {
     return _
   })
   return [...found]
-}
-
-// ───────────────────────── one-time migration from per-batch docs ─────────────────────────
-
-/**
- * Lift chapters and cover pages out of every batch into the global docs.
- *
- * Runs once (guarded by `migratedAt` on the cover-page index) and is additive:
- * chapters merge by name, cover pages are de-duplicated by their HTML, and
- * nothing is deleted from `batches/{id}/meta/*`. If this ever needs re-running,
- * clearing `migratedAt` is enough — a second pass would find the same pages
- * already present and change nothing.
- */
-export async function migrateFromBatches() {
-  const [index, curriculum] = await Promise.all([getCoverPages(), getCurriculum()])
-  if (index.migratedAt) return { skipped: true, batches: 0, chapters: 0, pages: 0 }
-
-  let batchDocs
-  try {
-    batchDocs = await getDocs(collection(db, 'batches'))
-  } catch (err) {
-    console.warn('Migration could not list batches:', err)
-    return { skipped: true, batches: 0, chapters: 0, pages: 0 }
-  }
-
-  let chapters = curriculum.chapters
-  let rawMap = curriculum.rawMap
-  const starts = [...index.starts]
-  const ends = [...index.ends]
-  const seenHtml = new Set([...starts, ...ends].map((p) => p.html))
-  let touched = 0
-
-  for (const b of batchDocs.docs) {
-    let grabbed = false
-    try {
-      const s = await getDoc(doc(db, 'batches', b.id, 'meta', 'settings'))
-      if (s.exists()) {
-        const d = s.data()
-        if (Array.isArray(d.chapters) && d.chapters.length) {
-          chapters = mergeChapters(chapters, d.chapters)
-          grabbed = true
-        }
-        if (!rawMap && d.rawMap) rawMap = d.rawMap
-      }
-    } catch (err) { console.warn(`Migration skipped settings for ${b.id}:`, err) }
-
-    try {
-      const p = await getDoc(doc(db, 'batches', b.id, 'meta', 'exportPages'))
-      if (p.exists()) {
-        const d = p.data()
-        const legacy = [
-          { role: 'start', html: d.startHtml, name: d.startName, list: starts },
-          { role: 'end', html: d.endHtml, name: d.endName, list: ends },
-        ]
-        for (const item of legacy) {
-          // Only the inline copy migrates; a chunked legacy page is rare and
-          // re-uploading it is cheaper than a second chunk reader here.
-          if (!item.html || seenHtml.has(item.html)) continue
-          if (item.list.length >= MAX_COVER_PAGES) continue
-          seenHtml.add(item.html)
-          item.list.push({
-            id: makeId('cover'),
-            name: item.name || `${b.id}-${item.role}.html`,
-            role: item.role,
-            fit: DEFAULT_FIT,
-            enabled: true,
-            html: item.html,
-          })
-          grabbed = true
-        }
-        if (d.logoOnCovers) index.logoOnCovers = true
-      }
-    } catch (err) { console.warn(`Migration skipped export pages for ${b.id}:`, err) }
-
-    if (grabbed) touched += 1
-  }
-
-  const gainedChapters = chapters.length - curriculum.chapters.length
-  const gainedPages = starts.length + ends.length - index.starts.length - index.ends.length
-
-  if (chapters.length) await saveCurriculum({ chapters, rawMap })
-  await saveCoverPages({ starts, ends, logoOnCovers: index.logoOnCovers })
-  await setDoc(pagesIndexRef(), { migratedAt: Date.now() }, { merge: true })
-
-  return { skipped: false, batches: touched, chapters: Math.max(0, gainedChapters), pages: Math.max(0, gainedPages) }
 }

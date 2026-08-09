@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Globe, X, Loader2, Plus, Trash2, BookOpen, FileUp, Image as ImageIcon,
   Save, ClipboardPaste, Check, AlertTriangle, Tag, Eye, ArrowUp, ArrowDown,
-  Download, Power,
+  Power,
 } from 'lucide-react'
 import { makeId } from '../lib/content'
 import {
@@ -10,7 +10,6 @@ import {
   getCoverPages, saveCoverPages, fileToCoverPage, countCoverSheets,
   getBranding, saveBranding, fileToLogoDataUrl, logoBoxStyle,
   parseChapterTopicMap, chaptersToMapText, normaliseChapters,
-  migrateFromBatches,
   EXPORT_VARIABLES, findPlaceholders, substituteVariables,
   FIT_MODES, LOGO_ANCHORS, MAX_COVER_PAGES,
   EMPTY_CURRICULUM, EMPTY_COVER_PAGES, EMPTY_BRANDING,
@@ -23,29 +22,14 @@ const TABS = [
 ]
 
 /**
- * Global settings — one modal for everything shared by every batch: the
- * chapter & topic map, the cover pages wrapped around every export, and the
- * logo stamped on every sheet. Each tab owns its own Firestore document so a
- * slow tab never blocks the others and a save touches only what changed.
- * Nothing auto-saves: teaching data is worth an explicit click.
+ * Global settings — one modal for everything shared by every batch of THIS
+ * account: the chapter & topic map, the cover pages wrapped around every
+ * export, and the logo stamped on every sheet. Each tab owns its own Firestore
+ * document so a slow tab never blocks the others and a save touches only what
+ * changed. Nothing auto-saves: teaching data is worth an explicit click.
  */
 export default function GlobalSettingsPanel({ onClose }) {
   const [tab, setTab] = useState('chapters')
-  const [migration, setMigration] = useState(null)
-
-  // Lift anything a pre-split batch still owns into the global docs, once.
-  // Fire-and-forget: a failure here only means the old per-batch fallback in
-  // loadPresenterExportConfig keeps doing its job.
-  useEffect(() => {
-    let alive = true
-    migrateFromBatches()
-      .then((r) => {
-        if (!alive || r.skipped || (!r.chapters && !r.pages)) return
-        setMigration(r)
-      })
-      .catch((e) => console.warn('Migration failed:', e))
-    return () => { alive = false }
-  }, [])
 
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-950/70 backdrop-blur-sm" onClick={onClose}>
@@ -57,7 +41,7 @@ export default function GlobalSettingsPanel({ onClose }) {
           <Globe className="h-4 w-4 text-violet-400" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-slate-100">Global settings</div>
-            <div className="truncate text-xs text-slate-500">Shared by every batch and every export</div>
+            <div className="truncate text-xs text-slate-500">Shared by every batch in your account</div>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-white/10 hover:text-slate-200">
             <X className="h-5 w-5" />
@@ -84,14 +68,6 @@ export default function GlobalSettingsPanel({ onClose }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          {migration && (
-            <Banner tone="emerald">
-              <Download className="mr-1 inline h-3.5 w-3.5" />
-              Imported from {migration.batches} batch{migration.batches === 1 ? '' : 'es'}:{' '}
-              {migration.chapters} chapter{migration.chapters === 1 ? '' : 's'} and {migration.pages} cover
-              page{migration.pages === 1 ? '' : 's'}. Nothing was removed from the batches.
-            </Banner>
-          )}
           {tab === 'chapters' && <ChaptersTab />}
           {tab === 'covers' && <CoversTab />}
           {tab === 'branding' && <BrandingTab />}
@@ -640,7 +616,7 @@ function BrandingTab() {
     <div>
       {loadErr && <Banner tone="red">{loadErr}</Banner>}
       <Banner tone="violet">
-        This logo is a <b>global</b> setting — it appears on exports from every batch, not just one.
+        This logo is an <b>account-wide</b> setting — it appears on exports from every one of your batches, not just one.
       </Banner>
 
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">

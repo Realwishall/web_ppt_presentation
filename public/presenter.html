@@ -491,7 +491,7 @@
     <div class="spacer"></div>
 
     <div class="center-pill">
-      <button class="pill-btn" id="exitBtn" data-action="exit" title="Leave the presenter — back to the app">
+      <button class="pill-btn" id="exitBtn" data-action="exit" title="Back to the main screen — an unexported session is saved first">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m8 17-5-5 5-5"/><path d="M3 12h12"/></svg>
       </button>
       <button class="pill-btn" data-action="library" title="Master Library — pick a folder to teach">
@@ -653,6 +653,7 @@
     decks:[],        // [{ id, text, count, name, folderId, classId, chapterId, tag }]
     sessionId:null,  // active teaching-session id (host-assigned)
     batchId:null,
+    userKey:null,    // which signed-in teacher this board belongs to (host-assigned)
     /* Export settings pushed by the host (lf-export-config): the global
        chapter/topic map, the uploaded Starting/Ending pages, the global logo,
        and this batch's memory of the last export. Null until the host answers
@@ -2028,6 +2029,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     state.decks.push({
       id:deckId, text, count,
       name: sourceName || m.name || "Deck",
+      // The content registry's permanent code + the exact version this board is
+      // showing. A saved session stores these instead of the HTML itself.
+      code: m.code || null,
+      version: m.version || null,
       folderId: m.folderId || null,
       classId: m.classId || null,
       chapterId: m.chapterId || null,
@@ -2096,6 +2101,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     if(d.type === "lf-load-deck" && typeof d.text === "string"){
       libraryAck = true;                 // a deck arrived — no file picker
       loadDeckFromText(d.text, d.name || "Library", {
+        code: d.code || null,
+        version: d.version || null,
         folderId: d.folderId || null,
         classId: d.classId || null,
         chapterId: d.chapterId || null,
@@ -2130,6 +2137,19 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       requestAnimationFrame(sizeCanvas);
       refitDecksBurst();                 // the board just changed size
     } else if(d.type === "lf-session-config"){
+      // Switching batch inside one panel: the board on screen belongs to the
+      // OLD batch. Flush it to the old batch's recovery key, then clear it —
+      // keeping the incoming batch's own recovery record intact so it can
+      // still be offered.
+      if(d.batchId && state.batchId && d.batchId !== state.batchId){
+        if(saveTimer){ clearTimeout(saveTimer); saveTimer = 0; }
+        if(state.pages.length) writeRecover();
+        clearBoard({ keepRecover:true });
+        recoverOffered = false;
+      }
+      // Adopted after the flush above, so that flush still writes under the
+      // key of the board it is flushing.
+      if(d.userKey) state.userKey = d.userKey;
       if(d.batchId) state.batchId = d.batchId;
       if(d.sessionId) state.sessionId = d.sessionId;
     } else if(d.type === "lf-export-config"){
@@ -2174,6 +2194,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       decks: state.decks.map(d => ({
         id: d.id, text: d.text, count: d.count,
         name: d.name || "Deck",
+        code: d.code || null,
+        version: d.version || null,
         folderId: d.folderId || null,
         classId: d.classId || null,
         chapterId: d.chapterId || null,
@@ -2192,7 +2214,11 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     };
   }
 
-  function clearBoard(){
+  /* `keepRecover` is for the one case where the board is being emptied but its
+     crash snapshot must survive: handing the panel from one batch to another.
+     The outgoing batch's ink is flushed to ITS key first and must not then be
+     wiped by the incoming batch's clear. */
+  function clearBoard(opts){
     state.pages = []; state.current = -1;
     state.decks = [];
     for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
@@ -2201,7 +2227,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     emptyState.classList.remove("hidden");
     positionSnap();
     updateChrome();
-    dropRecover();          // the session is over — nothing left to recover
+    if(!(opts && opts.keepRecover)) dropRecover();   // session over — nothing to recover
   }
 
   // Rebuild the board from a saved unfinished payload (decks + pages + ink).
@@ -2217,6 +2243,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       state.decks.push({
         id: newId, text: deck.text, count: deck.count,
         name: deck.name || "Deck",
+        code: deck.code || null,
+        version: deck.version || null,
         folderId: deck.folderId || null,
         classId: deck.classId || null,
         chapterId: deck.chapterId || null,
@@ -2284,7 +2312,21 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      is the bulky part and localStorage is small, so a board that will not fit
      is saved again without it — the ink and the page structure are what cannot
      be got back, the decks can always be re-picked from the Library. */
-  const RECOVER_KEY  = "lf-board-recover";
+  /* ONE KEY PER TEACHER PER BATCH. A single shared key was how a board inked
+     for one batch turned up on another batch's board — and, worse, how the
+     recovered wrap.batchId then redirected that batch's next export into the
+     wrong batch's history. Both ids are part of the key, the saved wrap is
+     re-checked against the live board before it is offered, and nothing here
+     is ever allowed to change state.batchId.
+
+     The teacher's key matters because a Preview has no batch at all: without
+     it every Preview on this machine shared the key "…:none", so one teacher's
+     inked preview — deck HTML and all — was offered to the next person to sign
+     in on the same browser. localStorage does not care who is logged in; this
+     key is what makes it care. */
+  const RECOVER_PREFIX = "lf-board-recover";
+  const recoverKey = () =>
+    RECOVER_PREFIX + ":" + (state.userKey || "anon") + ":" + (state.batchId || "none");
   const RECOVER_MAX_AGE = 14 * 3600e3;    // a lesson, not last week
   let saveTimer = 0, lastSaveAt = 0, recoverOffered = false;
 
@@ -2293,9 +2335,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     lastSaveAt = Date.now();
     if(!state.pages.length){ dropRecover(); return; }
     const board0 = serializeBoard();
-    const wrap = { at: Date.now(), sessionId: state.sessionId, batchId: state.batchId, board: board0 };
+    const wrap = { at: Date.now(), sessionId: state.sessionId, batchId: state.batchId,
+                   userKey: state.userKey, board: board0 };
     try{
-      localStorage.setItem(RECOVER_KEY, JSON.stringify(wrap));
+      localStorage.setItem(recoverKey(), JSON.stringify(wrap));
     }catch(err){
       // over quota — the decks are recoverable from the Library, the ink is not.
       // A frozen page's baked slide goes with them: it is styled by its deck's
@@ -2308,11 +2351,27 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
           pages: board0.pages.map(p => p.snap && p.snap.body
             ? { ...p, snap: { ...p.snap, body: null } } : p)
         };
-        localStorage.setItem(RECOVER_KEY, JSON.stringify(wrap));
+        localStorage.setItem(recoverKey(), JSON.stringify(wrap));
       }catch(err2){ /* nothing more to try — the session save still covers it */ }
     }
   }
-  function dropRecover(){ try{ localStorage.removeItem(RECOVER_KEY); }catch(err){} }
+  function dropRecover(){ try{ localStorage.removeItem(recoverKey()); }catch(err){} }
+
+  /* Boards saved under the old, teacher-less key ("lf-board-recover:<batch>")
+     can never be offered again — the key has three parts now. They are also
+     the biggest thing this app puts in localStorage, so leaving them there
+     would quietly eat the quota that writeRecover's trimming fallback exists
+     to cope with. Swept once, on load. */
+  (function dropLegacyRecover(){
+    try{
+      const stale = [];
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(RECOVER_PREFIX + ":") && k.split(":").length < 3) stale.push(k);
+      }
+      stale.forEach(k => localStorage.removeItem(k));
+    }catch(err){ /* private mode / quota — nothing to clean up anyway */ }
+  })();
 
   // Debounced, and never more often than every 6s — writing the board on every
   // stroke would put a JSON.stringify of the whole lesson on the ink path.
@@ -2332,8 +2391,12 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     if(recoverOffered || state.pages.length) return;
     recoverOffered = true;
     let wrap = null;
-    try{ wrap = JSON.parse(localStorage.getItem(RECOVER_KEY) || "null"); }catch(err){}
+    try{ wrap = JSON.parse(localStorage.getItem(recoverKey()) || "null"); }catch(err){}
     if(!wrap || !wrap.board || !(wrap.board.pages || []).length) return;
+    // Belt and braces: the key already carries both ids, but a board whose
+    // recorded batch — or teacher — is not the one on screen is never offered.
+    if((wrap.batchId || null) !== (state.batchId || null)) return;
+    if((wrap.userKey || null) !== (state.userKey || null)) return;
     if(Date.now() - (wrap.at || 0) > RECOVER_MAX_AGE) return dropRecover();
     const n = wrap.board.pages.length;
     const mins = Math.round((Date.now() - wrap.at) / 60000);
@@ -2345,8 +2408,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     document.getElementById("doRecover").onclick = () => {
       document.getElementById("recoverOverlay").classList.remove("show");
       restoreSession(wrap.board);
+      // Only the session id is adopted. state.batchId stays whatever the host
+      // configured for THIS board — a recovered board never re-points the
+      // batch, so a later export cannot land in another batch's history.
       if(wrap.sessionId) state.sessionId = wrap.sessionId;
-      if(wrap.batchId)   state.batchId   = wrap.batchId;
     };
     document.getElementById("discardRecover").onclick = () => {
       document.getElementById("recoverOverlay").classList.remove("show");
@@ -2846,7 +2911,13 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       case "fullscreen": toggleFS(); break;
       case "anim": setAnim(!state.anim); break;
       case "library": openLibrary(); break;
-      case "exit": tellHost({ type:"lf-exit" }); break;
+      // Back to the main screen. The host does the work — it saves the board
+      // first unless every page has already gone out through Export — so all
+      // this does is ask, and say so while the round trip happens.
+      case "exit":
+        if(state.pages.length) toast("Returning to the main screen…");
+        tellHost({ type:"lf-exit" });
+        break;
     }
   }
 
@@ -3899,7 +3970,8 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     window.__lf = { state, renderPageInk, paintStrokes, setTool, redraw,
                     drawPaper, serializeBoard, inkBoxFrac, inkSVG, sizeCanvas };
 
-  // nothing to go back to when the panel is opened on its own
+  // Standing alone there is no main screen to go back to — and nobody to save
+  // the session either, since that is the host's job.
   if(!hosted) document.getElementById("exitBtn").style.display = "none";
   sizeCanvas();
   renderRails();

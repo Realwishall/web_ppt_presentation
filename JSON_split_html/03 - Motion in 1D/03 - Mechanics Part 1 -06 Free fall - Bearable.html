@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free fall — Mechanics Part 1</title>
+<style>
+/* ============================================================
+   FREE FALL — midnight + gold, falling-body motif
+   Self-contained deck for the LessonForge presenter.
+   ============================================================ */
+:root{
+  --ink-0:#04050c; --ink-1:#080b16; --ink-2:#0d1020;
+  --gold:#f5c542; --gold-soft:#ffd968; --gold-dim:rgba(245,197,66,.22);
+  --violet:#7c5cff; --cyan:#5fd3e2; --green:#78d692; --red:#ff7a7a;
+  --text:#e9edf7; --muted:#98a2ba; --hair:rgba(255,255,255,.10);
+  --glass:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.018));
+  --font-ui:Calibri,Candara,'Segoe UI',system-ui,sans-serif;
+  --font-math:'Cambria Math',Cambria,'STIX Two Math','Times New Roman',serif;
+  --fs-body:clamp(19px,3.6vmin,42px);
+  --fs-eq:clamp(21px,4.3vmin,50px);
+  --fs-h1:clamp(34px,8.6vmin,98px);
+  --fs-h2:clamp(26px,6.0vmin,64px);
+  --fs-small:clamp(15px,2.5vmin,28px);
+}
+html,body{height:100%;margin:0}
+body{background:var(--ink-1);color:var(--text);font-family:var(--font-ui);
+     -webkit-font-smoothing:antialiased}
+
+/* ---------- persistent layers (siblings of .page) ---------- */
+#bg{position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%}
+#aurora{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(70vmax 46vmax at 78% -14%,rgba(245,197,66,.10),transparent 62%),
+    radial-gradient(60vmax 44vmax at 8% 108%,rgba(124,92,255,.13),transparent 64%),
+    radial-gradient(90vmax 60vmax at 50% 50%,rgba(10,14,28,0),rgba(3,4,10,.55) 100%),
+    linear-gradient(180deg,var(--ink-2),var(--ink-0));}
+/* faint height-ruler down both edges — the chapter's own instrument */
+#rulers{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.30;
+  background:
+    repeating-linear-gradient(180deg,rgba(255,255,255,.16) 0 1px,transparent 1px 4.4vh),
+    repeating-linear-gradient(180deg,rgba(255,255,255,.16) 0 1px,transparent 1px 4.4vh);
+  background-size:2.2vmin 100%,1.2vmin 100%;
+  background-position:left top,right top;background-repeat:no-repeat}
+.kicker-tag{position:fixed;right:2.6vmin;bottom:1.9vmin;z-index:2;pointer-events:none;
+  font:600 clamp(11px,1.55vmin,17px)/1 var(--font-ui);letter-spacing:.20em;
+  text-transform:uppercase;color:rgba(245,197,66,.42)}
+
+/* ---------- page shell ---------- */
+.page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+  background:transparent;overflow:hidden}
+.page::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(245,197,66,.55),rgba(124,92,255,.35),transparent)}
+.wrap{height:100%;box-sizing:border-box;overflow:auto;
+  display:flex;flex-direction:column;gap:2.0vmin;padding:5.2vmin 6.4vmin 6.2vmin}
+.wrap.center{align-items:center;justify-content:center;text-align:center}
+.wrap.tight{gap:1.2vmin}
+.wrap.dense{padding:3.6vmin 4.4vmin 5vmin;gap:1.4vmin}
+.wrap.fit{overflow:hidden}
+
+/* ---------- headings ---------- */
+h1.title{margin:0;font-size:var(--fs-h1);font-weight:700;letter-spacing:-.015em;
+  background:linear-gradient(100deg,#ffffff 8%,var(--gold-soft) 58%,#e2a93b 96%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.wrap.center h1.title+.rule{width:min(34vmin,340px);height:2px;margin:2.2vmin auto 0;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+h2.heading{margin:0 0 .4vmin;position:relative;padding-left:2.4vmin;
+  font-size:var(--fs-h2);font-weight:700;color:var(--gold);letter-spacing:-.01em;line-height:1.12}
+h2.heading::before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:.42vmin;
+  min-width:4px;border-radius:4px;background:linear-gradient(180deg,var(--gold),rgba(245,197,66,.15))}
+h2.heading .paren{font-size:.55em;color:var(--muted);font-weight:600}
+.inline-lead{font-weight:400;color:var(--text);font-size:.62em}
+
+/* ---------- text roles ---------- */
+p{margin:0;font-size:var(--fs-body);line-height:1.42;color:var(--text)}
+.lead{font-size:clamp(22px,4.6vmin,54px);line-height:1.32;color:var(--text);font-weight:600}
+.sub{font-size:clamp(17px,3.0vmin,34px);color:var(--muted)}
+.note{font-size:var(--fs-small);color:var(--muted);font-style:italic}
+.caption,.fig-caption{font-size:var(--fs-small);color:var(--muted);text-align:center}
+.example{font-style:italic;color:var(--muted)}
+strong,b{color:#fff}
+
+/* ---------- surfaces ---------- */
+.card,.callout,.figure-frame,.info-box,.option,.qa,.answer-box,.term-card{
+  background:var(--glass);border:1px solid var(--hair);border-radius:1.6vmin;
+  box-shadow:0 1.2vmin 3.4vmin rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06)}
+.card{padding:2.2vmin 2.6vmin}
+.callout{padding:1.8vmin 2.4vmin;display:flex;flex-direction:column;gap:.9vmin;
+  border-left:none;font-size:var(--fs-body)}
+.callout .callout-label{font-size:var(--fs-small);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);font-weight:700}
+.callout.warn .callout-label{color:#ffb46b}
+.callout.tip .callout-label{color:var(--cyan)}
+
+/* ---------- glossary / label + definition ---------- */
+.glossary{display:flex;flex-direction:column;gap:1.5vmin}
+.g-row{display:grid;grid-template-columns:minmax(0,auto) 1fr;gap:2.2vmin;align-items:start;
+  font-size:var(--fs-body);line-height:1.4}
+.g-row.wide{grid-template-columns:minmax(0,34%) 1fr}
+.label{display:inline-block;padding:.55em 1.05em;border-radius:1.1vmin;font-weight:700;
+  color:#0a0c16;background:linear-gradient(160deg,var(--gold-soft),#e0a92f);
+  box-shadow:0 .5vmin 1.6vmin rgba(245,197,66,.20);white-space:nowrap}
+.label.ghost{color:var(--gold);background:rgba(245,197,66,.10);
+  border:1px solid rgba(245,197,66,.34);box-shadow:none}
+
+/* ---------- bullets ---------- */
+ul.bullets{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:1.35vmin}
+ul.bullets.tight{gap:.75vmin}
+ul.bullets.small li{font-size:clamp(17px,3.1vmin,36px)}
+ul.bullets li{position:relative;padding-left:3.4vmin;font-size:var(--fs-body);line-height:1.38}
+ul.bullets li::before{content:"\2726";position:absolute;left:0;top:.02em;color:var(--gold);
+  font-size:.82em;opacity:.9}
+ul.bullets.arrow li::before{content:"\27A4";font-size:.66em;top:.18em}
+ul.bullets.dot li::before{content:"\2022"}
+
+/* ---------- math ---------- */
+.eq{font-family:var(--font-math);font-style:normal;font-size:var(--fs-eq);
+  line-height:1.45;color:var(--text)}
+.eq.big{font-size:clamp(24px,5.1vmin,58px);color:var(--gold-soft);
+  text-shadow:0 0 2.2vmin rgba(245,197,66,.22)}
+.eq.small{font-size:clamp(17px,3.3vmin,38px)}
+.eq.dim{color:var(--muted)}
+.eq.inline{white-space:nowrap}
+.frac{display:inline-block;vertical-align:middle;text-align:center;margin:0 .26em}
+.frac>.num{display:block;padding:0 .34em .06em;border-bottom:.09em solid currentColor;line-height:1.18}
+.frac>.den{display:block;padding:.06em .34em 0;line-height:1.2}
+.radical{display:inline-block;white-space:nowrap;margin:0 .1em}
+.radical>.sym{display:inline-block;transform:scaleY(1.28) translateY(-.02em);transform-origin:bottom}
+.radical>.content{display:inline-block;border-top:.075em solid currentColor;
+  padding:.08em .18em 0 .08em;margin-left:-.06em}
+.vec{position:relative;display:inline-block;padding-top:.1em}
+.vec::after{content:"\2192";position:absolute;left:50%;top:-.42em;transform:translateX(-50%) scaleX(.85);
+  font-size:.66em;line-height:1}
+.eq-note{font-size:var(--fs-small);color:var(--muted);font-style:italic}
+sub,sup{font-size:.62em;line-height:0}
+
+/* ---------- derivation ---------- */
+.derivation{display:flex;flex-direction:column;gap:1.15vmin}
+/* NOT flex: a flex line blockifies <sub>/<sup> and drops them to the baseline */
+.derivation .line{display:block;font-family:var(--font-math);font-style:normal;
+  font-size:var(--fs-eq);line-height:1.5}
+.derivation .line.txt{font-family:var(--font-ui);font-size:var(--fs-body);line-height:1.4}
+.derivation .why{display:inline-block;margin-left:2.2vmin;vertical-align:middle;
+  font-family:var(--font-ui);font-style:italic;color:var(--muted);font-size:var(--fs-small)}
+.result{align-self:flex-start;margin-top:.6vmin;padding:.5em 1.15em;border-radius:1.4vmin;
+  font-family:var(--font-math);font-style:normal;font-size:clamp(22px,4.7vmin,54px);
+  color:var(--gold-soft);background:rgba(245,197,66,.09);
+  border:1px solid rgba(245,197,66,.42);box-shadow:0 0 3vmin rgba(245,197,66,.14)}
+
+/* ---------- Q & A ---------- */
+.qa{padding:2.0vmin 2.4vmin;display:flex;flex-direction:column;gap:1.3vmin}
+.qa.flat{background:none;border:none;box-shadow:none;padding:0}
+.q-head,.a-head{display:inline-block;font-size:var(--fs-small);font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.95}
+.a-head{color:var(--cyan)}
+.qa .q{font-size:var(--fs-body);line-height:1.4;color:var(--text)}
+.qa .a{display:flex;flex-direction:column;gap:1.1vmin}
+.tag-hot{display:inline-block;margin-left:1vmin;padding:.16em .7em;border-radius:.8vmin;
+  font-size:.52em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#ffcf8a;background:rgba(255,140,60,.14);border:1px solid rgba(255,160,80,.4);
+  vertical-align:middle}
+.qsep{height:1px;background:linear-gradient(90deg,rgba(255,255,255,.28),rgba(255,255,255,.05) 70%,transparent);
+  margin:.3vmin 0}
+
+/* ---------- options / MCQ ---------- */
+.options{display:flex;flex-direction:column;gap:1.2vmin}
+.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.2vmin}
+.options.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vmin}
+.option{display:flex;align-items:center;gap:1.4vmin;padding:1.15vmin 1.8vmin;min-height:44px;
+  font-size:var(--fs-body);line-height:1.3;transition:background .25s,border-color .25s}
+.opt-badge{flex:0 0 auto;display:grid;place-items:center;width:1.9em;height:1.9em;border-radius:50%;
+  font-size:.72em;font-weight:700;color:var(--gold);background:rgba(245,197,66,.12);
+  border:1px solid rgba(245,197,66,.38)}
+.option.picked{border-color:rgba(245,197,66,.6);background:rgba(245,197,66,.10)}
+.option.correct{border-color:rgba(120,214,146,.75);background:rgba(120,214,146,.14)}
+.option.correct .opt-badge{color:var(--green);border-color:rgba(120,214,146,.6);
+  background:rgba(120,214,146,.16)}
+.option.wrong{border-color:rgba(255,122,122,.6);background:rgba(255,122,122,.10)}
+.answer-box{padding:1.3vmin 2vmin;display:flex;align-items:center;gap:1.2vmin;
+  font-size:var(--fs-body);border-color:rgba(120,214,146,.42)}
+.ok{color:var(--green);font-weight:700}
+.no{color:var(--red);font-weight:700}
+
+/* ---------- layout helpers ---------- */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:3.2vmin;align-items:start}
+.split-6040{display:grid;grid-template-columns:60% 1fr;gap:3vmin;align-items:start}
+.split-4060{display:grid;grid-template-columns:40% 1fr;gap:3vmin;align-items:start}
+.split-5545{display:grid;grid-template-columns:55% 1fr;gap:3vmin;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:2vmin}
+.stack{display:flex;flex-direction:column;gap:1.3vmin}
+.row{display:flex;gap:2vmin;align-items:center;flex-wrap:wrap}
+.center-y{display:flex;flex-direction:column;justify-content:center;height:100%}
+.grow{flex:1 1 auto;min-height:0}
+.pad-t{margin-top:1.2vmin}
+
+/* ---------- figures ---------- */
+.figure-frame{padding:1.6vmin;display:flex;align-items:center;justify-content:center;
+  min-height:0}
+.figure-frame.plain{background:none;border:none;box-shadow:none;padding:0}
+.figure-frame.short svg{max-height:30vh}
+.figure-frame.tall svg{max-height:56vh}
+.figure-frame svg{width:100%;height:auto;max-height:42vh;display:block}
+svg.dgm .rail{stroke:rgba(255,255,255,.5);stroke-width:2;fill:none}
+svg.dgm .body{fill:rgba(93,124,214,.55);stroke:rgba(150,180,255,.75);stroke-width:1.5}
+svg.dgm .body.b{fill:rgba(245,197,66,.30);stroke:rgba(245,197,66,.8)}
+svg.dgm .brick{fill:rgba(255,255,255,.72)}
+svg.dgm .arw{stroke:#fff;stroke-width:2.4;fill:none}
+svg.dgm .arw.b{stroke:var(--gold)}
+svg.dgm .arwhead{fill:#fff}
+svg.dgm .arwhead.b{fill:var(--gold)}
+svg.dgm .dim{stroke:rgba(255,255,255,.75);stroke-width:1.6;fill:none}
+svg.dgm .guide{stroke:rgba(255,255,255,.45);stroke-width:1.6;stroke-dasharray:7 8;fill:none}
+svg.dgm .path{stroke:rgba(190,215,255,.95);stroke-width:2.4;fill:none}
+svg.dgm .path.b{stroke:var(--gold)}
+svg.dgm .ball{fill:#fff}
+svg.dgm .ball.b{fill:var(--gold)}
+svg.dgm .ground{stroke:var(--green);stroke-width:5;stroke-linecap:round}
+svg.dgm text.lab{font-family:var(--font-ui);font-size:22px;fill:rgba(233,237,247,.92)}
+svg.dgm text.num{font-family:var(--font-math);font-style:normal;font-size:24px;fill:var(--gold-soft)}
+svg.dgm text.numw{font-family:var(--font-math);font-style:normal;font-size:24px;fill:#fff}
+
+/* ---------- term cards ---------- */
+.term-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.8vmin}
+.term-row.two{grid-template-columns:1fr 1fr}
+.term-card{padding:1.8vmin 2vmin;display:flex;flex-direction:column;gap:1vmin}
+.term{align-self:flex-start;padding:.4em .9em;border-radius:1vmin;font-weight:700;
+  font-size:clamp(16px,2.8vmin,32px);color:var(--gold);background:rgba(245,197,66,.10);
+  border:1px solid rgba(245,197,66,.34)}
+
+/* ---------- step (host owns opacity/transform) ---------- */
+.step{}
+
+/* ---------- print / PDF export ---------- */
+@media print{
+  .step{opacity:1!important;transform:none!important}
+  .no-print{display:none!important}
+  #bg{display:none!important}
+  #aurora{background:#080b16!important}
+  #rulers{opacity:.16!important}
+  html,body,.page{background:#080b16!important}
+  .card,.callout,.figure-frame,.info-box,.option,.qa,.answer-box,.term-card{
+    background:rgba(255,255,255,.05)!important;box-shadow:none!important}
+  .eq.big,.result{text-shadow:none!important;box-shadow:none!important}
+  h1.title{color:var(--gold-soft)!important;-webkit-text-fill-color:var(--gold-soft)}
+  .wrap{overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ persistent layers (OUTSIDE every .page) ============ -->
+<div id="aurora"></div>
+<div id="rulers"></div>
+<canvas id="bg"></canvas>
+<div class="kicker-tag">Mechanics &middot; Free fall</div>
+
+<!-- ==================== 1. TITLE ==================== -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Free fall</h1>
+    <div class="rule"></div>
+    <p class="sub step">Motion under gravity alone &mdash; one acceleration, every body</p>
+  </div>
+</section>
+
+<!-- ==================== 2. SPECIAL POINTS ==================== -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Special points on Free fall</h2>
+    <ul class="bullets">
+      <li class="step">In free fall acceleration is constant even if mass of body is different</li>
+      <li class="step">Can use all kinematics equation</li>
+      <li class="step">Can use all speed equation</li>
+      <li class="step">Can use ratio technique</li>
+    </ul>
+    <div class="glossary pad-t">
+      <div class="g-row">
+        <span class="label">Air Friction</span>
+        <span class="step">We assume no air friction</span>
+      </div>
+      <div class="g-row">
+        <span class="label">Dropping velocity</span>
+        <div class="stack">
+          <div class="step">Dropping velocity is not zero but same as source</div>
+          <div class="step">Dropping acceleration is simply <span class="eq inline">g</span> in downward direction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. KINEMATICS EQUATIONS ==================== -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Can use all kinematics equation</h2>
+    <div class="two-col grow">
+      <div class="stack">
+        <div class="eq step">&rArr; <span class="vec">v</span> = <span class="vec">u</span> + <span class="vec">a</span>t</div>
+        <div class="eq step">&rArr; <span class="vec">s</span> = <span class="vec">u</span>t + <span class="frac"><span class="num">1</span><span class="den">2</span></span><span class="vec">a</span>t<sup>2</sup></div>
+        <div class="eq step">&rArr; v<sup>2</sup> = u<sup>2</sup> + 2<span class="vec">a</span>&middot;<span class="vec">s</span></div>
+        <div class="eq step">&rArr; <span class="vec">s</span><sub>nth</sub> = <span class="vec">u</span> + <span class="frac"><span class="num"><span class="vec">a</span></span><span class="den">2</span></span>(2n &minus; 1)</div>
+      </div>
+      <div class="stack">
+        <div class="eq step">&rArr; <span class="vec">v</span><sub>avg</sub> = <span class="frac"><span class="num"><span class="vec">u</span> + <span class="vec">v</span></span><span class="den">2</span></span></div>
+        <div class="eq step">&rArr; <span class="vec">s</span> = <span class="frac"><span class="num"><span class="vec">u</span> + <span class="vec">v</span></span><span class="den">2</span></span> t</div>
+        <div class="eq step">&rArr; <span class="vec">v</span><sub>at d/2</sub> = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">u<sup>2</sup> + v<sup>2</sup></span><span class="den">2</span></span></span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. SPEED EQUATIONS ==================== -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Can use all speed equation</h2>
+    <div class="eq big">If u or v = 0</div>
+    <div class="two-col grow pad-t">
+      <div class="stack">
+        <div class="eq step">&rArr; v = at</div>
+        <div class="eq step">&rArr; s = <span class="frac"><span class="num">1</span><span class="den">2</span></span> at<sup>2</sup></div>
+        <div class="eq step">&rArr; v = <span class="radical"><span class="sym">&radic;</span><span class="content">2as</span></span></div>
+      </div>
+      <div class="stack">
+        <div class="eq step">&rArr; t = <span class="frac"><span class="num">v</span><span class="den">a</span></span></div>
+        <div class="eq step">&rArr; t = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2s</span><span class="den">a</span></span></span></span></div>
+        <div class="eq step">&rArr; s = v<sup>2</sup>/2a</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. TWO STONES COLLIDE ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="split-5545 grow">
+      <div class="qa flat">
+        <span class="q-head">Question</span>
+        <div class="q">Two stone are thrown as shown in the figure &mdash; when will they collide?</div>
+        <div class="qsep"></div>
+        <div class="a">
+          <span class="a-head">Solution</span>
+          <div class="derivation">
+            <div class="line step">a<sub>relative</sub> = 0<span class="why">both have g downward</span></div>
+            <div class="line step">v<sub>relative</sub> = 34 + 6 = 40<span class="why">approaching each other</span></div>
+            <div class="line step">t = <span class="frac"><span class="num">d</span><span class="den">v</span></span> = <span class="frac"><span class="num">80</span><span class="den">40</span></span></div>
+          </div>
+          <div class="result step">t = 2 s</div>
+        </div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 300 430">
+          <rect class="body" x="70" y="40" width="66" height="350" rx="4"/>
+          <text class="numw" x="103" y="222" text-anchor="middle">80m</text>
+          <circle class="ball" cx="188" cy="46" r="13"/>
+          <path class="arw" d="M188 62 V96"/><path class="arwhead" d="M178 92 h20 l-10 18 z"/>
+          <text class="num" x="206" y="94">6 m/s</text>
+          <circle class="ball" cx="188" cy="384" r="13"/>
+          <path class="arw" d="M188 368 V332"/><path class="arwhead" d="M178 336 h20 l-10 -18 z"/>
+          <text class="num" x="206" y="348">34 m/s</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. BOLT IN THE LIFT ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="split-5545 grow">
+      <div class="qa flat">
+        <span class="q-head">Question</span>
+        <div class="q">A lift of height 40m is moving up with velocity 20m/s &mdash; find time in which a bolt loosen from top will hit base of the lift</div>
+        <div class="qsep"></div>
+        <div class="a">
+          <span class="a-head">Solution</span>
+          <div class="derivation">
+            <div class="line step">a<sub>relative</sub> = 10<span class="why">bolt has g, lift has none</span></div>
+            <div class="line step">v<sub>relative</sub> = 0<span class="why">both were moving up at 20 m/s</span></div>
+            <div class="line step">t = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2s</span><span class="den">g</span></span></span></span> = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2 &times; 40</span><span class="den">10</span></span></span></span></div>
+          </div>
+          <div class="result step">t = 2<span class="radical"><span class="sym">&radic;</span><span class="content">2</span></span> s</div>
+        </div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 300 430">
+          <rect class="body" x="58" y="40" width="180" height="330" rx="4"/>
+          <circle class="ball" cx="148" cy="58" r="12"/>
+          <path class="arw" d="M148 74 V102"/><path class="arwhead" d="M139 98 h18 l-9 16 z"/>
+          <text class="numw" x="166" y="222" text-anchor="middle">40m</text>
+          <circle class="ball" cx="148" cy="364" r="13"/>
+          <path class="arw" d="M148 348 V312"/><path class="arwhead" d="M138 316 h20 l-10 -18 z"/>
+          <text class="num" x="168" y="328">20 m/s</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 7. HOW HIGH WILL IT GO ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa flat grow center-y">
+      <span class="q-head">Question</span>
+      <div class="q">A body is projected with speed 20m/s &mdash; how high will it go.</div>
+      <div class="qsep"></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">h = <span class="frac"><span class="num">u<sup>2</sup></span><span class="den">2g</span></span> = <span class="frac"><span class="num">20<sup>2</sup></span><span class="den">2 &lowast; 10</span></span></div>
+        </div>
+        <div class="result step">h = 20 m</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 8. IN WHAT TIME WILL IT FALL DOWN ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="split-6040 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">A body is projected with speed 20m/s &mdash; In what time it will fall down.</div>
+        <div class="qsep"></div>
+        <div class="a">
+          <span class="a-head">Solution</span>
+          <div class="derivation">
+            <div class="line step">t = <span class="frac"><span class="num">u</span><span class="den">g</span></span> = <span class="frac"><span class="num">20</span><span class="den">10</span></span> = 2s<span class="why">time to go up</span></div>
+            <div class="line txt step">up 2s, down 2s &mdash; the journey is symmetric</div>
+          </div>
+          <div class="result step">T = 4 s</div>
+        </div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 320 300">
+          <path class="path" d="M118 268 Q160 -148 202 268"/>
+          <path class="rail" d="M70 268 H250"/>
+          <text class="num" x="86" y="176" text-anchor="end">2s</text>
+          <text class="num" x="234" y="176">2s</text>
+          <path class="arw" d="M104 246 V96"/><path class="arwhead" d="M95 100 h18 l-9 -20 z"/>
+          <path class="arw" d="M216 96 V246"/><path class="arwhead" d="M207 242 h18 l-9 20 z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 9. DROPPED FROM 100 m ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa flat grow center-y">
+      <span class="q-head">Question</span>
+      <div class="q">A body is dropped from height 100m &mdash; in what time it will hit the ground.</div>
+      <div class="qsep"></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">t = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2h</span><span class="den">g</span></span></span></span></div>
+          <div class="line step">t = <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2 &times; 100</span><span class="den">10</span></span></span></span></div>
+        </div>
+        <div class="result step">t = <span class="radical"><span class="sym">&radic;</span><span class="content">20</span></span> s</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10. DROPPED FROM 20 m — SPEED ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa flat grow center-y">
+      <span class="q-head">Question</span>
+      <div class="q">A body is dropped from height of 20m &mdash; with what speed it will fall</div>
+      <div class="qsep"></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">v = <span class="radical"><span class="sym">&radic;</span><span class="content">2gh</span></span></div>
+          <div class="line step">v = <span class="radical"><span class="sym">&radic;</span><span class="content">2 &times; 10 &times; 20</span></span></div>
+        </div>
+        <div class="result step">v = 20 m/s</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 11. FALLS IN 4 s — HEIGHT ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa flat grow center-y">
+      <span class="q-head">Question</span>
+      <div class="q">A body fall down in 4 second when dropped &mdash; find height of tower</div>
+      <div class="qsep"></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">&rArr; h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> &lowast; 10 &lowast; 4<sup>2</sup></div>
+        </div>
+        <div class="result step">h = 80 m</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 12. REBOUND — CHANGE IN VELOCITY ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa flat">
+      <span class="q-head">Question</span>
+      <div class="q">A body dropped from 20m then it rebound to height of 5m &mdash; find change in velocity due to impact</div>
+      <div class="qsep"></div>
+      <span class="a-head">Solution</span>
+    </div>
+    <div class="grid3 grow">
+      <div class="stack">
+        <div class="step eq">v = <span class="radical"><span class="sym">&radic;</span><span class="content">2gh</span></span></div>
+        <div class="step eq">v = &minus;20 m/s<span class="eq-note"> &nbsp;falling, from 20 m</span></div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 240 300">
+          <path class="arw" d="M92 40 V236"/><path class="arwhead" d="M82 232 h20 l-10 20 z"/>
+          <path class="arw b" d="M150 252 V128"/><path class="arwhead b" d="M140 132 h20 l-10 -20 z"/>
+          <path class="ground" d="M50 262 H190"/>
+          <text class="numw" x="72" y="130" text-anchor="end">20m</text>
+          <text class="num" x="170" y="190">5m</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <div class="step eq">v = <span class="radical"><span class="sym">&radic;</span><span class="content">2gh</span></span></div>
+        <div class="step eq">v = +10 m/s<span class="eq-note"> &nbsp;rebound, to 5 m</span></div>
+      </div>
+    </div>
+    <div class="derivation">
+      <div class="line step"><span class="eq inline dim">&Delta;V = 10 &minus; 20</span><span class="why">&#10007; sign of the falling velocity was dropped</span></div>
+      <div class="line step">&Delta;V = 10 &minus; (&minus;20)</div>
+    </div>
+    <div class="result step">&Delta;V = 30 m/s</div>
+  </div>
+</section>
+
+<!-- ==================== 13. LAST SECOND = FIRST 3 SECONDS ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">A body is dropped and distance covered in last second is same as distance covered in first 3 second &mdash; find height of tower.</div>
+        <div class="qsep"></div>
+        <span class="a-head">Solution</span>
+      </div>
+      <div class="stack">
+        <div class="derivation">
+          <div class="line step">s<sub>nth</sub> = u + <span class="frac"><span class="num">a</span><span class="den">2</span></span>(2n &minus; 1) = <span class="frac"><span class="num">a</span><span class="den">2</span></span>(2n &minus; 1)</div>
+          <div class="line step">s<sub>3</sub> = ut + <span class="frac"><span class="num">1</span><span class="den">2</span></span> at<sup>2</sup> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> a3<sup>2</sup></div>
+          <div class="line step">&rArr; <span class="frac"><span class="num">1</span><span class="den">2</span></span> a3<sup>2</sup> = <span class="frac"><span class="num">a</span><span class="den">2</span></span>(2n &minus; 1)</div>
+          <div class="line step">&rArr; 9 = 2n &minus; 1</div>
+          <div class="line step">&rArr; n = 5</div>
+          <div class="line step">NOW &rArr; h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup> = 125</div>
+        </div>
+        <div class="result step">h = 125 m</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 14. SAME QUESTION — RATIO TECHNIQUE ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">A body is dropped and distance covered in last second is same as distance covered in first 3 second &mdash; find height of tower.</div>
+        <div class="qsep"></div>
+        <div class="lead">OR</div>
+        <p class="note">the same board, done by ratio</p>
+      </div>
+      <div class="split-4060">
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 230 430">
+            <path class="dim" d="M40 26 H86"/>
+            <path class="dim" d="M40 41 H86"/>
+            <path class="dim" d="M40 86 H86"/>
+            <path class="dim" d="M40 161 H86"/>
+            <path class="dim" d="M40 266 H86"/>
+            <path class="dim" d="M40 401 H86"/>
+            <path class="arw" d="M63 26 V398"/><path class="arwhead" d="M54 394 h18 l-9 20 z"/>
+            <text class="num" x="96" y="42">x</text>
+            <text class="num" x="96" y="72">3x</text>
+            <text class="num" x="96" y="132">5x</text>
+            <text class="num" x="96" y="222">7x</text>
+            <text class="num" x="96" y="345">9x</text>
+            <path class="guide" d="M150 26 h10 v60 h10 v0 h-10 v60 h-10"/>
+            <text class="num" x="176" y="96">9x</text>
+          </svg>
+        </div>
+        <div class="stack center-y">
+          <div class="step eq small">1 : 3 : 5 : 7 : 9 &hellip;</div>
+          <div class="step eq small">first 3 s &rArr; x + 3x + 5x = 9x</div>
+          <div class="step eq small">last second = 9x &rArr; n = 5</div>
+          <div class="step eq">&rArr; h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup> = 125</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 15. DROPPED IN TIME t  |  LAST t OF UPWARD ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="two-col grow">
+      <div class="stack">
+        <div class="qa flat">
+          <span class="q-head">Question</span>
+          <div class="q">A body is dropped in time t, then find height of tower</div>
+          <div class="qsep"></div>
+          <span class="a-head">Solution</span>
+        </div>
+        <div class="row">
+          <div class="figure-frame plain">
+            <svg class="dgm" viewBox="0 0 130 260">
+              <circle class="ball" cx="52" cy="34" r="11"/>
+              <path class="arw" d="M52 52 V210"/><path class="arwhead" d="M43 206 h18 l-9 18 z"/>
+              <text class="num" x="72" y="130">u = 0</text>
+            </svg>
+          </div>
+          <div class="eq step">h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup></div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="qa flat">
+          <span class="q-head">Question</span>
+          <div class="q">A body is projected up &mdash; find distance cover in last t second of upward journey</div>
+          <div class="qsep"></div>
+          <span class="a-head">Solution</span>
+        </div>
+        <div class="row">
+          <div class="figure-frame plain">
+            <svg class="dgm" viewBox="0 0 130 260">
+              <path class="path" d="M64 214 Q78 30 92 214"/>
+              <path class="arw" d="M40 214 V44"/><path class="arwhead" d="M31 48 h18 l-9 -18 z"/>
+            </svg>
+          </div>
+          <div class="stack">
+            <div class="eq step">h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup></div>
+            <p class="note step">the last t going up is the first t coming down &mdash; so u = 0 again</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 16. LAST SECOND OF UPWARD JOURNEY (MCQ) ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-6040 grow">
+      <div class="stack">
+        <div class="qa flat">
+          <span class="q-head">Question</span>
+          <div class="q">Body is thrown up with speed 60m/s &mdash; find distance covered in last second of upward journey</div>
+        </div>
+        <div class="options three">
+          <div class="option clickable" onclick="this.classList.add('correct')"><span class="opt-badge">i</span>4.9m</div>
+          <div class="option clickable" onclick="this.classList.add('wrong')"><span class="opt-badge">ii</span>5m</div>
+          <div class="option clickable" onclick="this.classList.add('wrong')"><span class="opt-badge">iii</span>Can not be said</div>
+        </div>
+        <div class="qsep"></div>
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup><span class="why">last second up = first second of the fall, u = 0</span></div>
+          <div class="line step">h = <span class="frac"><span class="num">9.8</span><span class="den">2</span></span> = 4.9</div>
+        </div>
+        <div class="answer-box step"><span class="ok">&#10003;</span> 4.9 m &mdash; <i>g is 9.8, not 10, unless the question says so</i></div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 320 330">
+          <path class="rail" d="M40 300 H280"/>
+          <path class="path" d="M124 300 Q170 -120 216 300"/>
+          <path class="arw" d="M78 292 V104"/><path class="arwhead" d="M69 108 h18 l-9 -20 z"/>
+          <path class="guide" d="M118 111 H236"/>
+          <text class="lab" x="170" y="52" text-anchor="middle">Last one second</text>
+          <path class="dim" d="M244 90 V111"/>
+          <path class="arwhead" d="M238 96 h12 l-6 -14 z"/>
+          <path class="arwhead" d="M238 105 h12 l-6 14 z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 17. DISTANCE IN THE 6th SECOND ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">Objected is projected vertically upward with speed 55 m/s then find <b>distance</b> in 6<sup>th</sup> sec of journey. (g = 10)</div>
+        <div class="qsep"></div>
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">t = <span class="frac"><span class="num">u</span><span class="den">g</span></span> = <span class="frac"><span class="num">55</span><span class="den">10</span></span> = 5.5<span class="why">it turns around inside the 6th second</span></div>
+        </div>
+      </div>
+      <div class="split-4060">
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 240 330">
+            <path class="rail" d="M20 300 H220"/>
+            <path class="path" d="M68 300 Q120 -212 172 300"/>
+            <circle class="ball" cx="120" cy="44" r="9"/>
+            <text class="num" x="120" y="26" text-anchor="middle">5.5</text>
+            <circle class="ball" cx="101" cy="77" r="9"/>
+            <text class="num" x="86" y="72" text-anchor="end">5s</text>
+            <circle class="ball" cx="139" cy="77" r="9"/>
+            <text class="num" x="154" y="72">6s</text>
+            <path class="guide" d="M101 77 H139"/>
+          </svg>
+        </div>
+        <div class="stack center-y">
+          <div class="eq step small">h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> gt<sup>2</sup></div>
+          <div class="eq step small">h = <span class="frac"><span class="num">1</span><span class="den">2</span></span> &times; 10 &times; (<span class="frac"><span class="num">1</span><span class="den">2</span></span>)<sup>2</sup></div>
+          <div class="eq step small">h = <span class="frac"><span class="num">10</span><span class="den">8</span></span></div>
+          <div class="result step">distance = <span class="frac"><span class="num">20</span><span class="den">8</span></span></div>
+          <p class="note step">up 10/8 then down 10/8 &mdash; distance adds, displacement cancels</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18. SPEED AT ONE-THIRD OF MAX HEIGHT ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">Ball is projected vertically upward with speed <span class="eq inline">u</span> and its speed is 10 m/s at <span class="eq inline">1/3</span> rd of the maximum height, then find maximum height.</div>
+        <div class="qsep"></div>
+        <span class="a-head">Solution</span>
+      </div>
+      <div class="split-4060">
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 240 340">
+            <path class="rail" d="M30 310 H210"/>
+            <path class="path" d="M104 310 Q128 -230 152 310"/>
+            <path class="guide" d="M74 220 H182"/>
+            <path class="dim" d="M92 40 V220"/>
+            <path class="dim" d="M92 220 V310"/>
+            <path class="dim" d="M84 40 H100"/><path class="dim" d="M84 220 H100"/>
+            <path class="dim" d="M84 310 H100"/>
+            <text class="num" x="76" y="136" text-anchor="end">2H/3</text>
+            <text class="num" x="76" y="272" text-anchor="end">H/3</text>
+          </svg>
+        </div>
+        <div class="stack center-y">
+          <div class="eq step small">From &rArr; h = <span class="frac"><span class="num">v<sup>2</sup></span><span class="den">2g</span></span></div>
+          <div class="eq step small"><span class="frac"><span class="num">2H</span><span class="den">3</span></span> = <span class="frac"><span class="num">10<sup>2</sup></span><span class="den">2g</span></span></div>
+          <div class="eq step small">H = <span class="frac"><span class="num">3</span><span class="den">2</span></span> &times; <span class="frac"><span class="num">100</span><span class="den">20</span></span></div>
+          <div class="result step">H = 7.5 m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 19. THROWING FROM TOWER — 1st APPROACH ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Throwing from tower</h2>
+    <div class="split-6040 grow">
+      <div class="split-5545">
+        <div class="stack center-y">
+          <p>A ball of mass m is thrown up with velocity v from a tower of height H &mdash; find it&rsquo;s time of fall.</p>
+        </div>
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 220 400">
+            <rect class="body" x="74" y="150" width="72" height="230"/>
+            <rect class="brick" x="100" y="168" width="20" height="14"/>
+            <rect class="brick" x="100" y="196" width="20" height="14"/>
+            <rect class="brick" x="100" y="224" width="20" height="14"/>
+            <rect class="brick" x="100" y="252" width="20" height="14"/>
+            <rect class="brick" x="100" y="280" width="20" height="14"/>
+            <rect class="brick" x="100" y="308" width="20" height="14"/>
+            <rect class="brick" x="100" y="336" width="20" height="14"/>
+            <path class="path" d="M146 150 C152 42 178 42 184 150 L184 370"/>
+            <path class="arwhead" d="M174 358 h20 l-10 24 z"/>
+            <path class="arw" d="M146 148 V104"/><path class="arwhead" d="M137 108 h18 l-9 -18 z"/>
+            <text class="num" x="112" y="112" text-anchor="end">u</text>
+            <path class="dim" d="M56 150 V380"/>
+            <path class="dim" d="M48 150 H64"/><path class="dim" d="M48 380 H64"/>
+            <text class="num" x="40" y="272" text-anchor="end">H</text>
+          </svg>
+        </div>
+      </div>
+      <div class="stack center-y">
+        <div class="lead">1<sup>st</sup> approach</div>
+        <div class="eq step">s = ut + <span class="frac"><span class="num">1</span><span class="den">2</span></span> at<sup>2</sup></div>
+        <p class="step">If we take up as positive</p>
+        <div class="derivation">
+          <div class="line step">s = &minus;ve<span class="why">ball ends below the throw point</span></div>
+          <div class="line step">u = +ve</div>
+          <div class="line step">a = &minus;ve</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 20. THROWING FROM TOWER — 2nd APPROACH ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Throwing from tower <span class="paren">(contd.)</span></h2>
+    <div class="split-6040 grow">
+      <div class="split-5545">
+        <div class="stack center-y">
+          <p>A ball of mass m is thrown up with velocity v from a tower of height H &mdash; find it&rsquo;s time of fall.</p>
+          <div class="lead pad-t">2<sup>nd</sup> approach</div>
+          <p class="step">Break path about top most point and then solve with speed equation.</p>
+        </div>
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 220 400">
+            <rect class="body" x="74" y="150" width="72" height="230"/>
+            <rect class="brick" x="100" y="168" width="20" height="14"/>
+            <rect class="brick" x="100" y="196" width="20" height="14"/>
+            <rect class="brick" x="100" y="224" width="20" height="14"/>
+            <rect class="brick" x="100" y="252" width="20" height="14"/>
+            <rect class="brick" x="100" y="280" width="20" height="14"/>
+            <rect class="brick" x="100" y="308" width="20" height="14"/>
+            <rect class="brick" x="100" y="336" width="20" height="14"/>
+            <path class="path" d="M146 150 C152 42 178 42 184 150 L184 370"/>
+            <path class="arwhead" d="M174 358 h20 l-10 24 z"/>
+            <path class="guide" d="M40 150 H206"/>
+            <path class="arw" d="M146 148 V104"/><path class="arwhead" d="M137 108 h18 l-9 -18 z"/>
+            <text class="num" x="112" y="112" text-anchor="end">u</text>
+            <path class="dim" d="M56 150 V380"/>
+            <path class="dim" d="M48 150 H64"/><path class="dim" d="M48 380 H64"/>
+            <text class="num" x="40" y="272" text-anchor="end">H</text>
+          </svg>
+        </div>
+      </div>
+      <div class="stack center-y">
+        <div class="derivation">
+          <div class="line txt step">going up takes <span class="frac"><span class="num">u</span><span class="den">g</span></span></div>
+          <div class="line txt step">it then falls <span class="eq inline">H + <span class="frac"><span class="num">u<sup>2</sup></span><span class="den">2g</span></span></span> from rest</div>
+        </div>
+        <div class="eq big step">T = <span class="frac"><span class="num">u</span><span class="den">g</span></span> + <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2</span><span class="den">g</span></span> (H + <span class="frac"><span class="num">u<sup>2</sup></span><span class="den">2g</span></span>)</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 21. FIND TIME OF FLIGHT IN THIS CASE ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="eq small dim">T = <span class="frac"><span class="num">u</span><span class="den">g</span></span> + <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2</span><span class="den">g</span></span> (H + <span class="frac"><span class="num">u<sup>2</sup></span><span class="den">2g</span></span>)</span></span></div>
+    <div class="qa flat">
+      <span class="q-head">Question</span>
+      <div class="q">Find time of flight in this case</div>
+    </div>
+    <div class="split-4060 grow">
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 380 330">
+          <rect class="body" x="110" y="130" width="86" height="170"/>
+          <path class="path" d="M196 130 C202 32 226 32 232 130 L232 296"/>
+          <path class="arwhead" d="M222 286 h20 l-10 22 z"/>
+          <path class="arw" d="M196 128 V86"/><path class="arwhead" d="M187 90 h18 l-9 -20 z"/>
+          <text class="num" x="180" y="72" text-anchor="end">u = 20 m/s</text>
+          <path class="rail" d="M70 300 H330"/>
+          <path class="dim" d="M290 130 V300"/>
+          <path class="dim" d="M282 130 H298"/><path class="dim" d="M282 300 H298"/>
+          <text class="num" x="308" y="222">60m</text>
+        </svg>
+      </div>
+      <div class="stack center-y">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">T = <span class="frac"><span class="num">20</span><span class="den">10</span></span> + <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2</span><span class="den">10</span></span> (60 + <span class="frac"><span class="num">400</span><span class="den">20</span></span>)</span></span></div>
+          <div class="line step">T = 2 + <span class="radical"><span class="sym">&radic;</span><span class="content">16</span></span></div>
+        </div>
+        <div class="result step">T = 6 s</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 22. NOTE — THROWN DOWN ==================== -->
+<section class="page">
+  <div class="wrap">
+    <div class="split-4060 grow">
+      <div class="figure-frame plain center-y">
+        <svg class="dgm" viewBox="0 0 220 400">
+          <rect class="body" x="74" y="150" width="72" height="230"/>
+          <rect class="brick" x="100" y="168" width="20" height="14"/>
+          <rect class="brick" x="100" y="196" width="20" height="14"/>
+          <rect class="brick" x="100" y="224" width="20" height="14"/>
+          <rect class="brick" x="100" y="252" width="20" height="14"/>
+          <rect class="brick" x="100" y="280" width="20" height="14"/>
+          <rect class="brick" x="100" y="308" width="20" height="14"/>
+          <rect class="brick" x="100" y="336" width="20" height="14"/>
+          <path class="path b" d="M152 148 V378"/>
+          <path class="arwhead b" d="M142 366 h20 l-10 22 z"/>
+          <path class="arw b" d="M146 120 V150"/>
+          <text class="num" x="112" y="120" text-anchor="end">u</text>
+          <path class="dim" d="M56 150 V380"/>
+          <path class="dim" d="M48 150 H64"/><path class="dim" d="M48 380 H64"/>
+          <text class="num" x="40" y="272" text-anchor="end">H</text>
+        </svg>
+      </div>
+      <div class="stack center-y">
+        <div class="callout">
+          <span class="callout-label">Note</span>
+          <div>If ball is thrown <b>down</b> with speed u then time will be</div>
+        </div>
+        <div class="eq big step">T = &minus;<span class="frac"><span class="num">u</span><span class="den">g</span></span> + <span class="radical"><span class="sym">&radic;</span><span class="content"><span class="frac"><span class="num">2</span><span class="den">g</span></span> (H + <span class="frac"><span class="num">u<sup>2</sup></span><span class="den">2g</span></span>)</span></span></div>
+        <p class="note step">only the first term flips sign &mdash; there is no trip up to pay for</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 23. TWO OBJECT QUESTION ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Two object question</h2>
+    <div class="qa flat">
+      <span class="q-head">Question</span>
+      <div class="q">A ball is dropped from a high rise platform at t = 0 starting from rest. After 6 seconds another ball is thrown downwards from the same platform with a speed v. The two balls meet at t = 18 s. What is the value of v? (Take g = 10 <span class="eq inline">m/s<sup>2</sup></span>)</div>
+    </div>
+    <div class="qsep"></div>
+    <div class="split-6040 grow">
+      <div class="stack">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step">h<sub>1</sub> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> (10)(18)<sup>2</sup> = 1620<span class="why">first ball, 18 s from rest</span></div>
+          <div class="line step">h<sub>2</sub> = 12v + <span class="frac"><span class="num">1</span><span class="den">2</span></span> (10)(12)<sup>2</sup> = 12v + 720<span class="why">second ball, 12 s</span></div>
+          <div class="line step">12v + 720 = 1620<span class="why">they meet &rArr; h<sub>1</sub> = h<sub>2</sub></span></div>
+        </div>
+        <div class="result step">v = 75 m/s</div>
+      </div>
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 260 340">
+          <path class="rail" d="M30 40 H230"/>
+          <circle class="ball" cx="90" cy="26" r="11"/>
+          <text class="lab" x="90" y="16" text-anchor="middle">t = 0</text>
+          <path class="arw" d="M90 54 V270"/><path class="arwhead" d="M81 266 h18 l-9 18 z"/>
+          <circle class="ball b" cx="176" cy="26" r="11"/>
+          <text class="lab" x="176" y="16" text-anchor="middle">t = 6 s</text>
+          <path class="arw b" d="M176 54 V270"/><path class="arwhead b" d="M167 266 h18 l-9 18 z"/>
+          <path class="guide" d="M50 286 H210"/>
+          <text class="num" x="132" y="318" text-anchor="middle">meet at t = 18 s</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 24. THE FOUR STANDARD SHAPES ==================== -->
+<section class="page">
+  <div class="wrap center">
+    <div class="term-row two">
+      <div class="term-card">
+        <span class="term"><span class="eq inline">t<sub>1</sub></span> and <span class="eq inline">t<sub>2</sub></span> problem</span>
+      </div>
+      <div class="term-card">
+        <span class="term">Juggler problem</span>
+      </div>
+      <div class="term-card">
+        <span class="term"><span class="eq inline">n<sup>th</sup></span> and <span class="eq inline">m<sup>th</sup></span> problem</span>
+      </div>
+      <div class="term-card">
+        <span class="term">Up down drop problem</span>
+      </div>
+    </div>
+    <p class="sub step pad-t">Four shapes every free-fall question folds back into</p>
+  </div>
+</section>
+
+<!-- ==================== 25. SAME HEIGHT AT 7th AND 10th SECOND ==================== -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060 grow">
+      <div class="qa flat center-y">
+        <span class="q-head">Question</span>
+        <div class="q">Object is projected vertically upward and it is at the same height at <span class="eq inline">t = 7<sup>th</sup></span> sec and <span class="eq inline">t = 10<sup>th</sup></span> sec then find total time of flight.</div>
+        <div class="qsep"></div>
+        <span class="a-head">Solution</span>
+      </div>
+      <div class="split-4060">
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 300 330">
+            <path class="rail" d="M40 306 H260"/>
+            <path class="path" d="M120 306 C132 200 133 166 140 150
+                                   C147 132 159 112 170 108
+                                   C181 112 193 132 200 150
+                                   C207 166 208 200 220 306"/>
+            <path class="guide" d="M92 150 H248"/>
+            <circle class="ball" cx="152" cy="119" r="8"/>
+            <text class="num" x="140" y="110" text-anchor="end">t = 7</text>
+            <circle class="ball" cx="188" cy="119" r="8"/>
+            <text class="num" x="200" y="110">t = 9</text>
+            <circle class="ball" cx="140" cy="150" r="8"/>
+            <text class="num" x="128" y="178" text-anchor="end">t = 6</text>
+            <circle class="ball" cx="200" cy="150" r="8"/>
+            <text class="num" x="212" y="178">t = 10</text>
+          </svg>
+        </div>
+        <div class="stack center-y">
+          <div class="derivation">
+            <div class="line txt step">7<sup>th</sup> sec ends at t = 7, 10<sup>th</sup> sec ends at t = 10</div>
+            <div class="line txt step">so the equal heights sit at t = 6 and t = 10<span class="why">the pair is symmetric about the top</span></div>
+            <div class="line step">T = 6 + 10</div>
+          </div>
+          <div class="result step">T = 16 s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ---- persistent free-fall motif: bodies released from rest, a = g ---- */
+(function(){
+  window.addEventListener('load', function(){
+    var c = document.getElementById('bg');
+    if (!c || !c.getContext) return;
+    var ctx; try { ctx = c.getContext('2d'); } catch(e){ return; }
+    if (!ctx) return;
+    var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), drops = [], raf = 0;
+
+    function size(){
+      W = c.clientWidth; H = c.clientHeight;
+      if (!W || !H) { requestAnimationFrame(size); return; }
+      c.width  = Math.floor(W * dpr);
+      c.height = Math.floor(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function make(seed){
+      return { x: Math.random() * W,
+               y: seed ? Math.random() * H : -Math.random() * H * 0.4,
+               v: seed ? Math.random() * 1.6 : 0,
+               g: 0.010 + Math.random() * 0.020,
+               r: 0.9 + Math.random() * 1.7,
+               a: 0.05 + Math.random() * 0.13 };
+    }
+    function seed(){
+      var n = Math.max(16, Math.min(42, Math.round(W / 46)));
+      drops = []; for (var i = 0; i < n; i++) drops.push(make(true));
+    }
+    function tick(){
+      if (!W || !H) { raf = requestAnimationFrame(tick); return; }
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < drops.length; i++){
+        var d = drops[i];
+        d.v += d.g; d.y += d.v;
+        if (d.y - 60 > H){ drops[i] = make(false); continue; }
+        var tail = Math.min(72, d.v * 13);
+        var grd = ctx.createLinearGradient(d.x, d.y - tail, d.x, d.y);
+        grd.addColorStop(0, 'rgba(245,197,66,0)');
+        grd.addColorStop(1, 'rgba(245,197,66,' + d.a.toFixed(3) + ')');
+        ctx.strokeStyle = grd; ctx.lineWidth = d.r; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(d.x, d.y - tail); ctx.lineTo(d.x, d.y); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,225,150,' + (d.a * 1.5).toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(d.x, d.y, d.r * 0.85, 0, 6.2832); ctx.fill();
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    try {
+      size();
+      var boot = setInterval(function(){
+        if (c.clientWidth && c.clientHeight){
+          clearInterval(boot); size(); seed();
+          if (!raf) raf = requestAnimationFrame(tick);
+        }
+      }, 60);
+      window.addEventListener('resize', function(){ size(); seed(); });
+    } catch(e){ /* background is decoration only — never block the slides */ }
+  });
+})();
+</script>
+
+<!-- Standalone fallback controller (rule 6) — LAST. -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present → stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

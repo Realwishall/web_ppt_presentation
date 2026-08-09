@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X, Save, Loader2, Eye, Code2 } from 'lucide-react'
-import { FOLDER_TAGS, updateFolder } from '../lib/content'
+import { X, Save, Loader2, Eye, Code2, Hash } from 'lucide-react'
+import { FOLDER_TAGS, updateFolder, readFolderHtml } from '../lib/content'
 
 // Full-screen drawer to edit a folder's single-page HTML (with its CSS & JS
 // inline). Left = code, right = live sandboxed preview. The HTML uses the
@@ -9,12 +9,27 @@ import { FOLDER_TAGS, updateFolder } from '../lib/content'
 export default function FolderEditor({ classId, chapterId, folder, onClose, onSaved }) {
   const [name, setName] = useState(folder.name || '')
   const [tag, setTag] = useState(folder.tag || FOLDER_TAGS[0])
-  const [html, setHtml] = useState(folder.html || '')
+  // The folder row holds a code, not the document. Fetch the version it points
+  // at; a save writes a NEW version, so any session pinned to this one is safe.
+  const [html, setHtml] = useState('')
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    readFolderHtml(folder)
+      .then((text) => { if (alive) { setHtml(text); setPreview(text) } })
+      .catch((e) => { if (alive) setErr(e.message || 'Could not load this deck.') })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folder.id, folder.code, folder.version])
 
   // Debounce the preview so typing stays smooth.
-  const [preview, setPreview] = useState(html)
+  const [preview, setPreview] = useState('')
   useEffect(() => {
     const t = setTimeout(() => setPreview(html), 250)
     return () => clearTimeout(t)
@@ -32,10 +47,15 @@ export default function FolderEditor({ classId, chapterId, folder, onClose, onSa
 
   async function save() {
     if (!name.trim()) { setErr('Folder name is required.'); return }
+    if (loading) { setErr('Still loading this deck — wait a moment.'); return }
     setSaving(true)
     setErr('')
     try {
-      await updateFolder(classId, chapterId, folder.id, { name: name.trim(), tag, html })
+      // Only send `html` when it actually changed: an untouched save should
+      // rename the folder, not mint a pointless new version of the document.
+      const patch = { name: name.trim(), tag }
+      if (dirty) patch.html = html
+      await updateFolder(classId, chapterId, folder.id, patch)
       onSaved()
     } catch (e) {
       setErr(e.message || 'Save failed.')
@@ -57,7 +77,7 @@ export default function FolderEditor({ classId, chapterId, folder, onClose, onSa
             className="rounded-lg border border-white/10 bg-black/25 px-3 py-1.5 text-sm text-slate-100 outline-none focus:border-indigo-400 [&>option]:bg-slate-900">
             {FOLDER_TAGS.map((t) => <option key={t}>{t}</option>)}
           </select>
-          <button onClick={save} disabled={saving}
+          <button onClick={save} disabled={saving || loading}
             className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 px-4 py-1.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:brightness-110 disabled:opacity-60">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
           </button>
@@ -72,8 +92,19 @@ export default function FolderEditor({ classId, chapterId, folder, onClose, onSa
         <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2">
           <div className="flex min-h-0 flex-col border-r border-white/8">
             <PaneLabel icon={Code2} text="HTML · CSS · JS (one page)" />
+            {folder.code && (
+              <div className="flex items-center gap-1.5 border-b border-white/8 bg-black/20 px-4 py-1.5 font-mono text-[11px] text-slate-500">
+                <Hash className="h-3 w-3" />
+                <span className="text-slate-300">{folder.code}</span>
+                <span>· v{folder.version || 1}</span>
+                {dirty && <span className="text-amber-400">· saving creates v{(folder.version || 1) + 1}</span>}
+              </div>
+            )}
             <textarea
-              value={html} onChange={(e) => setHtml(e.target.value)} spellCheck={false}
+              value={loading ? 'Loading…' : html}
+              readOnly={loading}
+              onChange={(e) => { setHtml(e.target.value); setDirty(true) }}
+              spellCheck={false}
               className="min-h-0 flex-1 resize-none bg-[#05070d] p-4 font-mono text-xs leading-relaxed text-slate-100 outline-none"
             />
           </div>

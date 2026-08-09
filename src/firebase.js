@@ -35,10 +35,9 @@ if (firebaseConfig.measurementId) {
     .catch(() => {})
 }
 
-// The single hard-coded admin UID that is allowed to WRITE (mirrors firestore.rules).
-export const ADMIN_UID = import.meta.env.VITE_ADMIN_UID || 'REPLACE_WITH_ADMIN_UID'
-
-// The active batch students see on the dashboard.
-export const ACTIVE_BATCH_ID = 'batch_jee_2026_a'
+// There is no admin UID and no shared "active batch" any more. Every document
+// this app writes lives under `users/{uid}/…` (see lib/userScope.js), so each
+// signed-in teacher owns a complete, private copy of the app's data and
+// firestore.rules refuses any path whose owner segment is not the caller.
 
 export default app

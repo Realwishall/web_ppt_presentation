@@ -617,3 +617,176 @@ as worth extra attention.
   </div>
 </div>
 ```
+
+## Graphs — `svg.gph`, `.graph-grid`, `.graph-stack`, `.options.graphs`
+
+A chapter whose subject *is* the graph draws the same small figure dozens of
+times, so the ink is a component, not a per-slide decision. Put `class="gph"`
+on the `<svg>` and use the part classes inside it; every stroke then matches
+across the deck, and because it is pure SVG + CSS it survives PDF export.
+
+| Part class | What it draws |
+|---|---|
+| `.axis` | the x/y frame, ticks, arrowheads — scaffolding, **never** a `.step` |
+| `.curve` | the plotted quantity (gold: this is the thing being read) |
+| `.curve2` | a second plot on the same axes (indigo) |
+| `.guide` | dashed projection lines to an axis, or a reference level |
+| `.area` / `.area.gold` | the shaded region under a curve (integration slides) |
+| `.tangent` | the slope line at a point |
+| `.dot` / `.dot.open` | a marked point / a ringed answer point |
+| `text.lab` / `text.num` | axis names / tick numbers |
+
+```html
+<svg class="gph" viewBox="0 0 420 260">
+  <path class="area" d="M90 60 H250 V210 H90 Z"/>
+  <path class="axis" d="M90 240 V20"/>
+  <path class="axis" d="M40 210 H380"/>
+  <text class="lab" x="52" y="34">x</text>
+  <text class="lab" x="350" y="238">t</text>
+  <text class="num" x="46" y="70">96</text>
+  <path class="guide" d="M90 66 H190"/>
+  <path class="curve" d="M90 210 L190 66 L320 210"/>
+</svg>
+```
+
+**Small multiples.** `.graph-grid` is the "here are three/four graphs" layout
+(`.two`, `.four` for other counts). The **grid** is never the `.step`; each
+`.graph-cell` is, so the class meets one figure at a time. `.graph-cell .cap`
+is its caption and `.verdict.ok` / `.verdict.no` is the big ✓ / ✗ the source
+deck stamps on a graph.
+
+`.graph-stack` (`.three` for three of them) is the same cells run **down** a
+column instead of across a row. Use it rather than a plain `.stack`: stacked
+figures have to share the board's height, and without it the last one walks off
+the bottom of the slide.
+
+**Graph MCQs.** `.options.graphs` is the "which of these four curves" question,
+four to a row (`.two` for 2×2). Each `.option` keeps its `clickable` and its
+`.opt-badge`, and the badge sits above its own figure so the class can call an
+answer by letter. Per rule 19 the question and all options are visible at once;
+only the reasoning steps.
+
+```html
+<div class="options graphs">
+  <div class="option clickable" onclick="this.classList.add('correct')">
+    <span class="opt-badge">A</span>
+    <svg class="gph" viewBox="0 0 340 210">…</svg>
+  </div>
+  …
+</div>
+<div class="answer-box step"><span class="ok">&#10003;</span> A &mdash; …</div>
+```
+
+## Motion schematics — `svg.dgm`
+
+The kinematics counterpart of `svg.gph`. A constant-velocity / relative-motion
+chapter draws the same handful of props over and over — a train on a track, a
+pole, a bridge span, a boat on a river, an escalator — so the ink is a
+component, not a per-slide decision. Put `class="dgm"` on the `<svg>` and use
+the part classes below. Pure SVG + CSS, so it survives PDF export; a fragment
+never needs a `style` attribute to draw one.
+
+| Part class | What it draws |
+|---|---|
+| `.rail` / `.sleeper` | the track a vehicle stands on — scaffolding, **never** a `.step` |
+| `.body` (`.b`) | a vehicle hull; `.b` is the second (gold) vehicle |
+| `.nose` `.glass` `.wheel` | its driving end, windows, bogies |
+| `.stripe` (`.b`) | the livery line along the hull |
+| `.post` `.span` `.pier` | a pole, a bridge deck, its supports |
+| `.arw` + `.arwhead` (`.b`) | a motion arrow: a line and a solid head |
+| `.dim` `.tick` | a dimension line and its end ticks |
+| `.dot` | a marked point on the figure (a driver, a nose) |
+| `.water` `.wave` `.hull` `.sail` `.mast` | the river band and the boat on it |
+| `.stair` `.figr` (`.b`) | escalator treads and the person on them |
+| `text.lab` / `text.num` | labels (UI face) / numbers (math face) |
+| `.traj` (`.b` gold, `.w` white) | a free path through space — a trajectory, a river crossing, a spiral |
+| `.dot` (`.b` indigo, `.w` white) | the body itself, marked on the figure |
+| `.guide` | a dashed projection / construction line |
+| `.arc` | the little arc that names an angle |
+| `.arw.w` + `.arwhead.w` | a neutral (white) motion arrow, for the source decks that draw most vectors in white |
+
+Arrowheads are drawn as `<path class="arwhead">`, **never** as SVG markers — a
+marker needs an id and a deck is one document with a dozen figures in it.
+
+```html
+<div class="figure-frame plain short">
+  <svg class="dgm" viewBox="0 0 1000 300">
+    <path class="rail" d="M20 198 H980"/>
+    <rect class="body" x="70" y="100" width="420" height="72" rx="14"/>
+    <path class="nose" d="M490 100 h28 q40 0 40 36 q0 36 -40 36 h-28 z"/>
+    <path class="arw" d="M300 42 H392"/><path class="arwhead" d="M392 30 l30 12 l-30 12 z"/>
+    <text class="num" x="314" y="252" text-anchor="middle">200 m</text>
+  </svg>
+</div>
+```
+
+`.figure-frame.short` caps the figure at `32vh`. Use it for a wide schematic
+that shares its board with the working underneath, so the algebra and the gold
+answer chip still land above the fold.
+
+## Inline math runs — `.eq.inline`
+
+`.eq` is a **flex** run, and a flex container blockifies every inline child —
+which silently destroys `<sub>` and `<sup>` (each becomes its own flex item,
+dropped onto the baseline with a gap in front of it). `.eq.inline` lays the run
+out as ordinary inline content instead: subscripts behave, and `.frac` falls
+back to its own `vertical-align:middle`, which is what an inline formatting
+context wants anyway.
+
+Use it for **any** run carrying a subscript, and for math inside
+`.derivation .line`, `.result` and `.graph-cell .cap`, which are flex
+containers themselves.
+
+```html
+<div class="line step"><span class="eq inline">V<sub>r</sub> = V<sub>a</sub> &minus; V<sub>b</sub></span>
+  <span class="why">same direction &mdash; overtake case</span></div>
+```
+
+It is `white-space:nowrap`, so a formula never breaks mid-expression — keep the
+run short enough for its column.
+
+## Chapter motif — `manifest.motif`
+
+`#bg` carries one texture for the whole deck, chosen by the manifest (or
+`--motif` on `build-deck.mjs`):
+
+| Value | Backdrop |
+|---|---|
+| `hex` (default) | the PW hexagon weave — unchanged, what every existing deck uses |
+| `graph` | squared paper, one pale axis pair low-left and a rising curve |
+| `rail` | long-exposure speed streaks down the right, a track with sleepers low across the board — for the constant-velocity / relative-motion chapters |
+
+It is texture, never information (rule 11): it sits behind the writing area at
+a fraction of an opacity, and `@media print` drops it further. Authors do not
+reference `#bg` — they set `"motif"` in the manifest and nothing else.
+
+## Declared slide merges — `manifest.merged_slides`
+
+A PowerPoint **morph transition** leaves behind consecutive slides that are the
+same board with one more thing on it. In the presenter that build-up is exactly
+what `.step` does, so folding them into one page is a conversion, not a loss —
+but `validate-deck.mjs` still counts pages against the source slide count. List
+the folded source slide numbers in `manifest.merged_slides` (with a
+`merged_reason`) and the gate accounts for them and warns instead of failing.
+An **undeclared** shortfall is still an ERROR.
+
+```json
+{ "slide_count": 66,
+  "merged_slides": [5, 6, 7, 10],
+  "merged_reason": "morph frames of the same 'Graph Basic' board" }
+```
+
+## Declared slide splits — `manifest.split_slides`
+
+The mirror of a merge. A **two-up** source slide — two independent questions
+sharing one screen — becomes two pages, so the class reads one figure at a time
+and the teacher keeps a clean board to write on. That is a conversion, not
+invention, and it is declared the same way. Each entry accounts for `into - 1`
+extra pages; an **undeclared** surplus is still an ERROR (it usually means a
+page got duplicated by accident).
+
+```json
+{ "slide_count": 7,
+  "split_slides": [ { "slide": 2, "into": 2 }, { "slide": 3, "into": 2 } ],
+  "split_reason": "two-up boards — two independent train questions per screen" }
+```

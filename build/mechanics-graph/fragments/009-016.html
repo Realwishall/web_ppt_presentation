@@ -1,0 +1,452 @@
+<!-- source slide 13 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Velocity VS Speed</h2>
+
+    <div class="graph-grid four">
+      <div class="graph-cell">
+        <div class="cap">Velocity</div>
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M80 240 V20"/>
+          <path class="axis" d="M40 210 H370"/>
+          <text class="lab" x="330" y="196">t</text>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <span class="verdict ok">&#10003;</span>
+        <svg class="gph" viewBox="0 0 400 120">
+          <path class="curve" d="M60 60 H300"/>
+          <path class="curve" d="M300 60 l-26 -14 v28 z" fill="var(--gold-soft)" stroke="none"/>
+        </svg>
+        <div class="cap">Speed</div>
+      </div>
+      <div class="graph-cell">
+        <div class="cap">Speed</div>
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M80 240 V20"/>
+          <path class="axis" d="M40 210 H370"/>
+          <text class="lab" x="330" y="196">t</text>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <span class="verdict no">&#10007;</span>
+        <svg class="gph" viewBox="0 0 400 120">
+          <path class="curve" d="M60 60 H300"/>
+          <path class="curve" d="M300 60 l-26 -14 v28 z" fill="var(--gold-soft)" stroke="none"/>
+        </svg>
+        <div class="cap">Velocity</div>
+      </div>
+    </div>
+
+    <p class="note step">Velocity &rarr; speed is always possible; speed &rarr; velocity is not, because the sign is gone.</p>
+  </div>
+</section>
+
+<!-- source slide 14 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Velocity VS Speed</h2>
+
+    <div class="graph-grid two">
+      <div class="graph-cell">
+        <div class="cap">Velocity</div>
+        <svg class="gph" viewBox="0 0 460 300">
+          <path class="axis" d="M80 280 V20"/>
+          <path class="axis" d="M40 150 H420"/>
+          <text class="lab" x="392" y="136">t</text>
+          <path class="curve" d="M110 60 C 150 270 280 270 340 60"/>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <div class="cap"><span class="ok">&#10003;</span> Speed &mdash; the negative arc folds up above the axis</div>
+        <svg class="gph" viewBox="0 0 460 300">
+          <path class="axis" d="M80 280 V20"/>
+          <path class="axis" d="M40 150 H420"/>
+          <text class="lab" x="392" y="136">t</text>
+          <path class="curve" d="M110 60 C 138 148 158 150 168 150"/>
+          <path class="curve" d="M168 150 C 210 30 258 30 292 150"/>
+          <path class="curve" d="M292 150 C 302 150 320 148 340 60"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 15 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Position VS displacement VS distance</h2>
+
+    <div class="graph-grid">
+      <div class="graph-cell">
+        <div class="cap">Position</div>
+        <svg class="gph" viewBox="0 0 400 230">
+          <path class="axis" d="M80 210 V20"/>
+          <path class="axis" d="M40 185 H360"/>
+          <text class="lab" x="322" y="172">t</text>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <span class="verdict ok">&#10003;</span>
+        <div class="cap">Position &rarr; Displacement</div>
+      </div>
+      <div class="graph-cell">
+        <div class="cap">Displacement</div>
+        <svg class="gph" viewBox="0 0 400 230">
+          <path class="axis" d="M80 210 V20"/>
+          <path class="axis" d="M40 185 H360"/>
+          <text class="lab" x="322" y="172">t</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="graph-grid">
+      <div class="graph-cell step">
+        <div class="cap">Displacement</div>
+        <span class="verdict ok">&#10003;</span>
+        <div class="cap">Displacement &rarr; Distance</div>
+      </div>
+      <div class="graph-cell step">
+        <div class="cap">Distance</div>
+        <span class="verdict no">&#10007;</span>
+        <div class="cap">Distance &rarr; Displacement</div>
+      </div>
+      <div class="graph-cell step">
+        <div class="cap">Displacement</div>
+        <span class="verdict no">&#10007;</span>
+        <div class="cap">Displacement &rarr; Position</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 16 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Position VS displacement VS distance</h2>
+
+    <div class="graph-grid">
+      <div class="graph-cell step">
+        <div class="cap">Position</div>
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M80 240 V20"/>
+          <path class="axis" d="M40 130 H360"/>
+          <text class="lab" x="322" y="116">t</text>
+          <path class="curve" d="M80 60 C 140 90 170 170 220 190 C 250 200 262 160 272 122 C 282 156 296 172 340 176"/>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <div class="cap">Displacement &mdash; the same curve pulled down to start at zero</div>
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M80 240 V20"/>
+          <path class="axis" d="M40 60 H360"/>
+          <text class="lab" x="322" y="46">t</text>
+          <path class="curve" d="M80 60 C 140 90 170 170 220 190 C 250 200 262 160 272 122 C 282 156 296 172 340 176"/>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <div class="cap">Distance &mdash; every fall is folded into a rise, so it can only climb</div>
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M80 240 V20"/>
+          <path class="axis" d="M40 190 H360"/>
+          <text class="lab" x="322" y="176">t</text>
+          <path class="curve" d="M80 190 C 130 160 172 106 216 92 C 246 82 258 62 272 30 C 288 22 310 20 340 18"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 17 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Getting position from acceleration</h2>
+
+    <div class="split-4060">
+      <div class="stack">
+        <p class="step">First draw for velocity then area give displacement / distance</p>
+        <div class="callout callout--tip step">
+          <span class="callout-label">Route</span>
+          <span class="eq">a &rarr; v &rarr; x</span>, one integration at a time &mdash; never jump the middle step.
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="step">
+          <svg class="gph" viewBox="0 0 520 260">
+            <path class="area" d="M100 90 H230 V170 H100 Z"/>
+            <path class="area" d="M300 170 H400 V250 H300 Z"/>
+            <path class="axis" d="M100 240 V20"/>
+            <path class="axis" d="M40 170 H480"/>
+            <text class="lab" x="66" y="40">a</text>
+            <text class="lab" x="460" y="200">t</text>
+            <text class="num" x="52" y="100">4</text>
+            <text class="num" x="52" y="262">-4</text>
+            <text class="num" x="222" y="150">5</text>
+            <text class="num" x="292" y="150">8</text>
+            <text class="num" x="392" y="150">13</text>
+            <path class="curve" d="M100 90 H230 V170 H300 V250 H400 V170"/>
+          </svg>
+        </div>
+        <div class="step">
+          <svg class="gph" viewBox="0 0 520 240">
+            <path class="axis" d="M100 220 V20"/>
+            <path class="axis" d="M40 180 H480"/>
+            <text class="lab" x="66" y="40">v</text>
+            <text class="lab" x="460" y="210">t</text>
+            <text class="num" x="34" y="70">20</text>
+            <text class="num" x="222" y="222">5</text>
+            <text class="num" x="292" y="222">8</text>
+            <text class="num" x="392" y="222">13</text>
+            <path class="curve" d="M100 180 L230 60 H300 L400 180"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 18 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Not possible Graph</h2>
+
+    <div class="split-4060">
+      <ul class="bullets box tight">
+        <li class="step">Nothing can have two values a given time</li>
+        <li class="step">Speed and distance can never be negative</li>
+        <li class="step">Distance/path length can never decrease</li>
+        <li class="step">Distance displacement can never be discontinuing graph</li>
+      </ul>
+
+      <div class="stack">
+        <div class="graph-grid step">
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">x</text>
+              <text class="lab" x="272" y="212">t</text>
+              <ellipse class="curve" cx="150" cy="100" rx="52" ry="52" fill="none"/>
+              <path class="guide" d="M180 30 V178"/>
+              <circle class="dot open" cx="180" cy="58" r="7"/>
+              <circle class="dot open" cx="180" cy="142" r="7"/>
+            </svg>
+            <span class="verdict no">&#10007;</span>
+          </div>
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">x</text>
+              <text class="lab" x="272" y="212">v</text>
+              <ellipse class="curve" cx="150" cy="100" rx="52" ry="52" fill="none"/>
+            </svg>
+            <span class="verdict ok">&#10003;</span>
+          </div>
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">v</text>
+              <text class="lab" x="272" y="212">t</text>
+              <path class="curve" d="M80 40 C 160 30 230 90 250 150"/>
+              <path class="curve" d="M110 130 C 180 138 220 146 260 150"/>
+              <path class="guide" d="M172 26 V178"/>
+              <circle class="dot open" cx="172" cy="36" r="7"/>
+              <circle class="dot open" cx="172" cy="136" r="7"/>
+            </svg>
+            <span class="verdict no">&#10007;</span>
+          </div>
+        </div>
+
+        <div class="graph-grid step">
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">v</text>
+              <text class="lab" x="272" y="212">t</text>
+              <path class="curve" d="M80 130 C 140 40 200 42 270 130"/>
+              <circle class="dot open" cx="176" cy="52" r="7"/>
+            </svg>
+            <span class="verdict ok">&#10003;</span>
+          </div>
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">v</text>
+              <text class="lab" x="272" y="212">t</text>
+              <path class="curve" d="M100 170 C 190 130 190 70 110 30"/>
+              <path class="guide" d="M150 22 V178"/>
+              <circle class="dot open" cx="150" cy="38" r="7"/>
+              <circle class="dot open" cx="150" cy="158" r="7"/>
+            </svg>
+            <span class="verdict no">&#10007;</span>
+          </div>
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">t</text>
+              <text class="lab" x="272" y="212">v</text>
+              <path class="curve" d="M90 30 C 190 80 190 130 100 170"/>
+              <path class="guide" d="M78 100 H230"/>
+              <circle class="dot open" cx="168" cy="100" r="7"/>
+            </svg>
+            <span class="verdict ok">&#10003;</span>
+          </div>
+        </div>
+
+        <div class="graph-grid step">
+          <div class="graph-cell">
+            <svg class="gph" viewBox="0 0 340 230">
+              <path class="axis" d="M70 210 V20"/>
+              <path class="axis" d="M40 180 H310"/>
+              <text class="lab" x="36" y="34">x</text>
+              <text class="lab" x="272" y="212">t</text>
+              <path class="curve" d="M80 150 L 160 110"/>
+              <path class="curve" d="M160 50 L 230 34"/>
+              <path class="guide" d="M160 22 V178"/>
+            </svg>
+            <span class="verdict no">&#10007;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 19 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Not possible Graph</h2>
+
+    <div class="split-4060">
+      <ul class="bullets box tight">
+        <li>Nothing can have two values a given time</li>
+        <li>Speed and distance can never be negative</li>
+        <li>Distance/path length can never decrease</li>
+        <li>Distance displacement can never be discontinuing graph</li>
+      </ul>
+
+      <div class="graph-grid two">
+        <div class="graph-cell step">
+          <div class="cap">speed</div>
+          <svg class="gph" viewBox="0 0 400 250">
+            <path class="axis" d="M90 230 V20"/>
+            <path class="axis" d="M50 200 H360"/>
+            <text class="lab" x="322" y="230">t</text>
+            <path class="curve" d="M90 50 C 170 60 230 120 290 200"/>
+          </svg>
+          <span class="verdict ok">&#10003;</span>
+        </div>
+        <div class="graph-cell step">
+          <div class="cap">speed</div>
+          <svg class="gph" viewBox="0 0 400 250">
+            <path class="axis" d="M90 230 V20"/>
+            <path class="axis" d="M50 130 H360"/>
+            <text class="lab" x="322" y="160">t</text>
+            <path class="curve" d="M90 90 C 150 50 210 60 300 210"/>
+          </svg>
+          <span class="verdict no">&#10007;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 20 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Not possible Graph</h2>
+
+    <div class="split-4060">
+      <ul class="bullets box tight">
+        <li>Nothing can have two values a given time</li>
+        <li>Speed and distance can never be negative</li>
+        <li>Distance/path length can never decrease</li>
+        <li>Distance displacement can never be discontinuing graph</li>
+      </ul>
+
+      <div class="graph-stack three">
+        <div class="graph-cell step">
+          <div class="cap">Distance</div>
+          <svg class="gph" viewBox="0 0 460 170">
+            <path class="axis" d="M110 155 V15"/>
+            <path class="axis" d="M60 140 H400"/>
+            <text class="lab" x="366" y="168">t</text>
+            <path class="curve" d="M110 138 C 250 136 320 110 380 20"/>
+            <text class="lab" x="404" y="70">&#10003;</text>
+          </svg>
+        </div>
+        <div class="graph-cell step">
+          <div class="cap">Distance</div>
+          <svg class="gph" viewBox="0 0 460 170">
+            <path class="axis" d="M110 155 V15"/>
+            <path class="axis" d="M60 140 H400"/>
+            <text class="lab" x="366" y="168">t</text>
+            <path class="curve" d="M110 110 C 200 20 280 24 370 116"/>
+            <text class="lab" x="404" y="70">&#10007;</text>
+          </svg>
+        </div>
+        <div class="graph-cell step">
+          <div class="cap">Distance from origin</div>
+          <svg class="gph" viewBox="0 0 460 170">
+            <path class="axis" d="M110 155 V15"/>
+            <path class="axis" d="M60 140 H400"/>
+            <text class="lab" x="366" y="168">t</text>
+            <path class="curve" d="M110 110 C 200 20 280 24 370 116"/>
+            <text class="lab" x="404" y="70">&#10003;</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 21 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Not possible Graph</h2>
+
+    <div class="split-4060">
+      <ul class="bullets box tight">
+        <li>Nothing can have two values a given time</li>
+        <li>Speed and distance can never be negative</li>
+        <li>Distance/path length can never decrease</li>
+        <li>Distance displacement can never be discontinuing graph</li>
+      </ul>
+
+      <div class="graph-stack">
+        <div class="graph-cell step">
+          <svg class="gph" viewBox="0 0 460 190">
+            <path class="axis" d="M110 175 V15"/>
+            <path class="axis" d="M60 155 H400"/>
+            <text class="lab" x="72" y="34">x</text>
+            <text class="lab" x="366" y="182">t</text>
+            <path class="curve" d="M110 40 C 150 100 180 108 210 108"/>
+            <path class="curve" d="M250 108 H300"/>
+            <path class="curve" d="M330 108 H370"/>
+          </svg>
+          <span class="verdict no">&#10007;</span>
+          <div class="cap">a break in x means the body teleported</div>
+        </div>
+        <div class="graph-cell step">
+          <svg class="gph" viewBox="0 0 460 190">
+            <path class="axis" d="M110 175 V15"/>
+            <path class="axis" d="M60 155 H400"/>
+            <text class="lab" x="72" y="34">a</text>
+            <text class="lab" x="366" y="182">t</text>
+            <path class="curve" d="M110 40 C 150 100 180 108 210 108"/>
+            <path class="curve" d="M250 108 H300"/>
+            <path class="curve" d="M330 108 H370"/>
+          </svg>
+          <span class="verdict ok">&#10003;</span>
+          <div class="cap">a may jump &mdash; a force can switch on instantly</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

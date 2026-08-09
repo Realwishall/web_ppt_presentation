@@ -1,66 +1,75 @@
 rules_version = '2';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ONE TREE PER TEACHER.
+//
+// Every document this app writes lives under `users/{uid}` — classes with their
+// chapters and folders, the content registry, batches with their sessions and
+// rosters, and the account-wide export settings:
+//
+//   users/{uid}/classes/{classId}/chapters/{chapterId}/folders/{folderId}
+//   users/{uid}/content/{code}/versions/{v}/parts/{i}
+//   users/{uid}/batches/{batchId}/sessions/{sessionId}/chunks/{i}
+//   users/{uid}/batches/{batchId}/meta/{settings|roster|sessionHistory}
+//   users/{uid}/appSettings/{curriculum|exportPages|branding}
+//
+// So the whole app reduces to one question: is the owner segment of this path
+// your own uid? That is the second of two defences — the client already builds
+// every path from `auth.currentUser.uid` (src/lib/userScope.js) — and it is the
+// one that actually holds, because it runs on the server.
+//
+// The subtrees are listed one by one rather than with a single
+// `users/{uid}/{document=**}`, because Firestore ORs every matching rule
+// together: a blanket recursive grant would re-open the deletes that the
+// content registry deliberately refuses below.
+// ─────────────────────────────────────────────────────────────────────────────
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------- helpers -------
-    function isAuthenticated() {
-      return request.auth != null;
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
     }
 
-    // The single hard-coded admin UID. Replace with your admin account's UID
-    // (must match VITE_ADMIN_UID used by the client).
-    function isAdmin() {
-      return isAuthenticated()
-        && request.auth.uid == 'MtT95vUrgUej48ztNTVV8NK3Bdm1';
+    // The account's own document (profile / bookkeeping). The app does not
+    // write it today; owning it here keeps a future one from needing a rules
+    // deploy.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
     }
 
-    // ------- authoring model: classes -> chapters -> folders -------
-    // Any signed-in teacher may read and author the whole content tree.
-    // (This is a single-institute authoring tool gated behind login; tighten
-    // to isAdmin() here if you later want author-only writes.)
-    match /classes/{classId}/{document=**} {
-      allow read, write: if isAuthenticated();
+    // ------- authoring model: classes → chapters → folders -------
+    match /users/{uid}/classes/{document=**} {
+      allow read, write: if isOwner(uid);
     }
 
-    // ------- master chapters (+ topics) — legacy -------
-    match /master_chapters/{chapterId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-
-      match /topics/{topicId} {
-        allow read: if isAuthenticated();
-        allow write: if isAdmin();
-      }
+    // ------- the content registry: APPEND-ONLY -------
+    // Every HTML page file this teacher owns, under its permanent code, with
+    // one immutable document per version. Deletes are refused outright: the
+    // app's model is that nothing is destroyed — "deleting" a deck flips
+    // `visible` to false — so a session recorded months ago still resolves
+    // every code it stored. A client that removed a version would silently
+    // blank the ink that was drawn over it.
+    match /users/{uid}/content/{document=**} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid);
+      allow delete: if false;
     }
 
-    // ------- batches -------
-    // Any signed-in user may read; signed-in teachers may create/manage
-    // batches from the dashboard.
-    match /batches/{batchId} {
-      allow read, write: if isAuthenticated();
-
-      match /{document=**} {
-        allow read, write: if isAuthenticated();
-      }
+    // ------- batches: sessions, ink chunks, roster, export memory -------
+    match /users/{uid}/batches/{document=**} {
+      allow read, write: if isOwner(uid);
     }
 
-    // ------- app-wide settings -------
-    // The global chapter & topic map, the Start/End cover pages (with their
-    // chunk sub-collections for large HTML) and the export logo. Shared by
-    // every batch. Any signed-in teacher may read them — the presenter needs
-    // them at export time — and writes are teachers too, matching how the
-    // rest of this single-institute tool is gated.
-    match /appSettings/{docId} {
-      allow read, write: if isAuthenticated();
-
-      match /{document=**} {
-        allow read, write: if isAuthenticated();
-      }
+    // ------- account-wide settings: chapter map, cover pages, logo -------
+    match /users/{uid}/appSettings/{document=**} {
+      allow read, write: if isOwner(uid);
     }
 
     // ------- default deny -------
-    // Anything not matched above is denied for everyone.
+    // Anything outside a user's own tree is denied for everyone. The old
+    // top-level `classes`, `content`, `batches` and `appSettings` collections
+    // are gone; nothing may read or write them.
     match /{document=**} {
       allow read, write: if false;
     }

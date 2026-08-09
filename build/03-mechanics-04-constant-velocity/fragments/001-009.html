@@ -1,0 +1,692 @@
+<!-- ===========================================================================
+     03 · Mechanics Part 1 · 04 — Constant velocity   (source: 7 slides)
+
+     page 1  <- slide 1   title board + the three forms of v = d/t
+     page 2  <- slide 2L  train crosses a pole
+     page 3  <- slide 2R  train crosses a bridge
+     page 4  <- slide 3L  two trains cross each other
+     page 5  <- slide 3R  driver of A crosses driver of B
+     page 6  <- slide 4   the three cases (overtake/cross, driver/guard, stream)
+     page 7  <- slide 5   boat: up stream / down stream
+     page 8  <- slide 6   escalator, boy walking the same way
+     page 9  <- slide 7   escalator, boy walking against it
+
+     Slides 2 and 3 are two-up boards; each question is opened out onto its own
+     page (declared in manifest.split_slides). Every figure is rebuilt as an
+     inline svg.dgm — no source bitmap is inlined.
+     ======================================================================== -->
+
+<!-- Slide 1 — the whole topic in three lines. One relation, read three ways. -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Constant velocity problem</h2>
+
+    <div class="eq-block">
+      <div class="eq big step">v = <span class="frac"><span class="num">d</span><span class="den">t</span></span></div>
+      <div class="eq big step">d = v t</div>
+      <div class="eq big step">t = <span class="frac"><span class="num">d</span><span class="den">v</span></span></div>
+    </div>
+
+    <p class="note step">The speed never changes, so these are not three formulas &mdash; they are one
+      relation rearranged. Every question on the boards that follow is <i>find d</i> or <i>find t</i>.</p>
+  </div>
+</section>
+
+
+<!-- Slide 2 (left) — crossing a pole. The pole has no length, so the train has
+     to clear only its own 200 m. -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">A train is of length 200m is traveling with speed 20m/s as shown in the figure
+        find time in which it will cross the pole.</div>
+
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 1000 300">
+          <g class="sleeper">
+            <path d="M60 192 V220"/><path d="M140 192 V220"/><path d="M220 192 V220"/>
+            <path d="M300 192 V220"/><path d="M380 192 V220"/><path d="M460 192 V220"/>
+            <path d="M540 192 V220"/><path d="M620 192 V220"/><path d="M700 192 V220"/>
+            <path d="M860 192 V220"/><path d="M940 192 V220"/>
+          </g>
+          <path class="rail" d="M20 198 H980"/>
+          <path class="rail" d="M20 216 H980"/>
+
+          <text class="num" x="70" y="52">v = 20 m/s</text>
+          <path class="arw" d="M300 42 H392"/>
+          <path class="arwhead" d="M392 30 l30 12 l-30 12 z"/>
+
+          <rect class="body" x="70" y="100" width="420" height="72" rx="14"/>
+          <path class="nose" d="M490 100 h28 q40 0 40 36 q0 36 -40 36 h-28 z"/>
+          <path class="stripe" d="M76 150 H548"/>
+          <rect class="glass" x="96" y="112" width="48" height="32" rx="6"/>
+          <rect class="glass" x="168" y="112" width="48" height="32" rx="6"/>
+          <rect class="glass" x="240" y="112" width="48" height="32" rx="6"/>
+          <rect class="glass" x="312" y="112" width="48" height="32" rx="6"/>
+          <rect class="glass" x="430" y="112" width="46" height="32" rx="6"/>
+          <circle class="wheel" cx="112" cy="185" r="13"/>
+          <circle class="wheel" cx="166" cy="185" r="13"/>
+          <circle class="wheel" cx="392" cy="185" r="13"/>
+          <circle class="wheel" cx="446" cy="185" r="13"/>
+          <circle class="wheel" cx="500" cy="185" r="13"/>
+
+          <rect class="post" x="772" y="46" width="14" height="152" rx="4"/>
+          <text class="lab" x="779" y="30" text-anchor="middle">pole</text>
+
+          <text class="num" x="314" y="252" text-anchor="middle">200 m</text>
+          <path class="dim" d="M70 264 H558"/>
+          <path class="tick" d="M70 254 V276"/>
+          <path class="tick" d="M558 254 V276"/>
+        </svg>
+      </div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">d</span><span class="den">v</span></span></span>
+            <span class="why">the pole is a point &mdash; d is just the train's own length</span></div>
+          <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">200</span><span class="den">20</span></span></span></div>
+        </div>
+        <div class="result step"><span class="eq inline">t = 10 s</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 2 (right) — crossing a bridge. Now the bridge has a length of its
+     own, so the train covers 200 + 60. -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">A train is of length 200m is traveling with speed 20m/s as shown in the figure
+        find time in which it will cross the bridge.</div>
+
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 1000 300">
+          <g class="sleeper">
+            <path d="M40 192 V220"/><path d="M120 192 V220"/><path d="M200 192 V220"/>
+            <path d="M280 192 V220"/><path d="M360 192 V220"/><path d="M440 192 V220"/>
+            <path d="M520 192 V220"/>
+          </g>
+          <path class="rail" d="M20 198 H560"/>
+          <path class="rail" d="M20 216 H560"/>
+
+          <text class="num" x="50" y="52">v = 20 m/s</text>
+          <path class="arw" d="M280 42 H372"/>
+          <path class="arwhead" d="M372 30 l30 12 l-30 12 z"/>
+
+          <rect class="body" x="46" y="100" width="356" height="72" rx="14"/>
+          <path class="nose" d="M402 100 h26 q38 0 38 36 q0 36 -38 36 h-26 z"/>
+          <path class="stripe" d="M52 150 H458"/>
+          <rect class="glass" x="70" y="112" width="46" height="32" rx="6"/>
+          <rect class="glass" x="140" y="112" width="46" height="32" rx="6"/>
+          <rect class="glass" x="210" y="112" width="46" height="32" rx="6"/>
+          <rect class="glass" x="280" y="112" width="46" height="32" rx="6"/>
+          <rect class="glass" x="348" y="112" width="44" height="32" rx="6"/>
+          <circle class="wheel" cx="86" cy="185" r="13"/>
+          <circle class="wheel" cx="140" cy="185" r="13"/>
+          <circle class="wheel" cx="316" cy="185" r="13"/>
+          <circle class="wheel" cx="370" cy="185" r="13"/>
+          <circle class="wheel" cx="416" cy="185" r="13"/>
+
+          <path class="span" d="M600 198 H900"/>
+          <path class="pier" d="M604 198 V252"/>
+          <path class="pier" d="M896 198 V252"/>
+          <text class="lab" x="750" y="284" text-anchor="middle">bridge</text>
+
+          <text class="num" x="750" y="142" text-anchor="middle">60 m</text>
+          <path class="dim" d="M600 158 H900"/>
+          <path class="tick" d="M600 148 V170"/>
+          <path class="tick" d="M900 148 V170"/>
+
+          <text class="num" x="256" y="252" text-anchor="middle">200 m</text>
+          <path class="dim" d="M46 264 H466"/>
+          <path class="tick" d="M46 254 V276"/>
+          <path class="tick" d="M466 254 V276"/>
+        </svg>
+      </div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline">d = 200 + 60 = 260</span>
+            <span class="why">the tail only clears the bridge after the whole train has passed it</span></div>
+          <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">260</span><span class="den">20</span></span></span></div>
+        </div>
+        <div class="result step"><span class="eq inline">t = 13 s</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 3 (left) — the two trains meet head-on, so the relative speed is the
+     sum and the distance is both lengths. -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">In what time these train can cross each other if length of each train is 200m.</div>
+
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 1000 300">
+          <g class="sleeper">
+            <path d="M40 192 V220"/><path d="M120 192 V220"/><path d="M200 192 V220"/>
+            <path d="M280 192 V220"/><path d="M360 192 V220"/><path d="M440 192 V220"/>
+            <path d="M520 192 V220"/><path d="M600 192 V220"/><path d="M680 192 V220"/>
+            <path d="M760 192 V220"/><path d="M840 192 V220"/><path d="M920 192 V220"/>
+          </g>
+          <path class="rail" d="M20 198 H980"/>
+          <path class="rail" d="M20 216 H980"/>
+
+          <text class="num" x="40" y="46">v = 50 m/s</text>
+          <path class="arw" d="M264 36 H344"/>
+          <path class="arwhead" d="M344 24 l30 12 l-30 12 z"/>
+
+          <text class="num" x="640" y="46">v = 30 m/s</text>
+          <path class="arw b" d="M960 36 H880"/>
+          <path class="arwhead b" d="M880 24 l-30 12 l30 12 z"/>
+
+          <rect class="body" x="40" y="100" width="330" height="70" rx="13"/>
+          <path class="nose" d="M370 100 h24 q36 0 36 35 q0 35 -36 35 h-24 z"/>
+          <path class="stripe" d="M46 148 H422"/>
+          <rect class="glass" x="62" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="128" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="194" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="260" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="326" y="112" width="42" height="30" rx="6"/>
+          <circle class="wheel" cx="76" cy="184" r="12"/>
+          <circle class="wheel" cx="126" cy="184" r="12"/>
+          <circle class="wheel" cx="292" cy="184" r="12"/>
+          <circle class="wheel" cx="342" cy="184" r="12"/>
+          <circle class="wheel" cx="386" cy="184" r="12"/>
+
+          <rect class="body b" x="606" y="100" width="330" height="70" rx="13"/>
+          <path class="nose" d="M606 100 h-24 q-36 0 -36 35 q0 35 36 35 h24 z"/>
+          <path class="stripe b" d="M554 148 H930"/>
+          <rect class="glass" x="608" y="112" width="42" height="30" rx="6"/>
+          <rect class="glass" x="674" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="740" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="806" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="872" y="112" width="44" height="30" rx="6"/>
+          <circle class="wheel" cx="590" cy="184" r="12"/>
+          <circle class="wheel" cx="634" cy="184" r="12"/>
+          <circle class="wheel" cx="684" cy="184" r="12"/>
+          <circle class="wheel" cx="850" cy="184" r="12"/>
+          <circle class="wheel" cx="900" cy="184" r="12"/>
+
+          <text class="num" x="223" y="252" text-anchor="middle">200 m</text>
+          <path class="dim" d="M40 264 H430"/>
+          <path class="tick" d="M40 254 V276"/>
+          <path class="tick" d="M430 254 V276"/>
+
+          <text class="num" x="741" y="252" text-anchor="middle">200 m</text>
+          <path class="dim" d="M546 264 H936"/>
+          <path class="tick" d="M546 254 V276"/>
+          <path class="tick" d="M936 254 V276"/>
+        </svg>
+      </div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline">d = 200 + 200 = 400</span>
+            <span class="why">nose of A must travel past the whole of B, and B past the whole of A</span></div>
+          <div class="line step"><span class="eq inline">V<sub>r</sub> = V<sub>a</sub> + V<sub>b</sub></span>
+            <span class="why">they run at each other &mdash; cross case</span></div>
+          <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">400</span><span class="den">50 + 30</span></span></span></div>
+        </div>
+        <div class="result step"><span class="eq inline">t = 5 s</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 3 (right) — same two trains, same direction. Driver to driver is one
+     train length, and the relative speed is now the difference. -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">In what time driver of train A will cross driver of train B.</div>
+
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 1000 300">
+          <g class="sleeper">
+            <path d="M40 192 V220"/><path d="M120 192 V220"/><path d="M200 192 V220"/>
+            <path d="M280 192 V220"/><path d="M360 192 V220"/><path d="M440 192 V220"/>
+            <path d="M520 192 V220"/><path d="M600 192 V220"/><path d="M680 192 V220"/>
+            <path d="M760 192 V220"/><path d="M840 192 V220"/><path d="M920 192 V220"/>
+          </g>
+          <path class="rail" d="M20 198 H980"/>
+          <path class="rail" d="M20 216 H980"/>
+
+          <text class="num" x="40" y="46">v = 50 m/s</text>
+          <path class="arw" d="M264 36 H344"/>
+          <path class="arwhead" d="M344 24 l30 12 l-30 12 z"/>
+
+          <text class="num" x="600" y="46">v = 30 m/s</text>
+          <path class="arw b" d="M824 36 H904"/>
+          <path class="arwhead b" d="M904 24 l30 12 l-30 12 z"/>
+
+          <text class="lab" x="40" y="94">A</text>
+          <rect class="body" x="40" y="100" width="330" height="70" rx="13"/>
+          <path class="nose" d="M370 100 h24 q36 0 36 35 q0 35 -36 35 h-24 z"/>
+          <path class="stripe" d="M46 148 H422"/>
+          <rect class="glass" x="62" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="128" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="194" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="260" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="326" y="112" width="42" height="30" rx="6"/>
+          <circle class="wheel" cx="76" cy="184" r="12"/>
+          <circle class="wheel" cx="126" cy="184" r="12"/>
+          <circle class="wheel" cx="292" cy="184" r="12"/>
+          <circle class="wheel" cx="342" cy="184" r="12"/>
+          <circle class="wheel" cx="386" cy="184" r="12"/>
+
+          <text class="lab" x="446" y="94">B</text>
+          <rect class="body b" x="446" y="100" width="330" height="70" rx="13"/>
+          <path class="nose" d="M776 100 h24 q36 0 36 35 q0 35 -36 35 h-24 z"/>
+          <path class="stripe b" d="M452 148 H828"/>
+          <rect class="glass" x="468" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="534" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="600" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="666" y="112" width="44" height="30" rx="6"/>
+          <rect class="glass" x="732" y="112" width="42" height="30" rx="6"/>
+          <circle class="wheel" cx="482" cy="184" r="12"/>
+          <circle class="wheel" cx="532" cy="184" r="12"/>
+          <circle class="wheel" cx="698" cy="184" r="12"/>
+          <circle class="wheel" cx="748" cy="184" r="12"/>
+          <circle class="wheel" cx="792" cy="184" r="12"/>
+
+          <circle class="dot" cx="424" cy="128" r="9"/>
+          <circle class="dot" cx="830" cy="128" r="9"/>
+          <text class="lab" x="627" y="252" text-anchor="middle">driver to driver</text>
+          <text class="num" x="627" y="290" text-anchor="middle">200 m</text>
+          <path class="dim" d="M424 264 H830"/>
+          <path class="tick" d="M424 254 V276"/>
+          <path class="tick" d="M830 254 V276"/>
+        </svg>
+      </div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline">d = 200</span>
+            <span class="why">A's driver only has to reach B's driver &mdash; one train length</span></div>
+          <div class="line step"><span class="eq inline">V<sub>r</sub> = V<sub>a</sub> &minus; V<sub>b</sub></span>
+            <span class="why">same direction &mdash; overtake case</span></div>
+          <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">200</span><span class="den">50 &minus; 30</span></span></span></div>
+        </div>
+        <div class="result step"><span class="eq inline">t = 10 s</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 4 — the three standing cases of the topic. Each heading is the source
+     slide's own; only what sits under it is a reveal. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="box-grid one">
+
+      <div class="info-box">
+        <h4 class="cell-heading">Overtake VS cross case</h4>
+        <div class="graph-grid two">
+
+          <div class="graph-cell step">
+            <svg class="dgm" viewBox="0 0 900 190">
+              <path class="rail" d="M10 150 H890"/>
+              <path class="arw" d="M170 40 H250"/>
+              <path class="arwhead" d="M250 28 l30 12 l-30 12 z"/>
+              <path class="arw b" d="M730 40 H650"/>
+              <path class="arwhead b" d="M650 28 l-30 12 l30 12 z"/>
+              <rect class="body" x="40" y="76" width="300" height="60" rx="12"/>
+              <path class="nose" d="M340 76 h22 q34 0 34 30 q0 30 -34 30 h-22 z"/>
+              <path class="stripe" d="M46 118 H388"/>
+              <rect class="body b" x="560" y="76" width="300" height="60" rx="12"/>
+              <path class="nose" d="M560 76 h-22 q-34 0 -34 30 q0 30 34 30 h22 z"/>
+              <path class="stripe b" d="M512 118 H854"/>
+            </svg>
+            <div class="cap"><span class="eq small inline">V<sub>r</sub> = V<sub>a</sub> + V<sub>b</sub></span></div>
+          </div>
+
+          <div class="graph-cell step">
+            <svg class="dgm" viewBox="0 0 900 190">
+              <path class="rail" d="M10 150 H890"/>
+              <path class="arw" d="M170 40 H250"/>
+              <path class="arwhead" d="M250 28 l30 12 l-30 12 z"/>
+              <path class="arw b" d="M650 40 H730"/>
+              <path class="arwhead b" d="M730 28 l30 12 l-30 12 z"/>
+              <rect class="body" x="40" y="76" width="300" height="60" rx="12"/>
+              <path class="nose" d="M340 76 h22 q34 0 34 30 q0 30 -34 30 h-22 z"/>
+              <path class="stripe" d="M46 118 H388"/>
+              <rect class="body b" x="504" y="76" width="300" height="60" rx="12"/>
+              <path class="nose" d="M804 76 h22 q34 0 34 30 q0 30 -34 30 h-22 z"/>
+              <path class="stripe b" d="M510 118 H852"/>
+            </svg>
+            <div class="cap"><span class="eq small inline">V<sub>r</sub> = V<sub>a</sub> &minus; V<sub>b</sub></span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h4 class="cell-heading">Driver VS guard</h4>
+        <div class="step">
+          <svg class="dgm" viewBox="0 0 1000 150">
+            <path class="rail" d="M10 120 H990"/>
+            <rect class="body" x="60" y="40" width="800" height="62" rx="13"/>
+            <path class="nose" d="M860 40 h26 q38 0 38 31 q0 31 -38 31 h-26 z"/>
+            <path class="stripe" d="M66 84 H916"/>
+            <rect class="glass" x="90" y="52" width="52" height="28" rx="6"/>
+            <rect class="glass" x="280" y="52" width="52" height="28" rx="6"/>
+            <rect class="glass" x="470" y="52" width="52" height="28" rx="6"/>
+            <rect class="glass" x="660" y="52" width="52" height="28" rx="6"/>
+            <rect class="glass" x="820" y="52" width="50" height="28" rx="6"/>
+            <circle class="dot" cx="906" cy="70" r="9"/>
+            <circle class="dot" cx="72" cy="70" r="9"/>
+            <text class="lab" x="906" y="146" text-anchor="middle">driver</text>
+            <text class="lab" x="72" y="146" text-anchor="middle">guard</text>
+          </svg>
+          <p class="note">The driver sits at the front, the guard at the tail &mdash; so "driver crosses the guard"
+            is one full train length apart, while driver to driver is another.</p>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h4 class="cell-heading">Up stream &ndash; Down stream</h4>
+        <p class="step">Down stream the current carries you, so the speeds add; up stream you push against it,
+          so they subtract. Same two cases as the trains, on water.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 5 — the boat. Two measured times hand you v + u and v − u; adding
+     them kills u and leaves the still-water time. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">It take <span class="eq small inline">t<sub>1</sub></span> time to cover distance in down stream and
+        <span class="eq small inline">t<sub>2</sub></span> in up stream find in what time same distance can be covered
+        <span class="tag-hot">Tough</span></div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="split-4060">
+          <div class="stack">
+            <div class="figure-frame plain">
+              <svg class="dgm" viewBox="0 0 700 500">
+                <text class="lab" x="350" y="34" text-anchor="middle">Down &minus; Stream</text>
+                <path class="arw" d="M250 72 H420"/>
+                <path class="arwhead" d="M420 60 l30 12 l-30 12 z"/>
+
+                <path class="mast" d="M136 170 V 34"/>
+                <path class="sail" d="M142 40 L142 156 L200 156 Z"/>
+                <path class="sail" d="M130 52 L130 156 L90 156 Z"/>
+                <path class="hull" d="M80 170 l130 0 l-18 34 l-94 0 z"/>
+                <rect class="water" x="0" y="170" width="700" height="46"/>
+                <path class="wave" d="M0 178 q40 -12 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0"/>
+
+                <text class="lab" x="230" y="292" text-anchor="middle">Up &minus; Stream</text>
+                <path class="arw" d="M420 330 H250"/>
+                <path class="arwhead" d="M250 318 l-30 12 l30 12 z"/>
+
+                <path class="mast" d="M526 430 V 294"/>
+                <path class="sail" d="M532 300 L532 416 L590 416 Z"/>
+                <path class="sail" d="M520 312 L520 416 L480 416 Z"/>
+                <path class="hull" d="M470 430 l130 0 l-18 34 l-94 0 z"/>
+                <rect class="water" x="0" y="430" width="700" height="46"/>
+                <path class="wave" d="M0 438 q40 -12 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0"/>
+              </svg>
+            </div>
+
+            <div class="glossary">
+              <div class="g-row">
+                <span class="label">v &rarr;</span>
+                <span class="step">Boat velocity</span>
+              </div>
+              <div class="g-row">
+                <span class="label">u &rarr;</span>
+                <span class="step">River velocity</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="grid3">
+              <div class="step">
+                <div class="eq inline">t<sub>1</sub> = <span class="frac"><span class="num">d</span><span class="den">v + u</span></span></div>
+                <div class="eq-note">down stream &mdash; the river helps</div>
+              </div>
+              <div class="step">
+                <div class="eq inline">t<sub>2</sub> = <span class="frac"><span class="num">d</span><span class="den">v &minus; u</span></span></div>
+                <div class="eq-note">up stream &mdash; the river fights</div>
+              </div>
+              <div class="step">
+                <div class="eq inline">t = <span class="frac"><span class="num">d</span><span class="den">v</span></span></div>
+                <div class="eq-note">what we are asked for &mdash; no current at all</div>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div class="step"><div class="eq inline">v + u = <span class="frac"><span class="num">d</span><span class="den">t<sub>1</sub></span></span></div></div>
+              <div class="step"><div class="eq inline">v &minus; u = <span class="frac"><span class="num">d</span><span class="den">t<sub>2</sub></span></span></div></div>
+            </div>
+
+            <div class="derivation">
+              <div class="line step"><span class="eq inline">2v = <span class="frac"><span class="num">d</span><span class="den">t<sub>1</sub></span></span> + <span class="frac"><span class="num">d</span><span class="den">t<sub>2</sub></span></span></span>
+                <span class="why">add the two &mdash; u cancels itself out</span></div>
+              <div class="line step"><span class="eq inline"><span class="frac"><span class="num">2v</span><span class="den">d</span></span> = <span class="frac"><span class="num">1</span><span class="den">t<sub>1</sub></span></span> + <span class="frac"><span class="num">1</span><span class="den">t<sub>2</sub></span></span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result step"><span class="eq inline"><span class="frac"><span class="num">2</span><span class="den">t</span></span> = <span class="frac"><span class="num">1</span><span class="den">t<sub>1</sub></span></span> + <span class="frac"><span class="num">1</span><span class="den">t<sub>2</sub></span></span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 6 — the escalator, walking the same way it moves. Two speeds add,
+     and the two given times are just the two speeds in disguise. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">It take <span class="eq small inline">t<sub>1</sub></span> time to go up when only escalator is moving upwards and
+        <span class="eq small inline">t<sub>2</sub></span> if only boy is walking upwards in what time same person can go up if we walk
+        on escalator moving upwards?
+        <span class="tag-hot">Tough</span></div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="graph-grid">
+
+          <div class="graph-cell step">
+            <svg class="dgm" viewBox="0 0 340 260">
+              <g class="stair">
+                <rect x="26" y="212" width="40" height="13" rx="3"/>
+                <rect x="58" y="190" width="40" height="13" rx="3"/>
+                <rect x="90" y="168" width="40" height="13" rx="3"/>
+                <rect x="122" y="146" width="40" height="13" rx="3"/>
+                <rect x="154" y="124" width="40" height="13" rx="3"/>
+                <rect x="186" y="102" width="40" height="13" rx="3"/>
+                <rect x="218" y="80" width="40" height="13" rx="3"/>
+                <rect x="250" y="58" width="40" height="13" rx="3"/>
+              </g>
+              <path class="arw" d="M110 196 L262 88"/>
+              <path class="arwhead" d="M262 88 L247.2 112.1 L234.4 94.1 Z"/>
+              <g class="figr">
+                <circle cx="46" cy="164" r="12"/>
+                <rect x="37" y="180" width="18" height="32" rx="7"/>
+                <path d="M40 210 l-3 26 h8 l3-20 z"/>
+                <path d="M52 210 l3 26 h-8 l-3-20 z"/>
+              </g>
+            </svg>
+            <div class="cap"><span class="eq small inline">t<sub>1</sub> = <span class="frac"><span class="num">d</span><span class="den">v</span></span></span> &mdash; escalator only</div>
+          </div>
+
+          <div class="graph-cell step">
+            <svg class="dgm" viewBox="0 0 340 260">
+              <g class="stair">
+                <rect x="26" y="212" width="40" height="13" rx="3"/>
+                <rect x="58" y="190" width="40" height="13" rx="3"/>
+                <rect x="90" y="168" width="40" height="13" rx="3"/>
+                <rect x="122" y="146" width="40" height="13" rx="3"/>
+                <rect x="154" y="124" width="40" height="13" rx="3"/>
+                <rect x="186" y="102" width="40" height="13" rx="3"/>
+                <rect x="218" y="80" width="40" height="13" rx="3"/>
+                <rect x="250" y="58" width="40" height="13" rx="3"/>
+              </g>
+              <path class="arw b" d="M126 152 L262 56"/>
+              <path class="arwhead b" d="M262 56 L247.2 80 L234.4 62 Z"/>
+              <g class="figr b">
+                <circle cx="106" cy="120" r="12"/>
+                <rect x="97" y="136" width="18" height="32" rx="7"/>
+                <path d="M99 166 l-9 24 h9 l7-18 z"/>
+                <path d="M112 166 l7 24 h-9 l-7-18 z"/>
+              </g>
+            </svg>
+            <div class="cap"><span class="eq small inline">t<sub>2</sub> = <span class="frac"><span class="num">d</span><span class="den">u</span></span></span> &mdash; boy only</div>
+          </div>
+
+          <div class="graph-cell step">
+            <svg class="dgm" viewBox="0 0 340 260">
+              <g class="stair">
+                <rect x="26" y="212" width="40" height="13" rx="3"/>
+                <rect x="58" y="190" width="40" height="13" rx="3"/>
+                <rect x="90" y="168" width="40" height="13" rx="3"/>
+                <rect x="122" y="146" width="40" height="13" rx="3"/>
+                <rect x="154" y="124" width="40" height="13" rx="3"/>
+                <rect x="186" y="102" width="40" height="13" rx="3"/>
+                <rect x="218" y="80" width="40" height="13" rx="3"/>
+                <rect x="250" y="58" width="40" height="13" rx="3"/>
+              </g>
+              <path class="arw" d="M120 210 L272 102"/>
+              <path class="arwhead" d="M272 102 L257.2 126.1 L244.4 108.1 Z"/>
+              <path class="arw b" d="M126 152 L262 56"/>
+              <path class="arwhead b" d="M262 56 L247.2 80 L234.4 62 Z"/>
+              <g class="figr b">
+                <circle cx="106" cy="120" r="12"/>
+                <rect x="97" y="136" width="18" height="32" rx="7"/>
+                <path d="M99 166 l-9 24 h9 l7-18 z"/>
+                <path d="M112 166 l7 24 h-9 l-7-18 z"/>
+              </g>
+            </svg>
+            <div class="cap"><span class="eq small inline">t = <span class="frac"><span class="num">d</span><span class="den">v + u</span></span></span> &mdash; both together</div>
+          </div>
+
+        </div>
+
+        <div class="two-col">
+          <div class="derivation">
+            <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">d</span><span class="den"><span class="frac"><span class="num">d</span><span class="den">t<sub>1</sub></span></span> + <span class="frac"><span class="num">d</span><span class="den">t<sub>2</sub></span></span></span></span></span>
+              <span class="why">write each speed as its own distance over its own time</span></div>
+          </div>
+          <div class="derivation">
+            <div class="line step"><span class="eq inline">t = <span class="frac"><span class="num">1</span><span class="den"><span class="frac"><span class="num">1</span><span class="den">t<sub>1</sub></span></span> + <span class="frac"><span class="num">1</span><span class="den">t<sub>2</sub></span></span></span></span></span>
+              <span class="why">d divides out &mdash; the answer never needed it</span></div>
+          </div>
+        </div>
+        <div class="result step"><span class="eq inline">t = <span class="frac"><span class="num">t<sub>1</sub> t<sub>2</sub></span><span class="den">t<sub>1</sub> + t<sub>2</sub></span></span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Slide 7 — the same board, escalator running the other way. Only the sign
+     between the two speeds changes, and the answer changes with it. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">It take <span class="eq small inline">t<sub>1</sub></span> time to go up when only escalator is moving upwards and
+        <span class="eq small inline">t<sub>2</sub></span> if only boy is walking upwards in what time same person can go up if we walk
+        on escalator moving upwards?
+        <span class="tag-hot">Tough</span></div>
+
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="split-6040">
+          <div class="graph-grid two">
+
+            <div class="graph-cell step">
+              <svg class="dgm" viewBox="0 0 340 260">
+                <g class="stair">
+                  <rect x="26" y="212" width="40" height="13" rx="3"/>
+                  <rect x="58" y="190" width="40" height="13" rx="3"/>
+                  <rect x="90" y="168" width="40" height="13" rx="3"/>
+                  <rect x="122" y="146" width="40" height="13" rx="3"/>
+                  <rect x="154" y="124" width="40" height="13" rx="3"/>
+                  <rect x="186" y="102" width="40" height="13" rx="3"/>
+                  <rect x="218" y="80" width="40" height="13" rx="3"/>
+                  <rect x="250" y="58" width="40" height="13" rx="3"/>
+                </g>
+                <path class="arw" d="M110 196 L262 88"/>
+                <path class="arwhead" d="M262 88 L247.2 112.1 L234.4 94.1 Z"/>
+                <g class="figr">
+                  <circle cx="46" cy="164" r="12"/>
+                  <rect x="37" y="180" width="18" height="32" rx="7"/>
+                  <path d="M40 210 l-3 26 h8 l3-20 z"/>
+                  <path d="M52 210 l3 26 h-8 l-3-20 z"/>
+                </g>
+              </svg>
+              <div class="cap"><span class="eq small inline">t<sub>1</sub> = <span class="frac"><span class="num">d</span><span class="den">v</span></span></span> &mdash; escalator only</div>
+            </div>
+
+            <div class="graph-cell step">
+              <svg class="dgm" viewBox="0 0 340 260">
+                <g class="stair">
+                  <rect x="26" y="212" width="40" height="13" rx="3"/>
+                  <rect x="58" y="190" width="40" height="13" rx="3"/>
+                  <rect x="90" y="168" width="40" height="13" rx="3"/>
+                  <rect x="122" y="146" width="40" height="13" rx="3"/>
+                  <rect x="154" y="124" width="40" height="13" rx="3"/>
+                  <rect x="186" y="102" width="40" height="13" rx="3"/>
+                  <rect x="218" y="80" width="40" height="13" rx="3"/>
+                  <rect x="250" y="58" width="40" height="13" rx="3"/>
+                </g>
+                <path class="arw b" d="M126 152 L262 56"/>
+                <path class="arwhead b" d="M262 56 L247.2 80 L234.4 62 Z"/>
+                <g class="figr b">
+                  <circle cx="106" cy="120" r="12"/>
+                  <rect x="97" y="136" width="18" height="32" rx="7"/>
+                  <path d="M99 166 l-9 24 h9 l7-18 z"/>
+                  <path d="M112 166 l7 24 h-9 l-7-18 z"/>
+                </g>
+              </svg>
+              <div class="cap"><span class="eq small inline">t<sub>2</sub> = <span class="frac"><span class="num">d</span><span class="den">u</span></span></span> &mdash; boy only</div>
+            </div>
+
+          </div>
+
+          <div class="stack">
+            <div class="derivation">
+              <div class="line step"><span class="eq inline">V<sub>r</sub> = u &minus; v</span>
+                <span class="why">this time the two are set against each other</span></div>
+            </div>
+            <div class="result step"><span class="eq inline">t = <span class="frac"><span class="num">d</span><span class="den">u &minus; v</span></span></span></div>
+            <p class="note step">Nothing new is being done here &mdash; it is the overtake case of the very first
+              board. Turn the escalator around and the same two speeds subtract instead of adding, so the boy
+              takes longer, and if <i>u</i> ever drops to <i>v</i> he never gets to the top at all.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

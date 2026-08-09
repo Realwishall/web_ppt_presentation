@@ -1,0 +1,10 @@
+{
+  "slug": "mechanics-graph",
+  "chapter": "03 - Motion in 1D",
+  "source_name": "03  Mechanics Part 1 03 Graph   Bearable.pptx",
+  "slide_count": 66,
+  "renderer": "libreoffice",
+  "motif": "graph",
+  "merged_slides": [5, 6, 7, 10],
+  "merged_reason": "PowerPoint morph frames: slides 5-7 and 10 are the same 'Graph Basic' board with one more heading each. They are the three .info-box reveals on that page, not four extra slides."
+}

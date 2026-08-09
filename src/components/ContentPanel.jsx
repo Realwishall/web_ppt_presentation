@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   FolderPlus, Plus, Trash2, ChevronRight, Layers, FolderOpen, Pencil, Loader2,
   UploadCloud, ClipboardPaste, FileCode2, X, Play, ChevronUp, ChevronDown, GripVertical,
+  Download,
 } from 'lucide-react'
 import ChapterIcon from './ChapterIcon'
 import FolderEditor from './FolderEditor'
@@ -11,6 +12,7 @@ import {
   listClasses, createClass, deleteClass,
   listChapters, createChapter, deleteChapter,
   listFolders, createFolder, deleteFolder, updateFolder, reorderFolders,
+  readFolderHtml,
 } from '../lib/content'
 
 // Left half of the dashboard: author Classes → Chapters → Folders.
@@ -85,7 +87,7 @@ function ClassList({ onOpen }) {
     } finally { setBusy(false) }
   }
   async function remove(id, e) {
-    if (!e?.shiftKey && !confirm('Delete this class and everything inside it? (Chapters/folders are not auto-deleted from storage.)')) return
+    if (!e?.shiftKey && !confirm('Hide this class? Its chapters and decks leave the panel but are kept, so old sessions still open.')) return
     await deleteClass(id)
     await load()
   }
@@ -136,7 +138,7 @@ function ChapterList({ cls, onOpen }) {
     } finally { setBusy(false) }
   }
   async function remove(id, e) {
-    if (!e?.shiftKey && !confirm('Delete this chapter and its folders?')) return
+    if (!e?.shiftKey && !confirm('Hide this chapter and its folders? Nothing is erased — old sessions keep working.')) return
     await deleteChapter(cls.id, id)
     await load()
   }
@@ -206,6 +208,7 @@ function FolderList({ cls, chapter }) {
   const [pasteHtml, setPasteHtml] = useState('')
   const [dragId, setDragId] = useState(null) // folder being dragged
   const [drop, setDrop] = useState(null) // {id, edge:'top'|'bottom'} — where it would land
+  const [dlId, setDlId] = useState(null) // folder whose HTML is being fetched for download
   const pressRef = useRef(null) // what the pointer went down on, to veto drags off a control
 
   const load = useCallback(async () => setItems(await listFolders(cls.id, chapter.id)), [cls.id, chapter.id])
@@ -262,7 +265,7 @@ function FolderList({ cls, chapter }) {
   }
 
   async function remove(id, e) {
-    if (!e?.shiftKey && !confirm('Delete this folder and its HTML?')) return
+    if (!e?.shiftKey && !confirm('Hide this folder? The HTML is kept under its content code, so sessions that taught it still replay.')) return
     await deleteFolder(cls.id, chapter.id, id)
     await load()
   }
@@ -292,6 +295,31 @@ function FolderList({ cls, chapter }) {
     if (drop.edge === 'bottom') to += 1
     if (from < to) to -= 1 // the row leaves its old slot before it is re-inserted
     move(from, to)
+  }
+
+  // Save this folder's deck to the teacher's laptop as one self-contained
+  // .html file — the same bytes the presenter loads, at the version the folder
+  // currently points at.
+  async function download(folder) {
+    if (dlId) return
+    setDlId(folder.id); setErr('')
+    let url = ''
+    try {
+      const html = await readFolderHtml(folder)
+      if (!html) throw new Error('This folder has no HTML to download yet.')
+      url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${htmlFileName(folder.name)}.html`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } catch (e) {
+      setErr(e.message || 'Download failed.')
+    } finally {
+      if (url) setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      setDlId(null)
+    }
   }
 
   async function changeTag(id, tagValue) {
@@ -405,13 +433,19 @@ function FolderList({ cls, chapter }) {
               <GripVertical className="h-3.5 w-3.5" />
               <MoveBtn onClick={() => move(i, i + 1)} disabled={i === items.length - 1} title="Move down"><ChevronDown className="h-4 w-4" /></MoveBtn>
             </span>
-            <button onClick={() => navigate('/teach', { state: { folder: f } })}
+            <button onClick={() => navigate('/teach', { state: { folder: { ...f, classId: cls.id, chapterId: chapter.id } } })}
               title="Preview in presentation view"
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-400 transition hover:bg-violet-600 hover:text-white">
               <Play className="h-5 w-5" />
             </button>
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold text-slate-100">{f.name}</span>
+              {f.code && (
+                <span className="mr-1.5 inline-block font-mono text-[11px] text-slate-500"
+                  title="Permanent content code — sessions reference this instead of copying the HTML">
+                  {f.code}<span className="text-slate-600"> ·v{f.version || 1}</span>
+                </span>
+              )}
               <select value={f.tag || FOLDER_TAGS[0]} onChange={(e) => changeTag(f.id, e.target.value)}
                 title="Change tag"
                 className="mt-0.5 cursor-pointer rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-slate-400 outline-none transition hover:border-indigo-400/50 hover:text-slate-200 focus:border-indigo-400 [&>option]:bg-slate-900">
@@ -420,11 +454,15 @@ function FolderList({ cls, chapter }) {
                   .map((t) => <option key={t}>{t}</option>)}
               </select>
             </span>
+            <IconBtn onClick={() => download(f)} disabled={dlId === f.id}
+              title="Download this deck as a .html file">
+              {dlId === f.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            </IconBtn>
             <button onClick={() => setEditing(f)}
               className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500">
               <Pencil className="h-3.5 w-3.5" /> Edit HTML
             </button>
-            <IconBtn onClick={(e) => remove(f.id, e)} danger title="Delete folder"><Trash2 className="h-4 w-4" /></IconBtn>
+            <IconBtn onClick={(e) => remove(f.id, e)} danger title="Hide folder (content is kept)"><Trash2 className="h-4 w-4" /></IconBtn>
           </li>
         ))}
       </ul>
@@ -474,13 +512,25 @@ function MoveBtn({ children, onClick, disabled, title }) {
     </button>
   )
 }
-function IconBtn({ children, onClick, danger, title }) {
+function IconBtn({ children, onClick, danger, title, disabled }) {
   return (
-    <button onClick={onClick} title={title}
-      className={`rounded-lg p-2 text-slate-500 transition ${danger ? 'hover:bg-red-500/10 hover:text-red-400' : 'hover:bg-white/10 hover:text-slate-200'}`}>
+    <button onClick={onClick} title={title} disabled={disabled}
+      className={`rounded-lg p-2 text-slate-500 transition disabled:opacity-50 ${danger ? 'hover:bg-red-500/10 hover:text-red-400' : 'hover:bg-white/10 hover:text-slate-200'}`}>
       {children}
     </button>
   )
+}
+// A folder name is free text; a download filename is not.
+function htmlFileName(name) {
+  const clean = String(name || 'deck')
+    .replace(/[<>:"/\\|?*]/g, '-') // characters Windows and macOS reject in a filename
+    .replace(/[\u0000-\u001f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^\.+|\.+$/g, '') // a leading dot hides the file; a trailing one breaks Windows
+    .trim()
+    .slice(0, 120)
+  return clean || 'deck'
 }
 function AddBtn({ busy, icon: Icon = Plus }) {
   return (

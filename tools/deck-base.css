@@ -113,6 +113,17 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
                       to  {transform:translate3d(-8vmin,-7vmin,0) scale(1.1)}}
 @media (prefers-reduced-motion:reduce){#bg:before,#bg:after{animation:none}}
 #bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.32}
+/* Chapter motif "graph" (manifest "motif":"graph"): squared paper behind the
+   whole deck, with one pale axis pair and a rising curve low-left. Carried at
+   a higher base opacity than the hex weave because its own strokes are set
+   far fainter; it must stay a texture, never a figure the class reads.      */
+#bg svg.motif-graph{opacity:.62}
+/* Chapter motif "rail" (manifest "motif":"rail"): a constant-velocity chapter's
+   quiet signature — a long-exposure streak field down the right-hand side and a
+   track with its sleepers running low across the board. Both live outside the
+   centre / upper-left, which is where the teacher writes. Texture, never
+   information (rule 11).                                                     */
+#bg svg.motif-rail{opacity:.7}
 
 .kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
     font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
@@ -292,6 +303,15 @@ table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!imp
 .eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
 .eq-note{font-style:italic;color:var(--muted);font-size:var(--fs-note)}
 .eq.small{font-size:var(--fs-small)}
+/* `.eq` is a flex run, and a flex container blockifies every inline child —
+   which silently destroys <sub> and <sup> (each one becomes its own flex item,
+   sitting on the baseline with a gap in front of it). `.eq.inline` lays the run
+   out as ordinary inline content instead: subscripts behave, and .frac falls
+   back to its own vertical-align:middle, which is what an inline formatting
+   context wants anyway. Use it for any run carrying a subscript, and inside
+   `.derivation .line` / `.graph-cell .cap`, which are flex containers too. */
+.eq.inline{display:inline-block;gap:normal;flex-wrap:nowrap;vertical-align:baseline;
+           white-space:nowrap}
 .eq.big  {font-size:clamp(24px,5vmin,56px);color:var(--gold-soft);
           text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
 
@@ -316,6 +336,11 @@ math{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink)}
 math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
 math[display="block"]{display:block;margin:.8vmin 0}
 .eq math{font-size:inherit}
+/* Inline MathML draws <mfrac> in "compact" style: numerator and denominator
+   drop a script level, so 96/8 next to full-size prose reads as a footnote.
+   These decks are presentation-scale (rule 9) and get read from the back of
+   the room, so force display style everywhere. */
+math{math-style:normal}
 
 /* ------------------------------------------------- annotated highlights ---
    For "A rod of [length] [4][m]" style examples, where parts of an expression
@@ -388,6 +413,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
                   display:flex;align-items:baseline;gap:.5em}
 .derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
                        font-size:var(--fs-note)}
+.stack>.result,.graph-cell>.result{align-self:flex-start}
 .result{display:inline-block;border:.14vmin solid rgba(245,197,66,.7);border-radius:1.1vmin;
         padding:1vmin 2vmin;color:var(--gold-soft);font-family:var(--font-math);
         font-size:var(--fs-eq);font-weight:700;
@@ -412,14 +438,152 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:1vmin}
 .figure-frame.plain{background:none;border:0;padding:0;box-shadow:none}
 .figure-frame.tall svg,.figure-frame.tall img{max-height:64vh}
+/* A wide schematic that shares its board with the working underneath: cap it
+   low so the algebra and the answer chip still fit above the fold. */
+.figure-frame.short svg,.figure-frame.short img{max-height:32vh}
 .fig-caption{margin-top:1vmin;text-align:center;color:var(--muted);font-size:var(--fs-note);
              letter-spacing:.02em}
+
+/* ------------------------------------------------------ graph primitives ---
+   A chapter whose subject IS the graph draws dozens of the same small figure,
+   so the ink is a component, not a per-slide decision. Put `class="gph"` on
+   the <svg> and use these part classes inside it; every stroke then matches
+   across the deck and survives PDF export (pure SVG + CSS, no script).
+
+     .axis    the x/y frame and its tick marks — scaffolding, never a .step
+     .curve   the plotted quantity (gold: this is the thing being read)
+     .curve2  a second plot on the same axes (indigo)
+     .guide   dashed projection lines down to an axis / a reference level
+     .area    the shaded region under a curve (integration slides)
+     .tangent the slope line at a point + .dot for the point itself
+     text.lab axis names and numbers                                         */
+svg.gph{overflow:visible}
+svg.gph .axis   {fill:none;stroke:rgba(255,255,255,.62);stroke-width:2.2;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .curve  {fill:none;stroke:var(--gold-soft);stroke-width:3.6;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .curve2 {fill:none;stroke:var(--accent);stroke-width:3.2;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .guide  {fill:none;stroke:rgba(159,180,255,.62);stroke-width:1.7;
+                 stroke-dasharray:7 7;stroke-linecap:round}
+svg.gph .area   {fill:rgba(124,140,255,.30);stroke:none}
+svg.gph .area.gold{fill:rgba(245,197,66,.24)}
+svg.gph .tangent{fill:none;stroke:rgba(255,255,255,.55);stroke-width:2;
+                 stroke-dasharray:9 7;stroke-linecap:round}
+svg.gph .dot    {fill:var(--gold);stroke:none}
+svg.gph .dot.open{fill:none;stroke:var(--gold);stroke-width:3}
+svg.gph text    {font-family:var(--font-math);font-size:34px;fill:var(--sub)}
+svg.gph text.lab{fill:rgba(255,255,255,.9)}
+svg.gph text.num{font-size:30px;fill:var(--muted)}
+
+/* ---------------------------------------------- motion schematics (.dgm) ---
+   A kinematics chapter draws the same handful of props over and over — a
+   train on a track, a pole, a bridge span, a boat on a river, an escalator —
+   so the ink is a component, exactly like svg.gph above. Put `class="dgm"` on
+   the <svg> and use the part classes below; every figure in the deck then
+   matches, no fragment needs a style attribute, and because it is pure SVG +
+   CSS it survives PDF export (rule 11).
+
+     .rail .sleeper    the track a vehicle stands on — scaffolding, never a .step
+     .body (+.b)       a vehicle hull; .b is the second (gold) vehicle
+     .nose .glass .wheel      its driving end, windows, bogies
+     .post .span .pier        a pole, a bridge deck, its supports
+     .arw + .arwhead (+.b)    a motion arrow: a line and a solid head
+     .dim .tick               a dimension line and its end ticks
+     .water .wave .hull .sail .mast   the river band and the boat on it
+     .stair .figr (+.b)       escalator treads and the person on them
+     text.lab text.num        labels (UI face) and numbers (math face)
+
+   Arrowheads are drawn as <path class="arwhead">, never as SVG markers: a
+   marker needs an id, and a deck is one document with a dozen figures in it. */
+svg.dgm{overflow:visible}
+svg.dgm .rail   {fill:none;stroke:rgba(255,255,255,.45);stroke-width:3;stroke-linecap:round}
+svg.dgm .sleeper{fill:none;stroke:rgba(255,255,255,.17);stroke-width:4;stroke-linecap:round}
+svg.dgm .body   {fill:rgba(124,140,255,.20);stroke:rgba(206,216,232,.85);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .body.b {fill:rgba(245,197,66,.15);stroke:rgba(245,197,66,.8)}
+svg.dgm .stripe {fill:none;stroke:var(--accent);stroke-width:3.4;stroke-linecap:round}
+svg.dgm .stripe.b{stroke:var(--gold)}
+svg.dgm .nose   {fill:rgba(251,113,133,.5);stroke:rgba(251,113,133,.9);
+                 stroke-width:2;stroke-linejoin:round}
+svg.dgm .glass  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.34);stroke-width:1.6}
+svg.dgm .wheel  {fill:rgba(255,255,255,.18);stroke:rgba(255,255,255,.45);stroke-width:2}
+svg.dgm .post   {fill:rgba(86,204,242,.32);stroke:var(--cyan);stroke-width:2.4}
+svg.dgm .span   {fill:none;stroke:var(--cyan);stroke-width:4.4;stroke-linecap:round}
+svg.dgm .pier   {fill:none;stroke:rgba(86,204,242,.55);stroke-width:3;stroke-linecap:round}
+svg.dgm .arw    {fill:none;stroke:var(--gold);stroke-width:3.4;stroke-linecap:round}
+svg.dgm .arw.b  {stroke:var(--accent)}
+svg.dgm .arwhead{fill:var(--gold);stroke:none}
+svg.dgm .arwhead.b{fill:var(--accent)}
+svg.dgm .dim    {fill:none;stroke:rgba(255,255,255,.72);stroke-width:2;stroke-linecap:round}
+svg.dgm .tick   {fill:none;stroke:rgba(255,255,255,.72);stroke-width:2;stroke-linecap:round}
+svg.dgm .water  {fill:rgba(124,140,255,.22);stroke:none}
+svg.dgm .wave   {fill:none;stroke:rgba(159,180,255,.5);stroke-width:2.4;stroke-linecap:round}
+svg.dgm .hull   {fill:rgba(245,197,66,.18);stroke:rgba(245,197,66,.85);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .sail   {fill:rgba(255,255,255,.13);stroke:rgba(255,255,255,.58);
+                 stroke-width:2;stroke-linejoin:round}
+svg.dgm .mast   {fill:none;stroke:rgba(255,255,255,.58);stroke-width:2.4;stroke-linecap:round}
+/* 2-D motion additions: a schematic in this chapter is a free path through
+   space rather than a vehicle on a rail, so it needs a trajectory stroke, a
+   marked body, a projection guide and an angle arc. Same ink language as the
+   props above; pure SVG + CSS, so they survive PDF export.                  */
+svg.dgm .traj   {fill:none;stroke:var(--accent);stroke-width:3.2;stroke-linecap:round}
+svg.dgm .traj.b {stroke:var(--gold-soft)}
+svg.dgm .traj.w {stroke:rgba(255,255,255,.8)}
+svg.dgm .dot    {fill:var(--gold);stroke:none}
+svg.dgm .dot.b  {fill:var(--accent)}
+svg.dgm .dot.w  {fill:rgba(255,255,255,.88)}
+svg.dgm .guide  {fill:none;stroke:rgba(159,180,255,.55);stroke-width:1.8;
+                 stroke-dasharray:9 9;stroke-linecap:round}
+svg.dgm .arc    {fill:none;stroke:rgba(255,255,255,.62);stroke-width:2}
+svg.dgm .arw.w  {stroke:rgba(255,255,255,.85)}
+svg.dgm .arwhead.w{fill:rgba(255,255,255,.85)}
+svg.dgm .stair  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.4);stroke-width:2}
+svg.dgm .figr   {fill:rgba(245,197,66,.6);stroke:none}
+svg.dgm .figr.b {fill:rgba(159,180,255,.65)}
+svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
+svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
+svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
+
+/* Small-multiple grid — the "here are four graphs, which one" layout that
+   this chapter repeats on nearly every slide. The GRID is never the .step;
+   each `.graph-cell` is, so the class meets one figure at a time.           */
+.graph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.8vmin;
+            margin-top:.6vmin;align-items:start}
+.graph-grid.two {grid-template-columns:repeat(2,1fr)}
+.graph-grid.four{grid-template-columns:repeat(4,1fr);gap:2.2vmin}
+.graph-cell{display:flex;flex-direction:column;gap:.9vmin;min-width:0}
+.graph-cell svg{width:100%;height:auto;max-height:34vh}
+.graph-cell .cap{text-align:center;color:var(--sub);font-size:var(--fs-note);
+                 line-height:1.3}
+.graph-cell .cap .ok,.graph-cell .cap .no{font-size:1.35em;line-height:1}
+/* Two or three graphs stacked down a column instead of across a row. They have
+   to SHARE the board's height, so the per-figure cap comes down; without this
+   the last figure walks off the bottom of the slide. */
+.graph-stack{display:flex;flex-direction:column;gap:1.6vmin;min-height:0}
+.graph-stack .graph-cell svg{max-height:26vh}
+.graph-stack.three .graph-cell svg{max-height:17vh}
+/* the verdict mark the source deck stamps on a graph: a big ✓ or ✗ */
+.verdict{display:block;text-align:center;font-size:clamp(22px,4.4vmin,48px);
+         font-weight:900;line-height:1}
+.verdict.ok{color:var(--green)}
+.verdict.no{color:var(--red)}
 
 /* ------------------------------------------------------------ questions ---
    Only .option carries .clickable (rule 3): ≥44px, stable position.
    No hover state — hover never fires while teaching.                        */
 .options{display:flex;flex-direction:column;gap:1.5vmin;margin-top:1vmin}
 .options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5vmin}
+/* Options that ARE graphs — the "which of these four curves" question this
+   chapter asks over and over. The badge sits above its own figure so the
+   class can call an answer by letter without reading a caption.            */
+.options.graphs{display:grid;grid-template-columns:repeat(4,1fr);gap:2vmin}
+.options.graphs.two{grid-template-columns:repeat(2,1fr)}
+.options.graphs .option{flex-direction:column;align-items:stretch;
+                        gap:.9vmin;padding:1.6vmin 1.4vmin}
+.options.graphs .option svg{width:100%;height:auto;max-height:30vh}
+.options.graphs .opt-badge{align-self:flex-start}
 .option{position:relative;display:flex;align-items:center;gap:1.4vmin;
         border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
         padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
@@ -637,6 +801,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
      nested print iframes (presenter export) often drop → washed-out white. */
   #bg{display:block!important;background:#080a14!important}
   #bg:before,#bg:after{display:none!important;animation:none!important}
+  /* the motif is texture, not information — drop it out of the PDF entirely */
+  #bg svg.motif-graph{opacity:.28!important}
+  #bg svg.motif-rail {opacity:.24!important}
   .kicker-tag,.no-print{display:none!important}
   html,body,.page{background:#080a14!important}
   .page:before{background:none!important;height:0!important}

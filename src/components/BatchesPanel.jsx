@@ -38,7 +38,7 @@ export default function BatchesPanel() {
     try { await createBatch(name); setName(''); await load() } finally { setBusy(false) }
   }
   async function remove(id) {
-    if (!confirm('Delete this batch?')) return
+    if (!confirm('Hide this batch? Its session history is kept, so it can be brought back.')) return
     await deleteBatch(id)
     await load()
   }
@@ -80,7 +80,7 @@ export default function BatchesPanel() {
                     <GraduationCap className="h-5 w-5" />
                   </span>
                   <h3 className="min-w-0 flex-1 truncate font-semibold text-slate-100">{b.name || b.id}</h3>
-                  <button onClick={() => remove(b.id)} title="Delete batch"
+                  <button onClick={() => remove(b.id)} title="Hide batch (session history is kept)"
                     className="rounded-lg p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -220,6 +220,7 @@ function OldSessionsModal({ batch, onClose, onOpen }) {
                         <span>{pages} page{pages === 1 ? '' : 's'}</span>
                         {r.reason === 'export' && <span>Exported pages only</span>}
                         {r.reason === 'timeout' && <span>Full board (auto-save)</span>}
+                        {r.reason === 'exit' && <span>Full board (saved on exit)</span>}
                         {r.fileCount > 0 && <span>{r.fileCount} file{r.fileCount === 1 ? '' : 's'} saved</span>}
                       </div>
                       {!!r.deckNames?.length && (

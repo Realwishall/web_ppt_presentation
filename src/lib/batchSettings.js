@@ -1,36 +1,28 @@
-// Per-batch settings (Batch → "Setting"):
+// Per-batch settings (Batch → "Setting"), inside the signed-in teacher's space:
 //
-//   batches/{batchId}/meta/settings      { lastExport{…}, chapters[] ← legacy }
-//   batches/{batchId}/meta/roster        { students[], tests[], marks{} }
-//   batches/{batchId}/meta/exportPages   { startHtml, endHtml, … }  ← legacy
+//   users/{uid}/batches/{batchId}/meta/settings   { lastExport{…} }
+//   users/{uid}/batches/{batchId}/meta/roster     { students[], tests[], marks{} }
 //
 // Only two things are genuinely per-batch: the roster, and the memory of what
 // the teacher typed the last time they exported (so the next export pre-fills
 // and the lecture counter can advance). The chapter & topic map, the cover
-// pages and the logo are GLOBAL and live in src/lib/globalSettings.js.
-//
-// The legacy fields above are still read — a batch that was configured before
-// the split keeps working, and `migrateFromBatches()` lifts it into the global
-// docs the first time the Global settings panel is opened.
+// pages and the logo are account-wide and live in src/lib/globalSettings.js.
 //
 // Everything is a small number of whole-document reads/writes: these panels
 // are opened rarely and edited in bursts, so a doc-per-concern beats a
 // collection of tiny docs both in cost and in code.
 
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { makeId } from './content'
+import { udoc } from './userScope'
 import {
   getBranding,
   getCoverPages,
   getCurriculum,
-  normaliseChapters,
-  DEFAULT_FIT,
 } from './globalSettings'
 
-const settingsRef = (batchId) => doc(db, 'batches', batchId, 'meta', 'settings')
-const rosterRef = (batchId) => doc(db, 'batches', batchId, 'meta', 'roster')
-const legacyPagesRef = (batchId) => doc(db, 'batches', batchId, 'meta', 'exportPages')
+const settingsRef = (batchId) => udoc('batches', batchId, 'meta', 'settings')
+const rosterRef = (batchId) => udoc('batches', batchId, 'meta', 'roster')
 
 // ───────────────────────── settings doc (export memory) ─────────────────────────
 
@@ -43,7 +35,7 @@ export const EMPTY_LAST_EXPORT = {
   atMs: null,
 }
 
-export const EMPTY_SETTINGS = { chapters: [], rawMap: '', lastExport: { ...EMPTY_LAST_EXPORT } }
+export const EMPTY_SETTINGS = { lastExport: { ...EMPTY_LAST_EXPORT } }
 
 export async function getBatchSettings(batchId) {
   if (!batchId) return { ...EMPTY_SETTINGS }
@@ -51,9 +43,6 @@ export async function getBatchSettings(batchId) {
   if (!snap.exists()) return { ...EMPTY_SETTINGS }
   const d = snap.data()
   return {
-    // Legacy — kept so a pre-split batch still has chapters until migration.
-    chapters: normaliseChapters(d.chapters),
-    rawMap: d.rawMap || '',
     lastExport: {
       batchCode: d.lastExport?.batchCode || '',
       chapterNumber: d.lastExport?.chapterNumber ?? null,
@@ -67,11 +56,9 @@ export async function getBatchSettings(batchId) {
 
 export async function saveBatchSettings(batchId, patch) {
   if (!batchId) throw new Error('batchId is required')
-  const clean = { ...patch }
-  if (clean.chapters) clean.chapters = normaliseChapters(clean.chapters)
   await setDoc(
     settingsRef(batchId),
-    { batchId, ...clean, updatedAt: serverTimestamp(), updatedAtMs: Date.now() },
+    { batchId, ...patch, updatedAt: serverTimestamp(), updatedAtMs: Date.now() },
     { merge: true },
   )
 }
@@ -188,32 +175,10 @@ export function summariseMarks(roster) {
 
 // ───────────────────────── what the presenter needs at export time ─────────────────────────
 
-/** A pre-split batch's single Starting/Ending page, as cover-page records. */
-async function legacyBatchCovers(batchId) {
-  if (!batchId) return { starts: [], ends: [], logoOnCovers: false }
-  try {
-    const snap = await getDoc(legacyPagesRef(batchId))
-    if (!snap.exists()) return { starts: [], ends: [], logoOnCovers: false }
-    const d = snap.data()
-    const make = (html, name, role) =>
-      html ? [{ id: `${role}_legacy`, name: name || `${role}.html`, role, fit: DEFAULT_FIT, enabled: true, html }] : []
-    return {
-      starts: make(d.startHtml, d.startName, 'start'),
-      ends: make(d.endHtml, d.endName, 'end'),
-      logoOnCovers: !!d.logoOnCovers,
-    }
-  } catch (err) {
-    console.warn('Legacy cover page read failed:', err)
-    return { starts: [], ends: [], logoOnCovers: false }
-  }
-}
-
 /**
- * One call for everything the presenter iframe needs at export time.
- *
- * Global first, per-batch only as a fallback: a batch that was configured
- * before chapters and cover pages became global keeps exporting exactly as it
- * did, and stops using its own copy the moment the global one is filled in.
+ * One call for everything the presenter iframe needs at export time: this
+ * teacher's chapter map, their cover pages and logo, and this batch's memory
+ * of the last export.
  */
 export async function loadPresenterExportConfig(batchId) {
   const [settings, curriculum, covers, branding] = await Promise.all([
@@ -223,18 +188,10 @@ export async function loadPresenterExportConfig(batchId) {
     getBranding(),
   ])
 
-  let { starts, ends, logoOnCovers } = covers
-  if (!starts.length && !ends.length) {
-    const legacy = await legacyBatchCovers(batchId)
-    starts = legacy.starts
-    ends = legacy.ends
-    logoOnCovers = logoOnCovers || legacy.logoOnCovers
-  }
-
-  const chapters = curriculum.chapters.length ? curriculum.chapters : settings.chapters
+  const { starts, ends, logoOnCovers } = covers
 
   return {
-    chapters,
+    chapters: curriculum.chapters,
     lastExport: settings.lastExport,
     // Only enabled pages are sent — the panel toggles a page off without
     // making the teacher delete and re-upload it next week.

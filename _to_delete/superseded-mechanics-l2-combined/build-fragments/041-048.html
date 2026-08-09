@@ -1,0 +1,248 @@
+<!-- 041 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Case 3</span>
+      <div class="q">A body is moving in y direction and another body is moving towards first body always with same speed find distance between them after very long time.</div>
+    </div>
+    <div class="graph-grid">
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 440 190">
+          <path class="traj b" d="M30 120 H420"/>
+          <path class="traj b" d="M240 20 V180"/>
+          <path class="arw w" d="M60 120 H118"/><path class="arwhead w" d="M118 108 l28 12 l-28 12 z"/>
+          <path class="arw w" d="M240 108 V56"/><path class="arwhead w" d="M228 56 l12 -28 l12 28 z"/>
+          <text class="num" x="72" y="166">v</text>
+          <text class="num" x="266" y="110">v</text>
+          <text class="num" x="150" y="108">a</text>
+        </svg>
+        <div class="cap">Along x &#8658;</div>
+      </div>
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 440 190">
+          <path class="traj b" d="M30 150 H420"/>
+          <path class="traj b" d="M250 20 V180"/>
+          <path class="traj w" d="M20 176 L420 46"/>
+          <path class="arw w" d="M90 138 L140 122"/><path class="arwhead w" d="M154 116 l-14 24 l-6 -22 z"/>
+          <path class="arw w" d="M250 112 V56"/><path class="arwhead w" d="M238 56 l12 -28 l12 28 z"/>
+          <path class="guide" d="M212 82 L272 122"/>
+          <path class="guide" d="M196 112 H300"/>
+          <text class="num" x="130" y="168">v</text>
+          <text class="num" x="266" y="70">v</text>
+          <text class="num" x="196" y="92">&#952;</text>
+          <text class="lab" x="46" y="46">after time t</text>
+        </svg>
+        <div class="cap">Along y &#8658;</div>
+      </div>
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 440 190">
+          <path class="traj b" d="M30 150 H420"/>
+          <path class="traj b" d="M230 20 V180"/>
+          <path class="arw w" d="M230 110 V46"/><path class="arwhead w" d="M218 46 l12 -28 l12 28 z"/>
+          <path class="arw w" d="M198 150 V96"/><path class="arwhead w" d="M186 96 l12 -28 l12 28 z"/>
+          <text class="num" x="248" y="42">v</text>
+          <text class="num" x="164" y="120">v</text>
+          <text class="num" x="286" y="76">x</text>
+          <text class="lab" x="284" y="36">after very</text><text class="lab" x="284" y="66">long time</text>
+        </svg>
+        <div class="cap">Along line joining &#8658;</div>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="derivation">
+        <div class="line step">relative velocity : <span class="eq inline" data-tex="\Rightarrow v\cos(\theta)"></span></div>
+        <div class="line step">distance travelled : <span class="eq inline" data-tex="\Rightarrow a"></span></div>
+      </div>
+      <div class="derivation">
+        <div class="line step">relative velocity : <span class="eq inline" data-tex="\Rightarrow v-v\sin(\theta)"></span></div>
+        <div class="line step">distance travelled : <span class="eq inline" data-tex="\Rightarrow x"></span> <span class="why">this need to found</span></div>
+      </div>
+      <div class="derivation">
+        <div class="line step">relative velocity : <span class="eq inline" data-tex="\Rightarrow v-v\sin(\theta)"></span></div>
+        <div class="line step">distance travelled : <span class="eq inline" data-tex="\Rightarrow a-x"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 042 -->
+<section class="page">
+  <div class="wrap">
+    <div class="derivation">
+      <div class="line step">So,</div>
+      <div class="line step"><span class="eq inline" data-tex="x=a-x"></span></div>
+    </div>
+    <div class="result step"><span class="eq inline" data-tex="x=a/2"></span></div>
+  </div>
+</section>
+
+<!-- 043 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="two-col">
+      <div class="stack">
+        <h3 class="sub-heading">Relation between R,T,u <span class="tag-hot">Important</span></h3>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline" data-tex="R=u\cos\theta\,T"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="T=\frac{2u\sin\theta}{g}"></span></div>
+          <div class="line step">Now, <span class="eq inline" data-tex="\sin^{2}\theta+\cos^{2}\theta=1"></span></div>
+        </div>
+        <div class="result step"><span class="eq inline" data-tex="\left(\frac{gT}{2u}\right)^{2}+\left(\frac{R}{Tu}\right)^{2}=1"></span></div>
+      </div>
+      <div class="stack">
+        <h3 class="sub-heading">Relation between R,H,u <span class="tag-hot">Important</span></h3>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline" data-tex="R=u\cos\theta\,T=u\cos\theta\times 2\sqrt{\frac{2H}{g}}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="H=\frac{(u\sin\theta)^{2}}{2g}"></span></div>
+          <div class="line step">Now, <span class="eq inline" data-tex="\sin^{2}\theta+\cos^{2}\theta=1"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="u^{2}\sin^{2}\theta+u^{2}\cos^{2}\theta=u^{2}"></span></div>
+        </div>
+        <div class="result step"><span class="eq inline" data-tex="2gH+\frac{gR^{2}}{8H}=u^{2}"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 044 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Compare velocity of ball on sticking ground</h2>
+    <div class="graph-grid">
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 400 300">
+          <path class="rail" d="M40 250 H340"/>
+          <path class="guide" d="M120 70 V250"/>
+          <path class="guide" d="M120 70 H240"/>
+          <circle class="dot b" cx="120" cy="70" r="11"/>
+          <path class="arw b" d="M128 66 L212 34"/><path class="arwhead b" d="M226 28 l-16 24 l-8 -22 z"/>
+          <path class="arc" d="M170 70 A 50 50 0 0 0 164 52"/>
+          <text class="num" x="146" y="34">u</text>
+          <text class="num" x="182" y="62">&#952;</text>
+          <text class="num" x="82" y="164">h</text>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 400 300">
+          <path class="rail" d="M40 250 H340"/>
+          <path class="guide" d="M120 70 V250"/>
+          <circle class="dot b" cx="120" cy="70" r="11"/>
+          <path class="arw b" d="M132 70 H228"/><path class="arwhead b" d="M228 58 l28 12 l-28 12 z"/>
+          <text class="num" x="146" y="42">u</text>
+          <text class="num" x="82" y="164">h</text>
+        </svg>
+      </div>
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 400 300">
+          <path class="rail" d="M40 250 H340"/>
+          <path class="guide" d="M120 70 V250"/>
+          <path class="guide" d="M120 70 H240"/>
+          <circle class="dot b" cx="120" cy="70" r="11"/>
+          <path class="arw b" d="M130 76 L212 112"/><path class="arwhead b" d="M228 120 l-24 10 l-2 -24 z"/>
+          <path class="arc" d="M170 70 A 50 50 0 0 1 166 90"/>
+          <text class="num" x="146" y="42">u</text>
+          <text class="num" x="182" y="98">&#952;</text>
+          <text class="num" x="82" y="164">h</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 045 -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">When a body is projected at some oblique it&#8217;s path is always parabolic .True or false?</div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="answer-box step">For always this statement is false</div>
+        <div class="note step">As for very high velocity gravity might be changing.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 046 -->
+<section class="page">
+  <div class="wrap">
+    <div class="callout step">
+      <span class="eq big" data-tex="y=x\tan\theta-\frac{1}{2}g\left(\frac{x}{u\cos\theta}\right)^{2}"></span>
+    </div>
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span class="eq inline" data-tex="y=\sqrt3 x-5x^{2}"></span> find angle of projection</div>
+      <div class="a"><span class="a-head">Solution</span></div>
+    </div>
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212; Initial velocity</div>
+      <div class="a"><span class="a-head">Solution</span></div>
+    </div>
+    <div class="note step"><i>both read off the same boxed trajectory equation</i></div>
+  </div>
+</section>
+
+<!-- 047 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading"><span class="eq inline" data-tex="y=ax-bx^{2}"></span></h2>
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 640 260" data-anime="draw">
+          <path class="rail" d="M40 210 H600"/>
+          <path class="traj" d="M70 210 C 200 40 400 40 540 210"/>
+          <path class="arw" d="M74 206 L128 158"/><path class="arwhead" d="M140 148 l-14 26 l-16 -14 z"/>
+          <text class="num" x="86" y="146">u</text>
+          <text class="num" x="146" y="196">&#952;</text>
+          <text class="num" x="240" y="60">y = ax &#8722; bx&#178;</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <h3 class="sub-heading">Range</h3>
+        <div class="derivation">
+          <div class="line step">&#8658; Put <span class="eq inline" data-tex="y=0"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; y=0=ax-bx^{2}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; ax=bx^{2}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; x=\frac{a}{b}"></span></div>
+        </div>
+        <h3 class="sub-heading">Height</h3>
+        <div class="derivation">
+          <div class="line step">&#8658; Put <span class="eq inline" data-tex="x=\frac{a}{2b}"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 048 -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading"><span class="eq inline" data-tex="y=at-bt^{2}"></span></h2>
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 640 260" data-anime="draw">
+          <path class="rail" d="M40 210 H600"/>
+          <path class="traj" d="M70 210 C 200 40 400 40 540 210"/>
+          <path class="arw" d="M74 206 L128 158"/><path class="arwhead" d="M140 148 l-14 26 l-16 -14 z"/>
+          <text class="num" x="86" y="146">u</text>
+          <text class="num" x="146" y="196">&#952;</text>
+          <text class="num" x="240" y="60">y = at &#8722; bt&#178;</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <h3 class="sub-heading">Time of flight</h3>
+        <div class="derivation">
+          <div class="line step">&#8658; Put <span class="eq inline" data-tex="y=0"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; y=0=at-bt^{2}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; at=bt^{2}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; t=\frac{a}{b}"></span></div>
+        </div>
+        <h3 class="sub-heading">Height</h3>
+        <div class="derivation">
+          <div class="line step">&#8658; Put <span class="eq inline" data-tex="t=\frac{a}{2b}"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

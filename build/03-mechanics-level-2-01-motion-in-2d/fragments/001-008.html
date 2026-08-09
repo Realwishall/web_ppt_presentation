@@ -1,0 +1,233 @@
+<!-- 001  (source slide 1) -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">In which of the given case time taken by ball will be lesser</div>
+    </div>
+    <div class="graph-grid two">
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 700 180">
+          <path class="rail" d="M30 118 H670"/>
+          <circle class="dot w" cx="150" cy="104" r="13"/>
+          <path class="arw w" d="M160 62 H244"/>
+          <path class="arwhead w" d="M244 50 l30 12 l-30 12 z"/>
+          <text class="num" x="186" y="44">u</text>
+        </svg>
+        <div class="cap">(i)</div>
+      </div>
+      <div class="graph-cell step">
+        <svg class="dgm" viewBox="0 0 700 180">
+          <path class="rail" d="M30 118 H210 C 268 118 276 166 348 166 C 420 166 428 118 486 118 H670"/>
+          <circle class="dot w" cx="150" cy="104" r="13"/>
+          <path class="arw w" d="M160 62 H244"/>
+          <path class="arwhead w" d="M244 50 l30 12 l-30 12 z"/>
+          <text class="num" x="186" y="44">u</text>
+        </svg>
+        <div class="cap">(ii)</div>
+      </div>
+    </div>
+    <div class="answer-box step"><span class="ok">&#10003;</span> Case (ii)</div>
+  </div>
+</section>
+
+<!-- 002  (source slide 2) -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Radius of curvature <span class="tag-hot">Important</span></h2>
+    <div class="eq-block">
+      <span class="eq big step" data-tex="r=\frac{\left[1+\left(\frac{dy}{dx}\right)^{2}\right]^{3/2}}{\frac{d^{2}y}{dx^{2}}}"></span>
+    </div>
+  </div>
+</section>
+
+<!-- 003  (source slide 3) -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">Find rate of change of speed <span class="tag-hot">Important</span>
+        <span class="eq inline" data-tex="\vec v = 3\hat{i}+4t\hat{j}"></span></div>
+    </div>
+    <span class="a-head">Solution</span>
+    <div class="two-col">
+      <div class="derivation">
+        <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; a_t=\frac{d\sqrt{3^{2}+16t^{2}}}{dt}"></span></div>
+        <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; \tfrac{1}{2}\left(9+16t^{2}\right)^{-1/2}(32t)"></span></div>
+      </div>
+      <div class="stack">
+        <div class="note">OR &mdash; <i>by finding component of a along v</i></div>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; a\cos(\theta)"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; a\,\frac{\vec a\cdot\vec v}{av}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; \frac{\vec a\cdot\vec v}{v}"></span></div>
+          <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; \frac{16t}{\sqrt{3^{2}+16t^{2}}}"></span></div>
+        </div>
+        <div class="step">
+          <div class="figure-frame plain short">
+            <svg class="dgm" viewBox="0 0 460 210">
+              <path class="arw w" d="M60 176 H330"/>
+              <path class="arwhead w" d="M330 164 l30 12 l-30 12 z"/>
+              <path class="arw" d="M60 176 L285 56"/>
+              <path class="arwhead" d="M285 44 l32 6 l-20 26 z"/>
+              <path class="arc" d="M132 176 A 72 72 0 0 0 100 118"/>
+              <text class="num" x="146" y="164">&#952;</text>
+              <text class="num" x="292" y="40">a</text>
+              <text class="num" x="330" y="212">v</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 004  (source slide 4) -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Component of acceleration in vector form <span class="tag-hot">Important</span></h2>
+    <div class="derivation">
+      <div class="line step"><span class="eq inline" data-tex="a_t = a\cos\theta"></span></div>
+      <div class="line step"><span class="eq inline" data-tex="a_t = a\,\frac{\vec a\cdot\vec v}{av}"></span> <span class="why">along v</span></div>
+      <div class="line step"><span class="eq inline" data-tex="a_t = a\,\frac{\vec a\cdot\vec v}{av}\,(\hat v)"></span></div>
+      <div class="line step"><span class="eq inline" data-tex="a_t = a\,\frac{\vec a\cdot\vec v}{av}\,\frac{\vec v}{v}"></span></div>
+    </div>
+    <div class="result step"><span class="eq inline" data-tex="a_c = \vec a - \vec a_t"></span></div>
+  </div>
+</section>
+
+<!-- 005  (source slide 5) -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Component of velocity in terms of r and angle <span class="tag-hot">Important</span></h2>
+    <div class="split-6040">
+      <div class="stack">
+        <div class="eq-block">
+          <span class="eq step" data-tex="v_{\perp}=\frac{r\,\partial\theta}{\partial t}"></span>
+          <span class="eq step" data-tex="v_{\parallel}=\frac{\partial r}{\partial t}"></span>
+        </div>
+        <div class="note step"><i>Assume &#952; is constant</i></div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="r=1+\sin\theta"></span>, find velocity of body if
+            <span class="eq inline" data-tex="\frac{\partial\theta}{\partial t}=3"></span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="figure-frame plain">
+          <svg class="dgm" viewBox="0 0 460 330">
+            <path class="rail" d="M60 20 V300"/>
+            <path class="rail" d="M40 288 H300"/>
+            <path class="arw w" d="M60 288 L250 150"/>
+            <path class="arwhead w" d="M250 138 l30 10 l-18 26 z"/>
+            <path class="guide" d="M212 178 L268 96"/>
+            <path class="guide" d="M232 200 L400 132"/>
+            <path class="arw" d="M226 190 L262 128"/>
+            <path class="arwhead" d="M262 116 l24 16 l-30 10 z"/>
+            <path class="arc" d="M118 288 A 58 58 0 0 0 96 246"/>
+            <text class="num" x="126" y="278">&#952;</text>
+            <text class="num" x="140" y="212">r</text>
+          </svg>
+        </div>
+        <div class="fig-caption">the radial and the perpendicular part of one velocity</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 006  (source slide 6) -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Equation of trajectory</h2>
+    <div class="note step"><i>This mean path</i></div>
+    <div class="lead step">It can have x, y, z and &#952; as variable but not time</div>
+    <div class="eq-block">
+      <div class="eq step"><span data-tex="\Rightarrow\; x=y"></span> <span class="ok">&#10003;</span></div>
+      <div class="eq step"><span data-tex="\Rightarrow\; \left(\frac{x}{A}\right)^{2}+\left(\frac{y}{B}\right)^{2}=1"></span> <span class="ok">&#10003;</span></div>
+      <div class="eq step"><span data-tex="\Rightarrow\; y=x^{2}"></span> <span class="ok">&#10003;</span></div>
+      <div class="eq step"><span data-tex="\Rightarrow\; y=t+3"></span> <span class="no">&#10007;</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 007  (source slide 7) -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="two-col">
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=3t,\; y=2t"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step"><span data-tex="\Rightarrow\; y=2\frac{x}{3}"></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=t,\; y=2t^{2}"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step"><span data-tex="\Rightarrow\; y=2x^{2}"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=t,\; y=e^{t}"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step"><span data-tex="\Rightarrow\; y=e^{x}"></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="\vec r = 3t\hat{i}+2t\hat{j}"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="derivation">
+              <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; x=3t,\; y=2t"></span></div>
+              <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; y=2\frac{x}{3}"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 008  (source slide 8) -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="two-col">
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=A\cos(\omega t),\; y=A\sin(\omega t),"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="derivation">
+              <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; x^{2}+y^{2}=[A\cos(\omega t)]^{2}+[A\sin(\omega t)]^{2}"></span></div>
+              <div class="line step"><span class="eq inline" data-tex="\Rightarrow\; x^{2}+y^{2}=A^{2}"></span></div>
+            </div>
+            <div class="note step">Note : This is circle</div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=A\cos(\omega t),\; y=A\cos(\omega t),"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step"><span data-tex="x=y"></span></div>
+            <div class="note step">Note : This is line</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q"><span class="eq inline" data-tex="x=A\cos(\omega t),\; y=B\sin(\omega t),"></span></div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step"><span data-tex="\left(\frac{x}{A}\right)^{2}+\left(\frac{y}{B}\right)^{2}=1"></span></div>
+            <div class="note step">Note : This is ellipse</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

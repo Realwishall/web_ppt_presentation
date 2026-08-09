@@ -1,0 +1,322 @@
+<!-- source slide 22 -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Graph conversion</h2>
+    <p>Try to solve question objectively with higher differential</p>
+
+    <div class="derivation">
+      <div class="line step">in <span data-tex="x, v"></span> &rArr; then see <span data-tex="v"></span></div>
+      <div class="line step">in <span data-tex="a, v"></span> &rArr; then see <span data-tex="a"></span></div>
+      <div class="line step">in <span data-tex="x, a"></span> &rArr; then see <span data-tex="a"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 23 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">Which <span data-tex="a - t"></span> graph matches this <span data-tex="x - t"></span> graph?</div>
+    </div>
+
+    <div class="split-4060">
+      <div class="figure-frame">
+        <svg class="gph" viewBox="0 0 400 260">
+          <path class="axis" d="M70 240 V20"/>
+          <path class="axis" d="M30 200 H370"/>
+          <text class="lab" x="34" y="34">x</text>
+          <text class="lab" x="340" y="230">t</text>
+          <path class="curve" d="M70 200 L 150 138 C 190 108 196 78 240 62 C 280 48 290 30 300 20"/>
+        </svg>
+      </div>
+
+      <div class="options graphs two">
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">A</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 100 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="128">t</text>
+            <path class="curve" d="M70 100 H130 L170 50 L210 100 C 240 100 250 150 270 150 C 288 150 296 100 300 100"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('correct')">
+          <span class="opt-badge">B</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 100 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="128">t</text>
+            <path class="curve" d="M70 100 C 100 100 110 150 132 150 C 154 150 160 100 176 100 L 214 50 L 250 100 H300"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">C</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 100 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="128">t</text>
+            <path class="curve" d="M70 130 L 120 70 L 160 100 C 190 100 200 150 222 150 C 244 150 250 118 268 108"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">D</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 100 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="128">t</text>
+            <path class="curve" d="M70 62 H280"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="answer-box step"><span class="ok">&#10003;</span> B &mdash;
+      the x-t curve is concave up first (a is +ve), then concave down (a is &minus;ve), so a starts negative only if the bend does; here the first bend is a dip below the axis.</div>
+  </div>
+</section>
+
+<!-- source slide 24 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">Convert <span data-tex="x - t"></span> graph to <span data-tex="v - t"></span> graph</div>
+    </div>
+
+    <div class="split-4060">
+      <div class="figure-frame">
+        <svg class="gph" viewBox="0 0 400 240">
+          <path class="axis" d="M70 220 V20"/>
+          <path class="axis" d="M30 180 H370"/>
+          <text class="lab" x="34" y="34">x</text>
+          <text class="lab" x="340" y="210">t</text>
+          <path class="curve" d="M70 180 V120 L 150 60 H220 L 250 180 H330"/>
+        </svg>
+      </div>
+
+      <div class="options graphs two">
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">A</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 96 H310"/>
+            <text class="lab" x="40" y="30">v</text>
+            <text class="lab" x="288" y="124">t</text>
+            <path class="curve" d="M70 56 H160"/>
+            <path class="guide" d="M160 56 V150"/>
+            <path class="curve" d="M160 150 H250"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">B</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 96 H310"/>
+            <text class="lab" x="40" y="30">v</text>
+            <text class="lab" x="288" y="124">t</text>
+            <path class="curve" d="M80 44 H180"/>
+            <path class="guide" d="M180 44 V120"/>
+            <path class="curve" d="M212 120 H244"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('correct')">
+          <span class="opt-badge">C</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 96 H310"/>
+            <text class="lab" x="40" y="30">v</text>
+            <text class="lab" x="288" y="124">t</text>
+            <path class="curve" d="M70 56 H150"/>
+            <path class="curve" d="M150 96 H190"/>
+            <path class="guide" d="M190 96 V166"/>
+            <path class="curve" d="M190 166 H240"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">D</span>
+          <svg class="gph" viewBox="0 0 340 190">
+            <path class="axis" d="M70 180 V15"/>
+            <path class="axis" d="M40 96 H310"/>
+            <text class="lab" x="40" y="30">v</text>
+            <text class="lab" x="288" y="124">t</text>
+            <path class="curve" d="M70 56 H160"/>
+            <path class="curve" d="M180 66 H290"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="answer-box step"><span class="ok">&#10003;</span> C &mdash;
+      rising slope &rarr; constant +v, flat top &rarr; v = 0, steep fall &rarr; a larger negative v.</div>
+  </div>
+</section>
+
+<!-- source slide 25 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">Convert <span data-tex="v - x"></span> graph to <span data-tex="a - x"></span> graph</div>
+    </div>
+
+    <div class="split-4060">
+      <div class="figure-frame">
+        <svg class="gph" viewBox="0 0 400 220">
+          <path class="axis" d="M70 200 V20"/>
+          <path class="axis" d="M30 170 H370"/>
+          <text class="lab" x="34" y="34">v</text>
+          <text class="lab" x="340" y="198">x</text>
+          <path class="curve" d="M70 40 L 250 170"/>
+        </svg>
+      </div>
+
+      <div class="options graphs two">
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">A</span>
+          <svg class="gph" viewBox="0 0 340 180">
+            <path class="axis" d="M70 170 V15"/>
+            <path class="axis" d="M40 140 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="168">x</text>
+            <path class="curve" d="M70 30 L 210 140"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">B</span>
+          <svg class="gph" viewBox="0 0 340 180">
+            <path class="axis" d="M70 170 V15"/>
+            <path class="axis" d="M40 140 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="168">x</text>
+            <path class="curve" d="M70 110 L 250 20"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('wrong')">
+          <span class="opt-badge">C</span>
+          <svg class="gph" viewBox="0 0 340 180">
+            <path class="axis" d="M70 170 V15"/>
+            <path class="axis" d="M40 90 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="118">x</text>
+            <path class="curve" d="M70 96 L 240 166"/>
+          </svg>
+        </div>
+        <div class="option clickable" onclick="this.classList.add('correct')">
+          <span class="opt-badge">D</span>
+          <svg class="gph" viewBox="0 0 340 180">
+            <path class="axis" d="M70 170 V15"/>
+            <path class="axis" d="M40 90 H310"/>
+            <text class="lab" x="40" y="30">a</text>
+            <text class="lab" x="288" y="118">x</text>
+            <path class="curve" d="M70 160 L 250 84"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="answer-box step"><span class="ok">&#10003;</span> D &mdash;
+      <span class="eq" data-tex="a = v\frac{dv}{dx}"></span>; the slope <span data-tex="dv/dx"></span> is a fixed negative number, and v falls from + to 0, so a is negative and rises linearly to zero.</div>
+  </div>
+</section>
+
+<!-- source slide 26 -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Question Practice</h1>
+  </div>
+</section>
+
+<!-- source slide 27 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame">
+        <svg class="gph" viewBox="0 0 420 300">
+          <path class="axis" d="M90 280 V20"/>
+          <path class="axis" d="M40 250 H380"/>
+          <text class="lab" x="52" y="34">x</text>
+          <text class="lab" x="350" y="278">t</text>
+          <text class="num" x="46" y="80">4</text>
+          <text class="num" x="46" y="146">3</text>
+          <text class="num" x="176" y="292">1</text>
+          <text class="num" x="256" y="292">2</text>
+          <path class="guide" d="M90 70 H190"/>
+          <path class="guide" d="M190 70 V250"/>
+          <path class="guide" d="M90 136 H270"/>
+          <path class="guide" d="M270 136 V250"/>
+          <path class="curve" d="M90 250 L 190 70 L 270 136"/>
+          <circle class="dot" cx="90" cy="250" r="8"/>
+        </svg>
+      </div>
+
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Find position at t = 1s</div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step">Ans &rArr; <span data-tex="4"></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Find displacement covered in full journey</div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step">Ans &rArr; <span data-tex="3 - 0"></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Find distance covered in full journey</div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step">Ans &rArr; <span data-tex="0 \dashrightarrow 4 \dashrightarrow 3"></span></div>
+            <div class="eq step"><span data-tex="\Rightarrow 4 + 1"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- source slide 28 -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame">
+        <svg class="gph" viewBox="0 0 420 280">
+          <path class="axis" d="M90 260 V20"/>
+          <path class="axis" d="M40 230 H380"/>
+          <text class="lab" x="52" y="34">x</text>
+          <text class="lab" x="350" y="258">t</text>
+          <text class="num" x="26" y="76">96</text>
+          <text class="num" x="180" y="272">8</text>
+          <text class="num" x="300" y="272">20</text>
+          <path class="guide" d="M90 66 H190"/>
+          <path class="guide" d="M190 66 V230"/>
+          <path class="curve" d="M90 230 L 190 66 L 320 230"/>
+        </svg>
+      </div>
+
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Find distance covered in full journey</div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step">Ans &rArr; <span data-tex="96 + 96"></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Find displacement covered in full journey</div>
+          <div class="a"><span class="a-head">Solution</span>
+            <div class="eq step">Ans &rArr; <span data-tex="0"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

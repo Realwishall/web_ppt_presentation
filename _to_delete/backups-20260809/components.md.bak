@@ -1,0 +1,708 @@
+# Deck component contract
+
+The **only** vocabulary a render pass (prompt P3) may use. Every class below is
+defined in `tools/deck-base.css` and inlined at build time.
+
+**Hard rules for the author**
+
+1. No `<style>`, no `<script>`, no `<head>` — output is only `<section class="page">` blocks.
+2. No inline `style="…"` attributes. If a slide needs something not listed here,
+   **stop and report the gap** so the component gets added to the design system.
+3. Every `.page` contains exactly one `.wrap` (layout lives on the wrap, never on
+   `.page` — rule 8).
+4. `.step` marks one reveal. Never put `opacity`/`visibility` on a `.step`.
+5. Never use `page`, `step` or `clickable` as names for anything else.
+
+---
+
+## Visual language — "midnight + gold"
+
+Set once in `tools/deck-base.css`; authors never restate it. Knowing it stops
+you reaching for markup that fights the theme.
+
+| | |
+|---|---|
+| Stage | near-black indigo (`#05060d`→`#0d1020`) with a slow gold/violet aurora on `#bg`, plus a hairline of light along the top of every slide |
+| Headings | gold `#f5c542`; `h2.heading` carries an automatic gold bar on its left — do not add your own |
+| Titles | white→gold gradient text, with a centred gold rule under a `.wrap.center` title |
+| Surfaces | frosted glass: a top-lit gradient, a hairline border, a soft drop shadow. `.card` `.callout` `.figure-frame` `.term-card` `.info-box` `.option` `.qa` all share it |
+| Tables | rounded glass panel, uppercase letter-spaced gold header band, zebra body rows, `td.prop` marked by a gold inner edge — no 1px grid |
+| Emphasis | `.eq.big` prints in soft gold with a faint glow; `.result` is a gold-ringed chip |
+| Print | every gradient, glow and glass effect flattens in `@media print`; the PDF keeps the dark stage and solid ink |
+
+Two consequences for authors: a bare `<span>` inside a `.g-row` is already set
+at body scale, and symbol-only working lines should be `<div class="eq step">`
+so they land in the math serif rather than the UI font.
+
+**Math is upright (rule 17).** `--font-math` is
+`'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif` at
+`font-style: normal`. Never add `font-style: italic` to `.eq`, `.frac`,
+`.radical` or `math`, and never load a webfont for it — no Google Fonts `<link>`,
+no `@font-face` (rule 2: the deck must set correctly with no classroom network).
+Italic stays on prose asides only: `.note`, `.example`, `.eq-note`,
+`td.note-cell`, `.derivation .why`.
+
+---
+
+## Stepping law (rules 16–17) — read before anything else
+
+Visible from the first moment, **never** `.step`:
+
+- the slide heading (`h1.title`, `h2.heading`)
+- table column headers (`<th>`) and each row's first cell (`td.prop`)
+- the term/label side of any label→definition pair (`.label`, `.qa .q`, `h4.cell-heading`)
+- static scaffolding: axes and frame of a figure
+
+Everything else is its own `.step`, revealed one at a time in reading order:
+each data `<td>`, each `<li>`, each equation line, each definition, each answer.
+
+Headings are **inherited, never authored**: if the source slide had no title,
+the page has no `h2.heading` and `.wrap` opens on the content. Only a real
+section divider carries `h1.title`.
+
+> A term and its definition must never appear in the same reveal.
+
+---
+
+## Page shells
+
+| Class | Use |
+|---|---|
+| `<section class="page">` | One slide. Required wrapper. |
+| `.wrap` | Default: column flow, generous padding, scrolls internally. |
+| `.wrap.center` | Centred both axes — title and section-divider slides. |
+| `.wrap.tight` | Same as `.wrap`, smaller gaps — long bullet lists. |
+| `.wrap.dense` | Reduced padding — full-width tables, long derivations. |
+| `.wrap.fit` | No internal scroll — pair with `.split-fill` for side-by-side boards. |
+
+```html
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Slide title</h2>
+    …
+  </div>
+</section>
+```
+
+## Persistent layers (emitted by the build script, not by the author)
+
+`#bg` and `.kicker-tag` are siblings of `.page`. Do not create them; do not
+reference them.
+
+---
+
+## Archetypes
+
+### `title` / `section-divider`
+
+```html
+<div class="wrap center">
+  <h1 class="title">Fundamental forces</h1>
+</div>
+```
+
+Optional subtitle: `<p class="sub step">…</p>`.
+
+### `definition` — glossary / term list
+
+Label unstepped, definition stepped.
+
+```html
+<div class="glossary">
+  <div class="g-row">
+    <span class="label">Hypothesis:</span>
+    <span class="step">An educated guess or thought</span>
+  </div>
+  <div class="g-row">
+    <span class="label">Laws:</span>
+    <div>
+      <div class="step">Experimentally observed, assumed true</div>
+      <div class="sub-list"><span class="step">Can be verified</span><span class="step">Cannot be proven</span></div>
+    </div>
+  </div>
+</div>
+```
+
+`.g-row.wide` when labels are long.
+
+### `bullets`
+
+```html
+<ul class="bullets">          <!-- ★ marker; .box ⬜  .arrow ➤  .dot •  -->
+  <li class="step">Unification</li>
+  <li class="step">Reduction</li>
+</ul>
+```
+
+Modifiers: `.tight` (less gap), `.small` (smaller type). Nest a `ul.bullets`
+inside an `li` for sub-points.
+
+### `comparison-table`
+
+Per-**cell** stepping; first column unstepped.
+
+```html
+<table class="data">
+  <thead>
+    <tr><th>Properties</th><th>Gravitational</th><th>Electromagnetic</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="prop">Range</td>
+      <td class="step">&infin;</td>
+      <td class="step">&infin;</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+Modifiers: `.compact` (tighter padding, ≥6 columns), `.center` (centre cells),
+`.fs-140` (every cell 40% larger — for sparse unit tables on the board).
+Cell helpers: `td.num` (right-aligned, math font), `td.note-cell` (italic muted
+footer row spanning the table), `.ok` (✓ green), `.no` (✗ red).
+
+### `formula-sheet` / inline math
+
+Script-free by design — survives PDF export.
+
+```html
+<div class="eq-block">
+  <div class="eq step">m = <span class="frac"><span class="num">m<sub>0</sub></span>
+    <span class="den"><span class="radical"><span class="sym">&radic;</span>
+    <span class="content">1&minus;(v/c)<sup>2</sup></span></span></span></span></div>
+  <div class="eq-note">here m<sub>0</sub> is rest mass</div>
+</div>
+```
+
+Primitives: `.eq` (inline math run), `.eq.small` / `.eq.big`, `.frac` + `.num`/`.den`,
+`.radical` + `.sym`/`.content`, `.vec` (over-arrow), `.eq-note`.
+
+**LaTeX alternative** — for anything more complex than the above, write
+`<span class="eq" data-tex="\vec{F} = \frac{dp}{dt}"></span>`; the build script
+converts `data-tex` to MathML at build time. Never emit `\(…\)` for a runtime
+renderer — scripts are stripped on export and the equation would come out blank.
+
+The MathML this produces is upright too, but only because `deck-base.css`
+carries `math mi, math mn, math mo, math mtext, math ms { text-transform: none }`
+— browsers italicise single-letter `<mi>` through `text-transform: math-auto`,
+which `font-style: normal` does not reach. Do not remove that rule.
+
+### Annotated example (colour-coded expression)
+
+For "A rod of **length** **4****m**" style lines where parts of an expression map
+to terms defined underneath. The colour *is* the mapping, so each mark pairs with
+a `.label` carrying the matching `for-*` modifier.
+
+```html
+<div class="eq">A rod of
+  <span class="mark-quantity">length</span>
+  <span class="mark-number">4</span><span class="mark-unit">m</span></div>
+
+<div class="g-row">
+  <span class="label for-quantity">Physical quantity:</span>
+  <span class="step">The quantity that can be measured…</span>
+</div>
+```
+
+Marks: `.mark-quantity` (amber), `.mark-number` (green), `.mark-unit` (grey).
+Labels: `.label.for-quantity`, `.label.for-number`, `.label.for-unit`.
+The marked line is never a `.step` — it's the thing being explained.
+
+### Spotlight statement — `.eq.spot` + `data-lights` / `data-lit`
+
+The same marks, but they start **plain** and light up only when their definition
+is revealed, so the class reads the sentence first and then watches each word
+catch fire as it is named. Put `data-lit="key"` on the mark and `data-lights="key"`
+on the `.step` that defines it; `build-deck.mjs` ships the observer that pairs
+them **within a page**. One `.step` may light several keys (`data-lights="n u"`).
+
+```html
+<div class="eq big spot">A rod of
+  <span class="mark-quantity" data-lit="q">length</span>
+  <span class="mark-number" data-lit="n">4</span><span class="mark-unit" data-lit="u">m</span></div>
+```
+
+Stepping back unlights. Scripts are stripped on export, so `@media print` forces
+every mark lit — the PDF still carries the colour mapping.
+
+### `term-row` — colour-coded term cards
+
+A row of term chips that arrive **together on one press**, with each definition
+stepping in underneath its own chip afterwards. Pairs with `.eq.spot` above: the
+chip colour and the mark colour are the same mapping.
+
+The **row** is the `.step` (all three names at once); the chip itself never is.
+
+```html
+<div class="term-row step">          <!-- .two for two columns -->
+  <div class="term-card">
+    <span class="term for-quantity">Physical quantity</span>
+    <p class="step" data-lights="q">The quantity that can be measured…</p>
+  </div>
+  …
+</div>
+```
+
+Chips: `.term.for-quantity`, `.term.for-number`, `.term.for-unit`.
+
+### `derivation`
+
+One line per `.step`; optional reason on the right.
+
+```html
+<div class="derivation">
+  <div class="line step">&rArr; K.E. = mc<sup>2</sup> &minus; m<sub>0</sub>c<sup>2</sup>
+    <span class="why">definition</span></div>
+  <div class="line step">&rArr; 2m<sub>0</sub> = m</div>
+</div>
+<div class="result step">v = (&radic;3/2) c</div>
+```
+
+Long derivations: wrap in `.two-col` and continue in the second column.
+
+### `worked-example`
+
+```html
+<div class="worked">
+  <div class="given">Given: u = 0, a = 2 m/s², t = 5 s</div>
+  <div class="asked">Find: v</div>
+  <div class="solution">
+    <div class="eq step">v = u + at</div>
+    <div class="eq step">v = 0 + 2(5) = 10 m/s</div>
+  </div>
+</div>
+```
+
+### `diagram-explain`
+
+```html
+<div class="split-6040">
+  <div class="figure-frame"><svg viewBox="0 0 400 260">…</svg></div>
+  <div class="stack">
+    <p class="step">Explanation line one</p>
+    <p class="step">Explanation line two</p>
+  </div>
+</div>
+<div class="fig-caption">Ray diagram for a convex lens</div>
+```
+
+SVG rules: `viewBox` only, no fixed width/height, `currentColor` or the deck
+tokens for strokes, labels as real `<text>`. `.figure-frame.plain` removes the
+card; `.figure-frame.tall` allows a taller figure.
+
+### `question` (MCQ)
+
+Only `.option` gets `clickable`.
+
+```html
+<p>If velocity is doubled, momentum will become:</p>
+<div class="options">
+  <div class="option clickable" onclick="this.classList.toggle('picked')">
+    <span class="opt-badge">A</span>It will be doubled</div>
+  <div class="option clickable" onclick="this.classList.toggle('picked')">
+    <span class="opt-badge">B</span>More than doubled</div>
+</div>
+<div class="answer-box step"><span class="ok">&#10003;</span>More than doubled
+  &mdash; <i>mass increases slightly</i></div>
+```
+
+`.options.two` for a 2×2 grid. States: `.picked`, `.correct`, `.wrong`.
+
+**Option with an aside** — when each option carries a formula or a ✓/✗ beside it,
+wrap the pair in `.option-row` so the option and its aside are separate reveals.
+Never merge them: the class should see the option, think, then see why it fails.
+
+```html
+<div class="option-row">
+  <div class="option step"><span class="opt-badge">&#10065;</span>Length, area, velocity</div>
+  <span class="eq small step" data-tex="A = l^2"></span>
+</div>
+```
+
+### `summary` / closing
+
+```html
+<div class="wrap center">
+  <div class="lead step">Don't invest too much time in the terms —<br>we meet them again in the course</div>
+</div>
+```
+
+---
+
+## Focus boxes — `.box-grid` + `.info-box`
+
+"One idea per box, revealed one at a time." Use when a slide is a set of short
+label + explanation pairs and you want the class's eye pulled to each one in
+turn — the alternative to `.glossary` when the items deserve equal visual weight.
+
+The box is **never** a `.step`. Its `h4.cell-heading` label stays visible (rule
+17) and the `<p class="step">` inside it is what reveals.
+
+Each box runs its own three-beat cycle, and the next box does not begin until
+the current one has closed:
+
+| press | what happens |
+|---|---|
+| 1 | box grows to **120 %**; every other box dims to 50 % |
+| 2 … | its content appears **inside the enlarged box**, one `.step` per press |
+| N | box settles back to 100 %, dimming clears |
+| N+1 | the next box starts its own cycle |
+
+**Grow and shrink are each their own press.** The host only ever reveals
+`.step`s, so `build-deck.mjs` injects a zero-size sentinel `.step.box-zoom` at
+each end of every instrumented box — authors never write them. Nothing is on a
+timer, so a box stays big for exactly as long as you talk. Pressing Previous
+walks the cycle back; leaving the page clears it.
+
+Budget the presses: a box costs **content steps + 2**. Eight one-line boxes is
+24 presses.
+
+Boxes grow **inward** (outer columns pin their outer edge) so a 120 % box never
+pushes past the slide's padding.
+
+The transform lives on the box, not on the step, because the host owns `.step`
+opacity and transform with `!important`. Nothing here is required for the slide
+to read — with JS off (PDF export) every box prints flat and undimmed.
+
+```html
+<div class="box-grid">            <!-- .three = 3 columns, .one = single column -->
+  <div class="info-box">
+    <h4 class="cell-heading">Cornea</h4>
+    <p class="step">Transparent front part. Refracts light.</p>
+  </div>
+  …
+</div>
+```
+
+## Motion — `data-anime` presets and `.scene-frame[data-three]`
+
+Authors write no JS. A data attribute names a preset; `build-deck.mjs` inlines
+the library (only if some slide asks for it) and plays the preset the first time
+that element becomes visible.
+
+| Attribute | Put it on | Effect |
+|---|---|---|
+| `data-anime="draw"` | an inline `<svg>` | strokes draw themselves on |
+| `data-anime="count"` | an element whose text is a number | counts up to that number |
+| `data-anime="pulse"` | any non-`.step` element | one gentle attention pulse |
+| `data-anime="float"` | a decorative mark | slow endless bob |
+| `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
+| `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
+| `data-three="solid-angle-cone"` | `<div class="scene-frame">` | cone of semi-vertical angle α on a sphere |
+| `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
+
+```html
+<div class="step">
+  <div class="figure-frame tall">
+    <svg viewBox="0 0 380 320" data-anime="draw">…</svg>
+  </div>
+  <div class="fig-caption">θ is the arc divided by the radius</div>
+</div>
+
+<div class="scene-frame" data-three="globe">
+  <div class="scene-fallback">A sphere seen from its centre — surface 4πr².</div>
+</div>
+```
+
+For the live instrument, nest the 3D frame in `.sim-stage` and keep the existing
+SVG as `.scene-fallback` (PDF / no-WebGL). The sim engine calls
+`frame.__sgUpdate({ gap, reading, csr, thick, name, divs })` on every control
+click — authors still write no JS.
+
+```html
+<div class="sim-stage">
+  <div class="scene-frame" data-three="screw-gauge">
+    <div class="scene-fallback">
+      <svg viewBox="0 0 1200 640">…start-state instrument…</svg>
+    </div>
+  </div>
+</div>
+```
+
+Rules that are not negotiable:
+
+- **The preset never goes on the `.step` itself** — the host owns `.step`
+  opacity and transform with `!important`. Mark a child of the stepped wrapper.
+- **A `.scene-frame` must contain a `.scene-fallback`.** Scripts are stripped in
+  PDF export and the room may have no WebGL; the fallback is what prints.
+- A `draw` figure must already be complete and correct with JS off.
+- One moving thing at a time, never behind text, never where the teacher writes.
+
+## Live instrument — `.sim[data-sim="screw-gauge"]`
+
+A click-driven virtual screw gauge. `build-deck.mjs` ships the engine (no-op
+when no `[data-sim]` is on the page); the author writes **no JS** — the whole rig
+is declared with data attributes on markup they already draw.
+
+**The SVG in the fragment must be drawn at the START STATE and be complete on
+its own.** Scripts are stripped for PDF export (rule 11), so the printed slide
+still has to show a real instrument sitting on a real, readable measurement. The
+engine only *moves* what is already there.
+
+```html
+<div class="sim" data-sim="screw-gauge" data-pitch="0.5" data-divisions="50"
+     data-open-max="6" data-open-gap="1.2">
+  <div class="sim-lab">
+    <div class="sim-stage"><svg viewBox="0 0 1200 640">…</svg></div>
+    <div class="sim-panel">
+      <div class="sim-row"><span class="sim-key">Main scale reading</span>
+        <span class="sim-val step" data-out="msr">0.50 mm</span></div>
+      …
+      <div class="sim-row total"><span class="sim-key">Correct reading</span>
+        <span class="sim-val step" data-out="true">0.84 mm</span></div>
+      <p class="sim-note" data-out="note">…</p>
+    </div>
+  </div>
+  <div class="sim-controls">
+    <div class="sim-group">
+      <span class="sim-group-label">Put in the jaws</span>
+      <div class="sim-keys">
+        <span class="sim-btn clickable is-on" data-act="obj" data-val="wire"
+              data-thick="0.84" data-name="Thin wire">Thin wire</span>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**`.sim` is the root and must contain the control bar** — the engine only binds
+`[data-act]` buttons found inside the `[data-sim]` element. `.sim-lab` is just
+the stage + panel grid.
+
+| On the rig | Meaning |
+|---|---|
+| `data-pitch` / `data-divisions` | the instrument; least count is `pitch ÷ divisions` |
+| `data-open-max` | furthest the jaws open, in mm |
+| `data-open-gap` | how far "Open the jaws" backs off from contact, in mm |
+
+| Inside the SVG | Meaning |
+|---|---|
+| `[data-sg-move="scale"]` | a `<g>` that slides right by the **indicated** reading; `data-u` = px per mm in that view |
+| `[data-sg-move="jaw"]` | a `<g>` that slides right by the **true jaw opening** |
+| `.sg-csr-ticks` | the thimble's circular scale; `data-x`/`data-y` = tick origin, `data-gap` = px between divisions, `data-span` = divisions drawn each side. Redrawn by the engine |
+| `.sg-object` | the specimen; its `width` is set to thickness × `data-u` |
+| `.sg-object-label` | `<text>` naming the specimen |
+
+Draw the sleeve **before** the thimble group: the thimble is opaque, so it hides
+the main-scale marks it has passed — which is exactly how the main scale reading
+is taken.
+
+| Button `data-act` | Effect |
+|---|---|
+| `obj` | put `data-thick` (mm) / `data-name` in the jaws |
+| `ze` | set the zero error to `data-val` divisions (signed) |
+| `turn` | turn by `data-val` divisions — **negative closes**, positive opens |
+| `close` | run the ratchet down until it grips |
+| `open` | back off by `data-open-gap` |
+| `orbit` | rotate the 3D micrometer: `data-yaw` / `data-pitch` in radians |
+| `view` | camera preset: `data-val` = `reset` \| `scales` \| `jaws` \| `left` \| `right` \| `up` \| `down` |
+
+The 3D scene (`data-three="screw-gauge"`) draws **flat scale plates** with large
+classroom-readable numbers (main scale + circular scale window). Cylinder body
+stays metal; numbering is never wrapped around a curved surface.
+
+Mark the starting choice in each group with `is-on`; the engine reads the start
+state from it and keeps the class in sync afterwards.
+
+Read-outs: `data-out="pitch | divs | lc | object | msr | csr | obs | ze | true |
+note"`. Put `.step` on the **value**, never on the `.sim-key`, so each line of the
+reading is its own reveal (rule 17) — the numbers keep updating live once shown.
+
+Only `.sim-btn` carries `clickable` (rule 3), and the whole control bar sits
+below the instrument so the teacher can write on the scales.
+
+## Video — `.video-frame[data-video]` + `.video-fallback`
+
+**Declare the video; do not try to drive it.** The deck runs in
+`<iframe sandbox="allow-scripts">` on an opaque origin, and the deck layer is
+`pointer-events:none` — a player embedded by the deck can neither load nor be
+clicked. The presenter reads `data-video` off the placeholder and renders a
+real, interactive player in its own document, above the ink canvas, positioned
+over that box, with a **"Write over video"** toggle so the pen can take the area
+back.
+
+The placeholder must have a size before anything loads (`.video-frame` is
+`aspect-ratio:16/9`), and a `.video-fallback` is **required**: scripts are
+stripped in PDF export and the room may be offline, so that block is what prints
+and what the teacher reads if the player is blocked.
+
+```html
+<div class="video-frame" data-video="ID" data-start="33" data-end="50">
+  <!-- optional inner <iframe>: only so the file plays when the .html is opened
+       in a plain browser. The host hides it and paints over it. -->
+</div>
+<div class="video-fallback">
+  <div class="cue">Play from 0:33 to 0:50</div>
+  <div class="url">https://www.youtube.com/watch?v=ID</div>
+</div>
+```
+
+| Attribute | Meaning |
+|---|---|
+| `data-video` | The video id — **not** the whole URL |
+| `data-start` / `data-end` | Clip in/out points, in seconds |
+| `data-provider` | `youtube` (default) or `vimeo` |
+
+---
+
+## Cross-cutting pieces
+
+| Class | Purpose |
+|---|---|
+| `h2.heading` + `<span class="inline-lead">` | Heading with a trailing plain-text lead |
+| `<span class="paren">(contd.)</span>` | Small parenthetical inside a heading |
+| `.two-col` `.split-6040` `.split-4060` `.split-fill` `.grid3` `.grid4` | Multi-column layouts |
+| `.stack` `.row` | Generic vertical / horizontal flow |
+| `.card` | Bordered surface |
+| `.box-grid` + `.info-box` | Focus boxes; each runs grow → content → shrink, one press per beat |
+| `.sim` + `.sim-lab` / `.sim-panel` / `.sim-controls` | Live instrument; the engine moves the SVG the author drew |
+| `.video-frame` + `.video-fallback` | 16:9 embed; the fallback is what prints |
+| `.center-y` | Vertically + horizontally centre a column's contents |
+| `.callout` `--note` `--warn` `--tip` | Highlighted aside; `.callout-label` for its title |
+| `.qa` + `.q` / `.a` | Question always visible, answer stepped |
+| `.note` `.caption` `.example` `.sub` `.lead` | Text roles |
+| `.btn` | Generic action button (needs `clickable`) |
+| `.no-print` | Hide from PDF export |
+
+## Interactivity (rule 3)
+
+Hover, keyboard, focus and typing never reach the slide. The only thing that
+works is a **click on an element carrying `class="clickable"`**, ≥44 px tall, in a
+stable position, away from where the teacher writes. Never use `<input>`,
+`<textarea>` or `<select>`.
+
+Recipes: reveal (`.answer-box.step`), toggle
+(`onclick="this.classList.toggle('open')"`), pick-one (`.option.picked`).
+
+### `operator-chain` — the calculus road between quantities
+
+A quantity, an arrow carrying its **operator above the shaft**, and the quantity
+it turns into — the figure a mechanics deck draws by hand when it explains
+r &rarr; v &rarr; a. Gold arrow = differentiate; `.op-arrow.int` (cyan) =
+integrate. Pure CSS, so it prints.
+
+The **chain** is the `.step`; the nodes and arrows inside it never are. Put
+`.is-focus` on the node the chain is producing so the eye lands on the answer.
+
+```html
+<div class="op-chain step">
+  <span class="op-node"><span data-tex="x = 3t^2 - 18"></span></span>
+  <span class="op-arrow"><span class="op-label">
+    <span class="frac"><span class="num">d</span><span class="den">dt</span></span>
+  </span></span>
+  <span class="op-node is-focus"><span data-tex="\vec v = 6t"></span></span>
+</div>
+```
+
+`.op-chain.mini` is the same thing at note size — use it above a derivation as a
+one-line route map ("this question travels a &rarr; v"), never as the carrier of
+the answer. Inline math inside `.op-node` / `.op-label` sits at the surrounding
+size, so write `<span data-tex="…">` there, not `<span class="eq" data-tex="…">`.
+
+### Q&A heads and the "tough" flag
+
+`.qa .q-head` / `.qa .a-head` are the small uppercase "QUESTION" / "SOLUTION"
+labels the source decks print above each half. Both are **labels, never
+reveals** (rule 17). `.tag-hot` is a chip for a question the source deck flags
+as worth extra attention.
+
+```html
+<div class="qa">
+  <span class="q-head">Question</span>
+  <div class="q">If <span data-tex="t = 4x^2 - 5x"></span>, find <span data-tex="v"></span>
+    <span class="tag-hot">Tough</span></div>
+  <div class="a">
+    <span class="a-head">Solution</span>
+    <div class="derivation"><div class="line step">…</div></div>
+  </div>
+</div>
+```
+
+## Graphs — `svg.gph`, `.graph-grid`, `.graph-stack`, `.options.graphs`
+
+A chapter whose subject *is* the graph draws the same small figure dozens of
+times, so the ink is a component, not a per-slide decision. Put `class="gph"`
+on the `<svg>` and use the part classes inside it; every stroke then matches
+across the deck, and because it is pure SVG + CSS it survives PDF export.
+
+| Part class | What it draws |
+|---|---|
+| `.axis` | the x/y frame, ticks, arrowheads — scaffolding, **never** a `.step` |
+| `.curve` | the plotted quantity (gold: this is the thing being read) |
+| `.curve2` | a second plot on the same axes (indigo) |
+| `.guide` | dashed projection lines to an axis, or a reference level |
+| `.area` / `.area.gold` | the shaded region under a curve (integration slides) |
+| `.tangent` | the slope line at a point |
+| `.dot` / `.dot.open` | a marked point / a ringed answer point |
+| `text.lab` / `text.num` | axis names / tick numbers |
+
+```html
+<svg class="gph" viewBox="0 0 420 260">
+  <path class="area" d="M90 60 H250 V210 H90 Z"/>
+  <path class="axis" d="M90 240 V20"/>
+  <path class="axis" d="M40 210 H380"/>
+  <text class="lab" x="52" y="34">x</text>
+  <text class="lab" x="350" y="238">t</text>
+  <text class="num" x="46" y="70">96</text>
+  <path class="guide" d="M90 66 H190"/>
+  <path class="curve" d="M90 210 L190 66 L320 210"/>
+</svg>
+```
+
+**Small multiples.** `.graph-grid` is the "here are three/four graphs" layout
+(`.two`, `.four` for other counts). The **grid** is never the `.step`; each
+`.graph-cell` is, so the class meets one figure at a time. `.graph-cell .cap`
+is its caption and `.verdict.ok` / `.verdict.no` is the big ✓ / ✗ the source
+deck stamps on a graph.
+
+`.graph-stack` (`.three` for three of them) is the same cells run **down** a
+column instead of across a row. Use it rather than a plain `.stack`: stacked
+figures have to share the board's height, and without it the last one walks off
+the bottom of the slide.
+
+**Graph MCQs.** `.options.graphs` is the "which of these four curves" question,
+four to a row (`.two` for 2×2). Each `.option` keeps its `clickable` and its
+`.opt-badge`, and the badge sits above its own figure so the class can call an
+answer by letter. Per rule 19 the question and all options are visible at once;
+only the reasoning steps.
+
+```html
+<div class="options graphs">
+  <div class="option clickable" onclick="this.classList.add('correct')">
+    <span class="opt-badge">A</span>
+    <svg class="gph" viewBox="0 0 340 210">…</svg>
+  </div>
+  …
+</div>
+<div class="answer-box step"><span class="ok">&#10003;</span> A &mdash; …</div>
+```
+
+## Chapter motif — `manifest.motif`
+
+`#bg` carries one texture for the whole deck, chosen by the manifest (or
+`--motif` on `build-deck.mjs`):
+
+| Value | Backdrop |
+|---|---|
+| `hex` (default) | the PW hexagon weave — unchanged, what every existing deck uses |
+| `graph` | squared paper, one pale axis pair low-left and a rising curve |
+
+It is texture, never information (rule 11): it sits behind the writing area at
+a fraction of an opacity, and `@media print` drops it further. Authors do not
+reference `#bg` — they set `"motif"` in the manifest and nothing else.
+
+## Declared slide merges — `manifest.merged_slides`
+
+A PowerPoint **morph transition** leaves behind consecutive slides that are the
+same board with one more thing on it. In the presenter that build-up is exactly
+what `.step` does, so folding them into one page is a conversion, not a loss —
+but `validate-deck.mjs` still counts pages against the source slide count. List
+the folded source slide numbers in `manifest.merged_slides` (with a
+`merged_reason`) and the gate accounts for them and warns instead of failing.
+An **undeclared** shortfall is still an ERROR.
+
+```json
+{ "slide_count": 66,
+  "merged_slides": [5, 6, 7, 10],
+  "merged_reason": "morph frames of the same 'Graph Basic' board" }
+```

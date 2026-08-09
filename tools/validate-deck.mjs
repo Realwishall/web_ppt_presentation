@@ -188,12 +188,46 @@ function validate(file) {
   const styleBlocks = (lint.match(/<style/gi) || []).length;
   if (styleBlocks > 1) W(`${styleBlocks} <style> blocks — the design system expects exactly one`);
 
-  /* -- slide count of record --------------------------------------------- */
+  /* -- slide count of record ---------------------------------------------
+     One page per source slide, EXCEPT the frames a PowerPoint morph
+     transition leaves behind: several consecutive slides that are the same
+     board with one more thing on it. In the presenter that build-up is what
+     `.step` does, so folding them is a conversion, not a loss — but it has to
+     be declared. `manifest.merged_slides` lists the folded source slide
+     numbers (and why), and only a declared merge is forgiven. An undeclared
+     shortfall is still an ERROR.
+
+     The mirror case: a source slide that is two-up — two independent questions
+     sharing one board — becomes two pages, so the teacher gets a full board and
+     clean ink space for each. That is also a conversion, not invention, and it
+     is declared the same way: `manifest.split_slides` is
+     [{ "slide": 2, "into": 2 }, …] plus a `split_reason`. Each entry accounts
+     for `into - 1` extra pages. An UNdeclared surplus is still an ERROR — it
+     usually means a page was duplicated by accident.                         */
   let expected = expectFlag;
-  if (!expected && manifestFlag && fs.existsSync(manifestFlag))
-    expected = JSON.parse(fs.readFileSync(manifestFlag, 'utf8')).slide_count;
-  if (expected && pages !== expected)
-    E(`${pages} pages but the source deck has ${expected} slides — ${expected - pages} lost`);
+  let merged = [];
+  let split = [];
+  if (manifestFlag && fs.existsSync(manifestFlag)) {
+    const m = JSON.parse(fs.readFileSync(manifestFlag, 'utf8'));
+    if (!expected) expected = m.slide_count;
+    merged = Array.isArray(m.merged_slides) ? m.merged_slides : [];
+    split = Array.isArray(m.split_slides) ? m.split_slides : [];
+  }
+  const extraFromSplit = split.reduce((a, s) => a + Math.max(0, (Number(s.into) || 2) - 1), 0);
+  if (expected) {
+    const accounted = pages + merged.length - extraFromSplit;
+    if (accounted !== expected) {
+      const lost = expected - accounted;
+      E(`${pages} pages + ${merged.length} declared merge(s) - ${extraFromSplit} declared split page(s) = ${accounted}, `
+        + `but the source deck has ${expected} slides — ${Math.abs(lost)} ${lost > 0 ? 'lost' : 'unaccounted for'}`);
+    } else {
+      if (merged.length)
+        W(`${merged.length} source slide(s) folded into a neighbouring page as steps: ${merged.join(', ')}`);
+      if (split.length)
+        W(`${split.length} two-up source slide(s) opened out, one question per page: `
+          + split.map((s) => `${s.slide}→${s.into || 2}`).join(', '));
+    }
+  }
 
   return {
     file: path.basename(file),

@@ -181,9 +181,17 @@ const kicker = flag('--kicker')
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /* --------------------------------------------------- persistent layers ----
-   Siblings of .page (rule 1). Inline SVG, no external assets (rule 2).      */
-const persistentLayers = `<div id="bg" aria-hidden="true">
-  <svg xmlns="http://www.w3.org/2000/svg">
+   Siblings of .page (rule 1). Inline SVG, no external assets (rule 2).
+
+   The motif is the chapter's quiet signature behind every slide. `hex` is the
+   default (the PW deck backdrop); `graph` is for chapters whose subject IS the
+   graph — squared paper, one pale axis pair bottom-left, one rising curve.
+   Choose with manifest `"motif"` or --motif. It never carries information
+   (rule 11) and never sits where the teacher writes (centre / upper-left).   */
+const motif = (flag('--motif') || manifest.motif || 'hex').toLowerCase();
+
+const motifSvg = {
+  hex: `<svg xmlns="http://www.w3.org/2000/svg">
     <defs>
       <pattern id="hex" width="70" height="121" patternUnits="userSpaceOnUse">
         <polygon points="35,0 70,20.2 70,60.6 35,80.8 0,60.6 0,20.2" fill="none" stroke="#ffffff" stroke-opacity="0.045" stroke-width="1.4"/>
@@ -191,7 +199,79 @@ const persistentLayers = `<div id="bg" aria-hidden="true">
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#hex)"/>
-  </svg>
+  </svg>`,
+
+  graph: `<svg class="motif-graph" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-grid-fine" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M40 0H0V40" fill="none" stroke="#9fb4ff" stroke-opacity="0.055" stroke-width="1"/>
+      </pattern>
+      <pattern id="lf-grid-major" width="200" height="200" patternUnits="userSpaceOnUse">
+        <rect width="200" height="200" fill="url(#lf-grid-fine)"/>
+        <path d="M200 0H0V200" fill="none" stroke="#9fb4ff" stroke-opacity="0.10" stroke-width="1.4"/>
+      </pattern>
+      <linearGradient id="lf-curve-ink" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.02"/>
+        <stop offset="0.55" stop-color="#f5c542" stop-opacity="0.30"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.16"/>
+      </linearGradient>
+      <linearGradient id="lf-curve-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.055"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-grid-major)"/>
+    <g stroke="#f5c542" stroke-opacity="0.13" stroke-width="2.4" stroke-linecap="round">
+      <path d="M120 820 V 210"/>
+      <path d="M120 820 H 1500"/>
+    </g>
+    <path d="M120 820 C 470 812 700 700 900 520 C 1090 350 1250 268 1470 232 L 1470 820 Z" fill="url(#lf-curve-fill)"/>
+    <path d="M120 820 C 470 812 700 700 900 520 C 1090 350 1250 268 1470 232" fill="none" stroke="url(#lf-curve-ink)" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M660 820 C 860 800 1010 690 1140 500 C 1250 340 1340 262 1470 214" fill="none" stroke="#7c8cff" stroke-opacity="0.10" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="14 20"/>
+  </svg>`,
+
+  rail: `<svg class="motif-rail" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="lf-streak-a" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.62" stop-color="#f5c542" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lf-streak-b" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0"/>
+        <stop offset="0.58" stop-color="#7c8cff" stop-opacity="0.22"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </linearGradient>
+      <pattern id="lf-sleepers" width="52" height="130" patternUnits="userSpaceOnUse">
+        <path d="M26 0 V130" stroke="#ffffff" stroke-opacity="0.05" stroke-width="9"/>
+      </pattern>
+    </defs>
+    <!-- long-exposure streaks: right half only, clear of the writing area -->
+    <g stroke-linecap="round">
+      <path d="M900 108  H1580" stroke="url(#lf-streak-a)" stroke-width="4"/>
+      <path d="M1050 176 H1560" stroke="url(#lf-streak-b)" stroke-width="3"/>
+      <path d="M960 246  H1610" stroke="url(#lf-streak-a)" stroke-width="2.6"/>
+      <path d="M1140 318 H1580" stroke="url(#lf-streak-b)" stroke-width="3.4"/>
+      <path d="M1020 392 H1560" stroke="url(#lf-streak-a)" stroke-width="2.2"/>
+    </g>
+    <!-- the track, low across the whole board -->
+    <rect x="0" y="742" width="1600" height="96" fill="url(#lf-sleepers)"/>
+    <g stroke="#ffffff" stroke-opacity="0.11" stroke-width="3.6" stroke-linecap="round">
+      <path d="M0 754 H1600"/>
+      <path d="M0 826 H1600"/>
+    </g>
+    <path d="M0 790 H1600" stroke="#f5c542" stroke-opacity="0.055" stroke-width="1.6" stroke-dasharray="34 46"/>
+  </svg>`,
+
+}[motif] || null;
+
+if (!motifSvg) {
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail`);
+  process.exit(1);
+}
+
+const persistentLayers = `<div id="bg" aria-hidden="true">
+  ${motifSvg}
 </div>
 <div class="kicker-tag">${esc(kicker)}</div>`;
 

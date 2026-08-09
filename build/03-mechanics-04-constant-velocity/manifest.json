@@ -1,0 +1,15 @@
+{
+  "slug": "03-mechanics-04-constant-velocity",
+  "source_name": "03  Mechanics Part 1 04 Constant Velocity   Bearable",
+  "chapter": "03 - Mechanics Part 1",
+  "slide_count": 7,
+  "count_ok": true,
+  "renderer": "libreoffice",
+  "motif": "rail",
+  "split_slides": [
+    { "slide": 2, "into": 2 },
+    { "slide": 3, "into": 2 }
+  ],
+  "split_reason": "source slides 2 and 3 are two-up boards — two independent train questions sharing one screen. Each question gets its own page so the class reads one figure at a time and the teacher keeps a clean half-board to write on.",
+  "note": "converted directly from the .pptx (rendered to PDF then PNG, read slide by slide). Every train / bridge / river / escalator bitmap rebuilt as inline svg.dgm; every equation retyped as MathML via data-tex."
+}
