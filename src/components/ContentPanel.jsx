@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   FolderPlus, Plus, Trash2, ChevronRight, Layers, FolderOpen, Pencil, Loader2,
   UploadCloud, ClipboardPaste, FileCode2, X, Play, ChevronUp, ChevronDown, GripVertical,
-  Download,
+  Download, Wand2,
 } from 'lucide-react'
 import ChapterIcon from './ChapterIcon'
 import FolderEditor from './FolderEditor'
@@ -458,8 +458,19 @@ function FolderList({ cls, chapter }) {
               title="Download this deck as a .html file">
               {dlId === f.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             </IconBtn>
+            {/* Two ways in, on purpose. "Edit HTML" is the raw document —
+                right for a typo or a hand-written rule. "Edit Live" opens the
+                deck at presentation proportions with editing controls, which
+                is what you want for anything you'd otherwise have to guess at:
+                type sizes, deleting furniture, resequencing the reveal. */}
+            <button onClick={() => navigate('/edit', { state: { folder: { ...f, classId: cls.id, chapterId: chapter.id } } })}
+              title="Open this deck in the live presentation editor"
+              className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-110">
+              <Wand2 className="h-3.5 w-3.5" /> Edit Live
+            </button>
             <button onClick={() => setEditing(f)}
-              className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500">
+              title="Edit the raw HTML in a code pane"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-indigo-400/40 hover:bg-white/10 hover:text-white">
               <Pencil className="h-3.5 w-3.5" /> Edit HTML
             </button>
             <IconBtn onClick={(e) => remove(f.id, e)} danger title="Hide folder (content is kept)"><Trash2 className="h-4 w-4" /></IconBtn>

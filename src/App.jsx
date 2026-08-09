@@ -3,6 +3,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PresenterView from './pages/PresenterView'
+import DeckEditorView from './pages/DeckEditorView'
 
 export default function App() {
   return (
@@ -25,6 +26,17 @@ export default function App() {
         element={
           <ProtectedRoute>
             <PresenterView />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* In-presentation editor: the same slide the presenter shows, at the
+          same proportions, with editing controls instead of board tools. */}
+      <Route
+        path="/edit"
+        element={
+          <ProtectedRoute>
+            <DeckEditorView />
           </ProtectedRoute>
         }
       />
