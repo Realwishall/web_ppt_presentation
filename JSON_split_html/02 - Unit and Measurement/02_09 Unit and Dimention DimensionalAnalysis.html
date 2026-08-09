@@ -7,7 +7,7 @@
         <style>* { box-sizing: border-box; } html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0d0f12; } body { font-family: "Segoe UI",Calibri,Candara,system-ui,sans-serif; color: #f2f4f8; background: radial-gradient(1100px 640px at 12% -12%, rgba(91,140,255,.13), transparent 62%),
     radial-gradient(1000px 620px at 92% 112%, rgba(46,204,154,.10), transparent 62%),
     radial-gradient(900px 520px at 55% 45%, rgba(245,185,66,.045), transparent 70%),
-    #0d0f12; } body.hidecursor, body.hidecursor * { cursor: none!important; } #stage { position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%; } .page { position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding: 17px 70px 46px; } .page > .wrap { height: 100%; display: flex; flex-direction: column; overflow: auto; box-sizing: border-box; } .page.title { padding: 46px 70px 46px; } .page.title > .wrap { justify-content: center; align-items: center; text-align: center; } h1.h { margin: 0 0 4px; font-size: 48px; font-weight: 800; line-height: 1.12; letter-spacing: -.01em; color: #f2f4f8; } h1.h .lite { color: #9aa4b2; font-weight: 600; } .rule { height: 5px; width: 132px; border-radius: 99px; flex: none; background: linear-gradient(90deg,#5b8cff 0%,#2ecc9a 62%,rgba(46,204,154,0) 100%); margin: 0 0 14px; } .page.title .rule { margin: 16px auto 0; } .big { font-size: 74px; font-weight: 800; line-height: 1.08; letter-spacing: -.015em; } .big .g { background: linear-gradient(115deg,#f2f4f8 22%,#5b8cff 92%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; } .kick { font-size: 22px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: #5b8cff; margin: 0 0 14px; } .content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; } .cols { display: flex; gap: 26px; align-items: flex-start; justify-content: flex-start; flex: 0 1 auto; min-height: 0; } .col { display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; min-width: 0; flex: 1 1 0; } .card { border: 1px solid rgba(255,255,255,.10); border-left: 5px solid #6b7684; border-radius: 14px; padding: 14px 20px; background: rgba(255,255,255,.035); font-size: 27px; line-height: 1.42; color: #e7ebf2; } .card .lbl { display: block; font-size: 19px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; margin: 0 0 6px; } .card.question { border-left-color: #5b8cff; background: rgba(91,140,255,.10); } .card.question .lbl { color: #5b8cff; } .card.solution { border-left-color: #2ecc9a; background: rgba(46,204,154,.10); } .card.solution .lbl { color: #2ecc9a; } .card.formula { border-left-color: #f5b942; background: rgba(245,185,66,.10); } .card.formula .lbl { color: #f5b942; } .card.warn { border-left-color: #ff6b6b; background: rgba(255,107,107,.10); } .card.warn .lbl { color: #ff6b6b; } .card.plain { border-left-color: #3a4250; background: rgba(255,255,255,.03); } ul.pts { margin: 2px 0 0; padding: 0 0 0 4px; list-style: none; display: flex; flex-direction: column; gap: 9px; } ul.pts li { position: relative; padding-left: 30px; font-size: 27px; line-height: 1.4; color: #e7ebf2; } ul.pts li:before { content: ""; position: absolute; left: 4px; top: .52em; width: 10px; height: 10px; border-radius: 3px; background: #5b8cff; transform: translateY(-50%); } ul.pts.g li:before { background: #2ecc9a; } ul.pts.a li:before { background: #f5b942; } ul.pts li em { font-style: normal; color: #f5b942; font-weight: 700; } .muted { color: #9aa4b2; } .acc { color: #5b8cff; font-weight: 700; } .gr { color: #2ecc9a; font-weight: 700; } .am { color: #f5b942; font-weight: 700; } .rd { color: #ff6b6b; font-weight: 700; } .blank { white-space: nowrap; color: #f5b942; font-weight: 800; border-bottom: 2px solid rgba(245,185,66,.55); padding: 0 6px; } .no { color: #ff6b6b; font-weight: 900; font-size: 1.05em; } .yes { color: #2ecc9a; font-weight: 900; font-size: 1.05em; } .strike { text-decoration: line-through; text-decoration-color: #ff6b6b; text-decoration-thickness: 3px; color: #9aa4b2; } .m { font-family: "Cambria Math",Cambria,Georgia,serif; font-style: italic; } .m .up { font-style: normal; } sup { font-size: .62em; vertical-align: super; font-style: normal; } sub { font-size: .62em; vertical-align: baseline; position: relative; top: .24em; font-style: normal; } .eq { font-family: "Cambria Math",Cambria,Georgia,serif; font-size: 32px; letter-spacing: .01em; } .eq.sm { font-size: 27px; } /* inline fraction */.fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 .22em; line-height: 1.14; font-size: .92em; } .fr>span { padding: 0 .34em; display: block; white-space: nowrap; } .fr>span:last-child { border-top: 2px solid currentColor; margin-top: 2px; padding-top: 2px; } /* row grid used for worked tables */.rows { display: grid; gap: 7px; } .rows .r { display: grid; gap: 16px; align-items: center; padding: 5px 2px; } .rows .r+.r { border-top: 1px solid rgba(255,255,255,.07); } .rows .hd { font-size: 20px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #9aa4b2; } .rows .r>* { min-width: 0; } .arw { color: #5b8cff; font-weight: 800; padding: 0 .35em; } figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; } figure img, figure svg { display: block; max-width: 100%; height: auto; } figure svg { width: 100%; } figcaption { font-size: 20px; color: #9aa4b2; text-align: center; } #hint { position: fixed; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 15px; letter-spacing: .14em; color: rgba(154,164,178,.62); transition: opacity .9s ease; pointer-events: none; z-index: 9; } #badge { position: fixed; right: 20px; bottom: 18px; z-index: 9; pointer-events: none; font-size: 15px; font-weight: 700; letter-spacing: .05em; color: #cfd6e2; background: rgba(20,24,31,.9); border: 1px solid rgba(255,255,255,.14); padding: 7px 14px; border-radius: 99px; opacity: 0; transition: opacity .35s ease; } #badge.on { opacity: 1; } /* ---- dense slides: many stacked blocks, tighter rhythm ---- */.page.dense { padding-bottom: 28px; } .page.dense .rule { margin-bottom: 10px; } .page.dense h1.h { font-size: 45px; } .page.dense .card { font-size: 24px; padding: 12px 17px; line-height: 1.36; } .page.dense .card .lbl { font-size: 17px; margin-bottom: 4px; } .page.dense ul.pts li { font-size: 24px; } .page.dense ul.pts { gap: 7px; } .page.dense .eq { font-size: 28px; } .page.dense .eq.sm { font-size: 24px; } .page.dense .rows .r { font-size: 24px; padding: 4px 2px; } .page.dense .rows { gap: 5px; } .page.dense .rows .hd { font-size: 18px; } .page.dense .content, .page.dense .col { gap: 11px; } .page.dense figcaption { font-size: 18px; } .page.dense figure { max-width: 85%; } /* ---- level overrides: buy room for bigger apparent text ---- */body[data-lvl="5"] .page { padding: 15px 52px 34px; } body[data-lvl="5"] .content, body[data-lvl="5"] .col { gap: 12px; } body[data-lvl="5"] .cols { gap: 22px; } body[data-lvl="5"] h1.h { font-size: 45px; } body[data-lvl="5"] .rule { margin-bottom: 11px; } body[data-lvl="5"] figure { max-width: 96%; } body[data-lvl="5"] .page.dense .card { font-size: 23px; padding: 10px 15px; } body[data-lvl="5"] .page.dense ul.pts li { font-size: 23px; } body[data-lvl="5"] .page.dense .rows .r { font-size: 23px; } body[data-lvl="5"] .page.dense .content, body[data-lvl="5"] .page.dense .col { gap: 9px; } body[data-lvl="5"] .page.dense figure { max-width: 83%; } body[data-lvl="6"] .page { padding: 13px 40px 28px; } body[data-lvl="6"] .content, body[data-lvl="6"] .col { gap: 10px; } body[data-lvl="6"] .cols { gap: 18px; } body[data-lvl="6"] h1.h { font-size: 43px; } body[data-lvl="6"] .rule { width: 112px; margin-bottom: 9px; } body[data-lvl="6"] .card { padding: 12px 17px; } body[data-lvl="6"] .big { font-size: 68px; } body[data-lvl="6"] figure { max-width: 90%; } body[data-lvl="6"] .page.dense .card { font-size: 22px; padding: 9px 14px; } body[data-lvl="6"] .page.dense .card .lbl { font-size: 16px; } body[data-lvl="6"] .page.dense ul.pts li { font-size: 22px; } body[data-lvl="6"] .page.dense .eq { font-size: 26px; } body[data-lvl="6"] .page.dense .eq.sm { font-size: 23px; } body[data-lvl="6"] .page.dense .rows .r { font-size: 22px; } body[data-lvl="6"] .page.dense .content, body[data-lvl="6"] .page.dense .col { gap: 8px; } body[data-lvl="6"] .page.dense figure { max-width: 79%; } body[data-lvl="7"] .page { padding: 11px 30px 22px; } body[data-lvl="7"] .content, body[data-lvl="7"] .col { gap: 9px; } body[data-lvl="7"] .cols { gap: 15px; } body[data-lvl="7"] h1.h { font-size: 41px; } body[data-lvl="7"] .rule { width: 96px; height: 4px; margin-bottom: 8px; } body[data-lvl="7"] .card { padding: 11px 15px; } body[data-lvl="7"] ul.pts li { padding-left: 27px; } body[data-lvl="7"] .big { font-size: 62px; } body[data-lvl="7"] figure { max-width: 84%; } body[data-lvl="7"] figcaption { font-size: 18px; } body[data-lvl="7"] .page.dense .card { font-size: 21px; padding: 8px 13px; line-height: 1.32; } body[data-lvl="7"] .page.dense .card .lbl { font-size: 15px; margin-bottom: 3px; } body[data-lvl="7"] .page.dense ul.pts li { font-size: 21px; } body[data-lvl="7"] .page.dense .eq { font-size: 25px; } body[data-lvl="7"] .page.dense .eq.sm { font-size: 22px; } body[data-lvl="7"] .page.dense .rows .r { font-size: 21px; } body[data-lvl="7"] .page.dense .content, body[data-lvl="7"] .page.dense .col { gap: 7px; } body[data-lvl="7"] .page.dense figure { max-width: 74%; } body[data-lvl="7"] .page.dense figcaption { font-size: 16px; } /* BEGIN math-font:upright *//* ---- upright math typography (rule 17) ---------------------------------
+    #0d0f12; } body.hidecursor, body.hidecursor * { cursor: none!important; } #stage { position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%; } .page { position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding: 17px 70px 46px; } .page > .wrap { height: 100%; display: flex; flex-direction: column; overflow: auto; box-sizing: border-box; } .page.title { padding: 46px 70px 46px; } .page.title > .wrap { justify-content: center; align-items: center; text-align: center; } h1.h { margin: 0 0 4px; font-size: 48px; font-weight: 800; line-height: 1.12; letter-spacing: -.01em; color: #f2f4f8; } h1.h .lite { color: #9aa4b2; font-weight: 600; } .rule { height: 5px; width: 132px; border-radius: 99px; flex: none; background: linear-gradient(90deg,#5b8cff 0%,#2ecc9a 62%,rgba(46,204,154,0) 100%); margin: 0 0 14px; } .page.title .rule { margin: 16px auto 0; } .big { font-size: 74px; font-weight: 800; line-height: 1.08; letter-spacing: -.015em; } .big .g { background: linear-gradient(115deg,#f2f4f8 22%,#5b8cff 92%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; } .kick { font-size: 22px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: #5b8cff; margin: 0 0 14px; } .content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; } .cols { display: flex; gap: 26px; align-items: flex-start; justify-content: flex-start; flex: 0 1 auto; min-height: 0; } .col { display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; min-width: 0; flex: 1 1 0; } .card { border: 1px solid rgba(255,255,255,.10); border-left: 5px solid #6b7684; border-radius: 14px; padding: 14px 20px; background: rgba(255,255,255,.035); font-size: 27px; line-height: 1.42; color: #e7ebf2; } .card .lbl { display: block; font-size: 19px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; margin: 0 0 6px; } .card.question { border-left-color: #5b8cff; background: rgba(91,140,255,.10); } .card.question .lbl { color: #5b8cff; } .card.solution { border-left-color: #2ecc9a; background: rgba(46,204,154,.10); } .card.solution .lbl { color: #2ecc9a; } .card.formula { border-left-color: #f5b942; background: rgba(245,185,66,.10); } .card.formula .lbl { color: #f5b942; } .card.warn { border-left-color: #ff6b6b; background: rgba(255,107,107,.10); } .card.warn .lbl { color: #ff6b6b; } .card.plain { border-left-color: #3a4250; background: rgba(255,255,255,.03); } ul.pts { margin: 2px 0 0; padding: 0 0 0 4px; list-style: none; display: flex; flex-direction: column; gap: 9px; } ul.pts li { position: relative; padding-left: 30px; font-size: 27px; line-height: 1.4; color: #e7ebf2; } ul.pts li:before { content: ""; position: absolute; left: 4px; top: .52em; width: 10px; height: 10px; border-radius: 3px; background: #5b8cff; transform: translateY(-50%); } ul.pts.g li:before { background: #2ecc9a; } ul.pts.a li:before { background: #f5b942; } ul.pts li em { font-style: normal; color: #f5b942; font-weight: 700; } .muted { color: #9aa4b2; } .acc { color: #5b8cff; font-weight: 700; } .gr { color: #2ecc9a; font-weight: 700; } .am { color: #f5b942; font-weight: 700; } .rd { color: #ff6b6b; font-weight: 700; } .blank { white-space: nowrap; color: #f5b942; font-weight: 800; border-bottom: 2px solid rgba(245,185,66,.55); padding: 0 6px; } .no { color: #ff6b6b; font-weight: 900; font-size: 1.05em; } .yes { color: #2ecc9a; font-weight: 900; font-size: 1.05em; } .strike { text-decoration: line-through; text-decoration-color: #ff6b6b; text-decoration-thickness: 3px; color: #9aa4b2; } .m { font-family: "Cambria Math",Cambria,Georgia,serif; font-style: italic; } .m .up { font-style: normal; } sup { font-size: .62em; vertical-align: super; font-style: normal; } sub { font-size: .62em; vertical-align: baseline; position: relative; top: .24em; font-style: normal; } .eq { font-family: "Cambria Math",Cambria,Georgia,serif; font-size: 32px; letter-spacing: .01em; } .eq.sm { font-size: 27px; } /* inline fraction */.fr { display: inline-flex; flex-direction: column; align-items: stretch; text-align: center; vertical-align: middle; margin: 0 .22em; line-height: 1.14; font-size: .92em; } .fr>span { padding: 0 .34em; display: block; white-space: nowrap; } .fr>span:last-child { border-top: 2px solid currentColor; margin-top: 2px; padding-top: 2px; } /* row grid used for worked tables */.rows { display: grid; gap: 7px; } .rows .r { display: grid; gap: 16px; align-items: center; padding: 5px 2px; } .rows .r+.r { border-top: 1px solid rgba(255,255,255,.07); } .rows .hd { font-size: 20px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #9aa4b2; } .rows .r>* { min-width: 0; } .arw { color: #5b8cff; font-weight: 800; padding: 0 .35em; } figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; } figure img, figure svg { display: block; max-width: 100%; height: auto; } figure svg { width: 100%; } figcaption { font-size: 20px; color: #9aa4b2; text-align: center; } #hint { position: fixed; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 15px; letter-spacing: .14em; color: rgba(154,164,178,.62); transition: opacity .9s ease; pointer-events: none; z-index: 9; } #badge { position: fixed; right: 20px; bottom: 18px; z-index: 9; pointer-events: none; font-size: 15px; font-weight: 700; letter-spacing: .05em; color: #cfd6e2; background: rgba(20,24,31,.9); border: 1px solid rgba(255,255,255,.14); padding: 7px 14px; border-radius: 99px; opacity: 0; transition: opacity .35s ease; } #badge.on { opacity: 1; } /* ---- dense slides: many stacked blocks, tighter rhythm ---- */.page.dense { padding-bottom: 28px; } .page.dense .rule { margin-bottom: 10px; } .page.dense h1.h { font-size: 45px; } .page.dense .card { font-size: 24px; padding: 12px 17px; line-height: 1.36; } .page.dense .card .lbl { font-size: 17px; margin-bottom: 4px; } .page.dense ul.pts li { font-size: 24px; } .page.dense ul.pts { gap: 7px; } .page.dense .eq { font-size: 28px; } .page.dense .eq.sm { font-size: 24px; } .page.dense .rows .r { font-size: 24px; padding: 4px 2px; } .page.dense .rows { gap: 5px; } .page.dense .rows .hd { font-size: 18px; } .page.dense .content, .page.dense .col { gap: 11px; } .page.dense figcaption { font-size: 18px; } .page.dense figure { max-width: 85%; } /* ---- level overrides: buy room for bigger apparent text ---- */body[data-lvl="5"] .page { padding: 15px 52px 34px; } body[data-lvl="5"] .content, body[data-lvl="5"] .col { gap: 12px; } body[data-lvl="5"] .cols { gap: 22px; } body[data-lvl="5"] h1.h { font-size: 45px; } body[data-lvl="5"] .rule { margin-bottom: 11px; } body[data-lvl="5"] figure { max-width: 96%; } body[data-lvl="5"] .page.dense .card { font-size: 23px; padding: 10px 15px; } body[data-lvl="5"] .page.dense ul.pts li { font-size: 23px; } body[data-lvl="5"] .page.dense .rows .r { font-size: 23px; } body[data-lvl="5"] .page.dense .content, body[data-lvl="5"] .page.dense .col { gap: 9px; } body[data-lvl="5"] .page.dense figure { max-width: 83%; } body[data-lvl="6"] .page { padding: 13px 40px 28px; } body[data-lvl="6"] .content, body[data-lvl="6"] .col { gap: 10px; } body[data-lvl="6"] .cols { gap: 18px; } body[data-lvl="6"] h1.h { font-size: 43px; } body[data-lvl="6"] .rule { width: 112px; margin-bottom: 9px; } body[data-lvl="6"] .card { padding: 12px 17px; } body[data-lvl="6"] .big { font-size: 68px; } body[data-lvl="6"] figure { max-width: 90%; } body[data-lvl="6"] .page.dense .card { font-size: 22px; padding: 9px 14px; } body[data-lvl="6"] .page.dense .card .lbl { font-size: 16px; } body[data-lvl="6"] .page.dense ul.pts li { font-size: 22px; } body[data-lvl="6"] .page.dense .eq { font-size: 26px; } body[data-lvl="6"] .page.dense .eq.sm { font-size: 23px; } body[data-lvl="6"] .page.dense .rows .r { font-size: 22px; } body[data-lvl="6"] .page.dense .content, body[data-lvl="6"] .page.dense .col { gap: 8px; } body[data-lvl="6"] .page.dense figure { max-width: 79%; } body[data-lvl="7"] .page { padding: 11px 30px 22px; } body[data-lvl="7"] .content, body[data-lvl="7"] .col { gap: 9px; } body[data-lvl="7"] .cols { gap: 15px; } body[data-lvl="7"] h1.h { font-size: 41px; } body[data-lvl="7"] .rule { width: 96px; height: 4px; margin-bottom: 8px; } body[data-lvl="7"] .card { padding: 11px 15px; } body[data-lvl="7"] ul.pts li { padding-left: 27px; } body[data-lvl="7"] .big { font-size: 62px; } body[data-lvl="7"] figure { max-width: 84%; } body[data-lvl="7"] figcaption { font-size: 18px; } body[data-lvl="7"] .page.dense .card { font-size: 21px; padding: 8px 13px; line-height: 1.32; } body[data-lvl="7"] .page.dense .card .lbl { font-size: 15px; margin-bottom: 3px; } body[data-lvl="7"] .page.dense ul.pts li { font-size: 21px; } body[data-lvl="7"] .page.dense .eq { font-size: 25px; } body[data-lvl="7"] .page.dense .eq.sm { font-size: 22px; } body[data-lvl="7"] .page.dense .rows .r { font-size: 21px; } body[data-lvl="7"] .page.dense .content, body[data-lvl="7"] .page.dense .col { gap: 7px; } body[data-lvl="7"] .page.dense figure { max-width: 74%; } body[data-lvl="7"] .page.dense figcaption { font-size: 16px; } /* BEGIN math-font:upright *//* ---- upright math typography (rule 17) ---------------------------------
    Cambria Math is a true math face: real Greek, real operators, digits that
    sit on the baseline. It was never the font that read wrong here, only the
    italic -- and the Georgia fallback underneath it. System fonts only, so a
@@ -277,10 +277,14 @@
                     </div>
                 </div>
             </section>
+            <section class="page dense title">
+                <div class="wrap">
+                    <h1 class="h step">Significant figures <span class="lite">&#183; count them</span></h1>
+                    <div class="rule step"></div>
+                </div>
+            </section>
             <section class="page dense">
                 <div class="wrap">
-                    <h1 class="h">Significant figures <span class="lite">&#183; count them</span></h1>
-                    <div class="rule"></div>
                     <div class="content">
                         <div class="rows">
                             <div class="r hd" style="grid-template-columns:1fr 1fr 1.5fr">
@@ -314,7 +318,22 @@
                                 <span class="muted step">leading zeros out</span>
                             </div>
                             <div class="r" style="grid-template-columns:1fr 1fr 1.5fr">
-                                <span class="eq am">3 rod &#183; 4 boys &#183; 3.5 rupee &#183; 5 &#183; &#960;</span>
+                                <span class="eq am">3 rod</span>
+                                <span class="eq step">&#8734;</span>
+                                <span class="muted step">counted / fixed</span>
+                            </div>
+                            <div class="r" style="grid-template-columns:1fr 1fr 1.5fr">
+                                <span class="eq am">4 boys</span>
+                                <span class="eq step">&#8734;</span>
+                                <span class="muted step">counted / fixed</span>
+                            </div>
+                            <div class="r" style="grid-template-columns:1fr 1fr 1.5fr">
+                                <span class="eq am">3.5 rupee</span>
+                                <span class="eq step">&#8734;</span>
+                                <span class="muted step">counted / fixed</span>
+                            </div>
+                            <div class="r" style="grid-template-columns:1fr 1fr 1.5fr">
+                                <span class="eq am">5, &#960;</span>
                                 <span class="eq step">&#8734;</span>
                                 <span class="muted step">counted / fixed</span>
                             </div>
@@ -345,12 +364,31 @@
                             <span class="eq step">3.6507 &#215; 3.3 = 12.04731 = <span class="am">12</span></span>
                         </div>
                         <div class="card question">
-                            <span class="lbl">Note</span>
-                            <span class="step">If a calculation <span class="acc">can</span> be done by addition, it will be done by addition only.</span>
+                            <span class="lbl">Statement vs Direct Math</span>
+                            <span class="step">Volume of 1 container = <span class="eq am">4.7 L</span>. Volume of 8 containers?</span>
                         </div>
-                        <div class="card solution">
-                            <span class="lbl">Vocabulary</span>
-                            <span class="step">The last significant digit is also called the <span class="gr">uncertain digit</span>.</span>
+                        <div class="cols">
+                            <div class="col">
+                                <div class="card solution">
+                                    <span class="lbl">As Addition (Correct)</span>
+                                    <span class="step eq sm m">4.7 + 4.7 + ... (8 times)</span>
+                                    <span class="step eq sm m">= 37.6 L</span>
+                                    <span class="step">Least decimal place = 1 &#8594; <span class="gr">37.6 L</span></span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card warn">
+                                    <span class="lbl">The Trap</span>
+                                    <span class="step">If you simply multiply: <span class="eq sm m">8 &#215; 4.7 = 37.6</span></span>
+                                    <span class="step">Since 4.7 has 2 S.F., you might round to <span class="rd">38 L</span>.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card question">
+                            <span class="lbl">Direct Multiplication</span>
+                            <span class="step">Calculate <span class="eq am">8.0 &#215; 4.7</span></span>
+                            <span class="step eq sm m">= 37.6 &#8594; <span class="gr">38</span> (2 S.F.)</span>
+                            <span class="step">If it's just math, use multiplication rules. If it can be done by addition, it <span class="rd">must</span> be done by addition.</span>
                         </div>
                     </div>
                 </div>
@@ -367,7 +405,7 @@
                         </div>
                         <div class="card solution">
                             <span class="lbl">Solution</span>
-                            <span class="eq step" style="font-size:1.15em">0.<span class="strike">0000</span>3<span class="am">00</span>232<span class="am">0</span></span>
+                            <span class="eq step" style="font-size:1.15em"><span class="strike">0.0000</span>3<span class="am">00</span>232<span class="am">0</span></span>
                             <br>
                             <span class="muted step" style="font-size:.85em">leading zeros &#8212; never significant &#183; two zeros inside &#183; one trailing zero after the decimal</span>
                         </div>
@@ -397,21 +435,21 @@
                                     <span class="lbl">Solution</span>
                                     <span class="step"><span class="eq sm">4 &#183; 5 &#183; <span class="am">3</span> &#183; 4</span> &#8594; least is <span class="am eq">3</span></span> <span class="step">&#8594; answer has <span class="gr">3 S.F.</span></span>
                                 </div>
-                                <div class="card plain">
+                                <div class="card plain step">
+                                    <span class="eq">(ii)&nbsp; 5 &#215; 5.364</span>
+                                </div>
+                                <div class="card solution">
+                                    <span class="lbl">Solution</span>
+                                    <span class="step">5 is an <span class="am">exact count</span> (&#8734; S.F.)</span> <span class="step">&#8594; 26.82 has <span class="gr">4 S.F.</span></span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card plain step">
                                     <span class="eq">(iii)&nbsp; 0.0125 + 0.7864 + 0.0215</span>
                                 </div>
                                 <div class="card solution">
                                     <span class="lbl">Solution</span>
                                     <span class="step">Addition &#8594; least decimal place = <span class="am">4</span></span> <span class="step">&#8594; <span class="eq">0.8204</span> &#8594; <span class="gr">4 S.F.</span></span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="card plain">
-                                    <span class="eq">(ii)&nbsp; 5 &#215; 5.364</span>
-                                </div>
-                                <div class="card solution">
-                                    <span class="lbl">Solution</span>
-                                    <span class="step">5 is an <span class="am">exact count</span> (&#8734; S.F.)</span> <span class="step">&#8594; answer has <span class="gr">4 S.F.</span></span>
                                 </div>
                             </div>
                         </div>
@@ -448,6 +486,11 @@
                                     <span class="step">The measured value comes out <span class="rd">less</span> than the true value.</span>
                                 </div>
                             </div>
+                        </div>
+                        <div class="card solution">
+                            <span class="lbl">Correction</span>
+                            <span class="step">For a <span class="acc">positive error</span>, we apply a <span class="rd">negative correction</span>.</span>
+                            <span class="step">For a <span class="rd">negative error</span>, we apply a <span class="acc">positive correction</span>.</span>
                         </div>
                         <div class="card formula">
                             <span class="lbl">Two families</span>
@@ -551,6 +594,19 @@
                                 <div class="card warn">
                                     <span class="lbl">Backlash error</span>
                                     <span class="step">Lash or play in the screw threads &#8212; <span class="rd">cannot be removed completely.</span></span>
+                                    <svg viewBox="0 0 120 60" style="height:60px; margin-top:8px">
+                                        <g transform="translate(35, 30) rotate(0)">
+                                            <circle cx="0" cy="0" r="18" fill="none" stroke="#9aa4b2" stroke-width="4"/>
+                                            <path d="M-4,-24 L4,-24 L6,-16 L-6,-16 Z M-4,24 L4,24 L6,16 L-6,16 Z M-24,-4 L-24,4 L-16,6 L-16,-6 Z M24,-4 L24,4 L16,6 L16,-6 Z M-18,-18 L-12,-22 L-10,-14 L-16,-10 Z M18,18 L12,22 L10,14 L16,10 Z M18,-18 L12,-22 L10,-14 L16,-10 Z M-18,18 L-12,22 L-10,14 L-16,10 Z" fill="#9aa4b2"/>
+                                            <circle cx="0" cy="0" r="6" fill="#9aa4b2"/>
+                                        </g>
+                                        <g transform="translate(80, 30) rotate(15)">
+                                            <circle cx="0" cy="0" r="18" fill="none" stroke="#ff6b6b" stroke-width="4"/>
+                                            <path d="M-4,-24 L4,-24 L6,-16 L-6,-16 Z M-4,24 L4,24 L6,16 L-6,16 Z M-24,-4 L-24,4 L-16,6 L-16,-6 Z M24,-4 L24,4 L16,6 L16,-6 Z M-18,-18 L-12,-22 L-10,-14 L-16,-10 Z M18,18 L12,22 L10,14 L16,10 Z M18,-18 L12,-22 L10,-14 L16,-10 Z M-18,18 L-12,22 L-10,14 L-16,10 Z" fill="#ff6b6b"/>
+                                            <circle cx="0" cy="0" r="6" fill="#ff6b6b"/>
+                                        </g>
+                                        <path d="M 52,20 Q 58,15 63,20" fill="none" stroke="#f5b942" stroke-width="2" stroke-dasharray="2 2"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -643,7 +699,7 @@
                         </div>
                         <div class="card solution">
                             <span class="lbl">Step 1</span>
-                            <span class="step"><span class="eq sm m">&#8658; &#916;l<sub>mean</sub> = <span class="fr"><span>|3.75 &#8722; 3.77| + |3.75 &#8722; 3.75| + |3.75 &#8722; 3.73|</span><span>3</span></span> </span></span>
+                            <span class="step" style="display:inline-block"><span class="eq sm m">&#8658; &#916;l<sub>mean</sub> = <span class="fr"><span><span class="step" style="display:inline-block">|3.75 &#8722; 3.77|</span><span class="step" style="display:inline-block"> + |3.75 &#8722; 3.75|</span><span class="step" style="display:inline-block"> + |3.75 &#8722; 3.73|</span></span><span>3</span></span> </span></span>
                         </div>
                         <div class="card solution">
                             <span class="lbl">Step 2</span>
@@ -1162,6 +1218,46 @@
             </section>
             <section class="page dense">
                 <div class="wrap">
+                    <h1 class="h">Proper error reporting <span class="lite">&#183; more cases</span></h1>
+                    <div class="rule"></div>
+                    <div class="content">
+                        <div class="cols">
+                            <div class="col">
+                                <div class="card question">
+                                    <span class="lbl">Decimal places</span>
+                                    <span class="step">Reading is <span class="eq am">2.67 &#177; 0.11</span></span>
+                                </div>
+                                <div class="card solution">
+                                    <span class="lbl">Correction</span>
+                                    <span class="step">The error is at the <span class="am">first decimal place</span> (0.1).</span>
+                                    <span class="step">So the reading must be rounded to a single decimal place.</span>
+                                    <span class="eq gr step">2.7 &#177; 0.1</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card question">
+                                    <span class="lbl">Percentage Error</span>
+                                    <span class="step">Reading is <span class="eq am">378 &#177; 10%</span></span>
+                                </div>
+                                <div class="card solution">
+                                    <span class="lbl">Correction</span>
+                                    <span class="step">How many S.F. are allowed?</span>
+                                    <ul class="pts">
+                                        <li class="step">~100% error &#8594; <span class="am">1 S.F.</span></li>
+                                        <li class="step">~10% error &#8594; <span class="am">2 S.F.</span></li>
+                                        <li class="step">~1% error &#8594; <span class="am">3 S.F.</span></li>
+                                        <li class="step">~0.1% error &#8594; <span class="am">4 S.F.</span></li>
+                                    </ul>
+                                    <span class="step">For 10%, we need <span class="am">2 S.F.</span></span>
+                                    <span class="eq gr step">3.8 &#215; 10<sup>2</sup> &#177; 10%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="page dense">
+                <div class="wrap">
                     <h1 class="h">Question <span class="lite">&#183; absolute vs percentage</span></h1>
                     <div class="rule"></div>
                     <div class="content">
@@ -1531,31 +1627,23 @@
                         <div class="cols">
                             <div class="col">
                                 <ul class="pts a">
-                                    <li class="step">1 amu in terms of energy is <span class="eq m">931 MeV</span>
-                                    </li>
-                                    <li class="step">CSL <span class="eq m">2.8 &#215; 10<sup>30</sup> kg</span>
-                                    </li>
-                                    <li class="step">Solar mass <span class="eq m">1.99 &#215; 10<sup>30</sup> kg</span>
-                                    </li>
-                                    <li class="step">Light year <span class="eq m">9.46 &#215; 10<sup>15</sup> m</span>
-                                    </li>
-                                    <li class="step">Astronomical unit <span class="eq m">1.496 &#215; 10<sup>11</sup> m</span>
-                                    </li>
-                                    <li class="step">Parsec &#8212; 3.26 light year,
-                                        <span class="eq m">3.09 &#215; 10<sup>16</sup> m</span> (parallactic second)
-                                    </li>
-                                    <li class="step">Ton = 1000 kg</li>
+                                    <li class="step">1 amu <span class="step" style="display:inline-block">&#8594; unit of mass &amp; energy <span class="eq m">(931 MeV)</span></span></li>
+                                    <li class="step">CSL <span class="step" style="display:inline-block">&#8594; unit of mass <span class="eq m">(2.8 &#215; 10<sup>30</sup> kg)</span></span></li>
+                                    <li class="step">Solar mass <span class="step" style="display:inline-block">&#8594; <span class="eq m">1.99 &#215; 10<sup>30</sup> kg</span></span></li>
+                                    <li class="step">Light year <span class="step" style="display:inline-block">&#8594; <span class="eq m">9.46 &#215; 10<sup>15</sup> m</span></span></li>
+                                    <li class="step">Astronomical unit <span class="step" style="display:inline-block">&#8594; <span class="eq m">1.496 &#215; 10<sup>11</sup> m</span></span></li>
+                                    <li class="step">Parsec (parallactic second) <span class="step" style="display:inline-block">&#8594; 3.26 ly <span class="eq m">(3.09 &#215; 10<sup>16</sup> m)</span></span></li>
+                                    <li class="step">Ton <span class="step" style="display:inline-block">&#8594; 1000 kg</span></li>
                                 </ul>
                             </div>
                             <div class="col">
                                 <ul class="pts a">
-                                    <li class="step">Quintal = 100 kg</li>
-                                    <li class="step">Shake = 10 nanosecond</li>
-                                    <li class="step">Sidereal day = 24 hours &#8722; 4 min</li>
-                                    <li class="step">Barn (nuclear area) = <span class="eq m">10<sup>&#8722;28</sup> m<sup>2</sup></span>
-                                    </li>
-                                    <li class="step">Lunar month = 27.3 days</li>
-                                    <li class="step">Slug = 14.593 kg</li>
+                                    <li class="step">Quintal <span class="step" style="display:inline-block">&#8594; 100 kg</span></li>
+                                    <li class="step">Shake <span class="step" style="display:inline-block">&#8594; 10 nanosecond</span></li>
+                                    <li class="step">Sidereal day <span class="step" style="display:inline-block">&#8594; 24 hours &#8722; 4 min</span></li>
+                                    <li class="step">Barn (nuclear area) <span class="step" style="display:inline-block">&#8594; <span class="eq m">10<sup>&#8722;28</sup> m<sup>2</sup></span></span></li>
+                                    <li class="step">Lunar month <span class="step" style="display:inline-block">&#8594; 27.3 days</span></li>
+                                    <li class="step">Slug <span class="step" style="display:inline-block">&#8594; 14.593 kg</span></li>
                                 </ul>
                             </div>
                         </div>
