@@ -34,12 +34,10 @@ body.idle{cursor:none;}
   padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .45s;pointer-events:none;}
 #size-badge.show{opacity:1;}
 
-.slide{position:absolute;inset:0;padding:17px 70px 46px;display:flex;flex-direction:column;
-  opacity:0;transform:translateX(70px) scale(.99);pointer-events:none;
-  transition:opacity .5s cubic-bezier(.22,.7,.25,1), transform .55s cubic-bezier(.22,.7,.25,1);}
-.slide.active{opacity:1;transform:none;pointer-events:auto;}
-.slide.past{transform:translateX(-70px) scale(.99);}
-.slide.center{justify-content:center;align-items:center;text-align:center;padding-top:46px;}
+.page{position:absolute;inset:0;padding:17px 70px 46px;}
+.page > .wrap{height:100%;display:flex;flex-direction:column;overflow:auto;box-sizing:border-box;}
+.page.center{padding-top:46px;}
+.page.center > .wrap{justify-content:center;align-items:center;text-align:center;}
 
 h1.title{font-size:112px;font-weight:800;letter-spacing:-4px;margin:0;line-height:1;}
 h1.title .sub{display:block;font-size:25px;font-weight:500;letter-spacing:11px;
@@ -94,17 +92,31 @@ h2.head .small{font-size:26px;color:var(--muted);font-weight:500;letter-spacing:
   transition:background .45s ease,color .45s ease;}
 .opt .v{flex:1;min-width:0;}
 .opt .v .katex{font-size:1.08em;}
-.opt.frag{opacity:1;transform:none;}
-.opt.frag.on{background:linear-gradient(90deg,rgba(46,204,154,.24),rgba(46,204,154,.05));
+
+/* the letter tile is the only hit zone — click it to grade that one option */
+.opt > .k.clickable{cursor:pointer;-webkit-user-select:none;user-select:none;}
+.opt > .k.clickable:hover{background:rgba(255,255,255,.16);color:#e7ecf4;}
+
+/* right answer — same green treatment the deck already used for the key */
+.opt.is-right{background:linear-gradient(90deg,rgba(46,204,154,.24),rgba(46,204,154,.05));
   border-color:rgba(46,204,154,.6);box-shadow:0 0 0 1px rgba(46,204,154,.18);}
-.opt.frag.on .k{background:rgba(46,204,154,.4);color:#d9ffef;}
-.opt.frag.on::after{content:'\2713';margin-left:auto;color:#2ecc9a;font-size:23px;font-weight:700;flex:0 0 auto;}
+.opt.is-right .k{background:rgba(46,204,154,.4);color:#d9ffef;}
+.opt.is-right::after{content:'\2713';margin-left:auto;color:#2ecc9a;font-size:23px;font-weight:700;flex:0 0 auto;}
+/* wrong answer — the same treatment in red */
+.opt.is-wrong{background:linear-gradient(90deg,rgba(255,86,94,.22),rgba(255,86,94,.045));
+  border-color:rgba(255,86,94,.55);box-shadow:0 0 0 1px rgba(255,86,94,.16);}
+.opt.is-wrong .k{background:rgba(255,86,94,.4);color:#ffe2e4;}
+.opt.is-wrong::after{content:'\2715';margin-left:auto;color:#ff5a62;font-size:22px;font-weight:700;flex:0 0 auto;}
+/* zero-size reveal marker: one "Next" on it colours every option at once */
+.ansgate{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;}
 
 .figure{background:#fdfdfd;border-radius:16px;padding:10px 12px;border:2px solid rgba(46,204,154,.5);
   box-shadow:0 12px 30px rgba(0,0,0,.5);display:flex;justify-content:center;}
 .figure svg{width:100%;height:auto;display:block;max-width:470px;margin:0 auto;}
 .figure.wide svg{max-width:100%;}
 .cap{font-size:17px;color:#7a8697;text-align:center;margin-top:8px;letter-spacing:.4px;}
+/* a figure and its caption reveal as one step, keeping the column's own gap */
+.figstep{display:flex;flex-direction:column;gap:18px;}
 
 .vcenter{flex:1;display:flex;flex-direction:column;justify-content:flex-start;}
 .rtable{width:100%;border-collapse:separate;border-spacing:0 12px;margin-top:4px;}
@@ -116,20 +128,19 @@ h2.head .small{font-size:26px;color:var(--muted);font-weight:500;letter-spacing:
 .rtable .name{font-size:23px;color:var(--accent);}
 .rtable .val{text-align:center;}
 
-.frag{opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s cubic-bezier(.22,.7,.25,1);}
-.frag.on{opacity:1;transform:none;}
-
 /* larger text levels trade padding for room, so nothing ever overflows */
-body[data-lvl="5"] .slide{padding:14px 54px 36px;}
+body[data-lvl="5"] .page{padding:14px 54px 36px;}
 body[data-lvl="5"] .card{padding:18px 22px;} body[data-lvl="5"] .card.tight{padding:14px 18px;}
 body[data-lvl="5"] .col{gap:14px;} body[data-lvl="5"] .cols{gap:24px;}
+body[data-lvl="5"] .figstep{gap:14px;}
 body[data-lvl="5"] .figure svg{max-width:420px;} body[data-lvl="5"] .rule{margin-bottom:18px;}
 body[data-lvl="5"] h2.head{font-size:44px;}
 body[data-lvl="5"] .opt{padding:9px 16px;} body[data-lvl="5"] .opts{gap:10px;}
 
-body[data-lvl="6"] .slide{padding:12px 46px 30px;}
+body[data-lvl="6"] .page{padding:12px 46px 30px;}
 body[data-lvl="6"] .card{padding:15px 19px;} body[data-lvl="6"] .card.tight{padding:12px 16px;}
 body[data-lvl="6"] .col{gap:12px;} body[data-lvl="6"] .cols{gap:20px;}
+body[data-lvl="6"] .figstep{gap:12px;}
 body[data-lvl="6"] .figure svg{max-width:380px;} body[data-lvl="6"] .rule{margin-bottom:14px;}
 body[data-lvl="6"] h2.head{font-size:42px;} body[data-lvl="6"] .card .label{margin-bottom:8px;}
 body[data-lvl="6"] .hint{font-size:19px;margin-top:8px;} body[data-lvl="6"] .bullet{margin-bottom:9px;}
@@ -139,9 +150,10 @@ body[data-lvl="6"] .opt .k{width:31px;height:31px;flex-basis:31px;font-size:17px
 body[data-lvl="6"] .qtext{font-size:24px;line-height:1.48;}
 body[data-lvl="6"] .rtable td{font-size:21px;} body[data-lvl="6"] .rtable{border-spacing:0 10px;}
 
-body[data-lvl="7"] .slide{padding:10px 38px 24px;}
+body[data-lvl="7"] .page{padding:10px 38px 24px;}
 body[data-lvl="7"] .card{padding:13px 17px;} body[data-lvl="7"] .card.tight{padding:10px 14px;}
 body[data-lvl="7"] .col{gap:10px;} body[data-lvl="7"] .cols{gap:18px;}
+body[data-lvl="7"] .figstep{gap:10px;}
 body[data-lvl="7"] .figure svg{max-width:340px;} body[data-lvl="7"] .rule{margin-bottom:12px;height:3px;}
 body[data-lvl="7"] h2.head{font-size:40px;} body[data-lvl="7"] .card .label{margin-bottom:6px;font-size:14px;}
 body[data-lvl="7"] .hint{font-size:18px;margin-top:6px;line-height:1.45;}
@@ -177,384 +189,440 @@ body[data-lvl="7"] .steps .hint{font-size:17px;margin-top:6px;}
 </head>
 <body>
 <div id="viewport"><div id="stage">
-<section class="slide center">
+<section class="page center">
+  <div class="wrap">
   <div class="kicker">Alternating Current</div>
-  <h1 class="title">AC<span class="sub">Questions · supply across instruments</span></h1>
+  <h1 class="title">AC<span class="sub step">Questions · supply across instruments</span></h1>
+  </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">01</span> <span class="small">— peak voltage across C</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In a series RLC circuit the r.m.s. voltages across the resistor and the inductor are \(400\ \text{V}\) and \(700\ \text{V}\). If the applied voltage is \(\varepsilon=500\sqrt{2}\,\sin\omega t\) then the <b>peak</b> voltage across the capacitor is </div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(1200\ \text{V}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(1200\sqrt{2}\ \text{V}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(400\ \text{V}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(400\sqrt{2}\ \text{V}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(1200\ \text{V}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(1200\sqrt{2}\ \text{V}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(400\ \text{V}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(400\sqrt{2}\ \text{V}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
     <div class="col"><div class="figure " data-fig="rlcPlain"></div>
-<div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[\varepsilon_{rms}=\frac{500\sqrt{2}}{\sqrt{2}}=500\ \text{V}\]</div>
-  <div class="eq-c">\[V^{2}=V_R^{2}+(V_L-V_C)^{2}\]</div>
-  <div class="eq-c">\[500^{2}=400^{2}+(700-V_C)^{2}\;\Rightarrow\;V_C=400\ \text{V}\]</div>
-  <div class="hint">That \(400\ \text{V}\) is <b>r.m.s.</b>; the peak is \(\sqrt2\times400=400\sqrt2\ \text{V}\).
+<div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[\varepsilon_{rms}=\frac{500\sqrt{2}}{\sqrt{2}}=500\ \text{V}\]</div>
+  <div class="eq-c step">\[V^{2}=V_R^{2}+(V_L-V_C)^{2}\]</div>
+  <div class="eq-c step">\[500^{2}=400^{2}+(700-V_C)^{2}\;\Rightarrow\;V_C=400\ \text{V}\]</div>
+  <div class="hint step">That \(400\ \text{V}\) is <b>r.m.s.</b>; the peak is \(\sqrt2\times400=400\sqrt2\ \text{V}\).
   The other root, \(1000\ \text{V}\), is not among the options.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">02</span> <span class="small">— impedance of a series LCR circuit</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In an LCR series circuit \(R=10\ \Omega\), \(X_L=8\ \Omega\) and \(X_C=6\ \Omega\). The total impedance of the circuit is </div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(10\sqrt{2}\ \Omega\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(17\sqrt{2}\ \Omega\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(10\ \Omega\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">None of these</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(10\sqrt{2}\ \Omega\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(17\sqrt{2}\ \Omega\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(10\ \Omega\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">None of these</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[Z=\sqrt{R^{2}+(X_L-X_C)^{2}}\]</div>
-  <div class="eq-c">\[Z=\sqrt{10^{2}+(8-6)^{2}}=\sqrt{104}\]</div>
-  <div class="eq-c">\[Z\approx10.2\ \Omega\]</div>
-  <div class="hint">The two reactances are \(180^\circ\) apart, so they <b>subtract</b> before the
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[Z=\sqrt{R^{2}+(X_L-X_C)^{2}}\]</div>
+  <div class="eq-c step">\[Z=\sqrt{10^{2}+(8-6)^{2}}=\sqrt{104}\]</div>
+  <div class="eq-c step">\[Z\approx10.2\ \Omega\]</div>
+  <div class="hint step">The two reactances are \(180^\circ\) apart, so they <b>subtract</b> before the
   square is taken. \(10.2\ \Omega\) matches none of the first three.</div></div></div>
-<div class="card note frag"><div class="steps">The printed key reads \(10\sqrt2\), which comes from \(\sqrt{R^{2}+X_L^{2}+X_C^{2}}\) —
+<div class="card note step"><div class="steps">The printed key reads \(10\sqrt2\), which comes from \(\sqrt{R^{2}+X_L^{2}+X_C^{2}}\) —
   adding the reactances instead of subtracting them. Worth pointing out in class.</div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">03</span> <span class="small">— e.m.f. of the source</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In a series RLC circuit the potential differences across \(R\), \(L\) and \(C\) are \(30\ \text{V}\), \(60\ \text{V}\) and \(100\ \text{V}\) respectively, as shown. The e.m.f. of the source (in volts) is </div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(190\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(70\)</span></div>
-<div class="opt frag"><span class="k">c</span><span class="v">\(50\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(40\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(190\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(70\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">c</span><span class="v">\(50\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(40\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
     <div class="col"><div class="figure " data-fig="rlcVolts"></div>
-<div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">\(V_L\) and \(V_C\) are opposite in phase, so they subtract; the
+<div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">\(V_L\) and \(V_C\) are opposite in phase, so they subtract; the
   result is perpendicular to \(V_R\).</div>
-  <div class="eq-c">\[\varepsilon=\sqrt{V_R^{2}+(V_L-V_C)^{2}}\]</div>
-  <div class="eq-c">\[=\sqrt{30^{2}+(60-100)^{2}}=50\ \text{V}\]</div>
-  <div class="hint">Never add the readings directly — \(30+60+100=190\) is the trap in option (a).</div></div></div></div>
+  <div class="eq-c step">\[\varepsilon=\sqrt{V_R^{2}+(V_L-V_C)^{2}}\]</div>
+  <div class="eq-c step">\[=\sqrt{30^{2}+(60-100)^{2}}=50\ \text{V}\]</div>
+  <div class="hint step">Never add the readings directly — \(30+60+100=190\) is the trap in option (a).</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">04</span> <span class="small">— voltmeter and ammeter readings</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In the given circuit the readings of voltmeters \(V_1\) and \(V_2\) are \(300\) volts each. The readings of voltmeter \(V_3\) and ammeter \(A\) are respectively <span class="src">[2010]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(150\ \text{V},\ 2.2\ \text{A}\)</span></div>
-<div class="opt frag"><span class="k">b</span><span class="v">\(220\ \text{V},\ 2.2\ \text{A}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(220\ \text{V},\ 2.0\ \text{A}\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(100\ \text{V},\ 2.0\ \text{A}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(150\ \text{V},\ 2.2\ \text{A}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">b</span><span class="v">\(220\ \text{V},\ 2.2\ \text{A}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(220\ \text{V},\ 2.0\ \text{A}\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(100\ \text{V},\ 2.0\ \text{A}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
     <div class="col"><div class="figure wide" data-fig="meterCirc"></div>
-<div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">\(V_1=V_2=300\ \text{V}\) across \(L\) and \(C\) — equal and opposite,
+<div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">\(V_1=V_2=300\ \text{V}\) across \(L\) and \(C\) — equal and opposite,
   so they <b>cancel</b>. The circuit is at resonance.</div>
-  <div class="eq-c">\[V_3=V_R=V_{supply}=220\ \text{V}\]</div>
-  <div class="eq-c">\[I=\frac{V_R}{R}=\frac{220}{100}=2.2\ \text{A}\]</div></div></div></div>
+  <div class="eq-c step">\[V_3=V_R=V_{supply}=220\ \text{V}\]</div>
+  <div class="eq-c step">\[I=\frac{V_R}{R}=\frac{220}{100}=2.2\ \text{A}\]</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">05</span> <span class="small">— impedance from the two equations</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">The equation of an alternating voltage is \(V=220\sin\!\left(\omega t+\frac{\pi}{6}\right)\) and the equation for the current is \(I=10\sin\!\left(\omega t+\frac{\pi}{6}\right)\). The impedance (in ohm) of the circuit is </div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(11\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(44\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(20\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(22\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(11\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(44\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(20\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(22\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[Z=\frac{V_o}{I_o}=\frac{V_{rms}}{I_{rms}}\]</div>
-  <div class="eq-c">\[Z=\frac{220}{10}=22\ \Omega\]</div>
-  <div class="hint">Both have the same phase \(\frac{\pi}{6}\), so \(\phi=0\): the circuit behaves as a
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[Z=\frac{V_o}{I_o}=\frac{V_{rms}}{I_{rms}}\]</div>
+  <div class="eq-c step">\[Z=\frac{220}{10}=22\ \Omega\]</div>
+  <div class="hint step">Both have the same phase \(\frac{\pi}{6}\), so \(\phi=0\): the circuit behaves as a
   <b>pure resistance</b> and \(Z=R=22\ \Omega\), power factor \(=1\).</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">06</span> <span class="small">— impedance from the three voltages</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">\(L\), \(C\) and \(R\) are connected in series to an ac source of p.d. \(V\), as shown. The potential differences across \(L\), \(C\) and \(R\) are \(40\ \text{V}\), \(10\ \text{V}\) and \(40\ \text{V}\). The amplitude of the current is \(10\sqrt{2}\ \text{A}\). The impedance is <span class="src">[2002]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(4\sqrt{2}\ \Omega\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(5/\sqrt{2}\ \Omega\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(4\ \Omega\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(5\ \Omega\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(4\sqrt{2}\ \Omega\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(5/\sqrt{2}\ \Omega\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(4\ \Omega\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(5\ \Omega\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
     <div class="col"><div class="figure wide" data-fig="lcr40"></div>
-<div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[V=\sqrt{40^{2}+(40-10)^{2}}=50\ \text{V}\]</div>
-  <div class="eq-c">\[I_{rms}=\frac{I_o}{\sqrt2}=\frac{10\sqrt2}{\sqrt2}=10\ \text{A}\]</div>
-  <div class="eq-c">\[Z=\frac{V}{I_{rms}}=\frac{50}{10}=5\ \Omega\]</div>
-  <div class="hint">The given voltages are r.m.s., so the current amplitude must be converted to r.m.s. too.</div></div></div></div>
+<div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[V=\sqrt{40^{2}+(40-10)^{2}}=50\ \text{V}\]</div>
+  <div class="eq-c step">\[I_{rms}=\frac{I_o}{\sqrt2}=\frac{10\sqrt2}{\sqrt2}=10\ \text{A}\]</div>
+  <div class="eq-c step">\[Z=\frac{V}{I_{rms}}=\frac{50}{10}=5\ \Omega\]</div>
+  <div class="hint step">The given voltages are r.m.s., so the current amplitude must be converted to r.m.s. too.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">07</span> <span class="small">— capacitance for a 45° lead</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In a circuit \(L\), \(C\) and \(R\) are connected in series with an alternating voltage source of frequency \(f\). The current <b>leads</b> the voltage by \(45^\circ\). The value of \(C\) is <span class="src">[2005]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(\dfrac{1}{\pi f\,(2\pi f L-R)}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(\dfrac{1}{2\pi f\,(2\pi f L-R)}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(\dfrac{1}{\pi f\,(2\pi f L+R)}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(\dfrac{1}{2\pi f\,(2\pi f L+R)}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(\dfrac{1}{\pi f\,(2\pi f L-R)}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(\dfrac{1}{2\pi f\,(2\pi f L-R)}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(\dfrac{1}{\pi f\,(2\pi f L+R)}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(\dfrac{1}{2\pi f\,(2\pi f L+R)}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">Current leads \(\Rightarrow\) the circuit is capacitive, \(X_C>X_L\).</div>
-  <div class="eq-c">\[\tan45^\circ=\frac{X_C-X_L}{R}=1\]</div>
-  <div class="eq-c">\[X_C=R+X_L\;\Rightarrow\;\frac{1}{2\pi f C}=R+2\pi f L\]</div>
-  <div class="eq-c">\[C=\frac{1}{2\pi f\,(2\pi f L+R)}\]</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">Current leads \(\Rightarrow\) the circuit is capacitive, \(X_C>X_L\).</div>
+  <div class="eq-c step">\[\tan45^\circ=\frac{X_C-X_L}{R}=1\]</div>
+  <div class="eq-c step">\[X_C=R+X_L\;\Rightarrow\;\frac{1}{2\pi f C}=R+2\pi f L\]</div>
+  <div class="eq-c step">\[C=\frac{1}{2\pi f\,(2\pi f L+R)}\]</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">08</span> <span class="small">— quality factor of an inductance</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">An inductance \(L\) having a resistance \(R\) is connected to an alternating source of angular frequency \(\omega\). The quality factor \(Q\) of the inductance is <span class="src">[2000]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(\dfrac{R}{\omega L}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(\left(\dfrac{\omega L}{R}\right)^{2}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(\left(\dfrac{R}{\omega L}\right)^{1/2}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(\dfrac{\omega L}{R}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(\dfrac{R}{\omega L}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(\left(\dfrac{\omega L}{R}\right)^{2}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(\left(\dfrac{R}{\omega L}\right)^{1/2}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(\dfrac{\omega L}{R}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">\(Q\) compares the energy <b>stored</b> with the energy <b>lost</b> per cycle —
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">\(Q\) compares the energy <b>stored</b> with the energy <b>lost</b> per cycle —
   that is, reactance against resistance.</div>
-  <div class="eq-c">\[Q=\frac{X_L}{R}=\frac{\omega L}{R}\]</div>
-  <div class="hint">A good choke has a large \(\omega L\) and a tiny \(R\), so \(Q\) is large.</div></div></div></div>
+  <div class="eq-c step">\[Q=\frac{X_L}{R}=\frac{\omega L}{R}\]</div>
+  <div class="hint step">A good choke has a large \(\omega L\) and a tiny \(R\), so \(Q\) is large.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">09</span> <span class="small">— inductance for maximum current</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">What is the value of inductance \(L\) for which the current is maximum in a series LCR circuit with \(C=10\ \mu\text{F}\) and \(\omega=1000\ \text{s}^{-1}\)? <span class="src">[2007]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(1\ \text{mH}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">Cannot be calculated unless \(R\) is known</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(10\ \text{mH}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(100\ \text{mH}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(1\ \text{mH}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">Cannot be calculated unless \(R\) is known</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(10\ \text{mH}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(100\ \text{mH}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">Current is maximum at <b>resonance</b>, where \(X_L=X_C\).</div>
-  <div class="eq-c">\[\omega L=\frac{1}{\omega C}\;\Rightarrow\;L=\frac{1}{\omega^{2}C}\]</div>
-  <div class="eq-c">\[L=\frac{1}{(1000)^{2}\times10\times10^{-6}}\]</div>
-  <div class="eq-c">\[L=\frac{1}{10}=0.1\ \text{H}=100\ \text{mH}\]</div>
-  <div class="hint">\(R\) fixes <i>how large</i> the peak current is, not <i>where</i> it occurs.</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">Current is maximum at <b>resonance</b>, where \(X_L=X_C\).</div>
+  <div class="eq-c step">\[\omega L=\frac{1}{\omega C}\;\Rightarrow\;L=\frac{1}{\omega^{2}C}\]</div>
+  <div class="eq-c step">\[L=\frac{1}{(1000)^{2}\times10\times10^{-6}}\]</div>
+  <div class="eq-c step">\[L=\frac{1}{10}=0.1\ \text{H}=100\ \text{mH}\]</div>
+  <div class="hint step">\(R\) fixes <i>how large</i> the peak current is, not <i>where</i> it occurs.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">10</span> <span class="small">— average power dissipated</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In an L-C-R series circuit an alternating emf \(e\) and current \(i\) are given by \(e=100\sin(100t)\ \text{V}\) and \(i=100\sin\!\left(100t+\frac{\pi}{3}\right)\ \text{mA}\). The average power dissipated in the circuit will be <span class="src">[MHT CET 2014]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(100\ \text{W}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(10\ \text{W}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(5\ \text{W}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(2.5\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(100\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(10\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(5\ \text{W}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(2.5\ \text{W}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[P_{avg}=\frac{e_o i_o}{2}\cos\phi\]</div>
-  <div class="eq-c">\[e_o=100\ \text{V},\quad i_o=100\ \text{mA}=0.1\ \text{A}\]</div>
-  <div class="eq-c">\[\phi=\frac{\pi}{3}\;\Rightarrow\;\cos\phi=\tfrac12\]</div>
-  <div class="eq-c">\[P_{avg}=\frac{100\times0.1}{2}\times\frac12=2.5\ \text{W}\]</div>
-  <div class="hint">Forgetting the <b>mA</b> gives \(2500\ \text{W}\); forgetting \(\cos\phi\) gives \(5\ \text{W}\).</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[P_{avg}=\frac{e_o i_o}{2}\cos\phi\]</div>
+  <div class="eq-c step">\[e_o=100\ \text{V},\quad i_o=100\ \text{mA}=0.1\ \text{A}\]</div>
+  <div class="eq-c step">\[\phi=\frac{\pi}{3}\;\Rightarrow\;\cos\phi=\tfrac12\]</div>
+  <div class="eq-c step">\[P_{avg}=\frac{100\times0.1}{2}\times\frac12=2.5\ \text{W}\]</div>
+  <div class="hint step">Forgetting the <b>mA</b> gives \(2500\ \text{W}\); forgetting \(\cos\phi\) gives \(5\ \text{W}\).</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">11</span> <span class="small">— power at resonance</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In a series resonant circuit having \(L\), \(C\) and \(R\) as its elements, the resonant current is \(i\). The power dissipated in the circuit at resonance is (\(\omega\) is the angular resonance frequency) <span class="src">[2002]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(\dfrac{i^{2}R}{\left(\omega L-\frac{1}{\omega L}\right)}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">zero</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(i^{2}\omega L\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(i^{2}R\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(\dfrac{i^{2}R}{\left(\omega L-\frac{1}{\omega L}\right)}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">zero</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(i^{2}\omega L\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(i^{2}R\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">At resonance \(X_L=X_C\), so \(Z=R\) and \(\phi=0\).</div>
-  <div class="eq-c">\[P=V_{rms}I_{rms}\cos\phi=(iR)(i)(1)\]</div>
-  <div class="eq-c">\[P=i^{2}R\]</div>
-  <div class="hint">\(L\) and \(C\) return every joule they take, so <b>all</b> the power goes into \(R\).</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">At resonance \(X_L=X_C\), so \(Z=R\) and \(\phi=0\).</div>
+  <div class="eq-c step">\[P=V_{rms}I_{rms}\cos\phi=(iR)(i)(1)\]</div>
+  <div class="eq-c step">\[P=i^{2}R\]</div>
+  <div class="hint step">\(L\) and \(C\) return every joule they take, so <b>all</b> the power goes into \(R\).</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">12</span> <span class="small">— power factor</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">In an electrical circuit \(R\), \(L\), \(C\) and an ac voltage source are all connected in series. When \(L\) is removed, the phase difference between the voltage and the current is \(\pi/3\). If instead \(C\) is removed, the phase difference is again \(\pi/3\). The power factor is <span class="src">[2012]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(\dfrac{1}{2}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(\dfrac{1}{\sqrt2}\)</span></div>
-<div class="opt frag"><span class="k">c</span><span class="v">\(1\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(\dfrac{\sqrt3}{2}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(\dfrac{1}{2}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(\dfrac{1}{\sqrt2}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">c</span><span class="v">\(1\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(\dfrac{\sqrt3}{2}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[\text{L out:}\quad\tan\frac{\pi}{3}=\frac{X_C}{R}\;\Rightarrow\;X_C=\sqrt3\,R\]</div>
-  <div class="eq-c">\[\text{C out:}\quad\tan\frac{\pi}{3}=\frac{X_L}{R}\;\Rightarrow\;X_L=\sqrt3\,R\]</div>
-  <div class="eq-c">\[\therefore\;X_L=X_C\;\Rightarrow\;\text{resonance},\ \phi=0\]</div>
-  <div class="eq-c">\[\cos\phi=1\]</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[\text{L out:}\quad\tan\frac{\pi}{3}=\frac{X_C}{R}\;\Rightarrow\;X_C=\sqrt3\,R\]</div>
+  <div class="eq-c step">\[\text{C out:}\quad\tan\frac{\pi}{3}=\frac{X_L}{R}\;\Rightarrow\;X_L=\sqrt3\,R\]</div>
+  <div class="eq-c step">\[\therefore\;X_L=X_C\;\Rightarrow\;\text{resonance},\ \phi=0\]</div>
+  <div class="eq-c step">\[\cos\phi=1\]</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">13</span> <span class="small">— power factor of a coil with a condenser</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">A coil of inductive reactance \(31\ \Omega\) has a resistance of \(8\ \Omega\). It is placed in series with a condenser of capacitative reactance \(25\ \Omega\). The combination is connected to an a.c. source of \(110\) volt. The power factor of the circuit is <span class="src">[2006]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(0.64\)</span></div>
-<div class="opt frag"><span class="k">b</span><span class="v">\(0.80\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(0.33\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(0.56\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(0.64\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">b</span><span class="v">\(0.80\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(0.33\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(0.56\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[X=X_L-X_C=31-25=6\ \Omega\]</div>
-  <div class="eq-c">\[Z=\sqrt{8^{2}+6^{2}}=10\ \Omega\]</div>
-  <div class="eq-c">\[\cos\phi=\frac{R}{Z}=\frac{8}{10}=0.8\]</div>
-  <div class="hint">The \(110\ \text{V}\) is not needed — the power factor depends only on \(R\) and \(Z\).</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[X=X_L-X_C=31-25=6\ \Omega\]</div>
+  <div class="eq-c step">\[Z=\sqrt{8^{2}+6^{2}}=10\ \Omega\]</div>
+  <div class="eq-c step">\[\cos\phi=\frac{R}{Z}=\frac{8}{10}=0.8\]</div>
+  <div class="hint step">The \(110\ \text{V}\) is not needed — the power factor depends only on \(R\) and \(Z\).</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">14</span> <span class="small">— power dissipated in an LCR circuit</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">Power dissipated in an LCR series circuit connected to an a.c. source of emf \(\varepsilon\) is <span class="src">[2009]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(\dfrac{\varepsilon^{2}\sqrt{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}}{R}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(\dfrac{\varepsilon^{2}\left[R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}\right]}{R}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(\dfrac{\varepsilon^{2}R}{\sqrt{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}}\)</span></div>
-<div class="opt frag"><span class="k">d</span><span class="v">\(\dfrac{\varepsilon^{2}R}{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(\dfrac{\varepsilon^{2}\sqrt{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}}{R}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(\dfrac{\varepsilon^{2}\left[R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}\right]}{R}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(\dfrac{\varepsilon^{2}R}{\sqrt{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">d</span><span class="v">\(\dfrac{\varepsilon^{2}R}{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[P=\varepsilon I\cos\phi=\varepsilon\cdot\frac{\varepsilon}{Z}\cdot\frac{R}{Z}
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[P=\varepsilon I\cos\phi=\varepsilon\cdot\frac{\varepsilon}{Z}\cdot\frac{R}{Z}
        =\frac{\varepsilon^{2}R}{Z^{2}}\]</div>
-  <div class="eq-c">\[Z^{2}=R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}\]</div>
-  <div class="eq-c">\[P=\frac{\varepsilon^{2}R}{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}\]</div>
-  <div class="hint">A quick check: the answer must have the <b>dimensions of \(\varepsilon^2/R\)</b> —
+  <div class="eq-c step">\[Z^{2}=R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}\]</div>
+  <div class="eq-c step">\[P=\frac{\varepsilon^{2}R}{R^{2}+\left(L\omega-\frac{1}{C\omega}\right)^{2}}\]</div>
+  <div class="hint step">A quick check: the answer must have the <b>dimensions of \(\varepsilon^2/R\)</b> —
   only a \(Z^2\) in the denominator does that.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">15</span> <span class="small">— power after an inductance is added</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">A resistance \(R\) draws power \(P\) when connected to an AC source. If an inductance is now placed in series with the resistance such that the impedance of the circuit becomes \(Z\), the power drawn will be <span class="src">[CBSE AIPMT 2015]</span></div></div>
 <div class="opts">
-<div class="opt frag"><span class="k">a</span><span class="v">\(P\left(\dfrac{R}{Z}\right)^{2}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(P\sqrt{\dfrac{R}{Z}}\)</span></div>
-<div class="opt"><span class="k">c</span><span class="v">\(P\left(\dfrac{R}{Z}\right)\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(P\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">a</span><span class="v">\(P\left(\dfrac{R}{Z}\right)^{2}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(P\sqrt{\dfrac{R}{Z}}\)</span></div>
+<div class="opt"><span class="k clickable">c</span><span class="v">\(P\left(\dfrac{R}{Z}\right)\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(P\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[\text{Before:}\quad P=\frac{V^{2}}{R}\]</div>
-  <div class="eq-c">\[\text{After:}\quad P'=V I\cos\phi=\frac{V^{2}}{Z}\cdot\frac{R}{Z}=\frac{V^{2}R}{Z^{2}}\]</div>
-  <div class="eq-c">\[P'=\frac{V^{2}}{R}\cdot\frac{R^{2}}{Z^{2}}=P\left(\frac{R}{Z}\right)^{2}\]</div>
-  <div class="hint">The inductor takes no power itself, but it cuts the current, so \(R\) receives less.</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[\text{Before:}\quad P=\frac{V^{2}}{R}\]</div>
+  <div class="eq-c step">\[\text{After:}\quad P'=V I\cos\phi=\frac{V^{2}}{Z}\cdot\frac{R}{Z}=\frac{V^{2}R}{Z^{2}}\]</div>
+  <div class="eq-c step">\[P'=\frac{V^{2}}{R}\cdot\frac{R^{2}}{Z^{2}}=P\left(\frac{R}{Z}\right)^{2}\]</div>
+  <div class="hint step">The inductor takes no power itself, but it cuts the current, so \(R\) receives less.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">16</span> <span class="small">— power loss in a series circuit</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">An inductor \(20\ \text{mH}\), a capacitor \(100\ \mu\text{F}\) and a resistor \(50\ \Omega\) are connected in series across a source of emf \(V=10\sin314t\). The power loss in the circuit is <span class="src">[AIIMS 2018]</span></div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(2.74\ \text{W}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(0.43\ \text{W}\)</span></div>
-<div class="opt frag"><span class="k">c</span><span class="v">\(0.79\ \text{W}\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(1.13\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(2.74\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(0.43\ \text{W}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">c</span><span class="v">\(0.79\ \text{W}\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(1.13\ \text{W}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="eq-c">\[X_L=\omega L=314\times0.02=6.28\ \Omega\]</div>
-  <div class="eq-c">\[X_C=\frac{1}{\omega C}=\frac{1}{314\times10^{-4}}=31.85\ \Omega\]</div>
-  <div class="eq-c">\[Z=\sqrt{50^{2}+(31.85-6.28)^{2}}=56.1\ \Omega\]</div>
-  <div class="eq-c">\[I_{rms}=\frac{10/\sqrt2}{56.1}=0.126\ \text{A}\]</div>
-  <div class="eq-c">\[P=I_{rms}^{2}R=(0.126)^{2}\times50\approx0.79\ \text{W}\]</div></div></div></div>
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="eq-c step">\[X_L=\omega L=314\times0.02=6.28\ \Omega\]</div>
+  <div class="eq-c step">\[X_C=\frac{1}{\omega C}=\frac{1}{314\times10^{-4}}=31.85\ \Omega\]</div>
+  <div class="eq-c step">\[Z=\sqrt{50^{2}+(31.85-6.28)^{2}}=56.1\ \Omega\]</div>
+  <div class="eq-c step">\[I_{rms}=\frac{10/\sqrt2}{56.1}=0.126\ \text{A}\]</div>
+  <div class="eq-c step">\[P=I_{rms}^{2}R=(0.126)^{2}\times50\approx0.79\ \text{W}\]</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Question <span class="accent">17</span> <span class="small">— best combination for tuning</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide"><div class="card question"><div class="label"><span class="dot"></span>Question</div><div class="qtext">Which of the following combinations should be selected for better tuning of an L-C-R circuit used for communication? </div></div>
 <div class="opts">
-<div class="opt"><span class="k">a</span><span class="v">\(R=20\ \Omega,\ L=1.5\ \text{H},\ C=35\ \mu\text{F}\)</span></div>
-<div class="opt"><span class="k">b</span><span class="v">\(R=25\ \Omega,\ L=2.5\ \text{H},\ C=45\ \mu\text{F}\)</span></div>
-<div class="opt frag"><span class="k">c</span><span class="v">\(R=15\ \Omega,\ L=3.5\ \text{H},\ C=30\ \mu\text{F}\)</span></div>
-<div class="opt"><span class="k">d</span><span class="v">\(R=25\ \Omega,\ L=1.5\ \text{H},\ C=45\ \mu\text{F}\)</span></div>
+<div class="opt"><span class="k clickable">a</span><span class="v">\(R=20\ \Omega,\ L=1.5\ \text{H},\ C=35\ \mu\text{F}\)</span></div>
+<div class="opt"><span class="k clickable">b</span><span class="v">\(R=25\ \Omega,\ L=2.5\ \text{H},\ C=45\ \mu\text{F}\)</span></div>
+<div class="opt" data-correct="1"><span class="k clickable">c</span><span class="v">\(R=15\ \Omega,\ L=3.5\ \text{H},\ C=30\ \mu\text{F}\)</span></div>
+<div class="opt"><span class="k clickable">d</span><span class="v">\(R=25\ \Omega,\ L=1.5\ \text{H},\ C=45\ \mu\text{F}\)</span></div>
+<span class="step ansgate" aria-hidden="true"></span>
 </div></div>
-    <div class="col"><div class="card solution frag"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
-  <div class="hint" style="margin-top:0">Better tuning means a <b>sharper</b> resonance, i.e. the largest
+    <div class="col"><div class="card solution"><div class="label"><span class="dot"></span>Solution</div><div class="steps">
+  <div class="hint step" style="margin-top:0">Better tuning means a <b>sharper</b> resonance, i.e. the largest
   quality factor.</div>
-  <div class="eq-c">\[Q=\frac{1}{R}\sqrt{\frac{L}{C}}\]</div>
+  <div class="eq-c step">\[Q=\frac{1}{R}\sqrt{\frac{L}{C}}\]</div>
   <table class="rtable">
-    <tr><td class="name">(a)</td><td class="val">\(Q\approx10.4\)</td></tr>
-    <tr><td class="name">(b)</td><td class="val">\(Q\approx9.4\)</td></tr>
-    <tr><td class="name" style="color:#2ecc9a">(c)</td><td class="val">\(Q\approx22.8\) — largest</td></tr>
-    <tr><td class="name">(d)</td><td class="val">\(Q\approx7.3\)</td></tr>
+    <tr><td class="name">(a)</td><td class="val step">\(Q\approx10.4\)</td></tr>
+    <tr><td class="name">(b)</td><td class="val step">\(Q\approx9.4\)</td></tr>
+    <tr><td class="name" style="color:#2ecc9a">(c)</td><td class="val step">\(Q\approx22.8\) — largest</td></tr>
+    <tr><td class="name">(d)</td><td class="val step">\(Q\approx7.3\)</td></tr>
   </table>
-  <div class="hint">Smallest \(R\), largest \(L\), smallest \(C\) — option (c) wins on all three.</div></div></div></div>
+  <div class="hint step">Smallest \(R\), largest \(L\), smallest \(C\) — option (c) wins on all three.</div></div></div></div>
+  </div>
   </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Choke <span class="accent">coil</span> <span class="small">— dropping voltage without burning power</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col">
-      <div class="figure" data-fig="choke1"></div>
-      <div class="card tight">
+      <div class="figure step" data-fig="choke1"></div>
+      <div class="card tight step">
         <div class="steps">A bulb made for \(60\ \text{V}\) is put straight across a \(100\ \text{V}\) supply.
         Too much voltage — it blows.</div>
       </div>
     </div>
     <div class="col">
-      <div class="figure frag" data-fig="choke2"></div>
-      <div class="card tight frag">
+      <div class="figure step" data-fig="choke2"></div>
+      <div class="card tight step">
         <div class="steps">Add a resistor to eat the extra \(40\ \text{V}\). It works —
         but that resistor <b>burns \(40I\) watts</b> as heat.</div>
       </div>
     </div>
     <div class="col">
-      <div class="figure frag" data-fig="choke3"></div>
-      <div class="card tight frag">
+      <div class="figure step" data-fig="choke3"></div>
+      <div class="card tight step">
         <div class="steps">Use a <b>choke</b> instead. Its voltage is \(90^\circ\) out of phase, so voltages add
         as vectors:</div>
         <div class="eq-c">\[100=\sqrt{60^{2}+x^{2}}\;\Rightarrow\;x=80\ \text{V}\]</div>
       </div>
     </div>
   </div>
+  </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Why the choke <span class="accent">wins</span></h2>
   <div class="rule"></div>
   <div class="cols">
@@ -562,58 +630,64 @@ body[data-lvl="7"] .steps .hint{font-size:17px;margin-top:6px;}
       <div class="card question">
         <div class="label"><span class="dot"></span>The arithmetic</div>
         <div class="eq-c">\[100^{2}=60^{2}+x^{2}\]</div>
-        <div class="eq-c">\[x^{2}=80^{2}\;\Rightarrow\;x=80\ \text{V}\]</div>
-        <div class="hint">The choke drops \(80\ \text{V}\) — more than the resistor's \(40\ \text{V}\) — because
+        <div class="eq-c step">\[x^{2}=80^{2}\;\Rightarrow\;x=80\ \text{V}\]</div>
+        <div class="hint step">The choke drops \(80\ \text{V}\) — more than the resistor's \(40\ \text{V}\) — because
         its voltage is perpendicular to the bulb's, not opposite to it.</div>
       </div>
-      <div class="card formula frag">
+      <div class="card formula">
         <div class="label"><span class="dot"></span>Same current through both</div>
-        <div class="eq-c">\[\frac{60}{R}=\frac{80}{\omega L}\;\Rightarrow\;\omega L=\frac{4R}{3}\]</div>
+        <div class="eq-c step">\[\frac{60}{R}=\frac{80}{\omega L}\;\Rightarrow\;\omega L=\frac{4R}{3}\]</div>
       </div>
     </div>
     <div class="col">
-      <div class="card frag">
+      <div class="card">
         <div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Ideal choke coil</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Inductor <b>only</b> — resistance zero, so \(\phi=90^\circ\) and \(\cos\phi=0\).</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">It <b>shares the voltage but loses no power</b>.</span></div>
+        <div class="bullet step"><span class="b">&#9656;</span><span class="t">Inductor <b>only</b> — resistance zero, so \(\phi=90^\circ\) and \(\cos\phi=0\).</span></div>
+        <div class="bullet step"><span class="b">&#9656;</span><span class="t">It <b>shares the voltage but loses no power</b>.</span></div>
       </div>
-      <div class="card solution frag">
+      <div class="card solution">
         <div class="label"><span class="dot"></span>Real choke coil</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Inductor <b>+</b> the small resistance \(r\) of its winding.</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Thick copper on a laminated soft-iron core keeps \(r\) small and \(L\) large.</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">A little power is lost, \(P=I^{2}r\) — far less than a resistor would waste.</span></div>
+        <div class="bullet step"><span class="b">&#9656;</span><span class="t">Inductor <b>+</b> the small resistance \(r\) of its winding.</span></div>
+        <div class="bullet step"><span class="b">&#9656;</span><span class="t">Thick copper on a laminated soft-iron core keeps \(r\) small and \(L\) large.</span></div>
+        <div class="bullet step"><span class="b">&#9656;</span><span class="t">A little power is lost, \(P=I^{2}r\) — far less than a resistor would waste.</span></div>
       </div>
     </div>
   </div>
+  </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Graphs and <span class="accent">reciprocal quantities</span></h2>
   <div class="rule"></div>
   <div class="cols">
     <div class="col wide">
+      <div class="figstep step">
       <div class="figure wide" data-fig="reactGraph"></div>
       <div class="cap">Against frequency: \(R\) is flat, \(X_L=\omega L\) is a straight line through the origin,
       \(X_C=1/\omega C\) is a rectangular hyperbola.</div>
+      </div>
     </div>
     <div class="col">
       <table class="rtable">
         <tr><th style="text-align:left">Opposition</th><th>Its reciprocal</th></tr>
-        <tr><td class="name">Resistance \(R\)</td><td class="val">Conductance \(G=\dfrac1R\)</td></tr>
-        <tr><td class="name">Reactance \(X\)</td><td class="val">Susceptance \(B=\dfrac1X\)</td></tr>
-        <tr><td class="name">Impedance \(Z\)</td><td class="val">Admittance \(Y=\dfrac1Z\)</td></tr>
+        <tr><td class="name">Resistance \(R\)</td><td class="val step">Conductance \(G=\dfrac1R\)</td></tr>
+        <tr><td class="name">Reactance \(X\)</td><td class="val step">Susceptance \(B=\dfrac1X\)</td></tr>
+        <tr><td class="name">Impedance \(Z\)</td><td class="val step">Admittance \(Y=\dfrac1Z\)</td></tr>
       </table>
-      <div class="card formula frag">
+      <div class="card formula">
         <div class="label"><span class="dot"></span>Impedance in imaginary form</div>
-        <div class="eq-c">\[Z=R+j\,(X_L-X_C)\]</div>
-        <div class="eq-c">\[Y=\frac1Z=G-jB\]</div>
-        <div class="hint">All three reciprocals are measured in <b>siemens</b> (S), also written \(\Omega^{-1}\).</div>
+        <div class="eq-c step">\[Z=R+j\,(X_L-X_C)\]</div>
+        <div class="eq-c step">\[Y=\frac1Z=G-jB\]</div>
+        <div class="hint step">All three reciprocals are measured in <b>siemens</b> (S), also written \(\Omega^{-1}\).</div>
       </div>
     </div>
   </div>
+  </div>
 </section>
 
-<section class="slide">
+<section class="page">
+  <div class="wrap">
   <h2 class="head">Rate of energy storage is <span class="accent">maximum when …</span></h2>
   <div class="rule"></div>
   <div class="cols">
@@ -621,24 +695,25 @@ body[data-lvl="7"] .steps .hint{font-size:17px;margin-top:6px;}
       <div class="card question">
         <div class="label"><span class="dot"></span>Energy in an inductor</div>
         <div class="eq-c">\[U=\tfrac12 L i^{2},\qquad i=I_o\sin\omega t\]</div>
-        <div class="eq-c">\[\frac{dU}{dt}=Li\frac{di}{dt}=L\,I_o\sin\omega t\cdot\omega I_o\cos\omega t\]</div>
-        <div class="eq-c">\[\frac{dU}{dt}=\frac{\omega L I_o^{2}}{2}\sin2\omega t\]</div>
+        <div class="eq-c step">\[\frac{dU}{dt}=Li\frac{di}{dt}=L\,I_o\sin\omega t\cdot\omega I_o\cos\omega t\]</div>
+        <div class="eq-c step">\[\frac{dU}{dt}=\frac{\omega L I_o^{2}}{2}\sin2\omega t\]</div>
       </div>
-      <div class="card solution frag">
+      <div class="card solution">
         <div class="label"><span class="dot"></span>Maximum</div>
-        <div class="eq-c">\[\sin2\omega t=1\;\Rightarrow\;\omega t=\frac{\pi}{4}\;\Rightarrow\;t=\frac{T}{8}\]</div>
-        <div class="eq-c">\[i=I_o\sin45^\circ=\frac{I_o}{\sqrt2}=I_{rms}\]</div>
-        <div class="hint">The rate of storage peaks when the instantaneous current equals the
+        <div class="eq-c step">\[\sin2\omega t=1\;\Rightarrow\;\omega t=\frac{\pi}{4}\;\Rightarrow\;t=\frac{T}{8}\]</div>
+        <div class="eq-c step">\[i=I_o\sin45^\circ=\frac{I_o}{\sqrt2}=I_{rms}\]</div>
+        <div class="hint step">The rate of storage peaks when the instantaneous current equals the
         <b>r.m.s. current</b>, and its value there is \(\dfrac{\omega L I_o^{2}}{2}\).</div>
       </div>
     </div>
     <div class="col">
-      <div class="figure wide" data-fig="rateGraph"></div>
-      <div class="card note frag">
+      <div class="figure wide step" data-fig="rateGraph"></div>
+      <div class="card note step">
         <div class="steps">The same argument for a capacitor: \(U=\dfrac{q^{2}}{2C}\), so the rate is
         maximum when \(q=\dfrac{q_o}{\sqrt2}\) — again at \(T/8\), and again at twice the supply frequency.</div>
       </div>
     </div>
+  </div>
   </div>
 </section>
 </div></div>
@@ -909,31 +984,13 @@ renderMathInElement(document.body,{
 });
 
 /* ============================================================
-   3 · Slide engine — keyboard only, zero UI
+   3 · Layout engine — paging and reveals belong to the host
    ============================================================ */
-const slides=[...document.querySelectorAll('.slide')];
+const pages=[...document.querySelectorAll('.page')];
 const stage=document.getElementById('stage');
-let idx=0, fragIdx=0;
 
-function frags(i){ return [...slides[i].querySelectorAll('.frag')]; }
-
-function paint(){
-  slides.forEach((s,i)=>{
-    s.classList.toggle('active', i===idx);
-    s.classList.toggle('past', i<idx);
-  });
-  frags(idx).forEach((f,i)=> f.classList.toggle('on', i<fragIdx));
-}
-
-function next(){
-  const f=frags(idx);
-  if(fragIdx<f.length){ fragIdx++; paint(); return; }
-  if(idx<slides.length-1){ idx++; fragIdx=0; paint(); }
-}
-function prev(){
-  if(fragIdx>0){ fragIdx--; paint(); return; }
-  if(idx>0){ idx--; fragIdx=frags(idx).length; paint(); }
-}
+function pageSteps(p){ return [...p.querySelectorAll('.step')]; }
+function hosted(){ return !!document.getElementById('__lf-ctl'); }
 
 /* text size = design canvas width; a narrower canvas makes every glyph
    larger on screen. Level 1 = smallest text … level 7 = largest.        */
@@ -947,8 +1004,7 @@ function applySize(){
   const W=SIZES[level-1], H=Math.round(W*9/16);
   document.body.setAttribute('data-lvl', level);
   stage.style.width=W+'px'; stage.style.height=H+'px';
-  fitEq();
-  fitContent();
+  lfMeasureAll();
   fit();
 }
 
@@ -967,22 +1023,50 @@ function fitEq(){
   });
 }
 
-/* content hugs the top of every slide; if a slide's block is taller than the
+/* content hugs the top of every page; if a page's block is taller than the
    space left under its heading, shrink just that block so nothing is clipped */
 function fitContent(){
-  slides.forEach(sl=>{
-    const box = sl.querySelector('.cols, .vcenter');
+  pages.forEach(p=>{
+    const box = p.querySelector('.cols, .vcenter');
     if(!box) return;
     box.style.zoom = 1;
     let z = 1;
     for(let pass=0; pass<4; pass++){
       const avail = box.clientHeight, need = box.scrollHeight;
+      if(!avail) break;
       if(need <= avail + 1) break;
       z = Math.max(0.6, z * (avail/need) * 0.995);
       box.style.zoom = z.toFixed(4);
     }
   });
 }
+
+/* .wrap clips instead of spilling, so finish any shrink the four passes above
+   left short — measured on the wrapper itself */
+function lfSqueeze(){
+  pages.forEach(p=>{
+    const w=p.querySelector('.wrap'); if(!w) return;
+    const box=w.querySelector('.cols, .vcenter'); if(!box) return;
+    if(!w.clientHeight) return;
+    let z=parseFloat(box.style.zoom)||1;
+    for(let pass=0; pass<8; pass++){
+      if(w.scrollHeight<=w.clientHeight+1) break;
+      z=Math.max(0.5, z*0.97);
+      box.style.zoom=z.toFixed(4);
+    }
+  });
+}
+
+/* a page the presenter has hidden measures as zero and used to wreck the fit
+   passes — lay every page out first, measure, then put the hiding back */
+function lfMeasureAll(){
+  const prev=pages.map(p=>p.style.display);
+  pages.forEach(p=>{ if(p.style.display==='none'){ p.style.display=''; p.style.visibility='hidden'; } });
+  fitEq(); fitContent(); lfSqueeze();
+  pages.forEach((p,i)=>{ p.style.visibility=''; p.style.display=prev[i]; });
+}
+function lfRefit(){ lfMeasureAll(); fit(); }
+
 function showBadge(){
   const b=document.getElementById('size-badge');
   const pct=Math.round(1600/SIZES[level-1]*100);
@@ -996,16 +1080,12 @@ function fit(){
   const s=Math.min(window.innerWidth/W, window.innerHeight/H);
   stage.style.transform=`translate(-50%,-50%) scale(${s})`;
 }
-window.addEventListener("resize",()=>{ fitEq(); fitContent(); fit(); });
+window.addEventListener("resize",()=>{ lfRefit(); });
 
 setTimeout(()=>document.getElementById('hint-key').classList.add('gone'),4200);
 document.addEventListener('keydown',e=>{
   const k=e.key;
-  if(k==='ArrowRight'||k==='PageDown'||k===' '){ next(); e.preventDefault(); }
-  else if(k==='ArrowLeft'||k==='PageUp'){ prev(); e.preventDefault(); }
-  else if(k==='Home'){ idx=0;fragIdx=0;paint(); }
-  else if(k==='End'){ idx=slides.length-1;fragIdx=frags(idx).length;paint(); }
-  else if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
+  if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
   else if(k==='+'||k==='='){ if(level<7){level++;store.set(level);applySize();showBadge();} }
   else if(k==='-'||k==='_'){ if(level>1){level--;store.set(level);applySize();showBadge();} }
   else return;
@@ -1018,8 +1098,106 @@ function wake(){ document.body.classList.remove('idle'); clearTimeout(cur);
   cur=setTimeout(()=>document.body.classList.add('idle'),2500); }
 document.addEventListener('mousemove',wake); wake();
 
-applySize(); paint(); showBadge();
+/* ============================================================
+   4 · Multiple-choice grading
+       · click the letter tile  → that one option turns green / red
+       · advance one step       → every option is coloured at once
+   ============================================================ */
+function verdictOf(opt){ return opt.hasAttribute('data-correct') ? 'is-right' : 'is-wrong'; }
 
+document.addEventListener('click',e=>{
+  const k=e.target.closest('.opt > .k.clickable');
+  if(!k) return;
+  const opt=k.parentElement;
+  opt.dataset.picked='1';
+  opt.classList.remove('is-right','is-wrong');
+  opt.classList.add(verdictOf(opt));
+  e.stopPropagation();
+});
+
+/* the gate is a zero-size .step: when the presenter reveals it, colour the lot.
+   Reading its own state (instead of hooking a controller) keeps this working
+   under the host, under the fallback controller, and when stepping backwards. */
+const gates=[...document.querySelectorAll('.ansgate')];
+function stepShown(s){
+  const inline=s.style.opacity;
+  if(inline!=='') return parseFloat(inline)>=0.5;
+  return s.classList.contains('on')||s.classList.contains('lf-on')
+      || s.classList.contains('revealed')||s.classList.contains('shown');
+}
+function syncGates(){
+  gates.forEach(g=>{
+    const opts=g.parentElement; if(!opts) return;
+    const open=stepShown(g);
+    [...opts.querySelectorAll('.opt')].forEach(opt=>{
+      if(open) opt.classList.add(verdictOf(opt));
+      else if(!opt.dataset.picked) opt.classList.remove('is-right','is-wrong');
+    });
+  });
+}
+setInterval(syncGates,120);
+
+/* ============================================================
+   5 · Start-up — first page and no flash of unrevealed content
+   ============================================================ */
+let lfSeeded=false;
+function lfInit(){
+  if(hosted()) return;                       // the host owns paging entirely
+  pages.forEach((p,i)=>{ p.style.display = i===0 ? '' : 'none'; });
+  pages.forEach(p=>pageSteps(p).forEach(s=>{
+    s.style.opacity='0'; s.style.transform='translateY(14px)';
+  }));
+  lfSeeded=true;
+}
+function lfYield(){                          // host arrived late — hand it back
+  if(!lfSeeded) return;
+  lfSeeded=false;
+  pages.forEach(p=>{ p.style.display=''; pageSteps(p).forEach(s=>{
+    s.style.opacity=''; s.style.transform='';
+  }); });
+}
+let watch=0;
+const hostWatch=setInterval(()=>{
+  if(hosted()){ lfYield(); clearInterval(hostWatch); }
+  else if(++watch>40) clearInterval(hostWatch);
+},100);
+
+lfInit();
+applySize();
+showBadge();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(lfRefit);
+window.addEventListener('load',()=>{ lfRefit(); setTimeout(lfRefit,600); });
+
+</script>
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
 </script>
 </body>
 </html>
