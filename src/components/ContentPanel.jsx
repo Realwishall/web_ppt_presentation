@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   FolderPlus, Plus, Trash2, ChevronRight, Layers, FolderOpen, Pencil, Loader2,
   UploadCloud, ClipboardPaste, FileCode2, X, Play, ChevronUp, ChevronDown, GripVertical,
-  Download, Wand2,
+  Download, Wand2, NotebookPen,
 } from 'lucide-react'
 import ChapterIcon from './ChapterIcon'
 import FolderEditor from './FolderEditor'
@@ -467,6 +467,14 @@ function FolderList({ cls, chapter }) {
               title="Open this deck in the live presentation editor"
               className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-110">
               <Wand2 className="h-3.5 w-3.5" /> Edit Live
+            </button>
+            {/* Notes mode: same slides, same proportions, no board tools —
+                just a note box that stamps every line with the slide it was
+                written on, for feeding back into a prompt later. */}
+            <button onClick={() => navigate('/notes', { state: { folder: { ...f, classId: cls.id, chapterId: chapter.id } } })}
+              title="Record Text — take notes against each slide, then copy them out with their slide numbers"
+              className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:border-emerald-400/60 hover:bg-emerald-500/20 hover:text-white">
+              <NotebookPen className="h-3.5 w-3.5" /> Record Text
             </button>
             <button onClick={() => setEditing(f)}
               title="Edit the raw HTML in a code pane"

@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PresenterView from './pages/PresenterView'
 import DeckEditorView from './pages/DeckEditorView'
+import NotesRecorderView from './pages/NotesRecorderView'
 
 export default function App() {
   return (
@@ -37,6 +38,18 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DeckEditorView />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Notes mode: the deck at presentation proportions with a note box
+          pinned to the bottom — every line is stamped with the slide it was
+          written on, and exports as slide-numbered markdown. */}
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <NotesRecorderView />
           </ProtectedRoute>
         }
       />
