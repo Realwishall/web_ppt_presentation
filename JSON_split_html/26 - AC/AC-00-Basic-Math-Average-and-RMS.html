@@ -34,12 +34,10 @@ body.idle{cursor:none;}
   padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .45s;pointer-events:none;}
 #size-badge.show{opacity:1;}
 
-.slide{position:absolute;inset:0;padding:17px 70px 46px;display:flex;flex-direction:column;
-  opacity:0;transform:translateX(70px) scale(.99);pointer-events:none;
-  transition:opacity .5s cubic-bezier(.22,.7,.25,1), transform .55s cubic-bezier(.22,.7,.25,1);}
-.slide.active{opacity:1;transform:none;pointer-events:auto;}
-.slide.past{transform:translateX(-70px) scale(.99);}
-.slide.center{justify-content:center;align-items:center;text-align:center;padding-top:46px;}
+.page{position:absolute;inset:0;padding:17px 70px 46px;}
+.page > .wrap{height:100%;display:flex;flex-direction:column;overflow:auto;box-sizing:border-box;}
+.page.center{padding-top:46px;}
+.page.center > .wrap{justify-content:center;align-items:center;text-align:center;}
 
 h1.title{font-size:112px;font-weight:800;letter-spacing:-4px;margin:0;line-height:1;}
 h1.title .sub{display:block;font-size:25px;font-weight:500;letter-spacing:11px;
@@ -70,9 +68,9 @@ h2.head .small{font-size:28px;color:var(--muted);font-weight:500;letter-spacing:
 .card.formula{background:linear-gradient(180deg,rgba(255,210,31,.10),rgba(255,210,31,.03));border-color:rgba(255,210,31,.28);}
 .card.formula .label{background:rgba(255,210,31,.18);color:var(--accent-soft);}
 .card.note{border-style:dashed;}
-.slide[data-3d] .col.narrow .card{padding:18px 22px;}
-.slide[data-3d] .col.narrow .hint{font-size:19px;margin-top:8px;}
-.slide[data-3d] .col.narrow{gap:14px;}
+.page[data-3d] .col.narrow .card{padding:18px 22px;}
+.page[data-3d] .col.narrow .hint{font-size:19px;margin-top:8px;}
+.page[data-3d] .col.narrow{gap:14px;}
 .dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block;}
 
 .eq-lg .katex{font-size:1.5em;} .eq-xl .katex{font-size:1.8em;}
@@ -109,18 +107,15 @@ h2.head .small{font-size:28px;color:var(--muted);font-weight:500;letter-spacing:
 .legend i{display:inline-block;width:20px;height:3px;border-radius:2px;vertical-align:middle;margin-right:9px;}
 
 
-.frag{opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s cubic-bezier(.22,.7,.25,1);}
-.frag.on{opacity:1;transform:none;}
-
 
 /* larger text levels trade padding for room, so nothing ever overflows */
-body[data-lvl="5"] .slide{padding:14px 54px 36px;}
+body[data-lvl="5"] .page{padding:14px 54px 36px;}
 body[data-lvl="5"] .card{padding:18px 22px;} body[data-lvl="5"] .card.tight{padding:14px 18px;}
 body[data-lvl="5"] .col{gap:14px;} body[data-lvl="5"] .cols{gap:24px;}
 body[data-lvl="5"] .figure svg{max-width:410px;} body[data-lvl="5"] .rule{margin-bottom:18px;}
 body[data-lvl="5"] h2.head{font-size:44px;}
 
-body[data-lvl="6"] .slide{padding:12px 46px 30px;}
+body[data-lvl="6"] .page{padding:12px 46px 30px;}
 body[data-lvl="6"] .card{padding:15px 19px;} body[data-lvl="6"] .card.tight{padding:12px 16px;}
 body[data-lvl="6"] .col{gap:12px;} body[data-lvl="6"] .cols{gap:20px;}
 body[data-lvl="6"] .figure svg{max-width:370px;} body[data-lvl="6"] .rule{margin-bottom:14px;}
@@ -128,7 +123,7 @@ body[data-lvl="6"] h2.head{font-size:42px;} body[data-lvl="6"] .card .label{marg
 body[data-lvl="6"] .hint{font-size:19px;margin-top:8px;} body[data-lvl="6"] .bullet{margin-bottom:9px;}
 body[data-lvl="6"] .eq-line{line-height:2.0;}
 
-body[data-lvl="7"] .slide{padding:10px 38px 24px;}
+body[data-lvl="7"] .page{padding:10px 38px 24px;}
 body[data-lvl="7"] .card{padding:13px 17px;} body[data-lvl="7"] .card.tight{padding:10px 14px;}
 body[data-lvl="7"] .col{gap:10px;} body[data-lvl="7"] .cols{gap:18px;}
 body[data-lvl="7"] .figure svg{max-width:330px;} body[data-lvl="7"] .rule{margin-bottom:12px;height:3px;}
@@ -137,11 +132,11 @@ body[data-lvl="7"] .hint{font-size:18px;margin-top:6px;line-height:1.45;}
 body[data-lvl="7"] .bullet{margin-bottom:7px;} body[data-lvl="7"] .eq-line{line-height:1.9;}
 body[data-lvl="7"] .rtable{border-spacing:0 9px;} body[data-lvl="7"] .rtable td{padding:5px 14px;}
 body[data-lvl="7"] .cap{font-size:15px;margin-top:5px;}
-body[data-lvl="6"] .slide[data-3d] .col.narrow .card{padding:13px 17px;}
-body[data-lvl="6"] .slide[data-3d] .col.narrow .hint{font-size:18px;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow .card{padding:11px 15px;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow .hint{font-size:17px;line-height:1.4;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow{gap:9px;}
+body[data-lvl="6"] .page[data-3d] .col.narrow .card{padding:13px 17px;}
+body[data-lvl="6"] .page[data-3d] .col.narrow .hint{font-size:18px;}
+body[data-lvl="7"] .page[data-3d] .col.narrow .card{padding:11px 15px;}
+body[data-lvl="7"] .page[data-3d] .col.narrow .hint{font-size:17px;line-height:1.4;}
+body[data-lvl="7"] .page[data-3d] .col.narrow{gap:9px;}
 body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 
 #hint-key{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
@@ -152,357 +147,342 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 </head>
 <body>
 <div id="viewport"><div id="stage">
-
 <!-- 1 · TITLE -->
-<section class="slide center">
-  <div class="kicker">Alternating Current</div>
-  <h1 class="title">AC<span class="sub">Basic Math · Average &amp; RMS</span></h1>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Alternating Current</div>
+<h1 class="title">AC<span class="sub step">Basic Math · Average &amp; RMS</span></h1>
+</div></section>
 <!-- 2 · SECTION -->
-<section class="slide center">
-  <div class="kicker">Chapter 00</div>
-  <div class="section-title">Basic Math<br><span style="color:var(--accent)">for AC</span></div>
-  <div class="section-note">Optional — skip it if you are already comfortable</div>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Chapter 00</div>
+<div class="section-title step">Basic Math<br/><span style="color:var(--accent)">for AC</span></div>
+<div class="section-note step">Optional — skip it if you are already comfortable</div>
+</div></section>
 <!-- 3 · PRE KNOWLEDGE — trigonometry -->
-<section class="slide">
-  <h2 class="head"><span class="accent">Pre knowledge</span> · Trigonometry</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card tight">
-        <div class="eq-lg" style="margin-bottom:6px">\(\sin(-\theta)=-\sin\theta\)</div>
-        <div class="plain-fig" data-circle="sin"></div>
-        <div class="cap" style="color:var(--muted)">signs of \(\sin\theta\) by quadrant</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card tight">
-        <div class="eq-lg" style="margin-bottom:6px">\(\cos(-\theta)=\cos\theta\)</div>
-        <div class="plain-fig" data-circle="cos"></div>
-        <div class="cap" style="color:var(--muted)">signs of \(\cos\theta\) by quadrant</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>Co-function</div>
-        <div class="eq-lg">\[\sin\theta=\cos(90^\circ-\theta)\]</div>
-        <div class="eq-lg">\[\cos\theta=\sin(90^\circ-\theta)\]</div>
-      </div>
-      <div class="card frag">
-        <div class="eq-xl" style="text-align:center">\[\sin\theta=\cos(\theta-90^\circ)\]</div>
-        <div class="hint" style="text-align:center">This shows that <b>cos leads sin by 90°</b></div>
-      </div>
-    </div>
-  </div>
-</section>
+<section class="page"><div class="wrap">
+<h2 class="head"><span class="accent">Pre knowledge</span> · Trigonometry</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card tight">
+<div class="eq-lg step" style="margin-bottom:6px">\(\sin(-\theta)=-\sin\theta\)</div>
+<div class="step"><div class="plain-fig" data-circle="sin"></div><div class="cap" style="color:var(--muted)">signs of \(\sin\theta\) by quadrant</div></div>
 
+</div>
+</div>
+<div class="col">
+<div class="card tight">
+<div class="eq-lg step" style="margin-bottom:6px">\(\cos(-\theta)=\cos\theta\)</div>
+<div class="step"><div class="plain-fig" data-circle="cos"></div><div class="cap" style="color:var(--muted)">signs of \(\cos\theta\) by quadrant</div></div>
+
+</div>
+</div>
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>Co-function</div>
+<div class="eq-lg step">\[\sin\theta=\cos(90^\circ-\theta)\]</div>
+<div class="eq-lg step">\[\cos\theta=\sin(90^\circ-\theta)\]</div>
+</div>
+<div class="card step">
+<div class="eq-xl" style="text-align:center">\[\sin\theta=\cos(\theta-90^\circ)\]</div>
+<div class="hint" style="text-align:center">This shows that <b>cos leads sin by 90°</b></div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 4 · PRE KNOWLEDGE — waveforms -->
-<section class="slide">
-  <h2 class="head"><span class="accent">Pre knowledge</span> · Waveforms</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card tight"><div class="eq-lg">\(\sin x\)</div>
-        <div class="plain-fig" data-wave="sin(x)" data-cycles="2"></div></div>
-      <div class="card tight"><div class="eq-lg">\(\cos x\)</div>
-        <div class="plain-fig" data-wave="cos(x)" data-cycles="2"></div></div>
-      <div class="card tight"><div class="eq-lg">\(\sin 2x\)</div>
-        <div class="plain-fig" data-wave="sin(2*x)" data-cycles="2"></div></div>
-    </div>
-    <div class="col">
-      <div class="card tight"><div class="eq-lg">\((\sin x)^2\)</div>
-        <div class="plain-fig" data-wave="sin(x)*sin(x)" data-ghost="sin(x)" data-cycles="2"></div>
-        <div class="hint">Never negative — it oscillates about \(\tfrac12\) at twice the frequency. Dashed curve is \(\sin x\).</div>
-      </div>
-      <div class="card tight"><div class="eq-lg">\(|\sin x|\)</div>
-        <div class="plain-fig" data-wave="abs(sin(x))" data-cycles="2"></div>
-        <div class="hint">The negative half is folded up — the period becomes \(\pi\).</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head"><span class="accent">Pre knowledge</span> · Waveforms</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card tight step"><div class="eq-lg">\(\sin x\)</div>
+<div class="plain-fig" data-cycles="2" data-wave="sin(x)"></div></div>
+<div class="card tight step"><div class="eq-lg">\(\cos x\)</div>
+<div class="plain-fig" data-cycles="2" data-wave="cos(x)"></div></div>
+<div class="card tight step"><div class="eq-lg">\(\sin 2x\)</div>
+<div class="plain-fig" data-cycles="2" data-wave="sin(2*x)"></div></div>
+</div>
+<div class="col">
+<div class="card tight"><div class="eq-lg step">\((\sin x)^2\)</div>
+<div class="plain-fig step" data-cycles="2" data-ghost="sin(x)" data-wave="sin(x)*sin(x)"></div>
+<div class="hint step">Never negative — it oscillates about \(\tfrac12\) at twice the frequency. Dashed curve is \(\sin x\).</div>
+</div>
+<div class="card tight"><div class="eq-lg step">\(|\sin x|\)</div>
+<div class="plain-fig step" data-cycles="2" data-wave="abs(sin(x))"></div>
+<div class="hint step">The negative half is folded up — the period becomes \(\pi\).</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 5 · SECTION -->
-<section class="slide center">
-  <div class="kicker">Part 1</div>
-  <div class="section-title">Understanding<br><span style="color:var(--accent)">Average Value</span></div>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Part 1</div>
+<div class="section-title step">Understanding<br/><span style="color:var(--accent)">Average Value</span></div>
+</div></section>
 <!-- 6 · AVERAGE VALUE -->
-<section class="slide">
-  <h2 class="head">Average value</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>For \(v_1,v_2,v_3\ldots\)</div>
-        <div class="eq-xl" style="text-align:center">\[V_{avg}=\frac{v_1+v_2+v_3+\dots}{n}\]</div>
-      </div>
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="eq-lg">Find the average of \(2,\;3,\;10\)</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">\[V_{avg}=\frac{2+3+10}{3}=\mathbf{5}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>For \(v=f(t)\)</div>
-        <div class="eq-xl" style="text-align:center">\[v_{avg}=\frac{\displaystyle\int v\,dt}{\displaystyle\int dt}\]</div>
-      </div>
-      <div class="card note">
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Numerator \(=\) <b style="color:var(--accent-soft)">area under the \(v\!-\!t\) curve</b></span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Denominator \(=t_2-t_1\), the <b style="color:var(--accent-soft)">base</b></span></div>
-        <div class="eq-lg" style="margin-top:14px;text-align:center">\[v_{avg}=\frac{\text{Area under } v-t}{t_2-t_1}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Average value</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>For \(v_1,v_2,v_3\ldots\)</div>
+<div class="eq-xl step" style="text-align:center">\[V_{avg}=\frac{v_1+v_2+v_3+\dots}{n}\]</div>
+</div>
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="eq-lg">Find the average of \(2,\;3,\;10\)</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">\[V_{avg}=\frac{2+3+10}{3}=\mathbf{5}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>For \(v=f(t)\)</div>
+<div class="eq-xl step" style="text-align:center">\[v_{avg}=\frac{\displaystyle\int v\,dt}{\displaystyle\int dt}\]</div>
+</div>
+<div class="card note">
+<div class="bullet step"><span class="b">▸</span><span class="t">Numerator \(=\) <b style="color:var(--accent-soft)">area under the \(v\!-\!t\) curve</b></span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Denominator \(=t_2-t_1\), the <b style="color:var(--accent-soft)">base</b></span></div>
+<div class="eq-lg step" style="margin-top:14px;text-align:center">\[v_{avg}=\frac{\text{Area under } v-t}{t_2-t_1}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 7 · AVERAGE — practice -->
-<section class="slide">
-  <h2 class="head">Average value · <span class="accent">Practice</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question 1</div>
-        <div class="hint" style="margin:0 0 10px">Find \(v_{avg}\) for the \(v\!-\!t\) graph shown</div>
-        <div class="figure" data-fig="trapezoid"></div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">\[v_{avg}=\frac{\tfrac12(4)(V)+2V}{6}=\frac{4V}{6}=\mathbf{\tfrac{2V}{3}}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question 2</div>
-        <div class="eq-lg">If \(v=4t\), find the average value in \(4\,\mathrm{s}\)</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">\[v_{avg}=\frac{\displaystyle\int_0^4 4t\,dt}{4-0}=\frac{4\left[\tfrac{t^2}{2}\right]_0^4}{4}=\mathbf{8}\]</div>
-      </div>
-      <div class="card note frag">
-        <div class="hint" style="margin:0">Check by area: the \(v\!-\!t\) line is a triangle of height \(16\) and base \(4\), so area \(=32\) and \(v_{avg}=32/4=8\).</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Average value · <span class="accent">Practice</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question 1</div>
+<div class="hint" style="margin:0 0 10px">Find \(v_{avg}\) for the \(v\!-\!t\) graph shown</div>
+<div class="figure" data-fig="trapezoid"></div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">\[v_{avg}=\frac{\tfrac12(4)(V)+2V}{6}=\frac{4V}{6}=\mathbf{\tfrac{2V}{3}}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question 2</div>
+<div class="eq-lg">If \(v=4t\), find the average value in \(4\,\mathrm{s}\)</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">\[v_{avg}=\frac{\displaystyle\int_0^4 4t\,dt}{4-0}=\frac{4\left[\tfrac{t^2}{2}\right]_0^4}{4}=\mathbf{8}\]</div>
+</div>
+<div class="card note step">
+<div class="hint" style="margin:0">Check by area: the \(v\!-\!t\) line is a triangle of height \(16\) and base \(4\), so area \(=32\) and \(v_{avg}=32/4=8\).</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 8 · RMS VALUE -->
-<section class="slide">
-  <h2 class="head">RMS value <span class="small">[ Root Mean Square ]</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>For \(v_1,v_2,v_3\ldots\)</div>
-        <div class="eq-xl" style="text-align:center">\[v_{rms}=\sqrt{\frac{v_1^{2}+v_2^{2}+v_3^{2}+\dots}{n}}\]</div>
-      </div>
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="eq-lg">Find the RMS of \(2,\;3,\;10\)</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">\[v_{rms}=\sqrt{\frac{2^{2}+3^{2}+10^{2}}{3}}=\sqrt{\frac{113}{3}}\approx\mathbf{6.14}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>For \(v=f(t)\)</div>
-        <div class="eq-xl" style="text-align:center">\[v_{rms}=\sqrt{\frac{\displaystyle\int v^{2}\,dt}{\displaystyle\int dt}}\]</div>
-      </div>
-      <div class="card note">
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Numerator \(=\) <b style="color:var(--accent-soft)">area under the \(v^{2}\!-\!t\) curve</b></span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Denominator \(=t_2-t_1\)</span></div>
-        <div class="eq-lg" style="margin-top:14px;text-align:center">\[v_{rms}=\sqrt{\frac{\text{Area under } v^{2}-t}{t_2-t_1}}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">RMS value <span class="small">[ Root Mean Square ]</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>For \(v_1,v_2,v_3\ldots\)</div>
+<div class="eq-xl step" style="text-align:center">\[v_{rms}=\sqrt{\frac{v_1^{2}+v_2^{2}+v_3^{2}+\dots}{n}}\]</div>
+</div>
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="eq-lg">Find the RMS of \(2,\;3,\;10\)</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">\[v_{rms}=\sqrt{\frac{2^{2}+3^{2}+10^{2}}{3}}=\sqrt{\frac{113}{3}}\approx\mathbf{6.14}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>For \(v=f(t)\)</div>
+<div class="eq-xl step" style="text-align:center">\[v_{rms}=\sqrt{\frac{\displaystyle\int v^{2}\,dt}{\displaystyle\int dt}}\]</div>
+</div>
+<div class="card note">
+<div class="bullet step"><span class="b">▸</span><span class="t">Numerator \(=\) <b style="color:var(--accent-soft)">area under the \(v^{2}\!-\!t\) curve</b></span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Denominator \(=t_2-t_1\)</span></div>
+<div class="eq-lg step" style="margin-top:14px;text-align:center">\[v_{rms}=\sqrt{\frac{\text{Area under } v^{2}-t}{t_2-t_1}}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 9 · RMS from a graph -->
-<section class="slide">
-  <h2 class="head">RMS <span class="accent">from a graph</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="hint" style="margin:0 0 10px">Find \(v_{rms}\) for this \(v\!-\!t\) graph</div>
-        <div class="figure" data-fig="step-v"></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Step 1 · square it</div>
-        <div class="figure" data-fig="step-v2"></div>
-        <div class="cap">\(v^{2}-t\) — the levels become \(4\) and \(36\)</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Step 2 · area ÷ base</div>
-        <div class="eq-lg">\[\text{Area}=4\times4+36\times2=88\]</div>
-        <div class="eq-lg" style="margin-top:12px">\[v_{rms}=\sqrt{\frac{88}{6}}\approx\mathbf{3.83}\]</div>
-        <div class="hint">It is <b>not</b> the plain average \(\left(\tfrac{2\cdot4+6\cdot2}{6}=3.33\right)\) — squaring weights the larger value more.</div>
-      </div>
-    </div>
-  </div>
-</section>
+<section class="page"><div class="wrap">
+<h2 class="head">RMS <span class="accent">from a graph</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="hint" style="margin:0 0 10px">Find \(v_{rms}\) for this \(v\!-\!t\) graph</div>
+<div class="figure" data-fig="step-v"></div>
+</div>
+</div>
+<div class="col">
+<div class="card solution">
+<div class="label"><span class="dot"></span>Step 1 · square it</div>
+<div class="step"><div class="figure" data-fig="step-v2"></div><div class="cap">\(v^{2}-t\) — the levels become \(4\) and \(36\)</div></div>
 
+</div>
+</div>
+<div class="col">
+<div class="card solution">
+<div class="label"><span class="dot"></span>Step 2 · area ÷ base</div>
+<div class="eq-lg step">\[\text{Area}=4\times4+36\times2=88\]</div>
+<div class="eq-lg step" style="margin-top:12px">\[v_{rms}=\sqrt{\frac{88}{6}}\approx\mathbf{3.83}\]</div>
+<div class="hint step">It is <b>not</b> the plain average \(\left(\tfrac{2\cdot4+6\cdot2}{6}=3.33\right)\) — squaring weights the larger value more.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 10 · STANDARD RESULTS -->
-<section class="slide">
-  <h2 class="head">Standard results <span class="accent">worth memorising</span></h2>
-  <div class="rule"></div>
-  <div class="vcenter">
-  <table class="rtable">
-    <tr><th style="width:250px;text-align:left">Waveform</th><th class="fig"></th><th>Average</th><th>RMS</th></tr>
-    <tr>
-      <td class="name">&#9656; DC</td>
-      <td class="fig"><div class="figure" data-fig="mini-dc"></div></td>
-      <td class="val eq-lg">\(A\)</td><td class="val eq-lg">\(A\)</td>
-    </tr>
-    <tr>
-      <td class="name">&#9656; \(A\sin(\omega t)\)</td>
-      <td class="fig"><div class="figure" data-fig="mini-sine"></div></td>
-      <td class="val eq-lg">\(\dfrac{2A}{\pi}\)</td><td class="val eq-lg">\(\dfrac{A}{\sqrt{2}}\)</td>
-    </tr>
-    <tr>
-      <td class="name">&#9656; Triangle / saw</td>
-      <td class="fig"><div class="figure" data-fig="mini-tri"></div></td>
-      <td class="val eq-lg">\(\dfrac{A}{2}\)</td><td class="val eq-lg">\(\dfrac{A}{\sqrt{3}}\)</td>
-    </tr>
-  </table>
-  <div class="hint frag" style="font-size:20px;margin-top:18px">For \(A\sin\omega t\) the average is taken over <b>half a cycle</b> — over a full cycle it is zero, because the positive and negative areas cancel.</div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Standard results <span class="accent">worth memorising</span></h2>
+<div class="rule"></div>
+<div class="vcenter">
+<table class="rtable">
+<tr><th style="width:250px;text-align:left">Waveform</th><th class="fig"></th><th>Average</th><th>RMS</th></tr>
+<tr>
+<td class="name">▸ DC</td>
+<td class="fig step"><div class="figure" data-fig="mini-dc"></div></td>
+<td class="val eq-lg step">\(A\)</td><td class="val eq-lg step">\(A\)</td>
+</tr>
+<tr>
+<td class="name">▸ \(A\sin(\omega t)\)</td>
+<td class="fig step"><div class="figure" data-fig="mini-sine"></div></td>
+<td class="val eq-lg step">\(\dfrac{2A}{\pi}\)</td><td class="val eq-lg step">\(\dfrac{A}{\sqrt{2}}\)</td>
+</tr>
+<tr>
+<td class="name">▸ Triangle / saw</td>
+<td class="fig step"><div class="figure" data-fig="mini-tri"></div></td>
+<td class="val eq-lg step">\(\dfrac{A}{2}\)</td><td class="val eq-lg step">\(\dfrac{A}{\sqrt{3}}\)</td>
+</tr>
+</table>
+<div class="hint step" style="font-size:20px;margin-top:18px">For \(A\sin\omega t\) the average is taken over <b>half a cycle</b> — over a full cycle it is zero, because the positive and negative areas cancel.</div>
+</div>
+</div></section>
 <!-- 11 · 3D phasor -->
-<section class="slide" data-3d="phasor">
-  <h2 class="head">Why \(v_{rms}=A/\sqrt{2}\) <span class="accent">— visually</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="canvas-wrap"><canvas id="phasor3d"></canvas>
-        <div class="legend">
-          <div><i style="background:#ffd21f"></i>rotating phasor of length \(A\)</div>
-          <div><i style="background:#5b8cff"></i>its projection \(=A\sin\omega t\)</div>
-          <div><i style="background:#2ecc9a"></i>the square \(A^{2}\sin^{2}\omega t\)</div>
-        </div>
-      </div>
-    </div>
-    <div class="col narrow">
-      <div class="card formula">
-        <div class="eq-lg" style="text-align:center">\[\langle\sin^{2}\omega t\rangle=\tfrac12\]</div>
-        <div class="hint">The green curve rides between \(0\) and \(A^{2}\), so its mean sits exactly halfway.</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Hence</div>
-        <div class="eq-lg" style="text-align:center">\[v_{rms}=\sqrt{\frac{A^{2}}{2}}=\frac{A}{\sqrt2}\]</div>
-      </div>
-      <div class="card note frag">
-        <div class="hint" style="margin:0">The blue curve averages to zero; the green one does not — which is exactly why RMS, not average, measures the heating effect.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page" data-3d="phasor"><div class="wrap">
+<h2 class="head">Why \(v_{rms}=A/\sqrt{2}\) <span class="accent">— visually</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="canvas-wrap"><canvas id="phasor3d"></canvas>
+<div class="legend">
+<div><i style="background:#ffd21f"></i>rotating phasor of length \(A\)</div>
+<div><i style="background:#5b8cff"></i>its projection \(=A\sin\omega t\)</div>
+<div><i style="background:#2ecc9a"></i>the square \(A^{2}\sin^{2}\omega t\)</div>
+</div>
+</div>
+</div>
+<div class="col narrow">
+<div class="card formula step">
+<div class="eq-lg" style="text-align:center">\[\langle\sin^{2}\omega t\rangle=\tfrac12\]</div>
+<div class="hint">The green curve rides between \(0\) and \(A^{2}\), so its mean sits exactly halfway.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Hence</div>
+<div class="eq-lg step" style="text-align:center">\[v_{rms}=\sqrt{\frac{A^{2}}{2}}=\frac{A}{\sqrt2}\]</div>
+</div>
+<div class="card note step">
+<div class="hint" style="margin:0">The blue curve averages to zero; the green one does not — which is exactly why RMS, not average, measures the heating effect.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 12 · SPECIAL CASE -->
-<section class="slide">
-  <h2 class="head">Special case · <span class="accent">RMS of a sum</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Case 1 · AC + AC, same \(\omega\)</div>
-        <div class="eq-lg">\[y=A\sin(\omega t)+B\sin(\omega t+60^\circ)\]</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Method</div>
-        <div class="hint" style="margin-top:0">Add them as <b>phasors</b> first — the sum is a single sine of amplitude</div>
-        <div class="eq-lg" style="text-align:center">\[R=\sqrt{A^{2}+B^{2}+2AB\cos 60^\circ}\]</div>
-        <div class="eq-lg" style="text-align:center;margin-top:8px">\[y_{rms}=\frac{R}{\sqrt2}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Case 2 · AC + DC, or AC + AC of different \(\omega\)</div>
-        <div class="eq-lg">\[y=A+B\sin(\omega t)\]</div>
-        <div class="eq-lg" style="margin-top:8px">\[y=A\sin(\omega t)+B\sin(2\omega t+60^\circ)\]</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Method</div>
-        <div class="hint" style="margin-top:0">Phasors <b>cannot</b> be added here. Square first and average term by term — the cross term averages to zero:</div>
-        <div class="eq-lg" style="text-align:center">\[y_{rms}=\sqrt{A^{2}+\frac{B^{2}}{2}}\qquad y_{rms}=\sqrt{\frac{A^{2}}{2}+\frac{B^{2}}{2}}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Special case · <span class="accent">RMS of a sum</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Case 1 · AC + AC, same \(\omega\)</div>
+<div class="eq-lg">\[y=A\sin(\omega t)+B\sin(\omega t+60^\circ)\]</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Method</div>
+<div class="hint step" style="margin-top:0">Add them as <b>phasors</b> first — the sum is a single sine of amplitude</div>
+<div class="eq-lg step" style="text-align:center">\[R=\sqrt{A^{2}+B^{2}+2AB\cos 60^\circ}\]</div>
+<div class="eq-lg step" style="text-align:center;margin-top:8px">\[y_{rms}=\frac{R}{\sqrt2}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Case 2 · AC + DC, or AC + AC of different \(\omega\)</div>
+<div class="eq-lg">\[y=A+B\sin(\omega t)\]</div>
+<div class="eq-lg step" style="margin-top:8px">\[y=A\sin(\omega t)+B\sin(2\omega t+60^\circ)\]</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Method</div>
+<div class="hint step" style="margin-top:0">Phasors <b>cannot</b> be added here. Square first and average term by term — the cross term averages to zero:</div>
+<div class="eq-lg step" style="text-align:center">\[y_{rms}=\sqrt{A^{2}+\frac{B^{2}}{2}}\qquad y_{rms}=\sqrt{\frac{A^{2}}{2}+\frac{B^{2}}{2}}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 13 · WORKED COMBINATIONS -->
-<section class="slide">
-  <h2 class="head">Worked <span class="accent">combinations</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Find the RMS value</div>
-        <div class="eq-line">
-          \(\Rightarrow\;3\sin(\omega t)+4\cos(\omega t)\)<br>
-          \(\Rightarrow\;6\sqrt2+3\sin(\omega t)\)<br>
+<section class="page"><div class="wrap">
+<h2 class="head">Worked <span class="accent">combinations</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Find the RMS value</div>
+<div class="eq-line">
+          \(\Rightarrow\;3\sin(\omega t)+4\cos(\omega t)\)<br/>
+          \(\Rightarrow\;6\sqrt2+3\sin(\omega t)\)<br/>
           \(\Rightarrow\;6\sqrt2+3\sin(\omega t)+4\cos(\omega t)\)
         </div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solutions</div>
-        <div class="eq-line">
-          \(\sqrt{3^{2}+4^{2}}=5\;\Rightarrow\;y_{rms}=\dfrac{5}{\sqrt2}\approx 3.54\)<br>
-          \(y_{rms}=\sqrt{(6\sqrt2)^{2}+\dfrac{3^{2}}{2}}=\sqrt{76.5}\approx 8.75\)<br>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solutions</div>
+<div class="eq-line"><div class="step">
+          \(\sqrt{3^{2}+4^{2}}=5\;\Rightarrow\;y_{rms}=\dfrac{5}{\sqrt2}\approx 3.54\)</div><div class="step">
+          \(y_{rms}=\sqrt{(6\sqrt2)^{2}+\dfrac{3^{2}}{2}}=\sqrt{76.5}\approx 8.75\)</div><div class="step">
           \(y_{rms}=\sqrt{72+\dfrac{5^{2}}{2}}=\sqrt{84.5}\approx 9.19\)
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="label" style="background:rgba(255,255,255,.08);color:var(--muted)"><span class="dot"></span>AC riding on DC</div>
-        <div class="plain-fig" data-fig="offset"></div>
-        <div class="hint">A DC level of \(5\) with a \(\pm2\) sine on top swings between <b>7</b> and <b>3</b>. The DC part shifts the graph; the AC part decides how far it swings.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+        </div></div>
+</div>
+</div>
+<div class="col">
+<div class="card">
+<div class="label" style="background:rgba(255,255,255,.08);color:var(--muted)"><span class="dot"></span>AC riding on DC</div>
+<div class="plain-fig step" data-fig="offset"></div>
+<div class="hint step">A DC level of \(5\) with a \(\pm2\) sine on top swings between <b>7</b> and <b>3</b>. The DC part shifts the graph; the AC part decides how far it swings.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 14 · RANDOM WAVEFORM -->
-<section class="slide">
-  <h2 class="head"><span class="accent">&#9656; Random</span> waveform</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="card"><div class="plain-fig" data-fig="random"></div></div>
-    </div>
-    <div class="col">
-      <div class="card note">
-        <div class="hint" style="margin-top:0;font-size:20px">Whatever the shape, the recipe never changes:</div>
-        <div class="bullet"><span class="b">1</span><span class="t"><b style="color:var(--accent-soft)">Average</b> — flatten the curve into a rectangle of the same area over the same base.</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">2</span><span class="t"><b style="color:var(--accent-soft)">RMS</b> — square the curve first, flatten that, then take the square root.</span></div>
-      </div>
-      <div class="card formula frag">
-        <div class="eq-lg" style="text-align:center">\[v_{avg}=\frac{\text{Area}(v-t)}{\text{Base}}\]</div>
-        <div class="eq-lg" style="text-align:center;margin-top:10px">\[v_{rms}=\sqrt{\frac{\text{Area}(v^{2}-t)}{\text{Base}}}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head"><span class="accent">▸ Random</span> waveform</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="card step"><div class="plain-fig" data-fig="random"></div></div>
+</div>
+<div class="col">
+<div class="card note">
+<div class="hint step" style="margin-top:0;font-size:20px">Whatever the shape, the recipe never changes:</div>
+<div class="bullet step"><span class="b">1</span><span class="t"><b style="color:var(--accent-soft)">Average</b> — flatten the curve into a rectangle of the same area over the same base.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">2</span><span class="t"><b style="color:var(--accent-soft)">RMS</b> — square the curve first, flatten that, then take the square root.</span></div>
+</div>
+<div class="card formula">
+<div class="eq-lg step" style="text-align:center">\[v_{avg}=\frac{\text{Area}(v-t)}{\text{Base}}\]</div>
+<div class="eq-lg step" style="text-align:center;margin-top:10px">\[v_{rms}=\sqrt{\frac{\text{Area}(v^{2}-t)}{\text{Base}}}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 </div></div>
 <div id="hint-key">← →  ·  press 1 – 7 for text size</div>
 <div id="size-badge"></div>
@@ -688,30 +668,48 @@ renderMathInElement(document.body,{
 /* ============================================================
    3 · Slide engine — keyboard only, zero UI
    ============================================================ */
-const slides=[...document.querySelectorAll('.slide')];
+const pages=[...document.querySelectorAll('.page')];
 const stage=document.getElementById('stage');
-let idx=0, fragIdx=0, busy=false;
 
-function frags(i){ return [...slides[i].querySelectorAll('.frag')]; }
 
-function paint(){
-  slides.forEach((s,i)=>{
-    s.classList.toggle('active', i===idx);
-    s.classList.toggle('past', i<idx);
+/* ---- LessonForge glue -------------------------------------------------- */
+/* Pages are stacked and the host (or the fallback controller at the bottom of
+   this file) decides which one is on screen.  Measuring a page that is not on
+   screen returns zeros, so every fit pass runs with all pages laid out.      */
+function lfMeasureAll(fn){
+  var saved = pages.map(function(p){ return p.style.display; });
+  pages.forEach(function(p){ p.style.display='block'; });
+  try { fn(); } finally { pages.forEach(function(p,i){ p.style.display=saved[i]; }); }
+}
+function lfInit(){
+  pages.forEach(function(p,i){ p.style.display = i===0 ? '' : 'none'; });
+  [].slice.call(document.querySelectorAll('.step')).forEach(function(s){
+    s.style.opacity='0'; s.style.transform='translateY(14px)';
   });
-  frags(idx).forEach((f,i)=> f.classList.toggle('on', i<fragIdx));
-  const on3d = slides[idx].dataset['3d']==='phasor';
-  on3d ? startAnim() : stopAnim();
 }
-
-function next(){
-  const f=frags(idx);
-  if(fragIdx<f.length){ fragIdx++; paint(); return; }
-  if(idx<slides.length-1){ idx++; fragIdx=0; paint(); }
+/* .wrap scrolls rather than spilling past the page, so a block that the deck's
+   own four fit passes left slightly too tall gets squeezed the rest of the way */
+function lfSqueeze(){
+  lfMeasureAll(function(){
+    pages.forEach(function(p){
+      var w = p.querySelector('.wrap'); if(!w) return;
+      var box = p.querySelector('.cols, .vcenter'); if(!box) return;
+      var z = parseFloat(box.style.zoom) || 1;
+      for (var pass=0; pass<10 && w.scrollHeight - w.clientHeight > 1; pass++){
+        z = Math.max(0.5, z * 0.985);
+        box.style.zoom = z.toFixed(4);
+      }
+    });
+  });
 }
-function prev(){
-  if(fragIdx>0){ fragIdx--; paint(); return; }
-  if(idx>0){ idx--; fragIdx=frags(idx).length; paint(); }
+function lfRefit(){
+  try { if (typeof fitEq === 'function') fitEq(); } catch(e){}
+  fitContent(); lfSqueeze(); fit();
+}
+function lfSchedule(){
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ lfRefit(); });
+  window.addEventListener('load', function(){ lfRefit(); setTimeout(lfRefit,400); });
+  setTimeout(lfRefit,300); setTimeout(lfRefit,1200);
 }
 
 /* text size = design canvas width; a narrower canvas makes every glyph
@@ -727,13 +725,15 @@ function applySize(){
   document.body.setAttribute('data-lvl', level);
   stage.style.width=W+'px'; stage.style.height=H+'px';
   fitContent();
+  lfSqueeze();
   fit();
 }
 
 /* content hugs the top of every slide; if a slide's block is taller than the
    space left under its heading, shrink just that block so nothing is clipped */
 function fitContent(){
-  slides.forEach(sl=>{
+  lfMeasureAll(()=>{
+  pages.forEach(sl=>{
     const box = sl.querySelector('.cols, .vcenter');
     if(!box) return;
     box.style.zoom = 1;
@@ -744,6 +744,7 @@ function fitContent(){
       z = Math.max(0.6, z * (avail/need) * 0.995);
       box.style.zoom = z.toFixed(4);
     }
+  });
   });
 }
 function showBadge(){
@@ -760,16 +761,12 @@ function fit(){
   stage.style.transform=`translate(-50%,-50%) scale(${s})`;
   resize3D();
 }
-window.addEventListener('resize',()=>{ fitContent(); fit(); });
+window.addEventListener('resize',()=>{ lfRefit(); });
 
 let hintTimer=setTimeout(()=>document.getElementById('hint-key').classList.add('gone'),4200);
 document.addEventListener('keydown',e=>{
   const k=e.key;
-  if(k==='ArrowRight'||k==='PageDown'||k===' '){ next(); e.preventDefault(); }
-  else if(k==='ArrowLeft'||k==='PageUp'){ prev(); e.preventDefault(); }
-  else if(k==='Home'){ idx=0;fragIdx=0;paint(); }
-  else if(k==='End'){ idx=slides.length-1;fragIdx=frags(idx).length;paint(); }
-  else if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
+  if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
   else if(k==='+'||k==='='){ if(level<7){level++;store.set(level);applySize();showBadge();} }
   else if(k==='-'||k==='_'){ if(level>1){level--;store.set(level);applySize();showBadge();} }
   else return;
@@ -782,7 +779,7 @@ function wake(){ document.body.classList.remove('idle'); clearTimeout(cur);
   cur=setTimeout(()=>document.body.classList.add('idle'),2500); }
 document.addEventListener('mousemove',wake); wake();
 
-applySize(); paint(); showBadge();
+lfInit(); applySize(); showBadge(); lfSchedule();
 
 /* ============================================================
    4 · Phasor animation — Three.js, with a 2D canvas fallback
@@ -902,6 +899,47 @@ function startAnim(){
   raf=requestAnimationFrame(loop);
 }
 function stopAnim(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
+
+/* the 3-D scene follows whichever page is on screen, whoever is switching them */
+(function(){
+  var host3d = document.querySelector('.page[data-3d]');
+  if(!host3d) return;
+  var on = null;
+  setInterval(function(){
+    var vis = host3d.offsetParent !== null && getComputedStyle(host3d).display !== 'none';
+    if(vis !== on){ on = vis; vis ? startAnim() : stopAnim(); }
+  }, 300);
+})();
+</script>
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
 </script>
 </body>
 </html>

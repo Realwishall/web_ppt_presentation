@@ -597,36 +597,65 @@
     body[data-lvl="7"] .page.dense figcaption {
       font-size: 21px
     }
-  
-/* BEGIN math-font:upright */
-/* ---- upright math typography (rule 17) ---------------------------------
+
+    /* BEGIN math-font:upright */
+    /* ---- upright math typography (rule 17) ---------------------------------
    Cambria Math is a true math face: real Greek, real operators, digits that
    sit on the baseline. It was never the font that read wrong here, only the
    italic -- and the Georgia fallback underneath it. System fonts only, so a
    deck still sets correctly with no classroom network (rule 2).          */
-:root{
-  --math-stack:'Cambria Math',Cambria,'STIX Two Math','Times New Roman',serif;
-  --font-math:var(--math-stack);
-  --math:var(--math-stack);
-}
-/* plain selectors (not :where) so these beat the deck's own .m / .eq rules */
-.m,.eq,.fr,.frac,.radical,.scene-readout .ro b{
-  font-family:var(--math-stack);
-  font-style:normal;
-}
-.m em,.m i,.eq em,.eq i,.m .up,.eq .up,sup,sub{font-style:normal}
-/* MathML: the UA sheet italicises a single-letter <mi> through
+    :root {
+      --math-stack: 'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif;
+      --font-math: var(--math-stack);
+      --math: var(--math-stack);
+    }
+
+    /* plain selectors (not :where) so these beat the deck's own .m / .eq rules */
+    .m,
+    .eq,
+    .fr,
+    .frac,
+    .radical,
+    .scene-readout .ro b {
+      font-family: var(--math-stack);
+      font-style: normal;
+    }
+
+    .m em,
+    .m i,
+    .eq em,
+    .eq i,
+    .m .up,
+    .eq .up,
+    sup,
+    sub {
+      font-style: normal
+    }
+
+    /* MathML: the UA sheet italicises a single-letter <mi> through
    text-transform:math-auto, which font-style does not override. */
-math{font-family:var(--math-stack)}
-math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
-/* zero-specificity so .am / .gr / .acc bold spans still win */
-:where(.m,.eq,.fr,.frac,.radical){
-  font-weight:500;
-  font-variant-numeric:lining-nums;
-  text-rendering:optimizeLegibility;
-}
-/* END math-font:upright */
-</style>
+    math {
+      font-family: var(--math-stack)
+    }
+
+    math mi,
+    math mn,
+    math mo,
+    math mtext,
+    math ms {
+      text-transform: none;
+      font-style: normal
+    }
+
+    /* zero-specificity so .am / .gr / .acc bold spans still win */
+    :where(.m, .eq, .fr, .frac, .radical) {
+      font-weight: 500;
+      font-variant-numeric: lining-nums;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* END math-font:upright */
+  </style>
 </head>
 
 <body data-lvl="5">
@@ -839,24 +868,24 @@ math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal
                   <line x1="540.0" y1="64" x2="540.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
                   <line x1="602.0" y1="64" x2="602.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
                   <line x1="664.0" y1="64" x2="664.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="65.1" y1="66" x2="65.1" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="120.9" y1="66" x2="120.9" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="176.7" y1="66" x2="176.7" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="232.5" y1="66" x2="232.5" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="288.3" y1="66" x2="288.3" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="344.1" y1="66" x2="344.1" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="399.9" y1="66" x2="399.9" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="455.7" y1="66" x2="455.7" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="511.5" y1="66" x2="511.5" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="567.3" y1="66" x2="567.3" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="623.1" y1="66" x2="623.1" y2="102" stroke="#f2f4f8" stroke-width="2.6" /><text x="44.0"
+                  <line x1="62.6" y1="66" x2="62.6" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="118.4" y1="66" x2="118.4" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="174.2" y1="66" x2="174.2" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="230.0" y1="66" x2="230.0" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="285.8" y1="66" x2="285.8" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="341.6" y1="66" x2="341.6" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="397.4" y1="66" x2="397.4" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="453.2" y1="66" x2="453.2" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="509.0" y1="66" x2="509.0" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="564.8" y1="66" x2="564.8" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="620.6" y1="66" x2="620.6" y2="102" stroke="#f2f4f8" stroke-width="2.6" /><text x="44.0"
                     y="18" fill="#f5b942" font-size="21" font-family="Cambria,Georgia,serif"
                     text-anchor="middle">0</text><text x="106.0" y="18" fill="#f5b942" font-size="21"
                     font-family="Cambria,Georgia,serif" text-anchor="middle">0.1</text>
                   <line x1="44.0" y1="48" x2="106.0" y2="48" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m6h)"
                     marker-start="url(#m6h2)" />
-                  <line x1="65.1" y1="86" x2="120.9" y2="86" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m6h)"
-                    marker-start="url(#m6h2)" /><text x="93.0" y="132" fill="#f5b942" font-size="21"
+                  <line x1="62.6" y1="86" x2="118.4" y2="86" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m6h)"
+                    marker-start="url(#m6h2)" /><text x="90.5" y="132" fill="#f5b942" font-size="21"
                     font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">x cm</text>
                 </svg></figure>
               <figure class="step"><svg viewBox="0 0 760 146" width="100%" xmlns="http://www.w3.org/2000/svg">
@@ -880,24 +909,24 @@ math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal
                   <line x1="540.0" y1="64" x2="540.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
                   <line x1="602.0" y1="64" x2="602.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
                   <line x1="664.0" y1="64" x2="664.0" y2="28" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="22.9" y1="66" x2="22.9" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="78.7" y1="66" x2="78.7" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="134.5" y1="66" x2="134.5" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="190.3" y1="66" x2="190.3" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="246.1" y1="66" x2="246.1" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="301.9" y1="66" x2="301.9" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="357.7" y1="66" x2="357.7" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="413.5" y1="66" x2="413.5" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="469.3" y1="66" x2="469.3" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="525.1" y1="66" x2="525.1" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
-                  <line x1="580.9" y1="66" x2="580.9" y2="102" stroke="#f2f4f8" stroke-width="2.6" /><text x="44.0"
+                  <line x1="25.4" y1="66" x2="25.4" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="81.2" y1="66" x2="81.2" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="137.0" y1="66" x2="137.0" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="192.8" y1="66" x2="192.8" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="248.6" y1="66" x2="248.6" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="304.4" y1="66" x2="304.4" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="360.2" y1="66" x2="360.2" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="416.0" y1="66" x2="416.0" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="471.8" y1="66" x2="471.8" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="527.6" y1="66" x2="527.6" y2="102" stroke="#f2f4f8" stroke-width="2.6" />
+                  <line x1="583.4" y1="66" x2="583.4" y2="102" stroke="#f2f4f8" stroke-width="2.6" /><text x="44.0"
                     y="18" fill="#f5b942" font-size="21" font-family="Cambria,Georgia,serif"
                     text-anchor="middle">0</text><text x="106.0" y="18" fill="#f5b942" font-size="21"
                     font-family="Cambria,Georgia,serif" text-anchor="middle">0.1</text>
                   <line x1="44.0" y1="48" x2="106.0" y2="48" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m7h)"
                     marker-start="url(#m7h2)" />
-                  <line x1="22.9" y1="86" x2="78.7" y2="86" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m7h)"
-                    marker-start="url(#m7h2)" /><text x="50.8" y="132" fill="#f5b942" font-size="21"
+                  <line x1="25.4" y1="86" x2="81.2" y2="86" stroke="#f5b942" stroke-width="2.4" marker-end="url(#m7h)"
+                    marker-start="url(#m7h2)" /><text x="53.3" y="132" fill="#f5b942" font-size="21"
                     font-family="Cambria,Georgia,serif" font-style="italic" text-anchor="middle">x cm</text>
                 </svg></figure>
             </div>

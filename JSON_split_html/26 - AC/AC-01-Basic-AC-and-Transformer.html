@@ -34,12 +34,10 @@ body.idle{cursor:none;}
   padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .45s;pointer-events:none;}
 #size-badge.show{opacity:1;}
 
-.slide{position:absolute;inset:0;padding:17px 70px 46px;display:flex;flex-direction:column;
-  opacity:0;transform:translateX(70px) scale(.99);pointer-events:none;
-  transition:opacity .5s cubic-bezier(.22,.7,.25,1), transform .55s cubic-bezier(.22,.7,.25,1);}
-.slide.active{opacity:1;transform:none;pointer-events:auto;}
-.slide.past{transform:translateX(-70px) scale(.99);}
-.slide.center{justify-content:center;align-items:center;text-align:center;padding-top:46px;}
+.page{position:absolute;inset:0;padding:17px 70px 46px;}
+.page > .wrap{height:100%;display:flex;flex-direction:column;overflow:auto;box-sizing:border-box;}
+.page.center{padding-top:46px;}
+.page.center > .wrap{justify-content:center;align-items:center;text-align:center;}
 
 h1.title{font-size:112px;font-weight:800;letter-spacing:-4px;margin:0;line-height:1;}
 h1.title .sub{display:block;font-size:25px;font-weight:500;letter-spacing:11px;
@@ -70,9 +68,9 @@ h2.head .small{font-size:28px;color:var(--muted);font-weight:500;letter-spacing:
 .card.formula{background:linear-gradient(180deg,rgba(255,210,31,.10),rgba(255,210,31,.03));border-color:rgba(255,210,31,.28);}
 .card.formula .label{background:rgba(255,210,31,.18);color:var(--accent-soft);}
 .card.note{border-style:dashed;}
-.slide[data-3d] .col.narrow .card{padding:18px 22px;}
-.slide[data-3d] .col.narrow .hint{font-size:19px;margin-top:8px;}
-.slide[data-3d] .col.narrow{gap:14px;}
+.page[data-3d] .col.narrow .card{padding:18px 22px;}
+.page[data-3d] .col.narrow .hint{font-size:19px;margin-top:8px;}
+.page[data-3d] .col.narrow{gap:14px;}
 .dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block;}
 
 .eq-lg .katex{font-size:1.5em;} .eq-xl .katex{font-size:1.8em;}
@@ -109,18 +107,15 @@ h2.head .small{font-size:28px;color:var(--muted);font-weight:500;letter-spacing:
 .legend i{display:inline-block;width:20px;height:3px;border-radius:2px;vertical-align:middle;margin-right:9px;}
 
 
-.frag{opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s cubic-bezier(.22,.7,.25,1);}
-.frag.on{opacity:1;transform:none;}
-
 
 /* larger text levels trade padding for room, so nothing ever overflows */
-body[data-lvl="5"] .slide{padding:14px 54px 36px;}
+body[data-lvl="5"] .page{padding:14px 54px 36px;}
 body[data-lvl="5"] .card{padding:18px 22px;} body[data-lvl="5"] .card.tight{padding:14px 18px;}
 body[data-lvl="5"] .col{gap:14px;} body[data-lvl="5"] .cols{gap:24px;}
 body[data-lvl="5"] .figure svg{max-width:410px;} body[data-lvl="5"] .rule{margin-bottom:18px;}
 body[data-lvl="5"] h2.head{font-size:44px;}
 
-body[data-lvl="6"] .slide{padding:12px 46px 30px;}
+body[data-lvl="6"] .page{padding:12px 46px 30px;}
 body[data-lvl="6"] .card{padding:15px 19px;} body[data-lvl="6"] .card.tight{padding:12px 16px;}
 body[data-lvl="6"] .col{gap:12px;} body[data-lvl="6"] .cols{gap:20px;}
 body[data-lvl="6"] .figure svg{max-width:370px;} body[data-lvl="6"] .rule{margin-bottom:14px;}
@@ -128,7 +123,7 @@ body[data-lvl="6"] h2.head{font-size:42px;} body[data-lvl="6"] .card .label{marg
 body[data-lvl="6"] .hint{font-size:19px;margin-top:8px;} body[data-lvl="6"] .bullet{margin-bottom:9px;}
 body[data-lvl="6"] .eq-line{line-height:2.0;}
 
-body[data-lvl="7"] .slide{padding:10px 38px 24px;}
+body[data-lvl="7"] .page{padding:10px 38px 24px;}
 body[data-lvl="7"] .card{padding:13px 17px;} body[data-lvl="7"] .card.tight{padding:10px 14px;}
 body[data-lvl="7"] .col{gap:10px;} body[data-lvl="7"] .cols{gap:18px;}
 body[data-lvl="7"] .figure svg{max-width:330px;} body[data-lvl="7"] .rule{margin-bottom:12px;height:3px;}
@@ -137,11 +132,11 @@ body[data-lvl="7"] .hint{font-size:18px;margin-top:6px;line-height:1.45;}
 body[data-lvl="7"] .bullet{margin-bottom:7px;} body[data-lvl="7"] .eq-line{line-height:1.9;}
 body[data-lvl="7"] .rtable{border-spacing:0 9px;} body[data-lvl="7"] .rtable td{padding:5px 14px;}
 body[data-lvl="7"] .cap{font-size:15px;margin-top:5px;}
-body[data-lvl="6"] .slide[data-3d] .col.narrow .card{padding:13px 17px;}
-body[data-lvl="6"] .slide[data-3d] .col.narrow .hint{font-size:18px;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow .card{padding:11px 15px;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow .hint{font-size:17px;line-height:1.4;}
-body[data-lvl="7"] .slide[data-3d] .col.narrow{gap:9px;}
+body[data-lvl="6"] .page[data-3d] .col.narrow .card{padding:13px 17px;}
+body[data-lvl="6"] .page[data-3d] .col.narrow .hint{font-size:18px;}
+body[data-lvl="7"] .page[data-3d] .col.narrow .card{padding:11px 15px;}
+body[data-lvl="7"] .page[data-3d] .col.narrow .hint{font-size:17px;line-height:1.4;}
+body[data-lvl="7"] .page[data-3d] .col.narrow{gap:9px;}
 body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 
 #hint-key{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
@@ -153,442 +148,424 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <body>
 <div id="viewport"><div id="stage">
 <!-- 1 · TITLE -->
-<section class="slide center">
-  <div class="kicker">Alternating Current</div>
-  <h1 class="title">AC<span class="sub">Basic AC &amp; Transformer</span></h1>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Alternating Current</div>
+<h1 class="title">AC<span class="sub step">Basic AC &amp; Transformer</span></h1>
+</div></section>
 <!-- 2 · RECAP: standard values -->
-<section class="slide">
-  <h2 class="head">Quick recap · <span class="accent">average &amp; RMS</span></h2>
-  <div class="rule"></div>
-  <div class="vcenter">
-  <table class="rtable">
-    <tr><th style="width:250px;text-align:left">Waveform</th><th class="fig"></th><th>Average</th><th>RMS</th></tr>
-    <tr><td class="name">&#9656; DC</td><td class="fig"><div class="figure" data-fig="mini-dc"></div></td>
-        <td class="val eq-lg">\(A\)</td><td class="val eq-lg">\(A\)</td></tr>
-    <tr><td class="name">&#9656; \(A\sin(\omega t)\)</td><td class="fig"><div class="figure" data-fig="mini-sine"></div></td>
-        <td class="val eq-lg">\(\dfrac{2A}{\pi}\)</td><td class="val eq-lg">\(\dfrac{A}{\sqrt{2}}\)</td></tr>
-    <tr><td class="name">&#9656; Triangle / saw</td><td class="fig"><div class="figure" data-fig="mini-tri"></div></td>
-        <td class="val eq-lg">\(\dfrac{A}{2}\)</td><td class="val eq-lg">\(\dfrac{A}{\sqrt{3}}\)</td></tr>
-  </table>
-  <div class="hint frag" style="font-size:20px;margin-top:18px">Sum of two AC of the <b>same \(\omega\)</b> → add as phasors, then divide by \(\sqrt2\). AC + DC, or different \(\omega\) → \(y_{rms}=\sqrt{A^{2}+\tfrac{B^{2}}{2}}\) and \(\sqrt{\tfrac{A^{2}}{2}+\tfrac{B^{2}}{2}}\).</div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Quick recap · <span class="accent">average &amp; RMS</span></h2>
+<div class="rule"></div>
+<div class="vcenter">
+<table class="rtable">
+<tr><th style="width:250px;text-align:left">Waveform</th><th class="fig"></th><th>Average</th><th>RMS</th></tr>
+<tr><td class="name">▸ DC</td><td class="fig step"><div class="figure" data-fig="mini-dc"></div></td>
+<td class="val eq-lg step">\(A\)</td><td class="val eq-lg step">\(A\)</td></tr>
+<tr><td class="name">▸ \(A\sin(\omega t)\)</td><td class="fig step"><div class="figure" data-fig="mini-sine"></div></td>
+<td class="val eq-lg step">\(\dfrac{2A}{\pi}\)</td><td class="val eq-lg step">\(\dfrac{A}{\sqrt{2}}\)</td></tr>
+<tr><td class="name">▸ Triangle / saw</td><td class="fig step"><div class="figure" data-fig="mini-tri"></div></td>
+<td class="val eq-lg step">\(\dfrac{A}{2}\)</td><td class="val eq-lg step">\(\dfrac{A}{\sqrt{3}}\)</td></tr>
+</table>
+<div class="hint step" style="font-size:20px;margin-top:18px">Sum of two AC of the <b>same \(\omega\)</b> → add as phasors, then divide by \(\sqrt2\). AC + DC, or different \(\omega\) → \(y_{rms}=\sqrt{A^{2}+\tfrac{B^{2}}{2}}\) and \(\sqrt{\tfrac{A^{2}}{2}+\tfrac{B^{2}}{2}}\).</div>
+</div>
+</div></section>
 <!-- 3 · WHAT IS AC -->
-<section class="slide">
-  <h2 class="head">What is <span class="accent">alternating current</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card tight">
-        <div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Direct current · DC</div>
-        <div class="plain-fig" data-fig="src-dc"></div>
-        <div class="plain-fig" data-fig="sig-dc"></div>
-        <div class="bullet" style="margin:10px 0 0"><span class="b">&#9656;</span><span class="t">A DC current <b style="color:var(--accent-soft)">does not change its direction</b></span></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card tight">
-        <div class="label" style="background:rgba(91,140,255,.2);color:#bcd0ff"><span class="dot"></span>Alternating current · AC</div>
-        <div class="plain-fig" data-fig="src-ac"></div>
-        <div class="plain-fig" data-fig="sig-ac"></div>
-        <div class="bullet" style="margin:10px 0 0"><span class="b">&#9656;</span><span class="t">Direction of the current <b style="color:var(--accent-soft)">changes alternately with time</b></span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">What is <span class="accent">alternating current</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card tight">
+<div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Direct current · DC</div>
+<div class="plain-fig step" data-fig="src-dc"></div>
+<div class="plain-fig step" data-fig="sig-dc"></div>
+<div class="bullet step" style="margin:10px 0 0"><span class="b">▸</span><span class="t">A DC current <b style="color:var(--accent-soft)">does not change its direction</b></span></div>
+</div>
+</div>
+<div class="col">
+<div class="card tight">
+<div class="label" style="background:rgba(91,140,255,.2);color:#bcd0ff"><span class="dot"></span>Alternating current · AC</div>
+<div class="plain-fig step" data-fig="src-ac"></div>
+<div class="plain-fig step" data-fig="sig-ac"></div>
+<div class="bullet step" style="margin:10px 0 0"><span class="b">▸</span><span class="t">Direction of the current <b style="color:var(--accent-soft)">changes alternately with time</b></span></div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 4 · SECTION: skin effect -->
-<section class="slide center">
-  <div class="kicker">Part 1</div>
-  <div class="section-title">Skin<br><span style="color:var(--accent)">Effect</span></div>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Part 1</div>
+<div class="section-title step">Skin<br/><span style="color:var(--accent)">Effect</span></div>
+</div></section>
 <!-- 5 · SKIN EFFECT -->
-<section class="slide">
-  <h2 class="head">Skin effect</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>Definition</div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">The tendency of an alternating current to flow <b style="color:var(--accent-soft)">from the surface only</b> is called skin effect.</span></div>
-      </div>
-      <div class="card">
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Most of the current flows through the <b style="color:var(--accent-soft)">outer skin</b>, so the core of a thick wire is wasted metal.</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">For AC we therefore use a <b style="color:var(--accent-soft)">hollow conductor</b>.</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">To keep the total area the same, wires are used in <b style="color:var(--accent-soft)">bundle form</b>.</span></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="figure" data-fig="skin-hollow"></div>
-    </div>
-    <div class="col">
-      <div class="figure" data-fig="skin-bundle"></div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Skin effect</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="card formula">
+<div class="label"><span class="dot"></span>Definition</div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">The tendency of an alternating current to flow <b style="color:var(--accent-soft)">from the surface only</b> is called skin effect.</span></div>
+</div>
+<div class="card">
+<div class="bullet step"><span class="b">▸</span><span class="t">Most of the current flows through the <b style="color:var(--accent-soft)">outer skin</b>, so the core of a thick wire is wasted metal.</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">For AC we therefore use a <b style="color:var(--accent-soft)">hollow conductor</b>.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">To keep the total area the same, wires are used in <b style="color:var(--accent-soft)">bundle form</b>.</span></div>
+</div>
+</div>
+<div class="col">
+<div class="figure step" data-fig="skin-hollow"></div>
+</div>
+<div class="col">
+<div class="figure step" data-fig="skin-bundle"></div>
+</div>
+</div>
+</div></section>
 <!-- 6 · UNDERSTANDING SKIN EFFECT (3D) -->
-<section class="slide" data-3d="skin">
-  <h2 class="head">Understanding <span class="accent">skin effect</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="canvas-wrap"><canvas id="skin3d"></canvas>
-        <div class="legend">
-          <div><i style="background:#ffd21f"></i>main current, increasing</div>
-          <div><i style="background:#5b8cff"></i>induced (eddy) current</div>
-        </div>
-      </div>
-    </div>
-    <div class="col narrow">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Assume</div>
-        <div class="hint" style="margin-top:0">The main current \(\otimes\) through the conductor is <b>increasing</b>, so the flux inside it is increasing too.</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Zone closer to the centre</div>
-        <div class="hint" style="margin-top:0">The induced current <b>opposes</b> the main current's increase — the current here is held back.</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Zone away from the centre</div>
-        <div class="hint" style="margin-top:0">The induced current <b>supports</b> the increase — so the current crowds towards the surface.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page" data-3d="skin"><div class="wrap">
+<h2 class="head">Understanding <span class="accent">skin effect</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="canvas-wrap"><canvas id="skin3d"></canvas>
+<div class="legend">
+<div><i style="background:#ffd21f"></i>main current, increasing</div>
+<div><i style="background:#5b8cff"></i>induced (eddy) current</div>
+</div>
+</div>
+</div>
+<div class="col narrow">
+<div class="card question">
+<div class="label"><span class="dot"></span>Assume</div>
+<div class="hint" style="margin-top:0">The main current \(\otimes\) through the conductor is <b>increasing</b>, so the flux inside it is increasing too.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Zone closer to the centre</div>
+<div class="hint step" style="margin-top:0">The induced current <b>opposes</b> the main current's increase — the current here is held back.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Zone away from the centre</div>
+<div class="hint step" style="margin-top:0">The induced current <b>supports</b> the increase — so the current crowds towards the surface.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 7 · AC vs DC ACROSS INSTRUMENTS -->
-<section class="slide">
-  <h2 class="head">AC and DC across <span class="accent">instruments</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card tight">
-        <div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>DC supply</div>
-        <div class="plain-fig" data-fig="src-dc"></div>
-      </div>
-      <div class="card solution">
-        <div class="label"><span class="dot"></span>These will work normally</div>
-        <div class="cols" style="gap:16px;flex:0">
-          <div class="col" style="gap:6px">
-            <div class="eq-lg">MCG&nbsp;&nbsp;\(I\propto\theta\)</div>
-            <div class="plain-fig" data-fig="galv"></div>
-          </div>
-          <div class="col" style="gap:6px">
-            <div class="eq-lg">TG&nbsp;&nbsp;\(I\propto\tan\theta\)</div>
-            <div class="plain-fig" data-fig="galv"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card tight">
-        <div class="label" style="background:rgba(91,140,255,.2);color:#bcd0ff"><span class="dot"></span>AC supply</div>
-        <div class="plain-fig" data-fig="src-ac"></div>
-      </div>
-      <div class="card question">
-        <div class="label" style="background:rgba(255,120,120,.18);color:#ffb3b3"><span class="dot"></span>These will not work</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Low frequency (1–2 Hz) → the pointer just <b style="color:var(--accent-soft)">oscillates</b>.</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Mains frequency (50 Hz) → it <b style="color:var(--accent-soft)">will not move</b> at all.</span></div>
-        <div class="hint">Both read the average, and the average of AC over a cycle is zero — a moving coil or tangent galvanometer cannot follow it.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">AC and DC across <span class="accent">instruments</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card tight">
+<div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>DC supply</div>
+<div class="plain-fig step" data-fig="src-dc"></div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>These will work normally</div>
+<div class="cols" style="gap:16px;flex:0">
+<div class="col" style="gap:6px">
+<div class="eq-lg step">MCG  \(I\propto\theta\)</div>
+<div class="plain-fig step" data-fig="galv"></div>
+</div>
+<div class="col" style="gap:6px">
+<div class="eq-lg step">TG  \(I\propto\tan\theta\)</div>
+<div class="plain-fig step" data-fig="galv"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col">
+<div class="card tight">
+<div class="label" style="background:rgba(91,140,255,.2);color:#bcd0ff"><span class="dot"></span>AC supply</div>
+<div class="plain-fig step" data-fig="src-ac"></div>
+</div>
+<div class="card question">
+<div class="label" style="background:rgba(255,120,120,.18);color:#ffb3b3"><span class="dot"></span>These will not work</div>
+<div class="bullet"><span class="b">▸</span><span class="t">Low frequency (1–2 Hz) → the pointer just <b style="color:var(--accent-soft)">oscillates</b>.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Mains frequency (50 Hz) → it <b style="color:var(--accent-soft)">will not move</b> at all.</span></div>
+<div class="hint step">Both read the average, and the average of AC over a cycle is zero — a moving coil or tangent galvanometer cannot follow it.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 8 · HOT WIRE GALVANOMETER + comparisons -->
-<section class="slide">
-  <h2 class="head">Hot wire galvanometer <span class="accent">&amp; comparisons</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>Hot wire galvanometer</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Works on the <b style="color:var(--accent-soft)">heating effect</b>, \(H=I^{2}Rt\)</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">It shows the <b style="color:var(--accent-soft)">RMS value</b></span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">It works for <b style="color:var(--accent-soft)">both</b> supplies</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Scale is <b style="color:var(--accent-soft)">non-uniform</b> (since \(H\propto I^{2}\))</span></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Wire type</div>
-        <div class="bullet"><span class="b">DC</span><span class="t">Any type of wire will work.</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">AC</span><span class="t">Hollow and bundled conductors are used.</span></div>
-      </div>
-      <div class="card question frag">
-        <div class="label"><span class="dot"></span>Which is more dangerous?</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">In general <b style="color:var(--accent-soft)">DC</b> — in AC the current passes through zero a hundred times a second, giving a chance to let go.</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">But NCERT says <b style="color:var(--accent-soft)">AC</b> for the same rating, because its peak \(=\sqrt2\times\) the quoted RMS value.</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Hot wire galvanometer <span class="accent">&amp; comparisons</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>Hot wire galvanometer</div>
+<div class="bullet step"><span class="b">▸</span><span class="t">Works on the <b style="color:var(--accent-soft)">heating effect</b>, \(H=I^{2}Rt\)</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">It shows the <b style="color:var(--accent-soft)">RMS value</b></span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">It works for <b style="color:var(--accent-soft)">both</b> supplies</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Scale is <b style="color:var(--accent-soft)">non-uniform</b> (since \(H\propto I^{2}\))</span></div>
+</div>
+</div>
+<div class="col">
+<div class="card">
+<div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Wire type</div>
+<div class="bullet step"><span class="b">DC</span><span class="t">Any type of wire will work.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">AC</span><span class="t">Hollow and bundled conductors are used.</span></div>
+</div>
+<div class="card question">
+<div class="label"><span class="dot"></span>Which is more dangerous?</div>
+<div class="bullet"><span class="b">▸</span><span class="t">In general <b style="color:var(--accent-soft)">DC</b> — in AC the current passes through zero a hundred times a second, giving a chance to let go.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">But NCERT says <b style="color:var(--accent-soft)">AC</b> for the same rating, because its peak \(=\sqrt2\times\) the quoted RMS value.</span></div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 9 · SECTION: transformer -->
-<section class="slide center">
-  <div class="kicker">Part 2</div>
-  <div class="section-title">The<br><span style="color:var(--accent)">Transformer</span></div>
-</section>
-
+<section class="page center"><div class="wrap">
+<div class="kicker">Part 2</div>
+<div class="section-title step">The<br/><span style="color:var(--accent)">Transformer</span></div>
+</div></section>
 <!-- 10 · WHY WE NEED IT -->
-<section class="slide">
-  <h2 class="head">The problem · <span class="accent">voltage lost on the line</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="card"><div class="plain-fig" data-fig="transmission"></div></div>
-    </div>
-    <div class="col narrow">
-      <div class="card question">
-        <div class="hint" style="margin-top:0">The house wants <b>220 V at 10 A</b>. The plant sends 320 V, but the line itself eats \(V=IR\).</div>
-      </div>
-      <div class="card solution frag">
-        <div class="eq-lg" style="text-align:center">\[P_{loss}=I^{2}R\]</div>
-        <div class="hint">Raising the source voltage cannot fix it — a longer line means more resistance, and the drop grows with it. The fix is to <b>cut the current</b>, not raise the source.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">The problem · <span class="accent">voltage lost on the line</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="card step"><div class="plain-fig" data-fig="transmission"></div></div>
+</div>
+<div class="col narrow">
+<div class="card question">
+<div class="hint" style="margin-top:0">The house wants <b>220 V at 10 A</b>. The plant sends 320 V, but the line itself eats \(V=IR\).</div>
+</div>
+<div class="card solution step">
+<div class="eq-lg" style="text-align:center">\[P_{loss}=I^{2}R\]</div>
+<div class="hint">Raising the source voltage cannot fix it — a longer line means more resistance, and the drop grows with it. The fix is to <b>cut the current</b>, not raise the source.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 11 · TRANSFORMER INTRODUCTION -->
-<section class="slide">
-  <h2 class="head">Transformer <span class="accent">introduction</span></h2>
-  <div class="rule"></div>
-  <div class="cols" style="flex-direction:column">
-    <div class="card"><div class="plain-fig" data-fig="chain"></div></div>
-    <div class="cols" style="flex:0">
-      <div class="col">
-        <div class="card solution">
-          <div class="label"><span class="dot"></span>Step-up transformer</div>
-          <div class="hint" style="margin-top:0">Raises voltage, lowers current by the same factor — sent onto the line as 22000 V at 0.1 A.</div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card question">
-          <div class="label"><span class="dot"></span>Step-down transformer</div>
-          <div class="hint" style="margin-top:0">Brings it back to 220 V at 10 A at the consumer end. Power in \(=\) power out; only the ratio changes.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Transformer <span class="accent">introduction</span></h2>
+<div class="rule"></div>
+<div class="cols" style="flex-direction:column">
+<div class="card step"><div class="plain-fig" data-fig="chain"></div></div>
+<div class="cols" style="flex:0">
+<div class="col">
+<div class="card solution">
+<div class="label"><span class="dot"></span>Step-up transformer</div>
+<div class="hint step" style="margin-top:0">Raises voltage, lowers current by the same factor — sent onto the line as 22000 V at 0.1 A.</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Step-down transformer</div>
+<div class="hint" style="margin-top:0">Brings it back to 220 V at 10 A at the consumer end. Power in \(=\) power out; only the ratio changes.</div>
+</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 12 · CONSTRUCTION -->
-<section class="slide">
-  <h2 class="head">Construction &amp; <span class="accent">transformer ratio</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col wide">
-      <div class="figure" data-fig="transformer"></div>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Two coils wound on one <b style="color:var(--accent-soft)">laminated soft-iron core</b>: primary \(N_1\), secondary \(N_2\).</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">The core keeps the flux inside, so <b style="color:var(--accent-soft)">the flux through each loop is the same</b>.</span></div>
-      </div>
-      <div class="card formula frag">
-        <div class="label"><span class="dot"></span>Transformer ratio</div>
-        <div class="eq-xl" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Construction &amp; <span class="accent">transformer ratio</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col wide">
+<div class="figure step" data-fig="transformer"></div>
+</div>
+<div class="col">
+<div class="card step">
+<div class="bullet"><span class="b">▸</span><span class="t">Two coils wound on one <b style="color:var(--accent-soft)">laminated soft-iron core</b>: primary \(N_1\), secondary \(N_2\).</span></div>
+<div class="bullet" style="margin-bottom:0"><span class="b">▸</span><span class="t">The core keeps the flux inside, so <b style="color:var(--accent-soft)">the flux through each loop is the same</b>.</span></div>
+</div>
+<div class="card formula">
+<div class="label"><span class="dot"></span>Transformer ratio</div>
+<div class="eq-xl step" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 13 · RELATIONS -->
-<section class="slide">
-  <h2 class="head">Where the ratio <span class="accent">comes from</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>From the flux</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Flux through each loop is the same, so total \(\phi\propto N\)</span></div>
-        <div class="eq-lg" style="text-align:center">\[\frac{\phi_1}{\phi_2}=\frac{N_1}{N_2},\qquad e=\frac{d\phi}{dt}\]</div>
-        <div class="eq-lg" style="text-align:center;margin-top:8px">\[\Rightarrow\;\frac{e_1}{e_2}=\frac{N_1}{N_2}\]</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>If no energy is lost</div>
-        <div class="eq-lg" style="text-align:center">\[I_1e_1=I_2e_2\;\Rightarrow\;\frac{I_1}{I_2}=\frac{e_2}{e_1}=\frac{N_2}{N_1}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card note">
-        <div class="label" style="background:rgba(255,210,31,.18);color:var(--accent-soft)"><span class="dot"></span>Note</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">\(\dfrac{e_1}{e_2}=\dfrac{N_1}{N_2}\) — valid <b style="color:var(--accent-soft)">even if</b> the efficiency is not 100%</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">\(\dfrac{I_1}{I_2}=\dfrac{N_2}{N_1}\) — valid <b style="color:var(--accent-soft)">only if</b> the efficiency is 100%</span></div>
-      </div>
-      <div class="card formula frag">
-        <div class="label"><span class="dot"></span>If the efficiency is given</div>
-        <div class="eq-xl" style="text-align:center">\[\eta=\frac{V_{out}\,I_{out}}{V_{in}\,I_{in}}\]</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Where the ratio <span class="accent">comes from</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>From the flux</div>
+<div class="bullet step"><span class="b">▸</span><span class="t">Flux through each loop is the same, so total \(\phi\propto N\)</span></div>
+<div class="eq-lg step" style="text-align:center">\[\frac{\phi_1}{\phi_2}=\frac{N_1}{N_2},\qquad e=\frac{d\phi}{dt}\]</div>
+<div class="eq-lg step" style="text-align:center;margin-top:8px">\[\Rightarrow\;\frac{e_1}{e_2}=\frac{N_1}{N_2}\]</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>If no energy is lost</div>
+<div class="eq-lg step" style="text-align:center">\[I_1e_1=I_2e_2\;\Rightarrow\;\frac{I_1}{I_2}=\frac{e_2}{e_1}=\frac{N_2}{N_1}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card note">
+<div class="label" style="background:rgba(255,210,31,.18);color:var(--accent-soft)"><span class="dot"></span>Note</div>
+<div class="bullet step"><span class="b">▸</span><span class="t">\(\dfrac{e_1}{e_2}=\dfrac{N_1}{N_2}\) — valid <b style="color:var(--accent-soft)">even if</b> the efficiency is not 100%</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">\(\dfrac{I_1}{I_2}=\dfrac{N_2}{N_1}\) — valid <b style="color:var(--accent-soft)">only if</b> the efficiency is 100%</span></div>
+</div>
+<div class="card formula">
+<div class="label"><span class="dot"></span>If the efficiency is given</div>
+<div class="eq-xl step" style="text-align:center">\[\eta=\frac{V_{out}\,I_{out}}{V_{in}\,I_{in}}\]</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 14 · CONCEPTUAL QUESTIONS -->
-<section class="slide">
-  <h2 class="head">Conceptual <span class="accent">questions</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="eq-lg">If the input frequency is \(f\), what is the output frequency?</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">The output frequency is also \(\mathbf{f}\).</div>
-        <div class="hint">The secondary is driven by the same changing flux, so the rhythm cannot change — only the amplitude does.</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="eq-lg">Will a transformer work with a DC supply?</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg"><b class="big-answer">NO</b></div>
-        <div class="hint">Steady DC gives a constant flux, so \(d\phi/dt=0\) and no emf is induced in the secondary.</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question</div>
-        <div class="eq-lg">Why does a transformer have such high efficiency?</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">Because it has <b class="big-answer">no moving parts</b>.</div>
-        <div class="hint">No friction and no mechanical wear — only the small electrical losses on the next slides.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Conceptual <span class="accent">questions</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="eq-lg">If the input frequency is \(f\), what is the output frequency?</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">The output frequency is also \(\mathbf{f}\).</div>
+<div class="hint step">The secondary is driven by the same changing flux, so the rhythm cannot change — only the amplitude does.</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="eq-lg">Will a transformer work with a DC supply?</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step"><b class="big-answer">NO</b></div>
+<div class="hint step">Steady DC gives a constant flux, so \(d\phi/dt=0\) and no emf is induced in the secondary.</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question</div>
+<div class="eq-lg">Why does a transformer have such high efficiency?</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">Because it has <b class="big-answer">no moving parts</b>.</div>
+<div class="hint step">No friction and no mechanical wear — only the small electrical losses on the next slides.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 15 · NUMERICALS -->
-<section class="slide">
-  <h2 class="head">Numericals</h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question 1</div>
-        <div class="hint" style="margin:0 0 10px">Input voltage is 220 V — what is the output voltage?</div>
-        <div class="figure" data-fig="txq"></div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\;\Rightarrow\;\frac{220}{e_2}=\frac{100}{20}\;\Rightarrow\;e_2=\mathbf{44\ V}\]</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Question 2</div>
-        <div class="eq-lg">A <b>200 V DC</b> supply feeds the 100-turn primary; the 20-turn secondary drives a \(4\,\Omega\) bulb. Find the current in the bulb.</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Solution</div>
-        <div class="eq-lg">This will <b class="big-answer">not work</b> — the supply is DC.</div>
-        <div class="eq-lg" style="text-align:center;margin-top:8px">\[\frac{d\phi}{dt}=0\;\Rightarrow\;e_2=0\;\Rightarrow\;I=\mathbf{0}\]</div>
-        <div class="hint">The tempting trap is to compute \(200\times\tfrac{20}{100}=40\ \mathrm V\) and then \(40/4=10\ \mathrm A\). That answer is worth zero marks here.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Numericals</h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question 1</div>
+<div class="hint" style="margin:0 0 10px">Input voltage is 220 V — what is the output voltage?</div>
+<div class="figure" data-fig="txq"></div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\;\Rightarrow\;\frac{220}{e_2}=\frac{100}{20}\;\Rightarrow\;e_2=\mathbf{44\ V}\]</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Question 2</div>
+<div class="eq-lg">A <b>200 V DC</b> supply feeds the 100-turn primary; the 20-turn secondary drives a \(4\,\Omega\) bulb. Find the current in the bulb.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Solution</div>
+<div class="eq-lg step">This will <b class="big-answer">not work</b> — the supply is DC.</div>
+<div class="eq-lg step" style="text-align:center;margin-top:8px">\[\frac{d\phi}{dt}=0\;\Rightarrow\;e_2=0\;\Rightarrow\;I=\mathbf{0}\]</div>
+<div class="hint step">The tempting trap is to compute \(200\times\tfrac{20}{100}=40\ \mathrm V\) and then \(40/4=10\ \mathrm A\). That answer is worth zero marks here.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 16 · LOSSES 1 -->
-<section class="slide">
-  <h2 class="head">Transformer losses · <span class="accent">flux leakage &amp; copper</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Flux leakage · issue</div>
-        <div class="figure" data-fig="leak-bad"></div>
-        <div class="hint">Not all the flux from the primary reaches the secondary.</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Fix</div>
-        <div class="figure" data-fig="leak-fix"></div>
-        <div class="hint">Wind the two coils <b>over each other</b> on the same limb, or surround the core with a diamagnetic material.</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question frag">
-        <div class="label"><span class="dot"></span>Copper loss · issue</div>
-        <div class="figure" data-fig="copper"></div>
-        <div class="hint"><b>Fix:</b> use a thicker wire of lower resistance so \(I^{2}R\) heating drops.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Transformer losses · <span class="accent">flux leakage &amp; copper</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Flux leakage · issue</div>
+<div class="figure" data-fig="leak-bad"></div>
+<div class="hint step">Not all the flux from the primary reaches the secondary.</div>
+</div>
+</div>
+<div class="col">
+<div class="card solution">
+<div class="label"><span class="dot"></span>Fix</div>
+<div class="figure step" data-fig="leak-fix"></div>
+<div class="hint step">Wind the two coils <b>over each other</b> on the same limb, or surround the core with a diamagnetic material.</div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Copper loss · issue</div>
+<div class="figure" data-fig="copper"></div>
+<div class="hint step"><b>Fix:</b> use a thicker wire of lower resistance so \(I^{2}R\) heating drops.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 17 · LOSSES 2 -->
-<section class="slide">
-  <h2 class="head">Transformer losses · <span class="accent">iron loss</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>Eddy current loss</div>
-        <div class="figure" data-fig="eddy-solid"></div>
-      </div>
-      <div class="card question frag">
-        <div class="label"><span class="dot"></span>Hysteresis loss</div>
-        <div class="figure" data-fig="hyst-wide"></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Fix · laminated core</div>
-        <div class="figure" data-fig="eddy-lam"></div>
-        <div class="hint">Thin sheets separated by varnish break the circulating loops, so far less energy is wasted as heat.</div>
-      </div>
-      <div class="card solution frag">
-        <div class="label"><span class="dot"></span>Fix · soft iron</div>
-        <div class="figure" data-fig="hyst-narrow"></div>
-        <div class="hint">A narrow B–H loop means less energy lost per cycle. It does <b>hum</b> at mains frequency as the core magnetises back and forth.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Transformer losses · <span class="accent">iron loss</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>Eddy current loss</div>
+<div class="figure" data-fig="eddy-solid"></div>
+</div>
+<div class="card question">
+<div class="label"><span class="dot"></span>Hysteresis loss</div>
+<div class="figure" data-fig="hyst-wide"></div>
+</div>
+</div>
+<div class="col">
+<div class="card solution">
+<div class="label"><span class="dot"></span>Fix · laminated core</div>
+<div class="figure step" data-fig="eddy-lam"></div>
+<div class="hint step">Thin sheets separated by varnish break the circulating loops, so far less energy is wasted as heat.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Fix · soft iron</div>
+<div class="figure step" data-fig="hyst-narrow"></div>
+<div class="hint step">A narrow B–H loop means less energy lost per cycle. It does <b>hum</b> at mains frequency as the core magnetises back and forth.</div>
+</div>
+</div>
+</div>
+</div></section>
 <!-- 18 · SUMMARY -->
-<section class="slide">
-  <h2 class="head">Worth <span class="accent">remembering</span></h2>
-  <div class="rule"></div>
-  <div class="cols">
-    <div class="col">
-      <div class="card formula">
-        <div class="label"><span class="dot"></span>Transformer</div>
-        <div class="eq-lg" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\qquad \frac{I_1}{I_2}=\frac{N_2}{N_1}\;(\eta=100\%)\]</div>
-        <div class="eq-lg" style="text-align:center;margin-top:10px">\[\eta=\frac{V_{out}I_{out}}{V_{in}I_{in}}\]</div>
-      </div>
-      <div class="card note frag">
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Works on AC only · frequency is unchanged · no moving parts</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Losses: flux leakage, copper \(I^{2}R\), eddy currents, hysteresis</span></div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card question">
-        <div class="label"><span class="dot"></span>AC facts</div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Skin effect → hollow and bundled conductors</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Moving coil / tangent galvanometer: DC only</span></div>
-        <div class="bullet"><span class="b">&#9656;</span><span class="t">Hot wire galvanometer: both supplies, reads RMS, non-uniform scale</span></div>
-        <div class="bullet" style="margin-bottom:0"><span class="b">&#9656;</span><span class="t">Quoted AC values are RMS; the peak is \(\sqrt2\) times larger</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<section class="page"><div class="wrap">
+<h2 class="head">Worth <span class="accent">remembering</span></h2>
+<div class="rule"></div>
+<div class="cols">
+<div class="col">
+<div class="card formula">
+<div class="label"><span class="dot"></span>Transformer</div>
+<div class="eq-lg step" style="text-align:center">\[\frac{e_1}{e_2}=\frac{N_1}{N_2}\qquad \frac{I_1}{I_2}=\frac{N_2}{N_1}\;(\eta=100\%)\]</div>
+<div class="eq-lg step" style="text-align:center;margin-top:10px">\[\eta=\frac{V_{out}I_{out}}{V_{in}I_{in}}\]</div>
+</div>
+<div class="card note step">
+<div class="bullet"><span class="b">▸</span><span class="t">Works on AC only · frequency is unchanged · no moving parts</span></div>
+<div class="bullet" style="margin-bottom:0"><span class="b">▸</span><span class="t">Losses: flux leakage, copper \(I^{2}R\), eddy currents, hysteresis</span></div>
+</div>
+</div>
+<div class="col">
+<div class="card question">
+<div class="label"><span class="dot"></span>AC facts</div>
+<div class="bullet"><span class="b">▸</span><span class="t">Skin effect → hollow and bundled conductors</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">Moving coil / tangent galvanometer: DC only</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">Hot wire galvanometer: both supplies, reads RMS, non-uniform scale</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Quoted AC values are RMS; the peak is \(\sqrt2\) times larger</span></div>
+</div>
+</div>
+</div>
+</div></section>
 </div></div>
 <div id="hint-key">← →  ·  press 1 – 7 for text size</div>
 <div id="size-badge"></div>
@@ -1049,30 +1026,48 @@ renderMathInElement(document.body,{
 /* ============================================================
    3 · Slide engine — keyboard only, zero UI
    ============================================================ */
-const slides=[...document.querySelectorAll('.slide')];
+const pages=[...document.querySelectorAll('.page')];
 const stage=document.getElementById('stage');
-let idx=0, fragIdx=0, busy=false;
 
-function frags(i){ return [...slides[i].querySelectorAll('.frag')]; }
 
-function paint(){
-  slides.forEach((s,i)=>{
-    s.classList.toggle('active', i===idx);
-    s.classList.toggle('past', i<idx);
+/* ---- LessonForge glue -------------------------------------------------- */
+/* Pages are stacked and the host (or the fallback controller at the bottom of
+   this file) decides which one is on screen.  Measuring a page that is not on
+   screen returns zeros, so every fit pass runs with all pages laid out.      */
+function lfMeasureAll(fn){
+  var saved = pages.map(function(p){ return p.style.display; });
+  pages.forEach(function(p){ p.style.display='block'; });
+  try { fn(); } finally { pages.forEach(function(p,i){ p.style.display=saved[i]; }); }
+}
+function lfInit(){
+  pages.forEach(function(p,i){ p.style.display = i===0 ? '' : 'none'; });
+  [].slice.call(document.querySelectorAll('.step')).forEach(function(s){
+    s.style.opacity='0'; s.style.transform='translateY(14px)';
   });
-  frags(idx).forEach((f,i)=> f.classList.toggle('on', i<fragIdx));
-  const on3d = slides[idx].dataset['3d']==='skin';
-  on3d ? startAnim() : stopAnim();
 }
-
-function next(){
-  const f=frags(idx);
-  if(fragIdx<f.length){ fragIdx++; paint(); return; }
-  if(idx<slides.length-1){ idx++; fragIdx=0; paint(); }
+/* .wrap scrolls rather than spilling past the page, so a block that the deck's
+   own four fit passes left slightly too tall gets squeezed the rest of the way */
+function lfSqueeze(){
+  lfMeasureAll(function(){
+    pages.forEach(function(p){
+      var w = p.querySelector('.wrap'); if(!w) return;
+      var box = p.querySelector('.cols, .vcenter'); if(!box) return;
+      var z = parseFloat(box.style.zoom) || 1;
+      for (var pass=0; pass<10 && w.scrollHeight - w.clientHeight > 1; pass++){
+        z = Math.max(0.5, z * 0.985);
+        box.style.zoom = z.toFixed(4);
+      }
+    });
+  });
 }
-function prev(){
-  if(fragIdx>0){ fragIdx--; paint(); return; }
-  if(idx>0){ idx--; fragIdx=frags(idx).length; paint(); }
+function lfRefit(){
+  try { if (typeof fitEq === 'function') fitEq(); } catch(e){}
+  fitContent(); lfSqueeze(); fit();
+}
+function lfSchedule(){
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ lfRefit(); });
+  window.addEventListener('load', function(){ lfRefit(); setTimeout(lfRefit,400); });
+  setTimeout(lfRefit,300); setTimeout(lfRefit,1200);
 }
 
 /* text size = design canvas width; a narrower canvas makes every glyph
@@ -1088,13 +1083,15 @@ function applySize(){
   document.body.setAttribute('data-lvl', level);
   stage.style.width=W+'px'; stage.style.height=H+'px';
   fitContent();
+  lfSqueeze();
   fit();
 }
 
 /* content hugs the top of every slide; if a slide's block is taller than the
    space left under its heading, shrink just that block so nothing is clipped */
 function fitContent(){
-  slides.forEach(sl=>{
+  lfMeasureAll(()=>{
+  pages.forEach(sl=>{
     const box = sl.querySelector('.cols, .vcenter');
     if(!box) return;
     box.style.zoom = 1;
@@ -1105,6 +1102,7 @@ function fitContent(){
       z = Math.max(0.6, z * (avail/need) * 0.995);
       box.style.zoom = z.toFixed(4);
     }
+  });
   });
 }
 function showBadge(){
@@ -1121,16 +1119,12 @@ function fit(){
   stage.style.transform=`translate(-50%,-50%) scale(${s})`;
   resize3D();
 }
-window.addEventListener('resize',()=>{ fitContent(); fit(); });
+window.addEventListener('resize',()=>{ lfRefit(); });
 
 let hintTimer=setTimeout(()=>document.getElementById('hint-key').classList.add('gone'),4200);
 document.addEventListener('keydown',e=>{
   const k=e.key;
-  if(k==='ArrowRight'||k==='PageDown'||k===' '){ next(); e.preventDefault(); }
-  else if(k==='ArrowLeft'||k==='PageUp'){ prev(); e.preventDefault(); }
-  else if(k==='Home'){ idx=0;fragIdx=0;paint(); }
-  else if(k==='End'){ idx=slides.length-1;fragIdx=frags(idx).length;paint(); }
-  else if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
+  if(k>='1'&&k<='7'){ level=+k; store.set(level); applySize(); showBadge(); }
   else if(k==='+'||k==='='){ if(level<7){level++;store.set(level);applySize();showBadge();} }
   else if(k==='-'||k==='_'){ if(level>1){level--;store.set(level);applySize();showBadge();} }
   else return;
@@ -1143,7 +1137,7 @@ function wake(){ document.body.classList.remove('idle'); clearTimeout(cur);
   cur=setTimeout(()=>document.body.classList.add('idle'),2500); }
 document.addEventListener('mousemove',wake); wake();
 
-applySize(); paint(); showBadge();
+lfInit(); applySize(); showBadge(); lfSchedule();
 
 /* ============================================================
    4 · Phasor animation — Three.js, with a 2D canvas fallback
@@ -1283,6 +1277,47 @@ function startAnim(){
   raf=requestAnimationFrame(loop);
 }
 function stopAnim(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
+
+/* the 3-D scene follows whichever page is on screen, whoever is switching them */
+(function(){
+  var host3d = document.querySelector('.page[data-3d]');
+  if(!host3d) return;
+  var on = null;
+  setInterval(function(){
+    var vis = host3d.offsetParent !== null && getComputedStyle(host3d).display !== 'none';
+    if(vis !== on){ on = vis; vis ? startAnim() : stopAnim(); }
+  }, 300);
+})();
+</script>
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
 </script>
 </body>
 </html>
