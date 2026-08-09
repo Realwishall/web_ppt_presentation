@@ -1,0 +1,3987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LessonForge — Presenter Panel</title>
+<style>
+  :root{
+    --bg:#0b0f19;
+    --surface:#0f172a;
+    --surface-80:rgba(15,23,42,.82);
+    --border:#1e293b;
+    --border-soft:rgba(30,41,59,.9);
+    --text:#f1f5f9;
+    --muted:#94a3b8;
+    --icon:#cbd5e1;
+    --green:#22c55e;
+    --emerald:#10b981;
+    --pencil:#f97316;
+    --violet:#7c3aed;
+    --indigo:#4f46e5;
+    --danger:#ef4444;
+    --sw-navy:#1e293b; --sw-red:#ef4444; --sw-blue:#3b82f6;
+    --sw-green:#22c55e; --sw-orange:#f97316; --sw-white:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    height:100vh;width:100vw;overflow:hidden;position:relative;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(124,58,237,.08), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--violet);outline-offset:2px;border-radius:12px}
+  svg{display:block}
+
+  /* ── TOP CHROME ─────────────────────────────── */
+  .esc-toast{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    background:#111827;border:1px solid var(--border);border-radius:12px;
+    padding:9px 16px;display:flex;align-items:center;gap:8px;
+    font-size:13px;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.5);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .esc-toast.hide{opacity:0;transform:translate(-50%,-10px);pointer-events:none}
+  .keycap{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    border:1px solid #374151;border-bottom-width:2px;border-radius:6px;
+    padding:2px 7px;background:#1f2937;
+  }
+
+  .action-toast{
+    position:absolute;bottom:92px;left:50%;transform:translate(-50%,8px);
+    background:#111827;border:1px solid var(--border);border-radius:10px;
+    padding:8px 14px;font-size:13px;color:var(--icon);z-index:50;
+    opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .action-toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ── STAGE — board fills ALL remaining space ── */
+  .stage{
+    position:absolute;
+    top:14px;              /* badges removed — reclaim the top */
+    left:44px; right:44px; /* just clears the slim rails */
+    bottom:76px;           /* above the control strip */
+  }
+  .board{
+    position:relative;width:100%;height:100%;   /* no aspect cap — take it all */
+    border-radius:16px;overflow:hidden;
+    /* Only the gradient lives in CSS now. The paper pattern (dots / graph /
+       axes) is painted per page on #paper by one painter that the board, the
+       page thumbnails and the PDF export all share, so a page that is graph
+       paper on the board is graph paper in the export. */
+    background:linear-gradient(180deg,#0d1424,#0b101d);
+    background-size:100% 100%;background-repeat:no-repeat;   /* see paperImage() */
+    border:1px solid var(--border-soft);
+    box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;
+  }
+  .board.visible{opacity:1;pointer-events:auto}
+
+  #snapBox{position:absolute;z-index:1;overflow:hidden;display:none;pointer-events:none}
+  #snapDeck{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none;display:none}
+  #snapImg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none}
+  #deckLayer{position:absolute;inset:0;z-index:0;pointer-events:none}
+  #deckLayer iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;
+    display:none;background:transparent;pointer-events:none;
+  }
+  /* ONE ink surface, and the flicker fix is how it is repainted, not how many
+     of them there are. Every repaint composes into an OFF-SCREEN buffer and
+     lands here as a single globalCompositeOperation:"copy" drawImage — so the
+     board is never presented in the moment between "cleared" and "repainted".
+     That gap, on a canvas composited over a live deck iframe, is the
+     full-board flash. (A second, live-stroke canvas was tried here and made
+     things worse: an extra full-board compositing layer costs more every frame
+     than the atomic blit costs once, and it shows up first on exactly the weak
+     GPUs a classroom projector is plugged into.) */
+  #ink{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2}
+
+  /* ── live media ────────────────────────────────────────────────────────
+     A deck iframe is sandboxed with allow-scripts only (opaque origin) and
+     the whole deck layer is pointer-events:none — so a video embedded INSIDE
+     a deck can never load a player, and a synthetic lf-click can never press
+     Play. The presenter therefore renders the player itself, in this
+     document, ABOVE the ink canvas, positioned over the placeholder the deck
+     reports. Only the player box takes pointer events; the rest of the board
+     stays inkable, and "Write over video" hands the box back to the pen. */
+  #mediaLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
+  .media-embed{
+    position:absolute;pointer-events:auto;overflow:hidden;border-radius:10px;background:#000;
+    border:1px solid rgba(148,163,184,.28);box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+  .media-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .media-embed.ink-through{pointer-events:none}
+  .media-embed.ink-through:after{
+    content:"";position:absolute;inset:0;border:2px dashed rgba(124,58,237,.8);border-radius:10px;
+  }
+  .media-ink-toggle{
+    position:absolute;pointer-events:auto;display:inline-flex;align-items:center;gap:6px;
+    padding:6px 11px;border-radius:999px;cursor:pointer;white-space:nowrap;
+    border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.94);color:#e2e8f0;
+    font:600 12px/1 system-ui,'Segoe UI',sans-serif;
+  }
+  .media-ink-toggle:hover{background:rgba(30,41,59,.96)}
+  .media-ink-toggle.on{border-color:var(--violet);color:#c4b5fd}
+  .board.tool-pen #ink{cursor:crosshair}
+  /* the erasers and the laser draw their own cursor on the live layer */
+  .board.tool-eraser #ink,.board.tool-eraser-obj #ink,.board.tool-laser #ink{cursor:none}
+  .board.tool-eraser #ink{cursor:pointer}
+
+  /* snapshot (duplicated page) controls */
+  .snap-outline{
+    position:absolute;z-index:3;pointer-events:none;display:none;
+    border:1.5px dashed rgba(124,58,237,.75);border-radius:8px;
+  }
+  .snap-grip{
+    position:absolute;z-index:4;width:28px;height:28px;border-radius:9px;
+    display:none;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);
+  }
+  .snap-grip svg{width:14px;height:14px}
+  #snapMove,.snap-move-alt{background:var(--violet);color:#fff;cursor:grab}
+  #snapMove:active,.snap-move-alt:active{cursor:grabbing}
+  #snapResize{background:#0f172a;border:1px solid var(--violet);color:#c4b5fd;cursor:nwse-resize}
+  #snapClose{background:#0f172a;border:1px solid var(--danger);color:var(--danger);cursor:pointer}
+
+  .empty{
+    position:absolute;inset:14px 44px 76px;display:flex;flex-direction:column;gap:18px;
+    align-items:center;justify-content:center;text-align:center;color:var(--muted);
+    transition:opacity .3s ease;
+  }
+  .empty.hidden{opacity:0;pointer-events:none}
+  .empty p{font-size:16px;max-width:440px;line-height:1.6}
+  .empty .btn-add-first{
+    display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#fff;
+    background:linear-gradient(135deg,var(--violet),var(--indigo));
+    border-radius:12px;padding:11px 20px;
+    box-shadow:0 6px 24px rgba(124,58,237,.35);
+    transition:filter .15s ease,transform .1s ease;
+  }
+  .empty .btn-add-first:hover{filter:brightness(1.1)}
+  .empty .btn-add-first:active{transform:translateY(1px)}
+  .empty .btn-add-first svg{width:16px;height:16px}
+
+  /* ── VERTICAL TOOL RAILS (slim — max board width) ── */
+  .rail{
+    position:absolute;bottom:76px;   /* bottom corners, clear of the control strip */
+    width:32px;display:flex;flex-direction:column;align-items:center;gap:5px;
+    z-index:30;padding:8px 0;max-height:calc(100vh - 166px);overflow-y:auto;
+    scrollbar-width:none;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:0 12px 34px rgba(0,0,0,.4);
+  }
+  .rail-left{left:6px}
+  .rail-right{right:6px}
+  .divider{width:16px;height:1px;background:var(--border);flex:none;margin:1px 0}
+
+  .tool-btn{
+    width:26px;height:26px;border-radius:8px;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--icon);transition:background .15s ease,color .15s ease,transform .1s ease;
+  }
+  .tool-btn:hover{background:rgba(148,163,184,.14)}
+  .tool-btn:active{transform:scale(.94)}
+  .tool-btn.is-active{background:var(--emerald);color:var(--pencil);box-shadow:0 4px 14px rgba(16,185,129,.4)}
+  .tool-btn.is-active:hover{background:#0ea371}
+  .tool-btn.eraser-obj{color:#fb923c}
+  .tool-btn.eraser-obj.is-active{color:#7c2d12}
+  .tool-btn.laser{color:#f87171}
+  .tool-btn.laser.is-active{background:#ef4444;color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.45)}
+  /* animation toggle: plain while motion is on, lit amber while it is off —
+     "off" is the state worth spotting from the back of the room */
+  .tool-btn.anim-off{color:#fbbf24;background:rgba(251,191,36,.12)}
+  .tool-btn.anim-off:hover{background:rgba(251,191,36,.22)}
+  .tool-btn.danger{color:var(--danger)}
+  .tool-btn.danger:hover{background:rgba(239,68,68,.16)}
+  .tool-btn svg{width:14px;height:14px}
+
+  .palette{display:grid;grid-template-columns:18px;gap:5px;justify-items:center}
+  .swatch{
+    width:16px;height:16px;border-radius:50%;border:1px solid rgba(148,163,184,.35);
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .swatch:hover{transform:scale(1.15)}
+  .swatch.is-active{box-shadow:0 0 0 2px var(--surface),0 0 0 4px #e2e8f0}
+
+  .widths{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .width-btn{
+    width:24px;height:22px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease;
+  }
+  .width-btn:hover{background:rgba(148,163,184,.14)}
+  .width-btn.is-active{background:#1f2937;box-shadow:0 0 0 2px rgba(203,213,225,.55)}
+  .width-dot{border-radius:50%;background:#fff}
+
+  /* ── BOTTOM CONTROL STRIP ───────────────────── */
+  .bottom-strip{
+    position:absolute;left:16px;right:16px;bottom:14px;
+    display:flex;align-items:center;gap:12px;z-index:30;
+  }
+  .nav-text{
+    display:flex;align-items:center;gap:4px;color:var(--muted);
+    font-size:14px;padding:9px 12px;border-radius:10px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .nav-text:hover:not(:disabled){color:var(--text);background:rgba(148,163,184,.1)}
+  .nav-text:disabled{opacity:.35;cursor:not-allowed}
+  .nav-text svg{width:16px;height:16px}
+
+  .nav-mini{
+    width:30px;height:30px;border-radius:9px;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;flex:none;
+    border:1px solid var(--border);background:var(--surface-80);
+    transition:color .15s ease,background .15s ease;
+  }
+  .nav-mini:hover:not(:disabled){color:var(--text);background:#1e293b}
+  .nav-mini:disabled{opacity:.35;cursor:not-allowed}
+  .nav-mini svg{width:14px;height:14px}
+
+  .spacer{flex:1}
+
+  .center-pill{
+    display:flex;align-items:center;gap:3px;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:16px;padding:6px 8px;backdrop-filter:blur(10px);
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .pill-btn{
+    width:38px;height:38px;border-radius:12px;color:var(--icon);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease,transform .1s ease;
+  }
+  .pill-btn:hover:not(:disabled){background:rgba(148,163,184,.14)}
+  .pill-btn:active:not(:disabled){transform:scale(.92)}
+  .pill-btn:disabled{opacity:.35;cursor:not-allowed}
+  .pill-btn svg{width:18px;height:18px}
+
+  .btn-next{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--violet),var(--indigo));
+    color:#fff;font-weight:600;font-size:14px;
+    border-radius:12px;padding:10px 18px;
+    box-shadow:0 6px 22px rgba(124,58,237,.4);
+    transition:filter .15s ease,transform .1s ease;
+  }
+  .btn-next:hover{filter:brightness(1.12)}
+  .btn-next:active{transform:translateY(1px)}
+  .btn-export{
+    display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:12px;padding:10px 14px;transition:background .15s ease;
+  }
+  .btn-export:hover{background:#1e293b}
+  .btn-export svg{width:16px;height:16px;color:#38bdf8}
+
+  .page-counter{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:10px;padding:9px 12px;letter-spacing:.05em;
+    cursor:pointer;transition:background .15s ease;
+  }
+  .page-counter:hover{background:#1e293b}
+
+  /* ── PAGE OVERVIEW SHEET ────────────────────── */
+  .page-sheet{
+    position:absolute;bottom:70px;left:50%;transform:translate(-50%,12px);
+    max-width:min(86vw,1100px);z-index:45;
+    background:var(--surface-80);border:1px solid var(--border);
+    border-radius:18px;padding:12px;backdrop-filter:blur(12px);
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    opacity:0;pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+  }
+  .page-sheet.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+  .page-sheet-inner{
+    display:flex;gap:10px;overflow-x:auto;padding:2px;
+    scrollbar-width:thin;
+  }
+  .page-tile{
+    position:relative;flex:none;border-radius:12px;overflow:hidden;
+    border:2px solid var(--border);padding:0;line-height:0;background:#0d1424;
+    transition:border-color .15s ease,transform .12s ease;
+  }
+  .page-tile:hover{transform:translateY(-3px);border-color:#475569}
+  .page-tile.cur{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,58,237,.35)}
+  .page-tile img{display:block;width:150px;height:auto;position:relative;z-index:1}
+  .pt-snap{position:absolute;overflow:hidden;z-index:0}
+  .pt-snap iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none}
+  .pt-num{
+    position:absolute;top:6px;left:6px;line-height:1;
+    font-size:11px;font-weight:700;color:#fff;
+    background:rgba(2,6,16,.7);border-radius:6px;padding:3px 7px;
+  }
+  .pt-label{
+    position:absolute;bottom:6px;right:6px;line-height:1;
+    font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    background:rgba(2,6,16,.7);border-radius:6px;padding:3px 6px;
+  }
+  .page-tile.cur .pt-label{color:#c4b5fd}
+  .page-dots{display:none;gap:5px}
+  .page-dots span{
+    width:6px;height:6px;border-radius:50%;background:#334155;
+    transition:background .2s ease,transform .2s ease;
+  }
+  .page-dots span.cur{background:var(--violet);transform:scale(1.35)}
+
+  /* ── CONFIRM DIALOG ─────────────────────────── */
+  .overlay{
+    position:absolute;inset:0;z-index:60;background:rgba(4,7,14,.65);
+    backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  .dialog{
+    background:#111827;border:1px solid var(--border);border-radius:16px;
+    padding:24px 26px;width:340px;box-shadow:0 24px 70px rgba(0,0,0,.6);
+    transform:translateY(8px);transition:transform .2s ease;
+  }
+  .overlay.show .dialog{transform:translateY(0)}
+  .dialog h2{font-size:16px;margin-bottom:8px}
+  .dialog p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+  .dialog-actions{display:flex;justify-content:flex-end;gap:10px}
+  .btn-ghost{padding:8px 14px;border-radius:10px;font-size:13px;color:var(--icon)}
+  .btn-ghost:hover{background:rgba(148,163,184,.12)}
+  .btn-danger{
+    padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;
+    color:#fff;background:var(--danger);
+  }
+  .btn-danger:hover{filter:brightness(1.1)}
+  .btn-primary{
+    padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;
+    color:#fff;background:linear-gradient(135deg,var(--violet),var(--indigo));
+  }
+  .btn-primary:hover{filter:brightness(1.1)}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .dialog.wide{width:380px}
+
+  /* ── EXPORT VARIABLES DIALOG ────────────────────
+     Filled in every time Export is pressed; its values are substituted into
+     the batch's uploaded Starting / Ending pages. Lives inside the panel (not
+     the React host) so it still works when the board is full screen. */
+  .dialog.form{width:min(560px,92vw);max-height:88vh;overflow:auto;padding:22px}
+  .dialog.form p{margin-bottom:14px}
+  .field{margin-bottom:14px}
+  .field>label{
+    display:block;font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+  }
+  .field input[type=text],.field input[type=number],.field select,.field textarea{
+    width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:var(--text);
+    background:rgba(2,6,16,.6);border:1px solid var(--border);border-radius:10px;
+    padding:9px 11px;outline:none;
+  }
+  .field textarea{resize:vertical;min-height:56px;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{
+    border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,58,237,.22);
+  }
+  .field .hint{display:block;margin-top:5px;font-size:11px;color:var(--muted)}
+  .field-row{display:flex;gap:12px}
+  .field-row>.field{flex:1;min-width:0}
+  /* Lecture 1–10 is the everyday range: one tap. 11–40 stays reachable. */
+  .lec-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:7px}
+  .lec-chip{
+    padding:8px 0;border-radius:9px;font-size:13px;font-weight:700;color:var(--icon);
+    background:rgba(148,163,184,.09);border:1px solid transparent;transition:all .12s ease;
+  }
+  .lec-chip:hover{background:rgba(148,163,184,.18);color:var(--text)}
+  .lec-chip.on{
+    background:linear-gradient(135deg,var(--violet),var(--indigo));color:#fff;
+    box-shadow:0 4px 14px rgba(124,58,237,.4);
+  }
+  .topic-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .topic-chip{
+    padding:6px 11px;border-radius:999px;font-size:12.5px;color:var(--icon);
+    background:rgba(148,163,184,.09);border:1px solid var(--border);transition:all .12s ease;
+    text-align:left;
+  }
+  .topic-chip:hover{border-color:#475569;color:var(--text)}
+  .topic-chip.on{background:rgba(124,58,237,.22);border-color:var(--violet);color:#fff}
+  .topic-chip.on::before{content:"✓ ";font-weight:700}
+  .cfg-note{
+    font-size:11.5px;color:var(--muted);background:rgba(148,163,184,.07);
+    border:1px solid var(--border);border-radius:9px;padding:8px 10px;margin-bottom:14px;
+  }
+  .cfg-note b{color:var(--text)}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top chrome -->
+  <div class="esc-toast" id="escToast">
+    To exit full screen, press and hold <span class="keycap">Esc</span>
+  </div>
+  <div class="action-toast" id="actionToast"></div>
+
+  <!-- Stage: board takes all remaining space -->
+  <main class="stage">
+    <div class="board tool-pen" id="board">
+      <div id="deckLayer"></div>
+      <div id="snapBox">
+        <iframe id="snapDeck" sandbox="allow-scripts" scrolling="no" title="Frozen slide"></iframe>
+        <img id="snapImg" alt="" draggable="false">
+      </div>
+      <canvas id="ink"></canvas>
+      <div id="mediaLayer"></div>
+      <div class="snap-outline" id="snapOutline"></div>
+      <button class="snap-grip" id="snapMove" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip snap-move-alt" id="snapMoveL" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip snap-move-alt" id="snapMoveR" title="Drag to move the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>
+      </button>
+      <button class="snap-grip" id="snapResize" title="Drag to resize the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v6h-6"/><path d="M21 21 12 12"/></svg>
+      </button>
+      <button class="snap-grip" id="snapClose" title="Remove the frozen page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+  </main>
+  <div class="empty" id="emptyState">
+    <p>No slides in this session.<br>Add a blank page to start writing, or open the Master&nbsp;Library and pick a folder.</p>
+    <div style="display:flex;gap:12px">
+      <button class="btn-add-first" id="addFirstPage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        Add blank page
+      </button>
+      <button class="btn-add-first" id="loadDeckEmpty" style="background:var(--surface);border:1px solid var(--border);box-shadow:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#f97316"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#22c55e"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#ef4444"/>
+        </svg>
+        Open Library
+      </button>
+    </div>
+  </div>
+  <input type="file" id="deckInput" accept=".html,.htm" multiple style="display:none">
+
+  <!-- Mirrored rails (filled by JS) -->
+  <nav class="rail rail-left" data-rail aria-label="Ink tools"></nav>
+  <nav class="rail rail-right" data-rail aria-label="Ink tools (mirror)"></nav>
+
+  <!-- Bottom control strip -->
+  <footer class="bottom-strip">
+    <button class="nav-text" id="prevBtn" title="Previous page (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Previous
+    </button>
+    <button class="nav-mini" id="nextBtnMini" title="Next (→)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+
+    <div class="spacer"></div>
+
+    <div class="center-pill">
+      <button class="pill-btn" id="exitBtn" data-action="exit" title="Back to the main screen — an unexported session is saved first">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m8 17-5-5 5-5"/><path d="M3 12h12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="library" title="Master Library — pick a folder to teach">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#f97316"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#22c55e"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#ef4444"/>
+        </svg>
+      </button>
+      <button class="pill-btn" data-action="undo" title="Undo (Ctrl+Z)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button class="pill-btn" data-action="first" title="Jump to first page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 18-6-6 6-6"/><path d="M7 6v12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="clear" title="Clear ink on this page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+      <button class="pill-btn" data-action="delete-after" title="Cut — delete all pages after this one">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="M14.47 14.48 20 20"/><path d="M8.12 8.12 12 12"/></svg>
+      </button>
+      <button class="pill-btn" data-action="last" title="Jump to last page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 18 6-6-6-6"/><path d="M17 6v12"/></svg>
+      </button>
+    </div>
+
+    <button class="btn-next" id="nextStep" title="Next step (→)">
+      Next Step
+    </button>
+
+    <button class="btn-export" data-action="export" title="Export all pages (slides + ink) as a PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+      Export
+    </button>
+
+    <button class="page-counter" id="pageCounterBtn" title="Show all pages">
+      <span id="pageLabel">0 / 0</span>
+      <span class="page-dots" id="pageDots"></span>
+    </button>
+
+    <div class="spacer"></div>
+
+    <button class="nav-mini" id="prevBtnMini" title="Previous (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button class="nav-text" id="nextBtn" title="Next page (→)">
+      Next
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+  </footer>
+
+  <!-- Page overview sheet (opened by the page counter) -->
+  <div class="page-sheet" id="pageSheet">
+    <div class="page-sheet-inner" id="pageSheetInner"></div>
+  </div>
+
+  <!-- Unfinished board found in local storage after a crash / accidental close -->
+  <div class="overlay" id="recoverOverlay">
+    <div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="recoverTitle">
+      <h2 id="recoverTitle">Pick up where you left off?</h2>
+      <p id="recoverMsg">An unfinished board was left on this computer.</p>
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="discardRecover">Start fresh</button>
+        <button class="btn-primary" id="doRecover">Restore the board</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- End-session confirm -->
+  <div class="overlay" id="closeOverlay">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="closeTitle">
+      <h2 id="closeTitle">End this session?</h2>
+      <p>All pages and ink will be removed. This can't be undone.</p>
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelClose">Keep teaching</button>
+        <button class="btn-danger" id="confirmClose">End session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export range confirm (when not on the final page) -->
+  <div class="overlay" id="exportOverlay">
+    <div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+      <h2 id="exportTitle">Include remaining pages?</h2>
+      <p id="exportMsg">Do you want to include the remaining pages in the export?</p>
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelExport">Cancel</button>
+        <button class="btn-ghost" id="exportCurrentOnly">No — up to here</button>
+        <button class="btn-primary" id="exportAllPages">Yes — include all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export variables — filled into the batch's Starting / Ending pages -->
+  <div class="overlay" id="varsOverlay">
+    <div class="dialog form" role="dialog" aria-modal="true" aria-labelledby="varsTitle">
+      <h2 id="varsTitle">Details for this export</h2>
+      <p>These values are written into your Starting and Ending pages before the PDF is built.</p>
+      <div class="cfg-note" id="varsCfgNote"></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="vBatchCode">Batch code</label>
+          <input type="text" id="vBatchCode" autocomplete="off" placeholder="e.g. JEE-2027-A">
+          <span class="hint" id="vBatchHint">Pre-filled from your last export — edit if it changed.</span>
+        </div>
+        <div class="field" style="flex:0 0 46%">
+          <label for="vChapter">Pick a chapter</label>
+          <select id="vChapter"></select>
+          <span class="hint">From this batch's chapter &amp; topic map.</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="flex:0 0 30%">
+          <label for="vChapterNo">Chapter no.</label>
+          <input type="number" id="vChapterNo" min="1" max="99" step="1" placeholder="4">
+        </div>
+        <div class="field">
+          <label for="vChapterName">Chapter name</label>
+          <input type="text" id="vChapterName" autocomplete="off" placeholder="e.g. Laws of Motion">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="vLecture">Lecture number <span style="text-transform:none;font-weight:400">(1 – 40)</span></label>
+        <div class="lec-grid" id="vLecGrid"></div>
+        <input type="number" id="vLecture" min="1" max="40" step="1" placeholder="or type 11 – 40">
+        <span class="hint" id="vLecHint"></span>
+      </div>
+
+      <div class="field">
+        <label for="vTopics">Topic list</label>
+        <div class="topic-chips" id="vTopicChips"></div>
+        <textarea id="vTopics" rows="2" placeholder="Comma-separate topics, or tap them above"></textarea>
+        <span class="hint">Tap a chapter's topics to add them; anything typed here is used as-is.</span>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-ghost" id="cancelVars">Cancel</button>
+        <button class="btn-primary" id="confirmVars">Build PDF</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ═══ STATE ═══════════════════════════════════
+     Vector model: every page stores its strokes, so pages are
+     fully independent — adding a page can never leak ink.       */
+  const state = {
+    tool:"pen", color:"white", width:1,
+    anim:true,       // false → every page opens with ALL of its steps showing
+    pages:[],        // [{ strokes, snap, undo, deckId, deckIndex, stepCount, stepIndex }]
+    current:-1,
+    decks:[],        // [{ id, text, count, name, folderId, classId, chapterId, tag }]
+    sessionId:null,  // active teaching-session id (host-assigned)
+    batchId:null,
+    userKey:null,    // which signed-in teacher this board belongs to (host-assigned)
+    /* Export settings pushed by the host (lf-export-config): the global
+       chapter/topic map, the uploaded Starting/Ending pages, the global logo,
+       and this batch's memory of the last export. Null until the host answers
+       — export still works without it, it just skips the covers and badge. */
+    exportCfg:null
+  };
+  // the teacher's choice outlives the session — a room with a projector that
+  // smears motion should not have to be told again next lesson
+  try{ state.anim = localStorage.getItem("lf-anim") !== "0"; }catch(err){}
+  const deckFrames = {};   // deckId → iframe element
+  // stroke = { mode:"draw"|"erase", color, width, pts:[{x,y}] }
+
+  const COLOR_HEX = {
+    navy:"#1e293b", red:"#ef4444", blue:"#3b82f6",
+    green:"#22c55e", orange:"#f97316", white:"#ffffff"
+  };
+  const WIDTH_PX  = [2, 4, 7, 12];      // pen, at the reference board width
+  const DOT_PX    = [4, 7, 11, 15];     // the rail's width-picker dots
+  const ERASER_PX = [16, 26, 44, 72];   // area eraser — the same four buttons
+  const STROKE_ERASER_HIT = 12;
+
+  /* ═══ NORMALISED INK ══════════════════════════
+     Stroke points are stored as FRACTIONS of the board box (0…1), never as
+     board pixels. Pixels were a slow leak: the numbers were captured against
+     whatever size the board happened to be, then repainted, exported and
+     restored against a different one — so ink drifted off the slide the moment
+     the teacher pressed F for full screen, and a session restored on another
+     screen came back misaligned. A fraction means the same place on the slide
+     on every surface, which is what the teacher actually drew.
+
+     A stroke therefore has no pixel width of its own either; px is derived
+     from whatever it is being painted on. REF_W is the board width the width
+     table was chosen against: on a 1280-wide board nothing changes, on a 1920
+     board the pen thickens by the same factor the slide does, and a 150px
+     thumbnail finally gets hairlines instead of slabs. */
+  const REF_W = 1280;
+  const nx = (px, W) => W ? px / W : 0;
+  const scaleFor = W => (W || REF_W) / REF_W;
+
+  /* ═══ DOM ═════════════════════════════════════ */
+  const board       = document.getElementById("board");
+  const canvas      = document.getElementById("ink");
+  // desynchronized: lower ink latency on supported browsers (classroom pens)
+  const ctx         = canvas.getContext("2d", { desynchronized:true, alpha:true })
+                      || canvas.getContext("2d");
+  /* The off-screen buffer every repaint is composed in. Not in the DOM, so it
+     costs nothing to composite — it exists only to make the visible canvas
+     change in one operation instead of two. */
+  const buf         = document.createElement("canvas");
+  const bctx        = buf.getContext("2d", { alpha:true });
+  const emptyState  = document.getElementById("emptyState");
+  const pageLabel   = document.getElementById("pageLabel");
+  const pageDots    = document.getElementById("pageDots");
+  const prevBtn     = document.getElementById("prevBtn");
+  const nextBtn     = document.getElementById("nextBtn");
+  const rails       = document.querySelectorAll("[data-rail]");
+  const actionToast = document.getElementById("actionToast");
+  const closeOverlay= document.getElementById("closeOverlay");
+  const exportOverlay= document.getElementById("exportOverlay");
+  const varsOverlay = document.getElementById("varsOverlay");
+  const snapImg     = document.getElementById("snapImg");
+  const snapBox     = document.getElementById("snapBox");
+  const snapDeck    = document.getElementById("snapDeck");
+  const deckLayer   = document.getElementById("deckLayer");
+  const deckInput   = document.getElementById("deckInput");
+  const snapOutline = document.getElementById("snapOutline");
+  const snapMove    = document.getElementById("snapMove");
+  const snapMoveL   = document.getElementById("snapMoveL");
+  const snapMoveR   = document.getElementById("snapMoveR");
+  const snapResize  = document.getElementById("snapResize");
+  const snapClose   = document.getElementById("snapClose");
+
+  /* ═══ HOST BRIDGE ═════════════════════════════
+     The panel normally runs inside the app (PresenterView) in an iframe and
+     has no chrome of its own, so it asks the host for the things the host
+     owns: the Master Library picker, the way back out, and — see FULL SCREEN
+     below — releasing full screen. Opened on its own (no host) every one of
+     those falls back to something that works standalone. */
+  const hosted = window.parent !== window;
+  const tellHost = msg => { if(hosted) parent.postMessage(msg, "*"); };
+
+  /* ═══ FULL SCREEN ═════════════════════════════
+     Full screen belongs to the HOST's container, not to this document. Only
+     the full-screen element and its descendants are rendered: if this iframe
+     is the full-screen element then everything the host draws — the Library
+     picker above all — simply does not paint, and its button looks dead. The
+     host's container holds both the board and the picker, so putting it in
+     charge is what makes the Library work in either mode.
+
+     Leaving was the other half of the same knot. A nested document's
+     `fullscreenElement` is null when the host owns the request, so the toggle
+     read "not full screen" and tried to ENTER again. Hence: the host mirrors
+     its state down (lf-fs-state) and takes lf-fullscreen{on} for both
+     directions; going it alone here is only the fallback for a host that
+     never acks, or for the panel opened on its own. */
+  let hostFS = false, fsAck = false;
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const isFS = () => !!fsEl() || hostFS;
+
+  function askHostExitFS(){
+    if(hosted) tellHost({ type:"lf-fullscreen", on:false });
+    else toast("Press Esc to leave full screen");
+  }
+  function exitFS(){
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if(!fsEl() || !exit) return askHostExitFS();
+    try{ Promise.resolve(exit.call(document)).catch(askHostExitFS); }
+    catch(err){ askHostExitFS(); }
+  }
+  function enterFSLocal(){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    const blocked = () => toast("Full screen was blocked by the browser");
+    if(!req) return blocked();
+    try{ Promise.resolve(req.call(el)).catch(blocked); }
+    catch(err){ blocked(); }
+  }
+  function enterFS(){
+    if(!hosted) return enterFSLocal();
+    fsAck = false;
+    tellHost({ type:"lf-fullscreen", on:true });
+    // the click's user activation reaches the host too and lasts seconds, so
+    // this late fallback is still allowed to request full screen itself
+    setTimeout(() => { if(!fsAck && !isFS()) enterFSLocal(); }, 400);
+  }
+  function toggleFS(){ isFS() ? exitFS() : enterFS(); }
+
+  /* ═══ ICONS ═══════════════════════════════════ */
+  const S = inner =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  const ICONS = {
+    pencil: S(`<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>`),
+    eraser: S(`<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>`),
+    trash:  S(`<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>`),
+    plus:   S(`<path d="M12 5v14"/><path d="M5 12h14"/>`),
+    copy:   S(`<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>`),
+    frame:  S(`<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>`),
+    unframe:S(`<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>`),
+    close:  S(`<path d="M18 6 6 18"/><path d="m6 6 12 12"/>`),
+    zap:    S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>`),
+    zapOff: S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/><path d="M3 3 21 21"/>`),
+    laser:  S(`<circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/>`),
+    grid:   S(`<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>`)
+  };
+
+  /* ═══ RAILS ═══════════════════════════════════
+     Removed per request: marquee (dotted box) tool + eye button */
+  const TOOLS = [
+    { id:"pen",        icon:"pencil", title:"Pen (P)" },
+    { id:"laser",      icon:"laser",  title:"Laser pointer — point without leaving ink (L)", cls:"laser" },
+    { id:"eraser",     icon:"eraser", title:"Stroke eraser — removes a whole stroke (E)" },
+    { id:"eraser-obj", icon:"eraser", title:"Area eraser — rubs out ink", cls:"eraser-obj" }
+  ];
+  const ACTIONS = [
+    { id:"clear",      icon:"trash", title:"Clear ink on this page" },
+    { id:"add-page",   icon:"plus",  title:"Add blank page (N)" },
+    { id:"paper",      icon:"grid",  title:"Page background — dots / graph / axes / plain (G)" },
+    { id:"duplicate",  icon:"copy",  title:"Duplicate & freeze this page" },
+    { id:"fullscreen", icon:"frame", title:"Enter / exit full screen (F)" },
+    { id:"close",      icon:"close", title:"End session", cls:"danger" }
+  ];
+
+  function railHTML(){
+    // Animation switch, top of both rails: the one control that changes what a
+    // page DOES when it opens, so it sits above the ink tools, not among them.
+    let h = `
+      <button class="tool-btn ${state.anim ? "" : "anim-off"}" data-action="anim"
+              title="${state.anim
+                ? "Animations on — steps reveal one press at a time (A)"
+                : "Animations off — every page opens with its full content (A)"}"
+              aria-pressed="${!state.anim}">
+        ${ICONS[state.anim ? "zap" : "zapOff"]}
+      </button>
+      <div class="divider" role="separator"></div>`;
+
+    h += TOOLS.map(t => `
+      <button class="tool-btn ${t.cls||""} ${state.tool===t.id?"is-active":""}"
+              data-tool="${t.id}" title="${t.title}" aria-pressed="${state.tool===t.id}">
+        ${ICONS[t.icon]}
+      </button>`).join("");
+
+    h += `<div class="divider" role="separator"></div><div class="palette">`;
+    h += Object.keys(COLOR_HEX).map(id => `
+      <button class="swatch ${state.color===id?"is-active":""}" data-color="${id}"
+              title="${id[0].toUpperCase()+id.slice(1)}" style="background:${COLOR_HEX[id]}"
+              aria-pressed="${state.color===id}"></button>`).join("");
+    h += `</div><div class="divider" role="separator"></div><div class="widths">`;
+    h += DOT_PX.map((px,i) => `
+      <button class="width-btn ${state.width===i?"is-active":""}" data-width="${i}"
+              title="Stroke width ${i+1}" aria-pressed="${state.width===i}">
+        <span class="width-dot" style="width:${px}px;height:${px}px"></span>
+      </button>`).join("");
+    h += `</div><div class="divider" role="separator"></div>`;
+    h += ACTIONS.map(a => {
+      let icon = a.icon, cls = a.cls || "";
+      // the two frame icons read almost the same at 20px, so the button also
+      // lights up while full screen is on — otherwise "exit" looks like a no-op
+      if(a.id === "fullscreen" && isFS()){ icon = "unframe"; cls += " is-active"; }
+      return `
+      <button class="tool-btn ${cls}" data-action="${a.id}" title="${a.title}">
+        ${ICONS[icon]}
+      </button>`;
+    }).join("");
+    return h;
+  }
+  /* The rails were rebuilt from a template string on every call — and
+     updateChrome() calls this on EVERY Next press, so each step of a lecture
+     threw away and re-parsed ~20 buttons with inline SVG while a deck was
+     animating beside it. Now: build once, then a key check that returns
+     immediately when nothing visible changed (the case on a step press), and
+     otherwise patch only the attributes that differ. */
+  let railsBuilt = false, railKey = "";
+  function renderRails(){
+    const key = [state.tool, state.color, state.width, state.anim, isFS(), curPaper()].join("|");
+    if(railsBuilt && key === railKey) return;
+    const first = !railsBuilt;
+    railKey = key; railsBuilt = true;
+    if(first){ rails.forEach(r => r.innerHTML = railHTML()); return; }
+
+    const flag = (b, on) => {
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    };
+    rails.forEach(r => {
+      r.querySelectorAll("[data-tool]").forEach(b => flag(b, state.tool === b.dataset.tool));
+      r.querySelectorAll("[data-color]").forEach(b => flag(b, state.color === b.dataset.color));
+      r.querySelectorAll("[data-width]").forEach(b => flag(b, state.width === +b.dataset.width));
+
+      const anim = r.querySelector('[data-action="anim"]');
+      if(anim){
+        anim.classList.toggle("anim-off", !state.anim);
+        anim.setAttribute("aria-pressed", state.anim ? "false" : "true");
+        anim.title = state.anim
+          ? "Animations on — steps reveal one press at a time (A)"
+          : "Animations off — every page opens with its full content (A)";
+        const want = ICONS[state.anim ? "zap" : "zapOff"];
+        if(anim.innerHTML !== want) anim.innerHTML = want;   // only re-parse the SVG on a real flip
+      }
+      const fs = r.querySelector('[data-action="fullscreen"]');
+      if(fs){
+        const on = isFS();
+        fs.classList.toggle("is-active", on);
+        const want = ICONS[on ? "unframe" : "frame"];
+        if(fs.innerHTML !== want) fs.innerHTML = want;
+      }
+      const pp = r.querySelector('[data-action="paper"]');
+      if(pp) pp.title = "Page background — " + (PAPER_LABEL[curPaper()] || "Dot grid") + " (G)";
+    });
+  }
+
+  /* ═══ DECK RE-FIT ═════════════════════════════
+     Tell every loaded deck to re-measure itself. Entering full screen is not
+     one event but a sequence — fullscreenchange fires while innerHeight is
+     still the windowed value, the board animates to its new size, and the
+     compositor settles a frame or two later. A single notification would be
+     read at the wrong moment, which is exactly why the first full screen
+     used to come out wrong and the second one right. So: a short burst. */
+  function refitDecks(){
+    Object.keys(deckFrames).forEach((id) => {
+      const f = deckFrames[id];
+      try{ f && f.contentWindow && f.contentWindow.postMessage({ type:"lf-refit" }, "*"); }
+      catch(err){ /* a frame mid-load simply catches the next tick */ }
+    });
+  }
+  let refitTimers = [];
+  function refitDecksBurst(){
+    refitTimers.forEach(clearTimeout);
+    refitTimers = [0, 60, 180, 400, 800, 1400].map(d => setTimeout(refitDecks, d));
+  }
+
+  /* ═══ RENDERING ═══════════════════════════════ */
+  // The board's own CSS size, refreshed by sizeCanvas. Every fraction→pixel
+  // conversion on screen goes through these two, so nothing else has to ask
+  // the layout engine how big the board is.
+  let boardW = 0, boardH = 0;
+  let inkRect = { left:0, top:0 };   // cached — never read layout on pointermove
+
+  function sizeCanvas(){
+    const r = board.getBoundingClientRect();
+    if(r.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    boardW = r.width; boardH = r.height;
+    inkRect = { left:r.left, top:r.top };
+    const pw = Math.round(r.width * dpr), ph = Math.round(r.height * dpr);
+    // Cheap to call from anywhere: resizing a canvas wipes it, so a call that
+    // changes nothing must not repaint. Only the rect above always refreshes.
+    if(canvas.width === pw && canvas.height === ph) return;
+    [[canvas,ctx],[buf,bctx]].forEach(([c,cc]) => {
+      c.width = pw; c.height = ph;
+      cc.setTransform(dpr,0,0,dpr,0,0);
+      cc.lineCap = cc.lineJoin = "round";
+    });
+    paintPaper(true);
+    redraw();
+  }
+
+  /* The backing store has to track the board's CSS box — and the window's own
+     resize event misses most of the ways that box changes: the host resizing
+     the panel, the stage reflowing around it, full screen. It also does not
+     fire at all on first load, which is how a fresh board came up drawing into
+     an unsized 300x150 canvas stretched across a 1200px board, and stayed that
+     way until something happened to resize the window. Watch the board itself
+     and none of that has to be enumerated. */
+  let sizeRaf = 0;
+  function scheduleSize(){
+    if(sizeRaf) return;
+    sizeRaf = requestAnimationFrame(() => { sizeRaf = 0; sizeCanvas(); });
+  }
+  if(window.ResizeObserver){
+    try{ new ResizeObserver(scheduleSize).observe(board); }catch(err){}
+  }
+
+  const strokeWidthPx = (s, W) =>
+    (s.mode === "erase" ? (ERASER_PX[s.width || 0] || ERASER_PX[1])
+                        : WIDTH_PX[s.width]) * scaleFor(W);
+
+  function applyStrokeStyle(s, c, W){
+    c.globalCompositeOperation = s.mode === "erase" ? "destination-out" : "source-over";
+    c.strokeStyle = COLOR_HEX[s.color] || "#fff";
+    c.lineWidth   = strokeWidthPx(s, W);
+  }
+
+  /* Paint one stroke onto any surface. W/H are that surface's logical size —
+     the board, a PDF sheet, a 150px thumbnail — and the stored fractions are
+     multiplied out against them here and nowhere else. */
+  function paintStroke(s, c, W, H){
+    const pts = s.pts;
+    if(!pts || !pts.length) return;
+    applyStrokeStyle(s, c, W);
+    c.beginPath();
+    c.moveTo(pts[0].x * W, pts[0].y * H);
+    if(pts.length === 1) c.lineTo(pts[0].x * W + .01, pts[0].y * H);
+    for(let i=1;i<pts.length;i++) c.lineTo(pts[i].x * W, pts[i].y * H);
+    c.stroke();
+  }
+
+  function paintStrokes(list, c, W, H){
+    for(let i=0;i<list.length;i++) paintStroke(list[i], c, W, H);
+    c.globalCompositeOperation = "source-over";
+  }
+
+  /* Hand the composed buffer to the screen in ONE operation. "copy" replaces
+     the destination outright, so there is no separate clearRect that a
+     compositor could present on its own — which is the flash this replaces.
+     Anything that is not ink (the eraser's ring, the laser's trail) is painted
+     on afterwards, and is therefore gone again on the next blit without ever
+     needing a clear of its own. */
+  function present(){
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalCompositeOperation = "copy";
+    ctx.drawImage(buf, 0, 0);
+    ctx.restore();
+    ctx.globalCompositeOperation = "source-over";
+    paintOverlay();
+  }
+
+  /* The area eraser bites the buffer once per point, and a 120Hz pen delivers a
+     handful of coalesced points per frame — blitting on each one would be
+     several full-canvas copies per frame for a single visible result. Coalesce
+     to one blit per frame; the frame is when it can be seen anyway. */
+  let presentRaf = 0;
+  function presentSoon(){
+    if(presentRaf) return;
+    presentRaf = requestAnimationFrame(() => { presentRaf = 0; present(); });
+  }
+
+  function redraw(){
+    bctx.save();
+    bctx.setTransform(1,0,0,1,0,0);
+    bctx.clearRect(0,0,buf.width,buf.height);
+    bctx.restore();
+    bctx.globalCompositeOperation = "source-over";
+    const page = state.pages[state.current];
+    if(page) paintStrokes(page.strokes, bctx, boardW, boardH);
+    present();
+  }
+
+
+  /* ═══ PAPER — the page's background pattern ═══
+     Dot grid (what every page used to be, and still the default), graph paper,
+     a blank first-quadrant frame, or nothing. One painter, so the board, the
+     page thumbnails and the PDF sheet cannot disagree about what a page is.
+     Graph and axes exist because a v–t curve drawn freehand on a plain board
+     is the thing that most often has to be wiped and drawn a second time. */
+  const PAPERS = ["dots", "graph", "axes", "plain"];
+  const PAPER_LABEL = {
+    dots:"Dot grid", graph:"Graph paper", axes:"Blank axes", plain:"Plain black"
+  };
+
+  // Additive: it paints onto whatever is already there. The board's own layer
+  // is cleared by paintPaper; the PDF background composes it over the gradient.
+  function drawPaper(c, W, H, kind){
+    if(!kind || kind === "plain" || !(W > 0)) return;
+    const k = scaleFor(W), cell = 26 * k;
+
+    if(kind === "dots"){
+      c.save();
+      c.fillStyle = "rgba(148,163,184,.14)";
+      const r = Math.max(.6, k);
+      for(let y = 0; y <= H; y += cell)
+        for(let x = 0; x <= W; x += cell){
+          c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fill();
+        }
+      c.restore();
+      return;
+    }
+
+    // graph + axes share the ruled grid
+    c.save();
+    c.lineWidth = Math.max(.5, k);
+    const rule = (step, alpha) => {
+      c.strokeStyle = "rgba(148,163,184," + alpha + ")";
+      c.beginPath();
+      for(let x = 0; x <= W; x += step){ c.moveTo(x + .5, 0); c.lineTo(x + .5, H); }
+      for(let y = H; y >= 0; y -= step){ c.moveTo(0, y + .5); c.lineTo(W, y + .5); }
+      c.stroke();
+    };
+    rule(cell, ".085");
+    rule(cell * 5, ".18");
+    c.restore();
+    if(kind !== "axes") return;
+
+    /* First quadrant only — the frame an x–t, v–t or F–x graph is actually
+       drawn on. Anything needing four quadrants is a freehand cross anyway. */
+    const ox = Math.round(cell * 3) + .5, oy = Math.round(H - cell * 3) + .5;
+    const ex = W - cell * 2, ey = cell * 2, head = 9 * k;
+    c.save();
+    c.strokeStyle = c.fillStyle = "rgba(226,232,240,.55)";
+    c.lineWidth = 2 * k;
+    c.beginPath();
+    c.moveTo(ox, oy); c.lineTo(ex, oy);
+    c.moveTo(ox, oy); c.lineTo(ox, ey);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(ex, oy); c.lineTo(ex - head, oy - head * .55); c.lineTo(ex - head, oy + head * .55);
+    c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(ox, ey); c.lineTo(ox - head * .55, ey + head); c.lineTo(ox + head * .55, ey + head);
+    c.closePath(); c.fill();
+    c.lineWidth = 1.5 * k;
+    c.beginPath();
+    for(let x = ox + cell * 5; x < ex - head; x += cell * 5){ c.moveTo(x, oy - 5 * k); c.lineTo(x, oy + 5 * k); }
+    for(let y = oy - cell * 5; y > ey + head; y -= cell * 5){ c.moveTo(ox - 5 * k, y); c.lineTo(ox + 5 * k, y); }
+    c.stroke();
+    c.restore();
+  }
+
+  // Repainting the grid on every page turn would be pure waste — the pattern
+  // only depends on the kind and the board size, so it is keyed on both.
+  const curPaper = () => {
+    const p = state.pages[state.current];
+    return (p && p.paper) || "dots";
+  };
+
+  /* On screen the pattern is the board's CSS background, not a canvas — a
+     fourth full-board compositing layer costs something every frame, and this
+     never changes between page turns. Rendered once per kind at the reference
+     size and stretched, so a resize costs nothing and there is no encode on
+     the resize path at all. */
+  const BOARD_GRADIENT = "linear-gradient(180deg,#0d1424,#0b101d)";
+  const paperCache = {};
+  function paperImage(kind){
+    if(!kind || kind === "plain") return BOARD_GRADIENT;
+    if(!paperCache[kind]){
+      const W = REF_W, H = 720, dpr = 2;
+      const c = document.createElement("canvas");
+      c.width = W * dpr; c.height = H * dpr;
+      const cc = c.getContext("2d");
+      cc.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cc.lineCap = cc.lineJoin = "round";
+      drawPaper(cc, W, H, kind);
+      paperCache[kind] = c.toDataURL("image/png");
+    }
+    return `url("${paperCache[kind]}"), ${BOARD_GRADIENT}`;
+  }
+
+  let paperKey = "";
+  function paintPaper(force){
+    const kind = curPaper();
+    if(!force && kind === paperKey) return;
+    paperKey = kind;
+    board.style.backgroundImage = paperImage(kind);
+  }
+
+  /* ═══ SNAPSHOT (duplicated page object) ═══════ */
+
+  const escAttr = s => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
+  /* A frozen box carries the slide's HTML too, rendered script-free in a
+     sandboxed iframe that is laid out at the board size it was frozen at and
+     then CSS-scaled into the box — so the layout never re-solves as the
+     teacher drags or resizes it, and no second WebGL context or replaying
+     preset runs next to the ink.
+
+     Preferred source is the BAKE the live deck hands over at freeze time
+     (buildFrozenBaked). Rebuilding from source text is the fallback, and the
+     reason the bake exists: the deck's runtime paints STATE, not just motion. */
+
+  /* Parse the deck once and take out everything that must not run or fetch
+     inside a frozen box: its scripts, and any absolute stylesheet/webfont.
+     Same reason as the PDF export — this iframe has an opaque origin and the
+     room may be offline. A CDN sheet or webfont that resolves late re-flows
+     the slide AFTER the box was composed, and .wrap.fit clips on overflow, so
+     the frozen slide silently loses its last rows. */
+  function frozenDoc(text){
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    doc.querySelectorAll("script").forEach(s => s.remove());
+    doc.querySelectorAll(
+      'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+    ).forEach(l => {
+      const href = l.getAttribute("href") || "";
+      if(/^https?:\/\//i.test(href)) l.remove();
+    });
+    return doc;
+  }
+
+  /* ── the baked path (what a freeze records today) ──────────────────────
+     snap.body is the ACTIVE page as the LIVE deck had it: fitted zoom, the
+     stage size and transform a fixed-canvas deck builds in JS, rendered
+     KaTeX, generated SVG, the revealed steps and every is-active / is-lit
+     class already on the elements. So there is nothing to replay here and no
+     script in the box at all — only the deck's own head, the baked body, and
+     the rules below that hold it still. */
+  const FROZEN_CSS = `<style id="__lf-frozen">
+/* .page and .wrap are height:100%; a deck that does not ship deck-base.css has
+   no full-height root of its own, and they collapse against an auto body. */
+html,body{overflow:hidden!important;margin:0!important;height:100%!important;min-height:100%!important}
+html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+/* A frozen frame does not breathe. Durations go to 1ms rather than
+   \`animation:none\` so a keyframe that ENDS somewhere (fill-mode:forwards)
+   still lands there — the same trick the deck controller's noanim path uses. */
+*,*::before,*::after{
+  animation-duration:1ms!important;animation-delay:0s!important;
+  animation-iteration-count:1!important;
+  transition-duration:1ms!important;transition-delay:0s!important;
+}
+.wrap.__lf-fitted{max-height:none!important}
+[data-video] iframe{visibility:hidden!important}
+/* nothing paints into a canvas here — a scene shows the same static figure
+   the PDF export prints; any other canvas was baked to an <img> at freeze */
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+<\/style>`;
+
+  function buildFrozenBaked(text, snap){
+    const doc = frozenDoc(text);
+    const head = doc.head ? doc.head.innerHTML : "";
+    /* Only what the deck controller itself owns is restated here. A step's
+       TRANSFORM is deliberately left alone: a deck may put an inline one on
+       its steps, and the board shows it — forcing transform:none would move
+       every revealed step by the offset the teacher was looking at. */
+    const page = `<style id="__lf-frozen-page">
+.page{display:none!important}
+.page.__lf-active{display:block!important;opacity:1!important}
+.page .step{opacity:0!important;transition:none!important}
+.page .step.__lf-on{opacity:1!important;visibility:visible!important}
+<\/style>`;
+    return `<!DOCTYPE html><html class="${escAttr(snap.rootClass || "")}"`
+         + (snap.rootStyle ? ` style="${escAttr(snap.rootStyle)}"` : "")
+         + `><head>${head}${FROZEN_CSS}${page}</head>${snap.body}</html>`;
+  }
+
+  /* ── the legacy path ───────────────────────────────────────────────────
+     Sessions frozen before the bake existed (and any deck that failed to
+     answer) still carry only slide + step, so the slide is rebuilt from the
+     deck text and the two states its runtime paints are replayed statically:
+     revealFx (the .info-box holding the floor grows and dims its neighbours)
+     and lightsFx (a revealed [data-lights] cue lights its [data-lit] words).
+     Both are a pure function of which steps are revealed. */
+  function buildFrozenSrcdoc(text, index, step){
+    const doc = frozenDoc(text);
+    const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+    const style = `<style id="__lf-frozen">
+/* .page and .wrap are height:100%; a deck that does not ship deck-base.css has
+   no full-height root of its own, and they collapse against an auto body. */
+html,body{overflow:hidden!important;margin:0!important;height:100%!important;min-height:100%!important}
+#bg:before,#bg:after{animation:none!important}   /* a frozen frame does not breathe */
+.page{display:none!important}
+.page.__lf-x{display:block!important;opacity:1!important;transform:none!important}
+.step{opacity:0!important;transform:none!important;transition:none!important}
+.step.__lf-on{opacity:1!important;visibility:visible!important}
+/* scripts are gone, so nothing ever sets .is-live or paints into a canvas —
+   show the same static figure the PDF export prints instead of an empty frame */
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+[data-video] iframe{visibility:hidden!important}
+<\/style>`;
+    const script = `<script>(function(){
+var ps=document.querySelectorAll(".page"),a=ps[${index}];if(!a)return;
+a.classList.add("__lf-x");
+var st=a.querySelectorAll(".step");
+for(var k=0;k<st.length;k++) if(k<${step}) st[k].classList.add("__lf-on");
+var on=function(el){return !!el&&el.classList.contains("__lf-on")};
+/* replay revealFx: the box between its two revealed .box-zoom sentinels is the
+   one holding the floor, so it freezes grown with its neighbours dimmed */
+var boxes=a.querySelectorAll(".info-box"),lit=null;
+for(var i=0;i<boxes.length;i++){
+  var z; try{ z=boxes[i].querySelectorAll(":scope > .box-zoom"); }
+  catch(e){ z=boxes[i].querySelectorAll(".box-zoom"); }
+  var open;
+  if(z.length<2){                       // uninstrumented box: open on any step
+    open=false;
+    var s2=boxes[i].querySelectorAll(".step");
+    for(var j=0;j<s2.length;j++){ if(on(s2[j])){ open=true; break; } }
+  } else open = on(z[0]) && !on(z[z.length-1]);
+  if(open) lit=boxes[i];
+}
+if(lit){ lit.classList.add("is-active"); a.classList.add("has-focus"); }
+/* replay lightsFx: a revealed [data-lights] cue lights its [data-lit] words */
+var cues=a.querySelectorAll("[data-lights]");
+for(var i=0;i<cues.length;i++){
+  if(!on(cues[i])) continue;
+  var keys=(cues[i].getAttribute("data-lights")||"").split(/\\s+/);
+  for(var j=0;j<keys.length;j++){
+    if(!keys[j]) continue;
+    var hits=a.querySelectorAll('[data-lit~="'+keys[j]+'"]');
+    for(var m=0;m<hits.length;m++) hits[m].classList.add("is-lit");
+  }
+}
+})();<\/script>`;
+    return base + style + script;
+  }
+
+  /* The one place that decides how a frozen box is rendered — the live box,
+     the page-sheet thumbnail and the PDF sheet all go through here, so they
+     can never disagree about what a frozen page looks like. */
+  function frozenSrcdoc(snap){
+    if(!snap || snap.deckId == null) return "";
+    const deck = state.decks.find(d => d.id === snap.deckId);
+    if(!deck) return "";
+    return snap.body ? buildFrozenBaked(deck.text, snap)
+                     : buildFrozenSrcdoc(deck.text, snap.deckIndex, snap.stepIndex);
+  }
+
+  let snapDeckKey = null;   // guards against reloading the iframe on every drag
+  // boxW/boxH are the box in board PIXELS — snap.w/h themselves are fractions.
+  function syncSnapDeck(snap, boxW, boxH){
+    if(!snap || snap.deckId == null){
+      snapDeck.style.display = "none";
+      if(snapDeckKey !== null){ snapDeck.srcdoc = ""; snapDeckKey = null; }
+      return;
+    }
+    const baseW = snap.baseW || boxW, baseH = snap.baseH || boxH;
+    snapDeck.style.width  = baseW + "px";
+    snapDeck.style.height = baseH + "px";
+    snapDeck.style.transform = `scale(${boxW / baseW}, ${boxH / baseH})`;
+    snapDeck.style.display = "block";
+    /* uid, not slide+step: two pages can be frozen from the same slide and
+       only one of them may carry a bake. Re-rendering costs a full iframe
+       load, so it happens on a real change of content and never on a drag. */
+    const key = (snap.uid || (snap.deckId + ":" + snap.deckIndex + ":" + snap.stepIndex))
+              + (snap.body ? ":b" : ":t");
+    if(key !== snapDeckKey){
+      snapDeck.srcdoc = frozenSrcdoc(snap);
+      snapDeckKey = key;
+    }
+  }
+
+  function positionSnap(){
+    const page = state.pages[state.current];
+    const snap = page && page.snap;
+    const show = !!snap;
+    snapBox.style.display     = show ? "block" : "none";
+    snapOutline.style.display = show ? "block" : "none";
+    [snapMove, snapMoveL, snapMoveR, snapResize, snapClose]
+      .forEach(g => g.style.display = show ? "flex" : "none");
+    if(!show){ syncSnapDeck(null); return; }
+    /* The box is stored in board fractions for the same reason the ink is —
+       multiplied out here, once, so it lands on the same part of the slide at
+       any board size. */
+    const X = snap.x * boardW, Y = snap.y * boardH;
+    const Wd = snap.w * boardW, Hd = snap.h * boardH;
+    // the box holds the frozen slide (iframe) + ink raster, both filling it
+    snapBox.style.left = X + "px";
+    snapBox.style.top  = Y + "px";
+    snapBox.style.width  = Wd + "px";
+    snapBox.style.height = Hd + "px";
+    snapImg.src = snap.url;
+    syncSnapDeck(snap, Wd, Hd);
+    snapOutline.style.left = X + "px";
+    snapOutline.style.top  = Y + "px";
+    snapOutline.style.width  = Wd + "px";
+    snapOutline.style.height = Hd + "px";
+    snapMove.style.left   = (X - 14) + "px";
+    snapMove.style.top    = (Y - 14) + "px";
+    snapMoveL.style.left  = (X - 14) + "px";
+    snapMoveL.style.top   = (Y + Hd/2 - 14) + "px";
+    snapMoveR.style.left  = (X + Wd - 14) + "px";
+    snapMoveR.style.top   = (Y + Hd/2 - 14) + "px";
+    snapClose.style.left  = (X + Wd - 14) + "px";
+    snapClose.style.top   = (Y - 14) + "px";
+    snapResize.style.left = (X + Wd - 14) + "px";
+    snapResize.style.top  = (Y + Hd - 14) + "px";
+  }
+
+  function makeGripDraggable(grip, onDrag){
+    grip.addEventListener("pointerdown", e => {
+      const page = state.pages[state.current];
+      if(!page || !page.snap) return;
+      e.preventDefault();
+      grip.setPointerCapture(e.pointerId);
+      pushUndo();
+      const start = { px:e.clientX, py:e.clientY, ...page.snap };
+      const move = ev => { onDrag(page.snap, start, ev.clientX - start.px, ev.clientY - start.py); positionSnap(); };
+      const up = () => {
+        scheduleRecover();
+        grip.removeEventListener("pointermove", move);
+        grip.removeEventListener("pointerup", up);
+        grip.removeEventListener("pointercancel", up);
+      };
+      grip.addEventListener("pointermove", move);
+      grip.addEventListener("pointerup", up);
+      grip.addEventListener("pointercancel", up);
+    });
+  }
+  // move freely — including fully outside the working zone. The drag arrives in
+  // client pixels; the box is stored in fractions, so it is divided back down.
+  const moveSnap = (snap, start, dx, dy) => {
+    snap.x = start.x + dx / (boardW || 1);
+    snap.y = start.y + dy / (boardH || 1);
+  };
+  makeGripDraggable(snapMove,  moveSnap);
+  makeGripDraggable(snapMoveL, moveSnap);   // middle-left edge
+  makeGripDraggable(snapMoveR, moveSnap);   // middle-right edge (other side)
+  makeGripDraggable(snapResize, (snap, start, dx, dy) => {
+    snap.w = Math.max(60 / (boardW || 1), start.w + dx / (boardW || 1));
+    snap.h = Math.max(40 / (boardH || 1), start.h + dy / (boardH || 1));
+  });
+  snapClose.addEventListener("click", () => {
+    const page = state.pages[state.current];
+    if(!page || !page.snap) return;
+    pushUndo();
+    page.snap = null;
+    positionSnap();
+    scheduleRecover();
+    toast("Frozen page removed");
+  });
+
+  /* compose current page (snapshot + ink) into a dataURL */
+  function composeCurrent(withBg){
+    const r = board.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const out = document.createElement("canvas");
+    out.width = Math.round(r.width * dpr);
+    out.height = Math.round(r.height * dpr);
+    const o = out.getContext("2d");
+    o.scale(dpr, dpr);
+    if(withBg){ o.fillStyle = "#0b0f19"; o.fillRect(0,0,r.width,r.height); }
+    const page = state.pages[state.current];
+    if(page && page.snap && snapImg.complete && snapImg.naturalWidth){
+      const s = page.snap;
+      o.drawImage(snapImg, s.x * r.width, s.y * r.height, s.w * r.width, s.h * r.height);
+    }
+    o.drawImage(canvas, 0, 0, r.width, r.height);
+    return out.toDataURL("image/png");
+  }
+
+  /* ═══ PAGES ═══════════════════════════════════ */
+  function blankPage(){ return { strokes:[], snap:null, undo:[], deckId:null, deckIndex:null, stepCount:0, stepIndex:0, paper:"dots" }; }
+
+  /* clickable pass-through: rects of .clickable elements reported by
+     the active deck; taps inside them click instead of drawing */
+  let deckClickRects = [];
+  function activeDeckFrame(){
+    const page = state.pages[state.current];
+    return page && page.deckId != null ? deckFrames[page.deckId] : null;
+  }
+  function clickableAt(p){
+    return deckClickRects.some(r =>
+      p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+  }
+  window.addEventListener("message", e => {
+    if(!e.data || e.data.type !== "lf-rects") return;
+    const f = activeDeckFrame();
+    if(f && e.source === f.contentWindow) deckClickRects = e.data.rects || [];
+  });
+
+  /* ═══ LIVE MEDIA ═══════════════════════════════════════════════════════
+     Players are rendered HERE, in the presenter document, not inside the deck
+     — see the #mediaLayer note in the stylesheet for why. Reconciliation is
+     by key, never teardown-and-rebuild, because syncDeck() fires on every
+     step: rebuilding would restart the video each time the teacher presses
+     Next. Same key -> reposition the existing iframe and leave it playing. */
+  const mediaLayer = document.getElementById("mediaLayer");
+  const mediaEmbeds = {};                       // key -> {box, iframe, toggle, deckId}
+  const mediaKey = (m) => (m.provider || "youtube") + "|" + m.id + "|" + m.start + "|" + m.end;
+
+  function mediaSrc(m){
+    const id = encodeURIComponent(m.id);
+    if((m.provider || "youtube") === "vimeo")
+      return "https://player.vimeo.com/video/" + id + (m.start ? "#t=" + encodeURIComponent(m.start) + "s" : "");
+    const q = ["rel=0", "modestbranding=1", "playsinline=1"];
+    if(m.start) q.push("start=" + encodeURIComponent(m.start));
+    if(m.end)   q.push("end="   + encodeURIComponent(m.end));
+    return "https://www.youtube-nocookie.com/embed/" + id + "?" + q.join("&");
+  }
+
+  function dropMedia(key){
+    const rec = mediaEmbeds[key];
+    if(!rec) return;
+    rec.iframe.src = "about:blank";             // kill playback + audio at once
+    rec.box.remove();
+    rec.toggle.remove();
+    delete mediaEmbeds[key];
+  }
+  function clearMedia(pred){
+    for(const key in mediaEmbeds) if(!pred || pred(mediaEmbeds[key])) dropMedia(key);
+  }
+
+  function renderMedia(list, deckId){
+    const seen = {};
+    (list || []).forEach(m => {
+      if(!m || !m.id) return;
+      const key = mediaKey(m);
+      seen[key] = true;
+      let rec = mediaEmbeds[key];
+      if(!rec){
+        const box = document.createElement("div");
+        box.className = "media-embed";
+        const f = document.createElement("iframe");
+        f.title = "Video";
+        f.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen");
+        f.setAttribute("allowfullscreen", "");
+        f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+        f.src = mediaSrc(m);
+        box.appendChild(f);
+
+        // Let the teacher write across the video without losing the player.
+        const t = document.createElement("button");
+        t.className = "media-ink-toggle";
+        t.textContent = "Write over video";
+        t.addEventListener("click", () => {
+          const on = box.classList.toggle("ink-through");
+          t.classList.toggle("on", on);
+          t.textContent = on ? "Back to video" : "Write over video";
+        });
+
+        mediaLayer.append(box, t);
+        rec = mediaEmbeds[key] = { box, iframe:f, toggle:t, deckId };
+      }
+      rec.deckId = deckId;
+      rec.box.style.left   = m.x + "px";
+      rec.box.style.top    = m.y + "px";
+      rec.box.style.width  = m.w + "px";
+      rec.box.style.height = m.h + "px";
+      rec.toggle.style.left = Math.max(4, m.x + m.w - 148) + "px";
+      rec.toggle.style.top  = Math.max(4, m.y - 34) + "px";
+    });
+    for(const key in mediaEmbeds) if(!seen[key]) dropMedia(key);
+  }
+
+  window.addEventListener("message", e => {
+    if(!e.data || e.data.type !== "lf-media") return;
+    const f = activeDeckFrame();
+    if(!f || e.source !== f.contentWindow) return;
+    const page = state.pages[state.current];
+    renderMedia(e.data.media, page ? page.deckId : null);
+  });
+
+  /* ═══ ANIMATION SWITCH ════════════════════════
+     With animations off a page is never half-told: the deck is asked to show
+     every step of it at once, and Next/Previous move whole pages. The page's
+     own stepIndex is left untouched, so switching back mid-lesson resumes
+     stepping instead of losing the teacher's place. */
+  const shownStep  = p => p ? (state.anim ? p.stepIndex : p.stepCount) : 0;
+  const hasNextStep = p => !!p && state.anim && p.stepIndex < p.stepCount;
+  const hasPrevStep = p => !!p && state.anim && p.stepIndex > 0;
+
+  function setAnim(on){
+    state.anim = !!on;
+    try{ localStorage.setItem("lf-anim", state.anim ? "1" : "0"); }catch(err){}
+    // turning motion back on must not blank the board: keep the page that is
+    // already up fully revealed, and let the NEXT page do the stepping
+    const page = state.pages[state.current];
+    if(state.anim && page) page.stepIndex = page.stepCount;
+    syncDeck();
+    updateChrome();
+    toast(state.anim
+      ? "Animations on — steps reveal one press at a time"
+      : "Animations off — every page opens with its full content");
+  }
+
+  /* show the current page's deck slide (if any) and hide all other decks */
+  function syncDeck(){
+    deckClickRects = [];          // stale until the active deck reports back
+    const page = state.pages[state.current];
+    const activeId = page && page.deckId != null ? page.deckId : null;
+    // Decks other than the active one never report, so prune their players
+    // here; the active deck's own empty report handles everything else.
+    clearMedia(rec => activeId === null || String(rec.deckId) !== String(activeId));
+    for(const id in deckFrames){
+      const f = deckFrames[id];
+      if(String(activeId) === String(id)){
+        f.style.display = "block";
+        if(f.contentWindow)
+          f.contentWindow.postMessage(
+            { type:"lf-show", index:page.deckIndex, step:shownStep(page), anim:state.anim }, "*");
+      } else {
+        f.style.display = "none";
+      }
+    }
+  }
+
+  function loadPage(i){
+    state.current = i;
+    laserPts = [];     // no laser trail survives a page turn
+    paintPaper();      // the page's own background (dots / graph / axes / plain)
+    redraw();          // this page's own strokes only — fresh ink per page,
+    positionSnap();    // but strokes persist and reappear when you come back
+    syncDeck();
+    updateChrome();
+    scheduleRecover();
+  }
+
+  /* ═══ MASTER LIBRARY — load an HTML/CSS/JS slides file ═══
+     Format: slides are <section class="page">…</section>.
+     class="step"      → revealed one by one with Next.
+     class="clickable" → that element receives REAL clicks through the
+     ink layer: tapping directly on it clicks it instead of drawing.
+     The file's own CSS and JS run inside a sandboxed iframe. */
+  const deckController = (animOn) => `
+<style id="__lf-ctl">
+.page{display:none!important}
+.page.__lf-active{display:block!important}
+.page .step{opacity:0!important;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease}
+.page .step.__lf-on{opacity:1!important;transform:none}
+.clickable{pointer-events:auto!important;cursor:pointer}
+/* A [data-video] placeholder may ship its own <iframe> so the file still works
+   when opened in a plain browser. Under the host that iframe is dead (opaque
+   origin), so hide it — the presenter paints a real player on top instead. */
+[data-video] iframe{visibility:hidden!important}
+
+/* ── ANIMATIONS OFF ───────────────────────────────────────────────────────
+   The host reveals every step at once; this collapses the motion that would
+   otherwise still play on the way in. Durations go to 1ms rather than
+   \`animation:none\` so a keyframe that ENDS somewhere (fill-mode:forwards)
+   still lands there, and a WebGL scene hands over to the same static figure
+   the PDF export prints. */
+html.__lf-noanim .page .step{transition:none!important;transform:none!important}
+html.__lf-noanim *,html.__lf-noanim *::before,html.__lf-noanim *::after{
+  animation-duration:1ms!important;animation-delay:0s!important;
+  animation-iteration-count:1!important;
+  transition-duration:1ms!important;transition-delay:0s!important;
+}
+html.__lf-noanim .scene-frame canvas{display:none!important}
+html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
+
+/* ── NO SCROLLING, EVER ───────────────────────────────────────────────────
+   A slide is a fixed frame, not a document. Nothing inside a deck may ever
+   present a scrollbar or a scroll offset: the auto-fit engine below is what
+   makes the content match the frame, so a scrollbar can only ever mean the
+   fit has not run yet. Deck authors keep writing \`overflow:auto\` — this
+   overrides it under the presenter without touching a single deck file. */
+html,body{overflow:hidden!important;height:100%!important;max-height:100%!important}
+html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+
+/* The fitted wrapper is driven from JS. A deck's own max-height must not
+   fight the height the engine hands it. */
+.wrap.__lf-fitted{max-height:none!important}
+<\/style>
+<script>
+(function(){
+  /* ── animation switch ──────────────────────────────────────────────────
+     CSS above handles the deck's own transitions. The [data-anime] presets
+     are JS, and their runtime captured \`window.anime\` at load — so the only
+     thing that reaches an already-running deck is swapping the method ON
+     that same object. \`instant\` plays a preset's LAST frame and nothing
+     else: onComplete restores a drawn SVG's strokes, and a "count" target
+     (a plain object) is jumped to its end value and printed once. A preset
+     whose only effect is motion (pulse, float) simply does nothing.        */
+  var animOn = ${animOn ? "true" : "false"}, realAnimate = null;
+
+  function instant(targets, props){
+    var p = props || {};
+    try{
+      if(targets && typeof targets === "object" && !targets.nodeType && targets.length === undefined){
+        for(var k in p){
+          if(typeof p[k] === "function") continue;
+          if(k === "duration" || k === "delay" || k === "ease" || k === "loop" || k === "autoplay") continue;
+          targets[k] = Object.prototype.toString.call(p[k]) === "[object Array]"
+            ? p[k][p[k].length - 1] : p[k];
+        }
+        if(typeof p.onUpdate === "function") p.onUpdate();
+      }
+      if(typeof p.onComplete === "function") p.onComplete();
+    }catch(err){}
+    return { play:function(){}, pause:function(){}, revert:function(){}, restart:function(){} };
+  }
+
+  function applyAnim(on){
+    animOn = !!on;
+    document.documentElement.classList.toggle("__lf-noanim", !animOn);
+    var A = window.anime;
+    if(!A || typeof A.animate !== "function") return;
+    try{
+      if(!animOn && !realAnimate){ realAnimate = A.animate; A.animate = instant; }
+      else if(animOn && realAnimate){ A.animate = realAnimate; realAnimate = null; }
+    }catch(err){ /* a frozen library must never blank a slide */ }
+  }
+
+  /* ── AUTO-FIT ENGINE ───────────────────────────────────────────────────
+     Why this exists: a deck sizes itself with vmin/clamp (or a fixed px
+     canvas), which is only correct if the browser has already settled on
+     the final viewport. Entering full screen does NOT satisfy that — the
+     board resizes across several frames, web fonts swap in after first
+     layout, and a page that is display:none at that moment cannot be
+     measured at all. That is the "fits only on the second try" bug.
+
+     So nothing here trusts the viewport. Every time the ACTIVE page could
+     have changed size we measure the real content and hand the slide's
+     .wrap a CSS zoom:
+
+        zoom: k   on the .wrap
+
+     zoom is doing real work here, not decoration. Inside a zoomed element
+     the browser resolves percentage heights, ch measures and vmin/clamp
+     type against the zoomed box, so a .wrap that is height:100% still
+     renders exactly the height of the page — it simply has k times more
+     (or less) room to lay the slide out in. The text genuinely re-wraps at
+     the new size; nothing is squashed, stretched or clipped.
+
+     The fit only ever shrinks. A slide that already fits is left at the size
+     its author chose — decks are designed at presentation scale, and blowing
+     a sparse slide up to fill the board changes how it was written to read.  */
+  var LF_GROW_MAX = 1;      /* never enlarge: authored size is the ceiling  */
+  var LF_SHRINK_MIN = 0.32; /* floor, so a runaway page still shows something */
+  var fitRaf = 0, fitTimers = [];
+
+  function baseStyle(el){
+    if(el.__lfBase === undefined) el.__lfBase = el.getAttribute("style") || "";
+    return el.__lfBase;
+  }
+  function clearFit(el){
+    var b = baseStyle(el);
+    if(b) el.setAttribute("style", b); else el.removeAttribute("style");
+    el.classList.remove("__lf-fitted");
+  }
+  function applyFit(el, k){
+    el.classList.add("__lf-fitted");
+    el.style.zoom = k;
+  }
+  /* Kill the scroll, not the layout. Only a box that would actually hand the
+     teacher a scrollbar gets clamped; a deck that lets a heading sit outside
+     its own column on purpose keeps doing that, because clamping every box
+     would newly clip designs that were fine. */
+  function hardenScroll(el){
+    var cs = window.getComputedStyle(el);
+    if(/auto|scroll/.test(cs.overflowY + " " + cs.overflowX)) el.style.overflow = "hidden";
+  }
+
+  function fitSig(page, wrap){
+    return page.clientHeight + ":" + wrap.offsetHeight + ":" + wrap.scrollHeight
+         + ":" + (wrap.style.zoom || "") + ":" + window.innerWidth + "x" + window.innerHeight;
+  }
+
+  function fitPage(page){
+    if(!page || document.body.hasAttribute("data-lf-nofit")) return;
+    var wrap = page.querySelector(".wrap");
+    if(!wrap) return;
+
+    /* The tail below fires this FIVE times per click or key press, and the
+       solve is a read-write-read layout thrash that rewrites .wrap's zoom. Once
+       the deck has settled, passes 2-5 recompute an answer they already have —
+       and each rewrite of zoom is a visible re-render of the slide next to the
+       board the teacher is writing on. If every input is identical to the last
+       pass that actually ran, there is nothing to solve. */
+    var sig = fitSig(page, wrap);
+    if(wrap.__lfSig === sig) return;
+
+    clearFit(wrap);                       /* always measure from the deck's own CSS */
+
+    /* LAYOUT pixels only — offsetHeight / clientHeight, never a client rect.
+       A deck may already sit under a scale of its own (the fixed-canvas decks
+       scale a #stage to the viewport), and a rect would hand back that scale
+       baked in, so the two would multiply. */
+    var pageH  = page.clientHeight;
+    var availH = wrap.offsetHeight;
+    /* A .wrap that is height:auto (rather than the usual height:100%) still
+       owns the rest of the page — let it use that room instead of hugging. */
+    if(pageH && availH < pageH * 0.6)
+      availH = Math.max(availH, pageH - wrap.offsetTop);
+    if(!(availH > 8)) return;
+
+    /* Solve for the zoom at which the slide's natural height is exactly the
+       height of the board. One shot is not enough: at a different zoom the
+       column is a different number of characters wide, so the text re-wraps
+       and asks for a different height. Measure, correct, repeat — it settles
+       in two or three rounds. */
+    var k = 1;
+    for(var pass = 0; pass < 4; pass++){
+      wrap.style.height = "auto";
+      wrap.style.maxHeight = "none";
+      var natural = Math.max(wrap.scrollHeight, wrap.offsetHeight);
+      wrap.style.height = "";
+      wrap.style.maxHeight = "";
+      if(!(natural > 0)) break;
+      var want = Math.min(LF_GROW_MAX, Math.max(LF_SHRINK_MIN, availH / natural));
+      if(!isFinite(want) || want <= 0) break;
+      var next = k + (want - k) * 0.85;          /* damped: don't ring */
+      if(Math.abs(next - k) < 0.004){ k = next; break; }
+      k = next;
+      applyFit(wrap, k);
+    }
+    if(Math.abs(k - 1) < 0.005) clearFit(wrap); else applyFit(wrap, k);
+
+    /* Safety net. A flex child that fills, a figure with a min-height, a late
+       font — anything the estimate could not see. Whatever the reason, the
+       slide does not get to overflow: give back scale until it fits. */
+    for(var guard = 0; guard < 3; guard++){
+      if(wrap.scrollHeight - wrap.clientHeight <= 1) break;
+      k = Math.max(LF_SHRINK_MIN,
+                   k * (wrap.clientHeight / wrap.scrollHeight) * 0.99);
+      applyFit(wrap, k);
+    }
+    hardenScroll(wrap);
+    hardenScroll(page);
+    wrap.__lfSig = fitSig(page, wrap);
+  }
+
+  function fitActive(){
+    try{ fitPage(document.querySelector(".page.__lf-active")); }catch(err){}
+  }
+  /* One synchronous fit (so an unfitted frame is never painted) plus a short
+     tail of re-fits: the full-screen resize lands over several frames, and
+     fonts / images / WebGL canvases settle after that. */
+  function scheduleFit(){
+    fitActive();
+    scheduleFitLater();
+  }
+  /* Same tail without the immediate pass — for things whose effect on layout
+     lands after the event (a deck's own key handler, an interactive figure). */
+  function scheduleFitLater(){
+    if(fitRaf) cancelAnimationFrame(fitRaf);
+    fitRaf = requestAnimationFrame(function(){ fitActive(); sendRects(); sendMedia(); });
+    for(var i = 0; i < fitTimers.length; i++) clearTimeout(fitTimers[i]);
+    fitTimers = [80, 260, 650, 1300].map(function(d){
+      return setTimeout(function(){ fitActive(); sendRects(); sendMedia(); }, d);
+    });
+  }
+
+  /* ── EXPORT SNAPSHOT ───────────────────────────────────────────────────
+     The PDF export cannot run scripts (a deck's own page controller would
+     fight the export's choice of page, and half-loaded CDN leftovers race
+     across the nested print frames). So it used to rebuild each sheet from
+     the deck's SOURCE TEXT with every script element stripped — and any deck
+     whose layout is made by script exported blank. The fixed-canvas
+     decks size their #stage entirely in JS: no script, no stage, no slide.
+
+     Fix: the export asks the deck, which is alive and on screen, to hand
+     back its CURRENT DOM. Everything script did is already in it — the
+     stage's size, the text-size level, rendered maths, the fitted zoom. The
+     page is then printable as plain markup, with no scripts at all. */
+  /* ── FREEZE SNAPSHOT (duplicate & freeze) ──────────────────────────────
+     Same lesson as the export above, for the same reason. A frozen box used
+     to be rebuilt from the deck's SOURCE TEXT with the scripts stripped — so
+     everything script had already done to the slide was thrown away: the
+     fit engine's zoom, a fixed-canvas deck's #stage size and transform, the
+     KaTeX it rendered, the SVG figures it generated, the text-size level.
+     Those decks froze as an unscaled, unrendered pile.
+
+     So the host asks the live deck for the ACTIVE page as it stands. Only
+     that one page is kept (the payload is one slide, not a whole deck) and
+     the head — fonts, the deck's CSS — still comes from the source text the
+     host already holds, so nothing is stored twice. */
+  function sendFrozenBody(requestId){
+    var out = "";
+    try{
+      fitActive();                       // settle the zoom before it is baked
+      var live = document.querySelectorAll(".page"), keep = -1;
+      for(var i = 0; i < live.length; i++)
+        if(live[i].classList.contains("__lf-active")) keep = i;
+      var body = document.body.cloneNode(true);
+      var copies = body.querySelectorAll(".page");
+      for(var j = 0; j < copies.length; j++)
+        if(j !== keep && copies[j].parentNode) copies[j].parentNode.removeChild(copies[j]);
+      /* A cloned <canvas> is blank. A .scene-frame has a .scene-fallback the
+         frozen sheet shows instead; anything else would simply disappear, so
+         its pixels are baked into an <img> while the original is still live.
+         Both lists are read from the SAME page — the live one and its clone —
+         so index k is the same canvas on both sides. */
+      var liveKeep = keep >= 0 ? live[keep] : null;
+      var cloneKeep = body.querySelector(".page.__lf-active");
+      var srcCans = liveKeep  ? liveKeep.querySelectorAll("canvas")  : [];
+      var cans    = cloneKeep ? cloneKeep.querySelectorAll("canvas") : [];
+      for(var k = 0; k < cans.length; k++){
+        if(cans[k].closest && cans[k].closest(".scene-frame")) continue;
+        var src = srcCans[k]; if(!src) continue;
+        try{
+          if(!(src.width > 0 && src.height > 0)) continue;
+          var url = src.toDataURL("image/png");
+          if(!url || url.length > 700000) continue;      // keep the payload sane
+          var img = document.createElement("img");
+          /* id and class come along so the deck's own CSS still applies to it;
+             the box is then pinned to the size the canvas actually occupied,
+             because a canvas sized by its width/height attributes has no CSS
+             box of its own and would otherwise come back at its bitmap size. */
+          for(var a = 0; a < cans[k].attributes.length; a++){
+            var at = cans[k].attributes[a];
+            if(at.name === "width" || at.name === "height" || at.name === "src") continue;
+            try{ img.setAttribute(at.name, at.value); }catch(e){}
+          }
+          img.src = url;
+          img.style.display = "block";
+          img.style.width  = src.offsetWidth  + "px";
+          img.style.height = src.offsetHeight + "px";
+          cans[k].parentNode.replaceChild(img, cans[k]);
+        }catch(err){ /* tainted or WebGL — the CSS hides it */ }
+      }
+      body.querySelectorAll("script,noscript").forEach(function(s){ s.remove(); });
+      out = body.outerHTML;
+    }catch(err){ out = ""; }
+    parent.postMessage({
+      type: "lf-frozen-body", requestId: requestId, html: out,
+      rootClass: document.documentElement.className || "",
+      rootStyle: document.documentElement.getAttribute("style") || ""
+    }, "*");
+  }
+
+  function sendExportDoc(requestId){
+    var ps = document.querySelectorAll(".page");
+    var cur = 0, curStep = 0;
+    for(var a = 0; a < ps.length; a++){
+      if(!ps[a].classList.contains("__lf-active")) continue;
+      cur = a;
+      curStep = ps[a].querySelectorAll(".step.__lf-on").length;
+    }
+    var html = "";
+    try{
+      /* Bake every page, not just the visible one: activate each in turn,
+         reveal its steps, let the fit engine size it, and leave the zoom
+         behind as an inline style. A page that is display:none cannot be
+         measured, which is exactly why this has to happen here. */
+      for(var i = 0; i < ps.length; i++){
+        for(var j = 0; j < ps.length; j++) ps[j].classList.toggle("__lf-active", j === i);
+        var steps = ps[i].querySelectorAll(".step");
+        for(var s = 0; s < steps.length; s++) steps[s].classList.add("__lf-on");
+        fitActive();
+      }
+      /* Leave no page marked active: the export decides which one shows. */
+      for(var c = 0; c < ps.length; c++) ps[c].classList.remove("__lf-active");
+      html = "<!DOCTYPE html>" + document.documentElement.outerHTML;
+    }catch(err){ html = ""; }
+    show(cur, curStep);                 // put the board back as it was
+    parent.postMessage({ type:"lf-export-doc", requestId:requestId, html:html }, "*");
+  }
+
+  function show(i, step){
+    var ps = document.querySelectorAll(".page");
+    for(var k=0;k<ps.length;k++) ps[k].classList.toggle("__lf-active", k===i);
+    var act = ps[i];
+    if(act){
+      var steps = act.querySelectorAll(".step");
+      for(var k=0;k<steps.length;k++) steps[k].classList.toggle("__lf-on", k < step);
+    }
+    /* A page that was display:none could not be measured while hidden, so it
+       is fitted here — synchronously, before this frame is painted. */
+    scheduleFit();
+    setTimeout(sendRects, 60);
+    setTimeout(sendRects, 700);   // again after CSS transitions settle
+    setTimeout(sendMedia, 60);
+    setTimeout(sendMedia, 700);
+  }
+  /* Report any [data-video] placeholder on the ACTIVE page so the host can
+     position a real player over it. Always posts — an empty list is how the
+     host knows to tear the previous player down and stop its audio. */
+  function sendMedia(){
+    var act = document.querySelector(".page.__lf-active");
+    var out = [];
+    if(act){
+      var els = act.querySelectorAll("[data-video]");
+      for(var k=0;k<els.length;k++){
+        var r = els[k].getBoundingClientRect();
+        if(r.width < 8 || r.height < 8) continue;
+        out.push({
+          provider: els[k].getAttribute("data-provider") || "youtube",
+          id:       els[k].getAttribute("data-video"),
+          start:    els[k].getAttribute("data-start") || "",
+          end:      els[k].getAttribute("data-end")   || "",
+          x:r.left, y:r.top, w:r.width, h:r.height
+        });
+      }
+    }
+    parent.postMessage({ type:"lf-media", media:out }, "*");
+  }
+  function sendRects(){
+    var els = document.querySelectorAll(".clickable");
+    var rects = [];
+    for(var k=0;k<els.length;k++){
+      var r = els[k].getBoundingClientRect();
+      if(r.width > 0 && r.height > 0)
+        rects.push({ x:r.left, y:r.top, w:r.width, h:r.height });
+    }
+    parent.postMessage({ type:"lf-rects", rects:rects }, "*");
+  }
+  function doClick(x, y){
+    var els = document.querySelectorAll(".clickable");
+    for(var k=0;k<els.length;k++){
+      var r = els[k].getBoundingClientRect();
+      if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom){
+        els[k].click();
+        setTimeout(sendRects, 100);   // layout may change after the click
+        return;
+      }
+    }
+  }
+  window.addEventListener("message", function(e){
+    var d = e.data || {};
+    if(d.type === "lf-show"){
+      if(d.anim !== undefined) applyAnim(d.anim);   // switch first, then paint
+      show(d.index, d.step || 0);
+    }
+    if(d.type === "lf-click") doClick(d.x, d.y);
+    /* The host fires this whenever the board could have changed size —
+       full-screen enter/exit above all, where the resize event inside this
+       frame is unreliable and arrives before the viewport has settled. */
+    if(d.type === "lf-refit") scheduleFit();
+    if(d.type === "lf-freeze-snap") sendFrozenBody(d.requestId);
+    if(d.type === "lf-export-snap") sendExportDoc(d.requestId);
+  });
+
+  /* Every signal that the frame's usable size or content metrics changed. */
+  window.addEventListener("resize", scheduleFit);
+  window.addEventListener("orientationchange", scheduleFit);
+  if(window.visualViewport)
+    window.visualViewport.addEventListener("resize", scheduleFit);
+  if(window.ResizeObserver){
+    try{ new ResizeObserver(scheduleFit).observe(document.documentElement); }catch(err){}
+  }
+  /* A web font swapping in after first layout is the other half of the
+     "fits on the second try" bug — the first fit measured Times New Roman. */
+  if(document.fonts && document.fonts.ready)
+    document.fonts.ready.then(scheduleFit).catch(function(){});
+  /* Late images / SVG likewise change the height they ask for. */
+  document.addEventListener("load", function(e){
+    var t = e.target;
+    if(t && (t.tagName === "IMG" || t.tagName === "IFRAME")) scheduleFit();
+  }, true);
+  /* A deck may re-lay itself out in response to input of its own — the
+     fixed-canvas decks bind 1-7 / +/- to a text-size level, and an
+     interactive figure can grow when it is clicked. Re-fit after, not
+     during: the deck's own handler has to run first. */
+  document.addEventListener("keydown", scheduleFitLater, true);
+  document.addEventListener("click", scheduleFitLater, true);
+
+  applyAnim(animOn);
+  // the preset runtime installs itself on load; re-assert after it exists
+  window.addEventListener("load", function(){ applyAnim(animOn); scheduleFit(); });
+  show(0, 0);
+})();
+<\/script>`;
+
+  // Load a deck from raw slides HTML text. `sourceName` is only used for the
+  // toast/title. `meta` carries folder identity so sessions can restore later.
+  // Returns true if slides were found.
+  function loadDeckFromText(text, sourceName, meta, opts){
+    const quiet = !!(opts && opts.quiet);
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const pageEls = doc.querySelectorAll(".page");
+    const count = pageEls.length;
+    if(!count){
+      if(!quiet) toast('No slides found — needs <section class="page"> blocks');
+      return false;
+    }
+    const stepCounts = Array.from(pageEls, pg => pg.querySelectorAll(".step").length);
+
+    // MULTI-DECK: every loaded deck gets its own iframe — existing decks and
+    // pages are kept, new pages append.
+    const deckId = "d" + Date.now() + "_" + state.decks.length;
+    const m = meta || {};
+    state.decks.push({
+      id:deckId, text, count,
+      name: sourceName || m.name || "Deck",
+      // The content registry's permanent code + the exact version this board is
+      // showing. A saved session stores these instead of the HTML itself.
+      code: m.code || null,
+      version: m.version || null,
+      folderId: m.folderId || null,
+      classId: m.classId || null,
+      chapterId: m.chapterId || null,
+      tag: m.tag || null
+    });
+
+    const frame = document.createElement("iframe");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("allowtransparency", "true");
+    frame.title = "Loaded slides — " + sourceName;
+    frame.addEventListener("load", syncDeck, { once:true });
+    deckLayer.appendChild(frame);
+    deckFrames[deckId] = frame;
+    frame.srcdoc = text + deckController(state.anim);
+
+    const startIdx = state.pages.length;
+    for(let i = 0; i < count; i++){
+      const p = blankPage();
+      p.deckId = deckId;
+      p.deckIndex = i;
+      p.stepCount = stepCounts[i];
+      state.pages.push(p);
+    }
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    if(!quiet){
+      requestAnimationFrame(() => {
+        sizeCanvas();          // idempotent — no-op when the size is already right
+        loadPage(startIdx);
+        toast(`Loaded ${count} slide${count>1?"s":""} from ${sourceName}`);
+      });
+    }
+    pingActivity();
+    return { startIdx, count };
+  }
+
+  function loadDeckFile(file){
+    const reader = new FileReader();
+    reader.onload = () => loadDeckFromText(String(reader.result), file.name);
+    reader.onerror = () => toast("Couldn't read that file");
+    reader.readAsText(file);
+  }
+
+  deckInput.addEventListener("change", () => {
+    if(deckInput.files) Array.from(deckInput.files).forEach(loadDeckFile);
+    deckInput.value = "";
+  });
+
+  /* The grid button opens the app's Master Library — decks come from the
+     library, not from the teacher's laptop. Standalone there is no library to
+     ask, so it falls back to the local file picker; the same fallback catches
+     a host that predates lf-open-library and therefore never acks. */
+  let libraryAck = false;
+  function openLibrary(){
+    if(!hosted) return deckInput.click();
+    libraryAck = false;
+    tellHost({ type:"lf-open-library" });
+    setTimeout(() => { if(!libraryAck) deckInput.click(); }, 600);
+  }
+
+  // Messages coming DOWN from the host app (PresenterView). Distinct types so
+  // they can't clash with the lf-rects / lf-media messages that come UP from
+  // the child deck iframes.
+  window.addEventListener("message", (e) => {
+    const d = e.data || {};
+    if(d.type === "lf-load-deck" && typeof d.text === "string"){
+      libraryAck = true;                 // a deck arrived — no file picker
+      loadDeckFromText(d.text, d.name || "Library", {
+        code: d.code || null,
+        version: d.version || null,
+        folderId: d.folderId || null,
+        classId: d.classId || null,
+        chapterId: d.chapterId || null,
+        tag: d.tag || null,
+        name: d.name || null
+      });
+    } else if(d.type === "lf-load-decks" && Array.isArray(d.decks)){
+      libraryAck = true;
+      let firstStart = -1, totalSlides = 0, loaded = 0;
+      d.decks.forEach((deck) => {
+        if(typeof deck.text !== "string") return;
+        const res = loadDeckFromText(deck.text, deck.name || "Library", deck, { quiet:true });
+        if(!res) return;
+        loaded++;
+        totalSlides += res.count;
+        if(firstStart < 0) firstStart = res.startIdx;
+      });
+      if(firstStart >= 0){
+        requestAnimationFrame(() => {
+          sizeCanvas();          // idempotent — no-op when the size is already right
+          loadPage(firstStart);
+          toast(`Loaded ${loaded} folder${loaded>1?"s":""} (${totalSlides} slide${totalSlides>1?"s":""})`);
+        });
+      }
+    } else if(d.type === "lf-library-ack"){
+      libraryAck = true;                 // the picker is up; don't fall back
+    } else if(d.type === "lf-fullscreen-ack"){
+      fsAck = true;                      // the host drives it; don't go it alone
+    } else if(d.type === "lf-fs-state"){
+      hostFS = !!d.on;
+      renderRails();
+      requestAnimationFrame(sizeCanvas);
+      refitDecksBurst();                 // the board just changed size
+    } else if(d.type === "lf-session-config"){
+      // Switching batch inside one panel: the board on screen belongs to the
+      // OLD batch. Flush it to the old batch's recovery key, then clear it —
+      // keeping the incoming batch's own recovery record intact so it can
+      // still be offered.
+      if(d.batchId && state.batchId && d.batchId !== state.batchId){
+        if(saveTimer){ clearTimeout(saveTimer); saveTimer = 0; }
+        if(state.pages.length) writeRecover();
+        clearBoard({ keepRecover:true });
+        recoverOffered = false;
+      }
+      // Adopted after the flush above, so that flush still writes under the
+      // key of the board it is flushing.
+      if(d.userKey) state.userKey = d.userKey;
+      if(d.batchId) state.batchId = d.batchId;
+      if(d.sessionId) state.sessionId = d.sessionId;
+    } else if(d.type === "lf-export-config"){
+      // Global settings (chapters/topics, cover pages, logo) plus this batch's
+      // export memory. Re-sent whenever the host reloads them, so the export
+      // form is never stale.
+      state.exportCfg = d.config || null;
+    } else if(d.type === "lf-restore-session" && d.payload){
+      // the host's copy wins — don't also offer the local crash snapshot
+      recoverOffered = true;
+      restoreSession(d.payload);
+      if(d.sessionId) state.sessionId = d.sessionId;
+    } else if(d.type === "lf-request-save"){
+      // Host wants a snapshot (export / inactivity / teach handoff).
+      tellHost({
+        type: "lf-session-state",
+        requestId: d.requestId || null,
+        reason: d.reason || "save",
+        sessionId: state.sessionId,
+        batchId: state.batchId || d.batchId || null,
+        board: serializeBoard(),
+        exportedThrough: d.exportedThrough != null ? d.exportedThrough : -1
+      });
+    } else if(d.type === "lf-key"){
+      // Clicker / host-forwarded keys when the iframe does not hold focus.
+      handleNavKey(d.key);
+    }
+  });
+
+  /* ═══ SESSION SERIALIZE / RESTORE ═════════════
+     v2 = ink and frozen boxes stored in board fractions. A payload with no
+     version is a v1 board whose numbers are pixels captured on some other
+     screen; there is nothing recorded to say how wide that screen was, so the
+     best available guess is the board in front of us now. That is no worse
+     than v1 was — it always drew those pixels against the current board — and
+     from the first save afterwards the page is correct for good. */
+  const BOARD_V = 2;
+  function serializeBoard(){
+    return {
+      v: BOARD_V,
+      current: state.current,
+      decks: state.decks.map(d => ({
+        id: d.id, text: d.text, count: d.count,
+        name: d.name || "Deck",
+        code: d.code || null,
+        version: d.version || null,
+        folderId: d.folderId || null,
+        classId: d.classId || null,
+        chapterId: d.chapterId || null,
+        tag: d.tag || null
+      })),
+      pages: state.pages.map(p => ({
+        strokes: (p.strokes || []).map(s => ({
+          mode: s.mode, color: s.color, width: s.width,
+          pts: (s.pts || []).map(pt => ({ x: pt.x, y: pt.y }))
+        })),
+        snap: p.snap ? {...p.snap} : null,
+        paper: p.paper || "dots",
+        deckId: p.deckId, deckIndex: p.deckIndex,
+        stepCount: p.stepCount || 0, stepIndex: p.stepIndex || 0
+      }))
+    };
+  }
+
+  /* `keepRecover` is for the one case where the board is being emptied but its
+     crash snapshot must survive: handing the panel from one batch to another.
+     The outgoing batch's ink is flushed to ITS key first and must not then be
+     wiped by the incoming batch's clear. */
+  function clearBoard(opts){
+    state.pages = []; state.current = -1;
+    state.decks = [];
+    for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
+    clearMedia(() => true);
+    board.classList.remove("visible");
+    emptyState.classList.remove("hidden");
+    positionSnap();
+    updateChrome();
+    if(!(opts && opts.keepRecover)) dropRecover();   // session over — nothing to recover
+  }
+
+  // Rebuild the board from a saved unfinished payload (decks + pages + ink).
+  function restoreSession(payload){
+    if(!payload || !Array.isArray(payload.pages)) return;
+    clearBoard();
+
+    const idMap = {};   // old deckId → new deckId
+    for(const deck of (payload.decks || [])){
+      if(typeof deck.text !== "string") continue;
+      const newId = "d" + Date.now() + "_" + state.decks.length;
+      idMap[deck.id] = newId;
+      state.decks.push({
+        id: newId, text: deck.text, count: deck.count,
+        name: deck.name || "Deck",
+        code: deck.code || null,
+        version: deck.version || null,
+        folderId: deck.folderId || null,
+        classId: deck.classId || null,
+        chapterId: deck.chapterId || null,
+        tag: deck.tag || null
+      });
+      const frame = document.createElement("iframe");
+      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("allowtransparency", "true");
+      frame.title = "Restored — " + (deck.name || "Deck");
+      frame.addEventListener("load", syncDeck, { once:true });
+      deckLayer.appendChild(frame);
+      deckFrames[newId] = frame;
+      frame.srcdoc = deck.text + deckController(state.anim);
+    }
+
+    /* v1 payloads are in pixels — divide them down by the board they are being
+       restored onto. sizeCanvas may not have run yet on a cold load, so fall
+       back to the live box rather than to zero. */
+    const legacy = (payload.v || 1) < 2;
+    const lr = legacy ? board.getBoundingClientRect() : null;
+    const LW = legacy ? (boardW || lr.width  || REF_W) : 1;
+    const LH = legacy ? (boardH || lr.height || 720)   : 1;
+
+    for(const src of payload.pages){
+      const p = blankPage();
+      p.strokes = (src.strokes || []).map(s => ({
+        mode: s.mode, color: s.color, width: s.width,
+        pts: (s.pts || []).map(pt => legacy ? { x: pt.x / LW, y: pt.y / LH }
+                                            : { x: pt.x, y: pt.y })
+      }));
+      p.snap = src.snap ? {...src.snap} : null;
+      if(p.snap && legacy){
+        p.snap.x /= LW; p.snap.w /= LW;
+        p.snap.y /= LH; p.snap.h /= LH;
+      }
+      if(p.snap && p.snap.deckId != null && idMap[p.snap.deckId])
+        p.snap.deckId = idMap[p.snap.deckId];
+      p.paper = PAPERS.indexOf(src.paper) >= 0 ? src.paper : "dots";
+      p.deckId = src.deckId != null && idMap[src.deckId] ? idMap[src.deckId] : null;
+      p.deckIndex = src.deckIndex;
+      p.stepCount = src.stepCount || 0;
+      p.stepIndex = src.stepIndex || 0;
+      state.pages.push(p);
+    }
+
+    if(!state.pages.length) return;
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    const go = Math.min(Math.max(0, payload.current|0), state.pages.length - 1);
+    requestAnimationFrame(() => {
+      sizeCanvas();          // idempotent — no-op when the size is already right
+      loadPage(go);
+      toast(`Restored ${state.pages.length} unexported page${state.pages.length>1?"s":""}`);
+    });
+    pingActivity();
+  }
+
+  /* ═══ CRASH RECOVERY ══════════════════════════
+     The host is told to persist the board on "end" and on "export" — which is
+     exactly the two moments a lesson is already over. Everything between them
+     lived only in this tab, so a crashed browser, a closed laptop or a stray
+     Cmd-W took the whole board with it.
+
+     So: a debounced local snapshot of the same payload the host gets. Deck HTML
+     is the bulky part and localStorage is small, so a board that will not fit
+     is saved again without it — the ink and the page structure are what cannot
+     be got back, the decks can always be re-picked from the Library. */
+  /* ONE KEY PER TEACHER PER BATCH. A single shared key was how a board inked
+     for one batch turned up on another batch's board — and, worse, how the
+     recovered wrap.batchId then redirected that batch's next export into the
+     wrong batch's history. Both ids are part of the key, the saved wrap is
+     re-checked against the live board before it is offered, and nothing here
+     is ever allowed to change state.batchId.
+
+     The teacher's key matters because a Preview has no batch at all: without
+     it every Preview on this machine shared the key "…:none", so one teacher's
+     inked preview — deck HTML and all — was offered to the next person to sign
+     in on the same browser. localStorage does not care who is logged in; this
+     key is what makes it care. */
+  const RECOVER_PREFIX = "lf-board-recover";
+  const recoverKey = () =>
+    RECOVER_PREFIX + ":" + (state.userKey || "anon") + ":" + (state.batchId || "none");
+  const RECOVER_MAX_AGE = 14 * 3600e3;    // a lesson, not last week
+  let saveTimer = 0, lastSaveAt = 0, recoverOffered = false;
+
+  function writeRecover(){
+    saveTimer = 0;
+    lastSaveAt = Date.now();
+    if(!state.pages.length){ dropRecover(); return; }
+    const board0 = serializeBoard();
+    const wrap = { at: Date.now(), sessionId: state.sessionId, batchId: state.batchId,
+                   userKey: state.userKey, board: board0 };
+    try{
+      localStorage.setItem(recoverKey(), JSON.stringify(wrap));
+    }catch(err){
+      // over quota — the decks are recoverable from the Library, the ink is not.
+      // A frozen page's baked slide goes with them: it is styled by its deck's
+      // head, so it is worth nothing once the deck text is gone.
+      try{
+        wrap.trimmed = true;
+        wrap.board = {
+          ...board0,
+          decks: board0.decks.map(d => ({ ...d, text: "" })),
+          pages: board0.pages.map(p => p.snap && p.snap.body
+            ? { ...p, snap: { ...p.snap, body: null } } : p)
+        };
+        localStorage.setItem(recoverKey(), JSON.stringify(wrap));
+      }catch(err2){ /* nothing more to try — the session save still covers it */ }
+    }
+  }
+  function dropRecover(){ try{ localStorage.removeItem(recoverKey()); }catch(err){} }
+
+  /* Boards saved under the old, teacher-less key ("lf-board-recover:<batch>")
+     can never be offered again — the key has three parts now. They are also
+     the biggest thing this app puts in localStorage, so leaving them there
+     would quietly eat the quota that writeRecover's trimming fallback exists
+     to cope with. Swept once, on load. */
+  (function dropLegacyRecover(){
+    try{
+      const stale = [];
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(RECOVER_PREFIX + ":") && k.split(":").length < 3) stale.push(k);
+      }
+      stale.forEach(k => localStorage.removeItem(k));
+    }catch(err){ /* private mode / quota — nothing to clean up anyway */ }
+  })();
+
+  // Debounced, and never more often than every 6s — writing the board on every
+  // stroke would put a JSON.stringify of the whole lesson on the ink path.
+  function scheduleRecover(){
+    if(saveTimer) return;
+    const wait = Math.max(1500, 6000 - (Date.now() - lastSaveAt));
+    saveTimer = setTimeout(writeRecover, wait);
+  }
+  // A tab being hidden or torn down is the last chance to get it right.
+  ["pagehide","visibilitychange"].forEach(ev => window.addEventListener(ev, () => {
+    if(ev === "visibilitychange" && !document.hidden) return;
+    if(saveTimer){ clearTimeout(saveTimer); saveTimer = 0; }
+    if(state.pages.length) writeRecover();
+  }));
+
+  function offerRecover(){
+    if(recoverOffered || state.pages.length) return;
+    recoverOffered = true;
+    let wrap = null;
+    try{ wrap = JSON.parse(localStorage.getItem(recoverKey()) || "null"); }catch(err){}
+    if(!wrap || !wrap.board || !(wrap.board.pages || []).length) return;
+    // Belt and braces: the key already carries both ids, but a board whose
+    // recorded batch — or teacher — is not the one on screen is never offered.
+    if((wrap.batchId || null) !== (state.batchId || null)) return;
+    if((wrap.userKey || null) !== (state.userKey || null)) return;
+    if(Date.now() - (wrap.at || 0) > RECOVER_MAX_AGE) return dropRecover();
+    const n = wrap.board.pages.length;
+    const mins = Math.round((Date.now() - wrap.at) / 60000);
+    const when = mins < 2 ? "a moment ago" : mins < 90 ? mins + " minutes ago" : "earlier today";
+    document.getElementById("recoverMsg").textContent =
+      `${n} page${n>1?"s":""} with your ink, left ${when}.`
+      + (wrap.trimmed ? " The slides will need re-picking from the Library." : "");
+    document.getElementById("recoverOverlay").classList.add("show");
+    document.getElementById("doRecover").onclick = () => {
+      document.getElementById("recoverOverlay").classList.remove("show");
+      restoreSession(wrap.board);
+      // Only the session id is adopted. state.batchId stays whatever the host
+      // configured for THIS board — a recovered board never re-points the
+      // batch, so a later export cannot land in another batch's history.
+      if(wrap.sessionId) state.sessionId = wrap.sessionId;
+    };
+    document.getElementById("discardRecover").onclick = () => {
+      document.getElementById("recoverOverlay").classList.remove("show");
+      dropRecover();
+    };
+  }
+
+  let activityTimer = 0;
+  function pingActivity(){
+    if(!hosted) return;
+    const now = Date.now();
+    if(now - activityTimer < 2000) return;   // throttle host chatter
+    activityTimer = now;
+    tellHost({ type: "lf-activity" });
+  }
+  ["pointerdown","pointermove","keydown","wheel"].forEach(ev =>
+    document.addEventListener(ev, pingActivity, { passive:true }));
+
+  /* Ask the live deck to hand back the slide exactly as it stands. One
+     serialize of ONE page, once, on the press — nothing is asked of the deck
+     while it is being presented. The timeout is the whole failure story: a
+     deck that does not answer (an old file, a frame still loading) simply
+     leaves the box to rebuild from source text, as it always did. */
+  /* One slide's markup is 4–40 KB. A bake far past that is a slide carrying
+     inlined photos, which the source text already holds and rebuilds fine —
+     so it falls back rather than storing the same base64 twice per freeze. */
+  const FREEZE_MAX = 600000;    // chars
+  function requestFrozenBody(frame, ms = 900){
+    return new Promise(resolve => {
+      if(!frame || !frame.contentWindow) return resolve(null);
+      const requestId = "fz" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      let settled = false;
+      const done = v => {
+        if(settled) return;
+        settled = true;
+        window.removeEventListener("message", onMsg);
+        resolve(v);
+      };
+      const onMsg = e => {
+        const d = e.data || {};
+        if(d.type !== "lf-frozen-body" || d.requestId !== requestId) return;
+        done(d.html && d.html.length <= FREEZE_MAX
+          ? { body:d.html, rootClass:d.rootClass || "", rootStyle:d.rootStyle || "" }
+          : null);
+      };
+      window.addEventListener("message", onMsg);
+      frame.contentWindow.postMessage({ type:"lf-freeze-snap", requestId }, "*");
+      setTimeout(() => done(null), ms);
+    });
+  }
+
+  async function addPage({duplicate=false} = {}){
+    const page = blankPage();
+    /* Where this page lands is decided BEFORE the deck is asked anything:
+       the freeze below is awaited, and a clicker press in that moment must
+       not drop the new page somewhere else in the lesson. */
+    let at = state.current;
+    if(duplicate && at >= 0){
+      const cur = state.pages[at];
+      const r = board.getBoundingClientRect();
+      const url = composeCurrent(false);   // ink only — HTML comes from the frozen deck iframe
+      const baked = cur.deckId != null
+        ? await requestFrozenBody(deckFrames[cur.deckId])
+        : null;
+      page.snap = {
+        // fractions of the board, centred at 62% — see NORMALISED INK
+        url, x:.19, y:.19, w:.62, h:.62,
+        baseW: r.width, baseH: r.height,
+        uid: "s" + Date.now() + "_" + Math.random().toString(36).slice(2),
+        // Freeze the slide HTML into the box. `body` is the live slide as it
+        // was on the board; slide/step stay recorded either way, both as the
+        // fallback for a deck that did not answer and as what the box means.
+        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: shownStep(cur),
+        body: baked ? baked.body : null,
+        rootClass: baked ? baked.rootClass : "",
+        rootStyle: baked ? baked.rootStyle : ""
+      };
+    }
+    if(!duplicate) at = state.current;
+    state.pages.splice(at + 1, 0, page);
+    board.classList.add("visible");
+    emptyState.classList.add("hidden");
+    requestAnimationFrame(() => {
+      sizeCanvas();          // idempotent — no-op when the size is already right
+      loadPage(at + 1);
+      scheduleRecover();
+      toast(duplicate
+        ? "Page frozen onto a new page — drag or resize it"
+        : "Blank page added");
+    });
+  }
+
+  function deletePagesAfter(){
+    if(state.current < 0) return;
+    const removed = state.pages.length - (state.current + 1);
+    if(removed <= 0) return toast("No pages after this one");
+    state.pages.splice(state.current + 1);
+    updateChrome();
+    scheduleRecover();
+    toast(`Cut ${removed} page${removed > 1 ? "s" : ""} after this one`);
+  }
+
+  function goTo(i){
+    if(i < 0 || i >= state.pages.length || i === state.current) return;
+    loadPage(i);
+  }
+
+  /* step-aware navigation: Next first reveals the slide's remaining
+     .step animations one by one; only then does it turn the page.  */
+  function nextAction(){
+    const page = state.pages[state.current];
+    if(hasNextStep(page)){
+      page.stepIndex++;
+      syncDeck();
+      updateChrome();
+      return true;              // consumed by a step
+    }
+    if(state.current < state.pages.length - 1){ goTo(state.current + 1); return true; }
+    return false;               // already at the very end
+  }
+  function prevAction(){
+    const page = state.pages[state.current];
+    if(hasPrevStep(page)){
+      page.stepIndex--;
+      syncDeck();
+      updateChrome();
+      return;
+    }
+    goTo(state.current - 1);
+  }
+
+  /* ═══ UNDO (structural, per page) ═════════════
+     Drawing used to deep-clone every stroke on pointerdown — with dense ink
+     that hitch is the lag you feel when the pen first touches the board.
+     Pen/area-eraser strokes now push a cheap length checkpoint; full clones
+     stay for stroke-eraser / clear / snap edits. */
+  function cloneState(page){
+    return {
+      strokes: page.strokes.map(s => ({...s, pts: s.pts.map(p => ({...p}))})),
+      snap: page.snap ? {...page.snap} : null
+    };
+  }
+  function pushUndo(){
+    const page = state.pages[state.current];
+    if(!page) return;
+    page.undo.push(cloneState(page));
+    if(page.undo.length > 30) page.undo.shift();
+  }
+  function pushStrokeCheckpoint(){
+    const page = state.pages[state.current];
+    if(!page) return;
+    page.undo.push({ kind:"stroke", len: page.strokes.length, snap: page.snap });
+    if(page.undo.length > 30) page.undo.shift();
+  }
+  function undo(){
+    const page = state.pages[state.current];
+    if(!page) return;
+    if(!page.undo.length){ toast("Nothing to undo"); return; }
+    const prev = page.undo.pop();
+    if(prev && prev.kind === "stroke"){
+      page.strokes.length = Math.min(page.strokes.length, prev.len);
+    } else {
+      page.strokes = prev.strokes;
+      page.snap = prev.snap;
+      positionSnap();
+    }
+    redraw();
+    scheduleRecover();
+  }
+
+  /* ═══ DRAWING & ERASING ═══════════════════════ */
+  let activeStroke = null, erasing = false;
+  let eraseRaf = 0;
+  const MIN_PT_DIST2 = 0.8 * 0.8;    // drop sub-pixel duplicates from high-Hz pens
+
+  function cacheInkRect(){
+    const r = canvas.getBoundingClientRect();
+    inkRect = { left:r.left, top:r.top };
+    if(r.width){ boardW = r.width; boardH = r.height; }
+  }
+  function posFromClient(x, y){
+    return { x: x - inkRect.left, y: y - inkRect.top };
+  }
+  function pos(e){ return posFromClient(e.clientX, e.clientY); }
+  // board pixels → the fraction that actually gets stored
+  const toFrac = p => ({ x: boardW ? p.x / boardW : 0, y: boardH ? p.y / boardH : 0 });
+
+  function distToSegXY(px, py, ax, ay, bx, by){
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx*dx + dy*dy;
+    let t = len2 ? ((px - ax)*dx + (py - ay)*dy) / len2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    return Math.hypot(px - (ax + t*dx), py - (ay + t*dy));
+  }
+
+  const strokePx = s => strokeWidthPx(s, boardW);
+
+  /* p is in board pixels, the stroke is in fractions. The multiply is inlined
+     rather than mapping the points, so dragging the eraser through dense ink
+     allocates nothing per frame. */
+  function strokeHit(p, s){
+    const pts = s.pts, tol = STROKE_ERASER_HIT + strokePx(s) / 2;
+    if(!pts || !pts.length) return false;
+    if(pts.length === 1)
+      return Math.hypot(p.x - pts[0].x*boardW, p.y - pts[0].y*boardH) <= tol;
+    for(let i=1;i<pts.length;i++)
+      if(distToSegXY(p.x, p.y,
+                     pts[i-1].x*boardW, pts[i-1].y*boardH,
+                     pts[i].x*boardW,   pts[i].y*boardH) <= tol) return true;
+    return false;
+  }
+
+  function eraseStrokesAt(p){
+    const page = state.pages[state.current];
+    const before = page.strokes.length;
+    page.strokes = page.strokes.filter(s => s.mode === "erase" || !strokeHit(p, s));
+    if(page.strokes.length !== before){
+      if(eraseRaf) return;
+      eraseRaf = requestAnimationFrame(() => { eraseRaf = 0; redraw(); });
+    }
+  }
+
+  function appendInkPoint(p){
+    if(!activeStroke) return;
+    const pts = activeStroke.pts;
+    const last = pts[pts.length - 1];
+    const lx = last.x * boardW, ly = last.y * boardH;
+    const dx = p.x - lx, dy = p.y - ly;
+    if(dx*dx + dy*dy < MIN_PT_DIST2 && pts.length > 1) return;
+    pts.push(toFrac(p));
+    /* Pen ink goes to the low-latency live layer. The area eraser cannot:
+       destination-out against an empty live layer removes nothing, so it has
+       to bite the committed buffer — still one small op plus one blit. */
+    /* The pen draws straight onto the visible canvas, as directly as it can —
+       this is the path latency is felt on. The area eraser cannot: it is
+       destination-out, so it has to bite the buffer and be blitted back. */
+    const c = activeStroke.mode === "erase" ? bctx : ctx;
+    applyStrokeStyle(activeStroke, c, boardW);
+    c.beginPath(); c.moveTo(lx, ly); c.lineTo(p.x, p.y); c.stroke();
+    if(activeStroke.mode === "erase") presentSoon();
+  }
+
+  // Fold the finished stroke into the buffer so the next blit still has it.
+  function endStroke(){
+    if(!activeStroke) return;
+    if(activeStroke.mode !== "erase"){
+      paintStroke(activeStroke, bctx, boardW, boardH);
+      bctx.globalCompositeOperation = "source-over";
+    }
+    activeStroke = null;
+    present();
+  }
+
+  /* ── the erasers' own cursor ───────────────────
+     "Crosshair" never said how much ink the next drag would take. The ring is
+     the radius that will actually be erased. It is painted in the overlay pass
+     after each blit, so it never has to be cleared — the next blit removes it. */
+  const ringTools = { "eraser":1, "eraser-obj":1 };
+  let hoverPt = null, hoverRaf = 0, lastCursor = "";
+
+  const eraseRadiusPx = () =>
+    (state.tool === "eraser-obj"
+      ? (ERASER_PX[state.width] || ERASER_PX[1]) * scaleFor(boardW)
+      : (STROKE_ERASER_HIT * 2) * scaleFor(boardW)) / 2;
+
+  function drawHoverRing(){
+    const r = Math.max(3, eraseRadiusPx());
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(hoverPt.x, hoverPt.y, r, 0, 6.2832);
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(2,6,23,.85)";       // dark halo first,
+    ctx.stroke();
+    ctx.lineWidth = 1.25; ctx.strokeStyle = "rgba(241,245,249,.95)"; // so it reads on
+    ctx.stroke();                                                    // ink or on board
+    ctx.restore();
+  }
+  const scheduleRing = () => {
+    if(hoverRaf) return;
+    hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; present(); });
+  };
+
+  /* Everything on the board that is not ink. Painted after each blit and gone
+     again on the next one, so it can never be clear()ed over live ink, land in
+     page.strokes, reach the undo stack, or turn up in the export. */
+  function paintOverlay(){
+    if(ringTools[state.tool] && hoverPt) return drawHoverRing();
+    if(state.tool === "laser" && laserPts.length) return drawLaserTrail();
+  }
+
+  /* ── laser pointer ─────────────────────────────
+     Points at things without leaving anything behind: the trail lives on the
+     live layer, decays in under a second, and never reaches page.strokes — so
+     there is nothing to clear afterwards and nothing in the export or the PDF. */
+  const LASER_MS = 620;
+  let laserPts = [], laserRaf = 0, laserInside = false;
+
+  function drawLaserTrail(){
+    const now = performance.now();
+    ctx.save();
+    ctx.lineCap = ctx.lineJoin = "round";
+    for(let i=1;i<laserPts.length;i++){
+      const a = laserPts[i-1], b = laserPts[i];
+      const f = 1 - (now - b.t) / LASER_MS;
+      if(f <= 0) continue;
+      ctx.strokeStyle = "rgba(248,113,113," + (f * .5).toFixed(3) + ")";
+      ctx.lineWidth = 5 * f * scaleFor(boardW) + 1;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    const h = laserPts[laserPts.length - 1], rr = 9 * scaleFor(boardW);
+    const g = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, rr);
+    g.addColorStop(0,   "rgba(255,255,255,.95)");
+    g.addColorStop(.35, "rgba(248,113,113,.9)");
+    g.addColorStop(1,   "rgba(248,113,113,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(h.x, h.y, rr, 0, 6.2832); ctx.fill();
+    ctx.restore();
+  }
+  function laserTick(){
+    laserRaf = 0;
+    const now = performance.now();
+    // keep the head alive while the pointer rests, or a laser held still fades out
+    if(laserInside && hoverPt){
+      const l = laserPts[laserPts.length - 1];
+      if(!l || now - l.t > 30) laserPts.push({ x:hoverPt.x, y:hoverPt.y, t:now });
+    }
+    while(laserPts.length && now - laserPts[0].t > LASER_MS) laserPts.shift();
+    present();                                   // blit wipes the old trail
+    if(laserPts.length) laserRaf = requestAnimationFrame(laserTick);
+  }
+  function pushLaser(p){
+    laserPts.push({ x:p.x, y:p.y, t:performance.now() });
+    if(!laserRaf) laserRaf = requestAnimationFrame(laserTick);
+  }
+  function stopLaser(){
+    laserInside = false;
+    if(!laserRaf && laserPts.length){ laserPts = []; present(); }
+  }
+
+  canvas.addEventListener("pointerdown", e => {
+    const page = state.pages[state.current];
+    if(!page) return;
+    e.preventDefault();
+    cacheInkRect();
+    const p = pos(e);
+    hoverPt = p;
+
+    if(state.tool === "laser"){ laserInside = true; pushLaser(p); return; }
+
+    // tap landed on a .clickable element of the loaded deck →
+    // forward a real click to it instead of starting a stroke
+    if(clickableAt(p)){
+      const f = activeDeckFrame();
+      if(f && f.contentWindow)
+        f.contentWindow.postMessage({ type:"lf-click", x:p.x, y:p.y }, "*");
+      return;
+    }
+
+    canvas.setPointerCapture(e.pointerId);
+
+    if(state.tool === "eraser"){            // STROKE eraser — whole strokes
+      pushUndo();
+      erasing = true;
+      eraseStrokesAt(p);
+      scheduleRing();
+      return;
+    }
+    if(state.tool === "pen" || state.tool === "eraser-obj"){
+      pushStrokeCheckpoint();               // cheap — no deep clone
+      activeStroke = {
+        mode: state.tool === "pen" ? "draw" : "erase",
+        color: state.color, width: state.width,
+        pts: [toFrac(p)]
+      };
+      page.strokes.push(activeStroke);
+      // dot on tap — live layer for the pen, committed buffer for the eraser
+      if(activeStroke.mode === "erase"){
+        paintStroke(activeStroke, bctx, boardW, boardH); present();
+      } else {
+        paintStroke(activeStroke, ctx, boardW, boardH);
+      }
+    }
+  });
+
+  canvas.addEventListener("pointermove", e => {
+    hoverPt = posFromClient(e.clientX, e.clientY);
+
+    if(state.tool === "laser"){
+      e.preventDefault();
+      laserInside = true;
+      pushLaser(hoverPt);
+      return;
+    }
+    if(ringTools[state.tool]) scheduleRing();
+
+    if(erasing){ e.preventDefault(); eraseStrokesAt(hoverPt); return; }
+
+    if(!activeStroke){
+      /* Hover used to re-read the canvas rect and re-assign style.cursor on
+         every single move — a forced layout plus a style invalidation per
+         event, for a value that almost never changes. The rect is cached by
+         the events that can actually move it (resize, full screen), and the
+         cursor is only written when it differs. */
+      const want = clickableAt(hoverPt) ? "pointer" : "";
+      if(want !== lastCursor) canvas.style.cursor = lastCursor = want;
+      return;
+    }
+    e.preventDefault();
+    const raw = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : null;
+    const events = raw && raw.length ? raw : [e];
+    for(let i=0;i<events.length;i++) appendInkPoint(posFromClient(events[i].clientX, events[i].clientY));
+  });
+
+  ["pointerup","pointercancel"].forEach(ev =>
+    canvas.addEventListener(ev, () => {
+      endStroke();
+      erasing = false;
+      if(eraseRaf){ cancelAnimationFrame(eraseRaf); eraseRaf = 0; redraw(); }
+      if(ringTools[state.tool]) scheduleRing();
+      scheduleRecover();
+    })
+  );
+
+  canvas.addEventListener("pointerleave", () => {
+    hoverPt = null;
+    stopLaser();
+    if(!activeStroke && !erasing) present();   // drop the ring / trail
+  });
+
+  /* ═══ CHROME / UI SYNC ════════════════════════ */
+  function updateChrome(){
+    const n = state.pages.length, c = state.current;
+    const page = state.pages[c];
+    pageLabel.textContent = n ? `${c+1} / ${n}` : "0 / 0";
+    pageDots.innerHTML = state.pages
+      .map((_,i) => `<span class="${i===c?"cur":""}"></span>`).join("");
+    prevBtn.disabled = c < 0 || (c === 0 && !hasPrevStep(page));
+    nextBtn.disabled = c < 0 || (c >= n - 1 && !hasNextStep(page));
+    const pm = document.getElementById("prevBtnMini"), nm = document.getElementById("nextBtnMini");
+    if(pm) pm.disabled = prevBtn.disabled;
+    if(nm) nm.disabled = nextBtn.disabled;
+    board.className = "board tool-" + state.tool + (n ? " visible" : "");
+    renderRails();
+  }
+
+  let toastTimer;
+  function toast(msg){
+    actionToast.textContent = msg;
+    actionToast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => actionToast.classList.remove("show"), 2000);
+  }
+
+  /* ═══ ACTIONS ═════════════════════════════════ */
+  // One way in, so switching tools always leaves the live layer clean — a
+  // half-drawn stroke or a laser trail must not survive into the next tool.
+  function setTool(id){
+    if(state.tool === id) return;
+    state.tool = id;
+    laserPts = []; laserInside = false;
+    canvas.style.cursor = lastCursor = "";
+    present();                                 // clear whatever the last tool drew
+    if(ringTools[id] && hoverPt) scheduleRing();
+    updateChrome();
+  }
+
+  function cyclePaper(){
+    const page = state.pages[state.current];
+    if(!page) return toast("No page yet — add one first");
+    page.paper = PAPERS[(PAPERS.indexOf(curPaper()) + 1) % PAPERS.length];
+    paintPaper();
+    updateChrome();
+    scheduleRecover();
+    toast("Page background — " + PAPER_LABEL[page.paper]);
+  }
+
+  function handleAction(id){
+    switch(id){
+      case "add-page":  addPage(); break;
+      case "paper":     cyclePaper(); break;
+      case "duplicate": state.current < 0 ? addPage() : addPage({duplicate:true}); break;
+      case "clear": {
+        const page = state.pages[state.current];
+        if(!page) return toast("No page yet — add one first");
+        pushUndo();
+        page.strokes = [];
+        redraw();
+        scheduleRecover();
+        toast("Ink cleared");
+        break;
+      }
+      case "delete-after": deletePagesAfter(); break;
+      case "undo": undo(); break;
+      case "first": goTo(0); break;
+      case "last":  goTo(state.pages.length - 1); break;
+      case "close": closeOverlay.classList.add("show"); break;
+      case "export": requestExport(); break;
+      case "fullscreen": toggleFS(); break;
+      case "anim": setAnim(!state.anim); break;
+      case "library": openLibrary(); break;
+      // Back to the main screen. The host does the work — it saves the board
+      // first unless every page has already gone out through Export — so all
+      // this does is ask, and say so while the round trip happens.
+      case "exit":
+        if(state.pages.length) toast("Returning to the main screen…");
+        tellHost({ type:"lf-exit" });
+        break;
+    }
+  }
+
+  /* ═══ EXPORT — PDF of selected pages ══════════
+     Builds one printable document: every page becomes a landscape
+     sheet containing its loaded slide HTML (all steps revealed),
+     its frozen-page snapshot, and its ink strokes rendered to PNG.
+     The browser's print dialog then saves it as a PDF.
+
+     If the teacher is not on the final page, a confirm asks whether
+     remaining pages should be included. After export the host is
+     told to persist the board into session history.               */
+  function requestExport(){
+    if(!state.pages.length) return toast("Nothing to export — add a page first");
+    if(state.current < state.pages.length - 1){
+      const left = state.pages.length - state.current - 1;
+      document.getElementById("exportMsg").textContent =
+        `You're on page ${state.current + 1} of ${state.pages.length}. ` +
+        `Do you want to include the remaining ${left} page${left>1?"s":""} in the export?`;
+      exportOverlay.classList.add("show");
+      return;
+    }
+    beginExport(state.pages.length - 1);
+  }
+
+  /* ═══ EXPORT VARIABLES ════════════════════════
+     Between "how many pages" and the PDF sits one form: batch code, chapter,
+     lecture number and topics. Those values are substituted into the batch's
+     uploaded Starting / Ending pages ({{BATCH_CODE}} and friends) and they
+     name the PDF, so the form is worth showing even with no covers uploaded.
+
+     A panel opened without a batch (no host, or Preview from the library)
+     has nothing to fill in and nowhere to remember it — it exports straight
+     through, exactly as it did before.                                     */
+  const vBatchCode  = document.getElementById("vBatchCode");
+  const vBatchHint  = document.getElementById("vBatchHint");
+  const vChapter    = document.getElementById("vChapter");
+  const vChapterNo  = document.getElementById("vChapterNo");
+  const vChapterName= document.getElementById("vChapterName");
+  const vLecture    = document.getElementById("vLecture");
+  const vLecGrid    = document.getElementById("vLecGrid");
+  const vLecHint    = document.getElementById("vLecHint");
+  const vTopics     = document.getElementById("vTopics");
+  const vTopicChips = document.getElementById("vTopicChips");
+  const varsCfgNote = document.getElementById("varsCfgNote");
+  let pendingThrough = -1;
+  /* What the previous export from this batch used. The chapter is the key:
+     re-exporting the same chapter offers the next lecture, any other chapter
+     starts again at 1. Set once per open, in openExportVars. */
+  let lastChapterKey = "";
+  let lastLecture    = 0;
+  let lastTopicsText = "";
+
+  const chapterList = () =>
+    (state.exportCfg && Array.isArray(state.exportCfg.chapters)) ? state.exportCfg.chapters : [];
+  const splitTopics = s =>
+    String(s || "").split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+
+  // 1–10 as one-tap chips (nearly every lecture); 11–40 through the number box.
+  for(let n = 1; n <= 10; n++){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "lec-chip"; b.textContent = String(n);
+    b.addEventListener("click", () => { vLecture.value = String(n); syncLecChips(); });
+    vLecGrid.appendChild(b);
+  }
+  function syncLecChips(){
+    const cur = Number(vLecture.value);
+    Array.from(vLecGrid.children).forEach((b, i) => b.classList.toggle("on", i + 1 === cur));
+  }
+  vLecture.addEventListener("input", syncLecChips);
+
+  function renderTopicChips(){
+    const num = vChapterNo.value;
+    const ch = chapterList().find(c => String(c.number) === String(num));
+    const topics = (ch && ch.topics) || [];
+    vTopicChips.innerHTML = "";
+    if(!topics.length){
+      const s = document.createElement("span");
+      s.className = "hint";
+      s.textContent = chapterList().length
+        ? "No topics saved for this chapter — type them below."
+        : "No chapter & topic map yet — add one in Batch settings → Chapters.";
+      vTopicChips.appendChild(s);
+      return;
+    }
+    const chosen = new Set(splitTopics(vTopics.value));
+    topics.forEach(t => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "topic-chip" + (chosen.has(t) ? " on" : "");
+      b.textContent = t;
+      b.addEventListener("click", () => {
+        const list = splitTopics(vTopics.value);
+        const at = list.indexOf(t);
+        if(at >= 0) list.splice(at, 1); else list.push(t);
+        vTopics.value = list.join(", ");
+        renderTopicChips();
+      });
+      vTopicChips.appendChild(b);
+    });
+  }
+  vTopics.addEventListener("input", renderTopicChips);
+
+  /* Lecture numbering follows the CHAPTER, not the calendar.
+     Staying on the chapter the last export used offers the next lecture;
+     moving to any other chapter restarts that chapter at lecture 1 and drops
+     the remembered topics, so nothing from the previous lecture leaks into a
+     new one. Everything else the teacher typed is left alone.              */
+  function applyLectureForChapter(){
+    const raw  = vChapterNo.value.trim();
+    const now  = raw === "" ? "" : String(Number(raw));
+    const same = now !== "" && now === lastChapterKey;
+    if(same){
+      vLecture.value = String(Math.min(40, (lastLecture || 0) + 1));
+      vTopics.value  = lastTopicsText;
+      vLecHint.textContent = lastLecture
+        ? `Same chapter as your last export (lecture ${lastLecture}) — offering the next one.`
+        : "First export for this chapter.";
+    } else {
+      vLecture.value = "1";
+      vTopics.value  = "";
+      vLecHint.textContent = lastChapterKey
+        ? "Different chapter from your last export — the count restarts at 1."
+        : "First export for this batch.";
+    }
+    syncLecChips();
+    renderTopicChips();
+  }
+
+  // The select is only a shortcut: it fills the number and name boxes, which
+  // stay editable for a chapter that is not in the map yet.
+  vChapter.addEventListener("change", () => {
+    const ch = chapterList().find(c => String(c.number) === vChapter.value);
+    if(!ch) return;
+    vChapterNo.value = String(ch.number);
+    vChapterName.value = ch.name;
+    applyLectureForChapter();
+  });
+  vChapterNo.addEventListener("input", () => {
+    const ch = chapterList().find(c => String(c.number) === vChapterNo.value);
+    if(ch){ vChapter.value = String(ch.number); vChapterName.value = ch.name; }
+    else vChapter.value = "";
+    applyLectureForChapter();
+  });
+
+  function renderChapterSelect(prefer){
+    const chapters = chapterList();
+    vChapter.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = chapters.length ? "— pick a chapter —" : "— no map saved —";
+    vChapter.appendChild(blank);
+    chapters.forEach(c => {
+      const o = document.createElement("option");
+      o.value = String(c.number);
+      o.textContent = c.number + ". " + c.name;
+      vChapter.appendChild(o);
+    });
+    const hit = chapters.find(c => String(c.number) === String(prefer));
+    if(hit){
+      vChapter.value = String(hit.number);
+      vChapterNo.value = String(hit.number);
+      vChapterName.value = hit.name;
+    } else {
+      vChapter.value = "";
+      vChapterNo.value = prefer == null ? "" : String(prefer);
+      vChapterName.value = "";
+    }
+  }
+
+  function openExportVars(through){
+    pendingThrough = through;
+    const cfg  = state.exportCfg || {};
+    const last = cfg.lastExport || {};
+
+    // Everything the last export used comes back filled in; only the lecture
+    // number moves on, and only while the chapter stays the same.
+    lastChapterKey = last.chapterNumber == null ? "" : String(Number(last.chapterNumber));
+    lastLecture    = Number(last.lectureNumber) > 0 ? Number(last.lectureNumber) : 0;
+    lastTopicsText = Array.isArray(last.topics) ? last.topics.join(", ") : "";
+
+    vBatchCode.value = last.batchCode || "";
+    vBatchHint.textContent = last.batchCode
+      ? "Pre-filled from your last export — edit it if the batch changed."
+      : "First export for this batch — whatever you type is remembered for next time.";
+
+    renderChapterSelect(last.chapterNumber);
+    // A chapter that was typed by hand last time is not in the map, so the
+    // select could not restore its name — the remembered one still can.
+    if(!vChapterName.value && last.chapterName) vChapterName.value = last.chapterName;
+    applyLectureForChapter();
+
+    const nStart = coverPages(cfg, "start").length;
+    const nEnd   = coverPages(cfg, "end").length;
+    const bits = [];
+    bits.push(nStart ? `<b>${nStart} starting page${nStart === 1 ? "" : "s"}</b>` : "no Starting page");
+    bits.push(nEnd ? `<b>${nEnd} ending page${nEnd === 1 ? "" : "s"}</b>` : "no Ending page");
+    bits.push(cfg.logo ? "<b>logo</b> on every slide" : "no logo");
+    varsCfgNote.innerHTML = bits.join(" &nbsp;·&nbsp; ")
+      + " — change these in Global settings on the dashboard.";
+
+    varsOverlay.classList.add("show");
+    setTimeout(() => { try{ vBatchCode.focus(); }catch(err){} }, 60);
+  }
+
+  function beginExport(through){
+    if(!state.batchId) return exportPDF({ through });
+    openExportVars(through);
+  }
+
+  document.getElementById("cancelVars").addEventListener("click", () =>
+    varsOverlay.classList.remove("show"));
+
+  document.getElementById("confirmVars").addEventListener("click", () => {
+    const lec = Number(vLecture.value);
+    if(vLecture.value !== "" && (!Number.isInteger(lec) || lec < 1 || lec > 40)){
+      vLecture.focus();
+      return toast("Lecture number must be a whole number from 1 to 40");
+    }
+    const values = {
+      batchCode: vBatchCode.value.trim(),
+      chapterNumber: vChapterNo.value === "" ? null : Number(vChapterNo.value),
+      chapterName: vChapterName.value.trim(),
+      lectureNumber: vLecture.value === "" ? null : lec,
+      topics: splitTopics(vTopics.value),
+      date: new Date().toLocaleDateString()
+    };
+    varsOverlay.classList.remove("show");
+    // Host-side so the next export pre-fills; fire-and-forget.
+    if(state.batchId) tellHost({ type:"lf-export-vars", batchId: state.batchId, values });
+    exportPDF({ through: pendingThrough, vars: values });
+  });
+
+  /* ── {{VARIABLE}} substitution for the uploaded cover pages ──
+     Unknown names are LEFT IN PLACE: a typo should be visible in the PDF,
+     not silently blanked out. Mirrors substituteVariables in
+     src/lib/globalSettings.js — keep the two in step.                      */
+  const escHtmlText = s => String(s).replace(/[&<>"]/g,
+    c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+  function substituteVars(html, v, pageCount){
+    const vals = v || {};
+    const topics = vals.topics || [];
+    // Escaped, because each value is dropped into someone's HTML page: a topic
+    // like "Pulleys & <strings>" must not become markup. TOPIC_LIST_HTML is the
+    // one exception — it is markup, assembled here from escaped parts.
+    const map = {
+      BATCH_CODE:      escHtmlText(vals.batchCode || ""),
+      CHAPTER_NUMBER:  vals.chapterNumber != null ? String(vals.chapterNumber) : "",
+      CHAPTER_NAME:    escHtmlText(vals.chapterName || ""),
+      LECTURE_NUMBER:  vals.lectureNumber != null ? String(vals.lectureNumber) : "",
+      TOPIC_LIST:      escHtmlText(topics.join(", ")),
+      TOPIC_LIST_HTML: topics.length
+        ? "<ul>" + topics.map(t => "<li>" + escHtmlText(t) + "</li>").join("") + "</ul>"
+        : "",
+      TOPIC_COUNT:     String(topics.length),
+      DATE:            escHtmlText(vals.date || new Date().toLocaleDateString()),
+      PAGE_COUNT:      String(pageCount)
+    };
+    return String(html || "").replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (whole, name) => {
+      const hit = map[name.toUpperCase()];
+      return hit === undefined ? whole : hit;
+    });
+  }
+
+  /* The cover pages for one end of the PDF, in print order.
+     `startPages` / `endPages` are the current (many-per-end) shape; the old
+     single `startHtml` / `endHtml` is still accepted so a host that has not
+     been reloaded yet keeps exporting its covers. */
+  function coverPages(cfg, role){
+    const list = role === "end" ? cfg.endPages : cfg.startPages;
+    if(Array.isArray(list)) return list.filter(p => p && p.html);
+    const html = role === "end" ? cfg.endHtml : cfg.startHtml;
+    return html ? [{ html, fit:"fill", name:role }] : [];
+  }
+
+  /* Lay an untouched copy of a cover page out off-screen and read the size it
+     actually wants, plus a background colour to pad any gap with. Never
+     rejects and never hangs: a cover that will not settle falls back to the
+     sheet's own size, which is what the export always used to assume. */
+  function measureCover(srcdoc, W, H){
+    return new Promise(resolve => {
+      const f = document.createElement("iframe");
+      f.setAttribute("aria-hidden", "true");
+      f.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;height:${H}px;`
+        + "border:0;visibility:hidden;pointer-events:none";
+      let settled = false;
+      let giveUp;
+      const finish = (r) => {
+        if(settled) return;
+        settled = true;
+        clearTimeout(giveUp);
+        try{ f.remove(); }catch(err){}
+        resolve(r);
+      };
+      const read = () => {
+        try{
+          const d  = f.contentDocument;
+          const de = d.documentElement, b = d.body;
+          let w = Math.max(de.scrollWidth || 0, b ? b.scrollWidth : 0, b ? b.offsetWidth : 0);
+          let h = Math.max(de.scrollHeight || 0, b ? b.scrollHeight : 0, b ? b.offsetHeight : 0);
+          /* Prefer the AUTHORED SHEET over the viewport. A cover written like
+             a deck is a fixed 1280×720 `.slide` inside a 100vw/100vh wrapper
+             that a script normally scales to fit; with scripts stripped for
+             print, the wrapper measures as the whole board and the slide would
+             print at its natural size in the corner with bars around it. The
+             slide is the box that has to be scaled onto the sheet. */
+          let root = null;
+          for(const sel of [".slide", ".page", "#stage", ".sheet"]){
+            const el = d.querySelector(sel);
+            if(el && (el.offsetWidth || 0) > 40 && (el.offsetHeight || 0) > 40){ root = el; break; }
+          }
+          if(root){ w = root.offsetWidth; h = root.offsetHeight; }
+
+          /* No sheet element and nothing in flow either — a cover that hides
+             its content until a script runs. Fall back to the biggest element
+             box; on a normal page the body metrics above are already right and
+             an oversized decorative element must not shrink the cover. */
+          if(w < 40 || h < 40){
+            const els = d.querySelectorAll("body *");
+            let mw = 0, mh = 0;
+            for(let k = 0; k < els.length; k++){
+              const ow = els[k].offsetWidth || 0, oh = els[k].offsetHeight || 0;
+              if(ow > mw && ow <= 8000) mw = ow;
+              if(oh > mh && oh <= 8000) mh = oh;
+            }
+            w = Math.max(w, mw);
+            h = Math.max(h, mh);
+          }
+          let bg = "#ffffff";
+          try{
+            const cs = getComputedStyle(b || de).backgroundColor;
+            if(cs && cs !== "transparent" && !/^rgba\(0,\s*0,\s*0,\s*0\)$/.test(cs)) bg = cs;
+          }catch(err){}
+          finish({ w: w > 20 ? w : W, h: h > 20 ? h : H, bg });
+        }catch(err){ finish({ w:W, h:H, bg:"#ffffff" }); }
+      };
+      f.onload = () => setTimeout(read, 60);
+      giveUp = setTimeout(() => finish({ w:W, h:H, bg:"#ffffff" }), 2500);
+      document.body.appendChild(f);
+      f.srcdoc = srcdoc;
+    });
+  }
+
+  /* An uploaded cover page → one full sheet. Sanitised exactly like a deck
+     (no scripts, no remote CSS/fonts) because the PDF cannot run scripts and
+     a CDN stylesheet that never resolves prints a white page.
+
+     The page is measured at its NATURAL size and then transformed onto the
+     sheet, because cover pages are authored at whatever size their author had
+     in mind — A4, 1920×1080, a phone-width column. Forcing the document to
+     100%×100% (what this used to do) left a small cover stranded in the
+     corner and cropped a tall one; scaling makes every cover fill the whole
+     PDF page. `fit` picks how: "fill" scales until the sheet is covered,
+     "contain" keeps the whole page visible, "stretch" matches both axes. */
+  async function buildCoverSheet(rawHtml, vars, pageCount, badge, fit, W, H){
+    if(!rawHtml) return "";
+    let doc;
+    try{ doc = new DOMParser().parseFromString(substituteVars(rawHtml, vars, pageCount), "text/html"); }
+    catch(err){ return ""; }
+    doc.querySelectorAll("script").forEach(s => s.remove());
+    doc.querySelectorAll(
+      'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+    ).forEach(l => {
+      const href = l.getAttribute("href") || "";
+      if(/^https?:\/\//i.test(href)) l.remove();
+    });
+    const COVER_STYLE = `<style id="__lf-cover">
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{margin:0!important;padding:0!important}
+<\/style>`;
+    const base = "<!DOCTYPE html>" + doc.documentElement.outerHTML + COVER_STYLE;
+
+    /* One uploaded file often holds SEVERAL authored slides — these pages are
+       written like decks, with an @media print rule giving each its own page.
+       Rendering the file into one sheet would silently drop every slide after
+       the first, so each becomes its own sheet, exactly as its author meant. */
+    let sel = null, count = 1;
+    for(const s of [".slide", ".page"]){
+      const found = doc.querySelectorAll(s).length;
+      if(found > 1){ sel = s; count = found; break; }
+    }
+    // Scripts were stripped above; this one is ours, and runs inside the print
+    // frame the same way the deck sheets' page-picker script does.
+    const keepOnly = (i) =>
+      `<script>(function(){var xs=document.querySelectorAll(${JSON.stringify(sel)});`
+      + `for(var k=xs.length-1;k>=0;k--){if(k!==${i}&&xs[k].parentNode)xs[k].parentNode.removeChild(xs[k]);}`
+      + `var t=xs[${i}];if(t){t.style.setProperty("opacity","1","important");`
+      + `t.style.setProperty("visibility","visible","important");`
+      + `t.style.setProperty("transform","none","important");}})();<\/script>`;
+
+    // Measured once: every slide in a file shares its sheet size.
+    const m = await measureCover(base + (sel ? keepOnly(0) : ""), W, H);
+    const baseW = m.w, baseH = m.h;
+    let sx, sy;
+    if(fit === "stretch"){ sx = W / baseW; sy = H / baseH; }
+    else if(fit === "contain"){ sx = sy = Math.min(W / baseW, H / baseH); }
+    else { sx = sy = Math.max(W / baseW, H / baseH); }        // "fill" — the default
+    // Centred, so a "fill" crop takes evenly off both edges instead of
+    // guillotining the bottom of the page.
+    const left = Math.round((W - baseW * sx) / 2);
+    const top  = Math.round((H - baseH * sy) / 2);
+    const inner = `position:absolute;left:${left}px;top:${top}px;width:${baseW}px;height:${baseH}px;`
+      + `border:0;transform-origin:0 0;transform:scale(${sx},${sy});background:${m.bg};z-index:1`;
+
+    const out = [];
+    for(let i = 0; i < count; i++){
+      const srcdoc = base + (sel ? keepOnly(i) : "");
+      out.push(`<div class="sheet" style="background:${m.bg}">`
+        + `<iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe>${badge}</div>`);
+    }
+    return out.join("");
+  }
+
+  /* Every cover page for one end, concatenated in order. Sequential on
+     purpose: each one mounts a measuring iframe, and a dozen at once is how
+     you get a browser to drop layout on half of them. */
+  async function buildCoverSheets(pages, vars, pageCount, badge, W, H){
+    const out = [];
+    for(const p of pages){
+      out.push(await buildCoverSheet(p.html, vars, pageCount, badge, p.fit || "fill", W, H));
+    }
+    return out.join("");
+  }
+
+  /* The global logo as a positioned <img> for one sheet, placed from the
+     global branding settings (anchor + inward nudge) and sitting under the
+     ink so it can never hide a teacher's annotation. Percentages of the
+     sheet, so one setting looks identical on any board size. Empty string
+     when branding is off or unset. */
+  function buildLogoBadge(){
+    const logo = state.exportCfg && state.exportCfg.logo;
+    if(!logo || !logo.dataUrl) return "";
+    const size = Number(logo.sizePct) > 0 ? Number(logo.sizePct) : 8;
+    const op   = Math.min(1, Math.max(0.05, (Number(logo.opacity) || 100) / 100));
+    const clamp = v => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.min(45, Math.max(-10, n)) : 1.8;
+    };
+    const anchor = typeof logo.anchor === "string" && logo.anchor ? logo.anchor : "top-left";
+    const vert = anchor === "center" ? "middle" : anchor.split("-")[0];
+    const horz = anchor === "center" ? "center" : (anchor.split("-")[1] || "left");
+    const x = clamp(logo.offsetXPct), y = clamp(logo.offsetYPct);
+    const css = ["width:" + size + "%", "opacity:" + op];
+    const shift = [];
+    if(horz === "left")       css.push("left:" + x + "%");
+    else if(horz === "right") css.push("right:" + x + "%");
+    else { css.push("left:50%"); shift.push("translateX(-50%)"); }
+    if(vert === "top")         css.push("top:" + y + "%");
+    else if(vert === "bottom") css.push("bottom:" + y + "%");
+    else { css.push("top:50%"); shift.push("translateY(-50%)"); }
+    if(shift.length) css.push("transform:" + shift.join(" "));
+    return `<img class="logo-badge" src="${escAttr(logo.dataUrl)}" alt="" style="${css.join(";")}">`;
+  }
+
+  /* Ask one deck's live frame for its current DOM. Resolves to null — never
+     rejects, never hangs — so a silent frame only costs the fallback. */
+  function requestDeckSnapshot(deck){
+    const frame = deckFrames[deck.id];
+    if(!frame || !frame.contentWindow) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const requestId = "snap_" + deck.id + "_" + Date.now();
+      let settled = false;
+      const finish = (html) => {
+        if(settled) return;
+        settled = true;
+        window.removeEventListener("message", onMsg);
+        clearTimeout(giveUp);
+        resolve(html || null);
+      };
+      const onMsg = (e) => {
+        if(e.source !== frame.contentWindow) return;
+        const d = e.data || {};
+        if(d.type === "lf-export-doc" && d.requestId === requestId) finish(d.html);
+      };
+      window.addEventListener("message", onMsg);
+      const giveUp = setTimeout(() => finish(null), 6000);
+      try{ frame.contentWindow.postMessage({ type:"lf-export-snap", requestId }, "*"); }
+      catch(err){ finish(null); }
+    });
+  }
+
+  /* ── one page's ink as inline SVG ──────────────────────────────────────
+     This is the export fix. What it replaces, per page, in series: a
+     full-board canvas at 2×, a synchronous PNG encode of ~3.7 megapixels, and
+     a multi-megabyte base64 string glued into one enormous print document. On
+     a 25-page lesson that — not the slides — was the wait.
+
+     Strokes are polylines. They were always vector; rasterising them was the
+     mistake. The sheet now carries the polylines themselves: nothing to
+     encode, a fraction of the bytes, and the ink prints at the PDF's own
+     resolution instead of at twice the board's, so it comes out sharper too.
+
+     The one thing a flat path list cannot express is the area eraser, which is
+     destination-out against everything drawn BEFORE it. SVG masks express it
+     exactly: split the strokes into runs at each eraser stroke, and mask run j
+     with every eraser stroke that came after it. A page that never used the
+     area eraser — most of them — is a plain list with no masks at all. */
+  function svgPath(s, W, H, color){
+    const p = s.pts, d = [];
+    for(let i=0;i<p.length;i++)
+      d.push((i ? "L" : "M") + (p[i].x*W).toFixed(1) + " " + (p[i].y*H).toFixed(1));
+    if(p.length === 1) d.push("L" + (p[0].x*W + .05).toFixed(2) + " " + (p[0].y*H).toFixed(1));
+    return `<path d="${d.join("")}" fill="none" stroke="${color}" stroke-width="`
+         + strokeWidthPx(s, W).toFixed(2) + `" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  const MAX_SVG_ERASERS = 60;   // beyond this the masks cost more than a raster
+
+  function inkSVG(page, W, H, uid){
+    const strokes = page.strokes || [];
+    if(!strokes.length) return "";
+    const runs = [[]], erasers = [];
+    for(let i=0;i<strokes.length;i++){
+      const s = strokes[i];
+      if(!s.pts || !s.pts.length) continue;
+      if(s.mode === "erase"){ erasers.push(s); runs.push([]); }
+      else runs[runs.length - 1].push(s);
+    }
+    if(erasers.length > MAX_SVG_ERASERS) return null;   // caller rasterises instead
+    let defs = "", body = "";
+    for(let j=0;j<runs.length;j++){
+      if(!runs[j].length) continue;
+      const inner = runs[j].map(s => svgPath(s, W, H, COLOR_HEX[s.color] || "#fff")).join("");
+      const after = erasers.slice(j);          // only the erasers that came later
+      if(!after.length){ body += `<g>${inner}</g>`; continue; }
+      const id = "lfm" + uid + "_" + j;        // unique across every sheet in the document
+      defs += `<mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
+            + `<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`
+            + after.map(s => svgPath(s, W, H, "#000")).join("")
+            + `</mask>`;
+      body += `<g mask="url(#${id})">${inner}</g>`;
+    }
+    if(!body) return "";
+    return `<svg class="ink-overlay" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" `
+         + `viewBox="0 0 ${W} ${H}" style="left:0;top:0">`
+         + (defs ? "<defs>" + defs + "</defs>" : "") + body + `</svg>`;
+  }
+
+  /* The union of the page's strokes, in board fractions, or null for a page
+     with none. Only used by the raster fallback below. */
+  function inkBoxFrac(page){
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, any = false;
+    const list = page.strokes || [];
+    for(let i=0;i<list.length;i++){
+      const pts = list[i].pts || [];
+      for(let j=0;j<pts.length;j++){
+        const p = pts[j];
+        if(p.x < x0) x0 = p.x;
+        if(p.y < y0) y0 = p.y;
+        if(p.x > x1) x1 = p.x;
+        if(p.y > y1) y1 = p.y;
+        any = true;
+      }
+    }
+    return any ? { x0, y0, x1, y1 } : null;
+  }
+
+  /* Raster fallback, for the pathological page that erased more times than the
+     mask list is worth. Still far cheaper than the old path: cropped to the
+     inked region, encoded off-thread with toBlob, handed back as an object URL
+     rather than base64, and rendered alongside every other page rather than
+     awaited one at a time. Returns { url, x, y, w, h } in sheet pixels. */
+  function renderPageInk(page, W, H){
+    return new Promise(resolve => {
+      const b = inkBoxFrac(page);
+      if(!b) return resolve(null);
+      const scale = 2;                       // crisp in the PDF
+      const pad   = 48;                      // widest pen + its round cap, in px
+      const px = Math.max(0, Math.floor(b.x0 * W - pad));
+      const py = Math.max(0, Math.floor(b.y0 * H - pad));
+      const pw = Math.min(W, Math.ceil(b.x1 * W + pad)) - px;
+      const ph = Math.min(H, Math.ceil(b.y1 * H + pad)) - py;
+      if(!(pw > 0 && ph > 0)) return resolve(null);
+      const c = document.createElement("canvas");
+      c.width = Math.round(pw * scale); c.height = Math.round(ph * scale);
+      const cc = c.getContext("2d");
+      // draw in full-sheet coordinates; the offset lands them inside the crop
+      cc.setTransform(scale, 0, 0, scale, -px * scale, -py * scale);
+      cc.lineCap = cc.lineJoin = "round";
+      // strokes only — the frozen page's ink is its own layer on the sheet
+      paintStrokes(page.strokes, cc, W, H);
+      const done = url => resolve({ url, x:px, y:py, w:pw, h:ph });
+      if(c.toBlob) c.toBlob(bl => done(bl ? URL.createObjectURL(bl) : c.toDataURL()), "image/png");
+      else done(c.toDataURL("image/png"));
+    });
+  }
+
+  /* the board background as an image — browsers often skip printing CSS
+     background colors, but images always print, so the PDF stays dark and
+     carries the page's own paper (dots / graph / axes / plain). Cached per
+     kind: a lesson uses one or two, not one per page. */
+  const bgCache = {};
+  function renderBoardBg(W, H, kind){
+    const key = (kind || "dots") + ":" + W + "x" + H;
+    if(bgCache[key]) return bgCache[key];
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const cc = c.getContext("2d");
+    cc.lineCap = cc.lineJoin = "round";
+    const grad = cc.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#0d1424");
+    grad.addColorStop(1, "#0b101d");
+    cc.fillStyle = grad;
+    cc.fillRect(0, 0, W, H);
+    drawPaper(cc, W, H, kind);
+    return (bgCache[key] = c.toDataURL("image/png"));
+  }
+
+  async function exportPDF({ through, vars } = {}){
+    if(!state.pages.length) return toast("Nothing to export — add a page first");
+    const end = Math.min(
+      through != null ? through : state.pages.length - 1,
+      state.pages.length - 1
+    );
+    if(end < 0) return toast("Nothing to export — add a page first");
+    const exportPages = state.pages.slice(0, end + 1);
+    const blobURLs = [];   // ink overlays — revoked once the print frame is gone
+    toast("Building PDF — “Save as PDF”, Margins: None, Scale: Default, and leave the paper size as offered");
+
+    const r = board.getBoundingClientRect();
+    const W = Math.max(2, Math.round(r.width)) || 1280;
+    const H = Math.max(2, Math.round(r.height)) || 720;
+
+    /* Paper == the live board. 1 CSS px is 1/96in, so the board converts to a
+       paper size exactly; it is declared in INCHES because that is the form
+       every print engine's @page parser accepts (px is spec-legal but has been
+       ignored in the wild). The page box is rounded UP to the next 1/1000in so
+       the W×H sheet can never overflow it by a rounding sliver and spill a
+       blank page; the leftover hair is painted by the dark body background. */
+    const PW = Math.ceil(W / 96 * 1000) / 1000;
+    const PH = Math.ceil(H / 96 * 1000) / 1000;
+
+    // The WHOLE deck document is embedded per sheet in its own iframe —
+    // one sanitized copy per loaded deck. Scripts go (PDF can't run them);
+    // external stylesheets/fonts go too — CDN KaTeX / Google Fonts / Three
+    // leftovers race across many nested iframes and can leave a sheet white.
+    const deckDocs = {};
+    // What the board is SHOWING beats what the file says — see the note on
+    // sendExportDoc in the deck controller. A deck that does not answer
+    // (an old snapshot restored without a live frame) falls back to its text.
+    const live = await Promise.all(state.decks.map(requestDeckSnapshot));
+    for(let di = 0; di < state.decks.length; di++){
+      const deck = state.decks[di];
+      const doc = new DOMParser().parseFromString(live[di] || deck.text, "text/html");
+      doc.querySelectorAll("script").forEach(s => s.remove());
+      doc.querySelectorAll(
+        'link[rel="stylesheet"],link[rel="preconnect"],link[rel="preload"],link[rel="prefetch"]'
+      ).forEach(l => {
+        const href = l.getAttribute("href") || "";
+        if(/^https?:\/\//i.test(href)) l.remove();
+      });
+      deckDocs[deck.id] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+    }
+
+    // per-sheet controls injected into each embedded copy:
+    // show ONLY that sheet's page, reveal all steps, keep colors.
+    // Solid hex backgrounds (not CSS vars) — nested print iframes often drop
+    // var()/gradient body paints, and deck-base's @media print hides #bg while
+    // .page stays transparent → washed-out white slides.
+    const EMBED_STYLE = `<style id="__lf-export">
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{overflow:hidden!important;height:100%!important;min-height:100%!important;background:#080a14!important}
+#bg,#canvas-wrap{display:block!important;visibility:visible!important;opacity:1!important;
+  background:#080a14!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+#bg:before,#bg:after{display:none!important;animation:none!important}
+.page{display:none!important;background:#080a14!important}
+.page.__lf-x{display:block!important;opacity:1!important;transform:none!important;background:#080a14!important}
+.step{opacity:1!important;transform:none!important;visibility:visible!important}
+canvas{display:none!important}
+.scene-frame .scene-fallback{display:flex!important}
+<\/style>`;
+    /* A frozen box printed from its own bake already carries the right page,
+       the right steps and the right zoom — print only needs the colours held
+       down. EMBED_STYLE would fight it (its .page rules key off __lf-x). */
+    const SNAP_PRINT = `<style id="__lf-snap-print">
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{background:#080a14!important}
+#bg,#canvas-wrap{display:block!important;visibility:visible!important;opacity:1!important}
+#bg:before,#bg:after{display:none!important;animation:none!important}
+.page.__lf-active{display:block!important;background:#080a14!important}
+<\/style>`;
+
+    // One markup string reused on every sheet — the logo is identical each time.
+    const badge = buildLogoBadge();
+    const showPage = i =>
+      `<script>var ps=document.querySelectorAll(".page");` +
+      `if(ps[${i}])ps[${i}].classList.add("__lf-x");<\/script>`;
+
+    /* Ink first, for every page at once. Almost all of them come back as SVG
+       and cost nothing; only a page that erased more than MAX_SVG_ERASERS
+       times falls through to the raster, and those render together rather than
+       one after another. */
+    const svgs = exportPages.map((p, i) => inkSVG(p, W, H, i));
+    const rasterNeeded = exportPages.map((p, i) => svgs[i] === null ? p : null);
+    const inks = await Promise.all(
+      rasterNeeded.map(p => p ? renderPageInk(p, W, H) : Promise.resolve(null)));
+    inks.forEach(i => { if(i && /^blob:/.test(i.url)) blobURLs.push(i.url); });
+
+    const sheets = [];
+    for(let pi = 0; pi < exportPages.length; pi++){
+      const page = exportPages[pi];
+      const ink  = inks[pi];
+      const bgURL = renderBoardBg(W, H, page.paper || "dots");
+      let embed = "";
+      const dd = page.deckId != null ? deckDocs[page.deckId] : null;
+      if(page.deckIndex != null && dd){
+        const srcdoc = dd + EMBED_STYLE + showPage(page.deckIndex);
+        embed = `<iframe class="deck-embed" srcdoc="${escAttr(srcdoc)}"></iframe>`;
+      }
+      // Frozen box that carries slide HTML → a scaled iframe placed at the box.
+      let snapEmbed = "";
+      const s = page.snap;
+      if(s && s.deckId != null && s.deckIndex != null && (s.body || deckDocs[s.deckId])){
+        /* A freeze that recorded the live slide prints exactly that — its own
+           step, its own zoom. SNAP_PRINT only re-asserts the colours print
+           needs; EMBED_STYLE would fight the baked sheet's own page rules. */
+        const srcdoc = s.body
+          ? frozenSrcdoc(s) + SNAP_PRINT
+          : deckDocs[s.deckId] + EMBED_STYLE + showPage(s.deckIndex);
+        const baseW = s.baseW || W, baseH = s.baseH || H;
+        // the box is stored in board fractions; the sheet is exactly W×H CSS px,
+        // so it multiplies out to plain px here — no vw/vh, which would resolve
+        // against the *paper* box when printing
+        const bx = s.x * W, by = s.y * H, bw = s.w * W, bh = s.h * H;
+        const wrap = `position:absolute;left:${bx}px;top:${by}px;`
+          + `width:${bw}px;height:${bh}px;overflow:hidden;z-index:5;background:#080a14`;
+        const inner = `position:absolute;left:0;top:0;width:${baseW}px;height:${baseH}px;`
+          + `border:0;transform-origin:0 0;transform:scale(${bw / baseW},${bh / baseH});background:#080a14`;
+        snapEmbed = `<div style="${wrap}"><iframe style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
+      }
+      /* The frozen page's own ink rides as its own layer now, over the frozen
+         slide and under this page's ink — it is already a data URL, so pulling
+         it out of the ink canvas takes an image decode off the export path. */
+      const snapInk = s
+        ? `<img class="snap-ink" style="left:${s.x*W}px;top:${s.y*H}px;`
+          + `width:${s.w*W}px;height:${s.h*H}px" src="${s.url}">`
+        : "";
+      // SVG when it can be (nearly always), a cropped raster when it can't,
+      // and nothing at all for a page with no ink on it
+      const inkEl = svgs[pi] !== null
+        ? svgs[pi]
+        : (ink ? `<img class="ink-overlay" style="left:${ink.x}px;top:${ink.y}px;`
+                 + `width:${ink.w}px;height:${ink.h}px" src="${ink.url}">` : "");
+      sheets.push(
+        `<div class="sheet"><img class="bg-layer" src="${bgURL}">${embed}${snapEmbed}${snapInk}${badge}${inkEl}</div>`);
+    }
+
+    /* Covers wrap the lesson: every Starting Page first, in the order set in
+       Global settings, then the board, then every Ending Page. Each cover is
+       scaled to fill the whole sheet, so the PDF stays one consistent shape
+       whatever size its author drew it at. Their {{VARIABLE}}s were filled in
+       by the form that opened when Export was pressed. */
+    const cfg        = state.exportCfg || {};
+    const coverBadge = cfg.logoOnCovers ? badge : "";
+    const startSheets = await buildCoverSheets(
+      coverPages(cfg, "start"), vars, exportPages.length, coverBadge, W, H);
+    const endSheets = await buildCoverSheets(
+      coverPages(cfg, "end"), vars, exportPages.length, coverBadge, W, H);
+    const allSheets = startSheets + sheets.join("") + endSheets;
+
+    // Browsers offer the document title as the PDF's file name.
+    const titleBits = [];
+    if(vars && vars.batchCode)          titleBits.push(vars.batchCode);
+    if(vars && vars.chapterNumber != null) titleBits.push("Ch " + vars.chapterNumber);
+    if(vars && vars.chapterName)        titleBits.push(vars.chapterName);
+    if(vars && vars.lectureNumber != null) titleBits.push("Lecture " + vars.lectureNumber);
+    const docTitle = titleBits.length ? titleBits.join(" · ") : "LessonForge export";
+
+    const printDoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>${escHtmlText(docTitle)}</title>
+<style>
+/* One PDF page == one board, pixel for pixel: the paper carries the board's
+   own aspect ratio, so the export looks like the presentation instead of
+   being letterboxed into A4/Letter. Margin 0 — the sheet is the page. */
+@page{size:${PW}in ${PH}in;margin:0}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
+.sheet{position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#0b0f19;page-break-after:always;break-after:page;break-inside:avoid;page-break-inside:avoid}
+.sheet:last-child{page-break-after:auto;break-after:auto}
+.bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#080a14}
+/* Cover pages are positioned and scaled inline per sheet — see buildCoverSheet. */
+/* Under the ink (z-10): a badge must never cover what the teacher wrote. */
+.logo-badge{position:absolute;height:auto;max-height:22%;object-fit:contain;z-index:8}
+/* SVG paths, or a raster cropped to the inked region — positioned inline */
+.ink-overlay{position:absolute;z-index:10}
+.snap-ink{position:absolute;z-index:6}
+</style></head><body>${allSheets}</body></html>`;
+
+    const f = document.createElement("iframe");
+    // Non-zero, off-screen host — a 0×0 print frame leaves nested deck iframes
+    // without a layout box, which prints as solid white on some sheets.
+    f.style.cssText = `position:fixed;left:0;top:0;width:${W}px;height:${H}px;border:0;opacity:0;pointer-events:none;z-index:-1`;
+    document.body.appendChild(f);
+    f.onload = () => {
+      const embeds = Array.from(f.contentDocument?.querySelectorAll("iframe") || []);
+      const waitEmbed = frame => new Promise(resolve => {
+        let done = false;
+        const finish = () => { if(done) return; done = true; resolve(); };
+        try{
+          if(frame.contentDocument?.readyState === "complete"){
+            // already parsed — still give one frame for paint
+            requestAnimationFrame(() => setTimeout(finish, 50));
+          } else {
+            frame.addEventListener("load", () => setTimeout(finish, 50), { once:true });
+          }
+        }catch{ /* opaque / cross-origin */ }
+        setTimeout(finish, 2500); // hard cap per embed
+      });
+      Promise.all(embeds.map(waitEmbed)).then(() => setTimeout(() => {
+        try{ f.contentWindow.focus(); f.contentWindow.print(); }
+        catch(err){ toast("Print failed — try again"); }
+        setTimeout(() => {
+          f.remove();
+          blobURLs.forEach(u => { try{ URL.revokeObjectURL(u); }catch(err){} });
+        }, 60000);   // keep alive while dialog is open
+      }, 200));
+    };
+    f.srcdoc = printDoc;
+
+    // Persist the full board into session history with how far the export reached.
+    tellHost({
+      type: "lf-session-state",
+      reason: "export",
+      sessionId: state.sessionId,
+      batchId: state.batchId,
+      board: serializeBoard(),
+      exportedThrough: end
+    });
+    pingActivity();
+  }
+
+  /* ═══ PAGE OVERVIEW SHEET ═════════════════════
+     Click the page counter → a bottom panel shows every page as a
+     thumbnail (ink + frozen snapshot over the dark board); clicking
+     a tile jumps straight to that page.                            */
+  const pageSheet      = document.getElementById("pageSheet");
+  const pageSheetInner = document.getElementById("pageSheetInner");
+  const pageCounterBtn = document.getElementById("pageCounterBtn");
+  let sheetOpen = false;
+
+  // The frozen slide's HTML for a tile → a scaled iframe placed at the box.
+  // The tile's dark background and the transparent ink layer sit over it.
+  function frozenThumbEmbed(page, W, H, tw, th){
+    const s = page.snap;
+    if(!s || s.deckId == null || s.deckIndex == null) return "";
+    const deck = state.decks.find(d => d.id === s.deckId);
+    if(!deck) return "";
+    const baseW = s.baseW || W, baseH = s.baseH || H;
+    const boxW = s.w * tw, boxH = s.h * th;                 // s.* are fractions
+    const wrap = `left:${s.x * tw}px;top:${s.y * th}px;width:${boxW}px;height:${boxH}px`;
+    const inner = `width:${baseW}px;height:${baseH}px;transform:scale(${boxW / baseW},${boxH / baseH})`;
+    const srcdoc = frozenSrcdoc(s);
+    return `<div class="pt-snap" style="${wrap}">`
+      + `<iframe sandbox="allow-scripts" scrolling="no" style="${inner}" srcdoc="${escAttr(srcdoc)}"></iframe></div>`;
+  }
+
+  /* Transparent over the tile's dark backdrop. Everything is stored in
+     fractions, so the tile is just another surface: paint straight at tw × th
+     and the pen thins down with it instead of coming out as a slab. */
+  function renderThumb(page, tw, th){
+    return new Promise(resolve => {
+      const c = document.createElement("canvas");
+      c.width = tw; c.height = th;
+      const cc = c.getContext("2d");
+      cc.lineCap = cc.lineJoin = "round";
+      drawPaper(cc, tw, th, page.paper || "dots");
+      const finish = () => {
+        paintStrokes(page.strokes, cc, tw, th);
+        resolve(c.toDataURL());
+      };
+      if(page.snap){
+        const s = page.snap;
+        const im = new Image();
+        im.onload  = () => { cc.drawImage(im, s.x * tw, s.y * th, s.w * tw, s.h * th); finish(); };
+        im.onerror = finish;
+        im.src = s.url;
+      } else finish();
+    });
+  }
+
+  async function buildPageSheet(){
+    const r = board.getBoundingClientRect();
+    const W = Math.max(2, Math.round(r.width))  || 1280;
+    const H = Math.max(2, Math.round(r.height)) || 720;
+    const tw = 150, th = Math.max(40, Math.round(tw * H / W));
+    const tiles = await Promise.all(state.pages.map(async (page, i) => {
+      const url = await renderThumb(page, tw, th);
+      const embed = frozenThumbEmbed(page, W, H, tw, th);
+      const label = page.deckId != null ? "Slide" : (page.snap ? "Frozen" : "Blank");
+      return `<button class="page-tile ${i === state.current ? "cur" : ""}" data-goto="${i}" title="Go to page ${i+1}">
+        ${embed}<img src="${url}" alt="Page ${i+1}">
+        <span class="pt-num">${i+1}</span><span class="pt-label">${label}</span>
+      </button>`;
+    }));
+    pageSheetInner.innerHTML = tiles.join("");
+    // keep the current page's tile in view
+    const cur = pageSheetInner.querySelector(".page-tile.cur");
+    if(cur) cur.scrollIntoView({ inline:"center", block:"nearest" });
+  }
+
+  async function togglePageSheet(force){
+    const next = force !== undefined ? force : !sheetOpen;
+    if(next && !state.pages.length){ toast("No pages yet — add one first"); return; }
+    sheetOpen = next;
+    if(sheetOpen){
+      await buildPageSheet();
+      pageSheet.classList.add("show");
+    } else {
+      pageSheet.classList.remove("show");
+    }
+  }
+
+  pageCounterBtn.addEventListener("click", () => togglePageSheet());
+  pageSheetInner.addEventListener("click", e => {
+    const tile = e.target.closest("button[data-goto]");
+    if(!tile) return;
+    goTo(+tile.dataset.goto);
+    togglePageSheet(false);
+  });
+  document.addEventListener("pointerdown", e => {
+    if(sheetOpen && !pageSheet.contains(e.target) && !pageCounterBtn.contains(e.target))
+      togglePageSheet(false);
+  });
+
+  /* ═══ EVENTS ══════════════════════════════════ */
+  rails.forEach(rail => rail.addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if(!btn) return;
+    if(btn.dataset.tool){ setTool(btn.dataset.tool); }
+    else if(btn.dataset.color){ state.color = btn.dataset.color; renderRails(); }
+    else if(btn.dataset.width !== undefined){ state.width = +btn.dataset.width; renderRails(); }
+    else if(btn.dataset.action){ handleAction(btn.dataset.action); }
+  }));
+
+  document.querySelector(".bottom-strip").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if(btn) handleAction(btn.dataset.action);
+  });
+
+  document.getElementById("addFirstPage").addEventListener("click", () => addPage());
+  prevBtn.addEventListener("click", prevAction);
+  nextBtn.addEventListener("click", nextAction);
+  document.getElementById("prevBtnMini").addEventListener("click", prevAction);
+  document.getElementById("nextBtnMini").addEventListener("click", nextAction);
+  document.getElementById("nextStep").addEventListener("click", () => {
+    if(!nextAction()) addPage();   // steps → next page → add page at the very end
+  });
+
+  document.getElementById("cancelClose").addEventListener("click", () =>
+    closeOverlay.classList.remove("show"));
+  document.getElementById("confirmClose").addEventListener("click", () => {
+    closeOverlay.classList.remove("show");
+    // Save before wiping if the host is tracking a batch session.
+    if(hosted && state.batchId && state.pages.length){
+      tellHost({
+        type: "lf-session-state",
+        reason: "end",
+        sessionId: state.sessionId,
+        batchId: state.batchId,
+        board: serializeBoard(),
+        exportedThrough: -1
+      });
+    }
+    clearBoard();
+    toast("Session ended");
+  });
+
+  document.getElementById("cancelExport").addEventListener("click", () =>
+    exportOverlay.classList.remove("show"));
+  document.getElementById("exportAllPages").addEventListener("click", () => {
+    exportOverlay.classList.remove("show");
+    beginExport(state.pages.length - 1);
+  });
+  document.getElementById("exportCurrentOnly").addEventListener("click", () => {
+    exportOverlay.classList.remove("show");
+    beginExport(state.current);
+  });
+
+  document.getElementById("loadDeckEmpty").addEventListener("click", openLibrary);
+
+  function handleNavKey(key){
+    // A clicker press forwarded by the host must not flip pages behind a dialog.
+    if(varsOverlay.classList.contains("show")) return true;
+    if(key === "ArrowLeft" || key === "PageUp" || key === "Backspace"){
+      prevAction();
+      return true;
+    }
+    if(key === "ArrowRight" || key === "PageDown" || key === " " || key === "Spacebar"){
+      nextAction();
+      return true;
+    }
+    return false;
+  }
+
+  document.addEventListener("keydown", e => {
+    // The export form owns the keyboard while it is up: Esc closes it, Enter
+    // submits from anywhere except the multi-line topic box, and board
+    // shortcuts (arrows, n, p, e…) must not run behind it.
+    if(varsOverlay.classList.contains("show")){
+      if(e.key === "Escape"){ e.preventDefault(); varsOverlay.classList.remove("show"); }
+      else if(e.key === "Enter" && e.target !== vTopics){
+        e.preventDefault();
+        document.getElementById("confirmVars").click();
+      }
+      return;
+    }
+    if(e.target && typeof e.target.matches === "function" && e.target.matches("input,textarea")) return;
+    // Arrows + PowerPoint-style clicker keys (PageUp/PageDown/Space)
+    if(handleNavKey(e.key)){ e.preventDefault(); return; }
+    else if(e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey) addPage();
+    else if(e.key.toLowerCase() === "p") setTool("pen");
+    else if(e.key.toLowerCase() === "e") setTool("eraser");
+    else if(e.key.toLowerCase() === "l") setTool("laser");
+    else if(e.key.toLowerCase() === "g" && !e.ctrlKey && !e.metaKey) handleAction("paper");
+    else if(e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey) handleAction("fullscreen");
+    else if(e.key.toLowerCase() === "a" && !e.ctrlKey && !e.metaKey) handleAction("anim");
+    else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
+    else if(e.key === "Escape"){
+      if(varsOverlay.classList.contains("show")){
+        varsOverlay.classList.remove("show"); return;
+      }
+      const rec = document.getElementById("recoverOverlay");
+      if(rec.classList.contains("show")){ rec.classList.remove("show"); return; }
+      if(sheetOpen){ togglePageSheet(false); return; }
+      if(exportOverlay.classList.contains("show")){
+        exportOverlay.classList.remove("show"); return;
+      }
+      closeOverlay.classList.remove("show");
+    }
+  });
+
+  window.addEventListener("resize", () => { sizeCanvas(); refitDecksBurst(); });
+  if(window.visualViewport)
+    window.visualViewport.addEventListener("resize", refitDecksBurst);
+  ["fullscreenchange","webkitfullscreenchange"].forEach(ev =>
+    document.addEventListener(ev, () => {
+      renderRails();                       // swap between enter/exit icon
+      requestAnimationFrame(sizeCanvas);   // board size changes with fullscreen
+      refitDecksBurst();                   // …and so does every deck's frame
+    })
+  );
+
+  /* ═══ INIT ════════════════════════════════════ */
+  /* A handle on the internals for debugging a live board, and for the headless
+     checks on ink drift and export cost. Off unless ?lfdebug is on the URL —
+     nothing in the panel reads it. */
+  if(/[?&]lfdebug\b/.test(location.search))
+    window.__lf = { state, renderPageInk, paintStrokes, setTool, redraw,
+                    drawPaper, serializeBoard, inkBoxFrac, inkSVG, sizeCanvas };
+
+  // Standing alone there is no main screen to go back to — and nobody to save
+  // the session either, since that is the host's job.
+  if(!hosted) document.getElementById("exitBtn").style.display = "none";
+  sizeCanvas();
+  renderRails();
+  updateChrome();
+  /* A hosted panel may be handed a session by the app a beat after load, and
+     that copy is the better one — wait long enough to find out before offering
+     the local crash snapshot. Standing alone, there is nobody to wait for. */
+  setTimeout(offerRecover, hosted ? 1800 : 300);
+  setTimeout(() => document.getElementById("escToast").classList.add("hide"), 5000);
+})();
+</script>
+</body>
+</html>
