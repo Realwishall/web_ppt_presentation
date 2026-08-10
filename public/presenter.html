@@ -989,6 +989,16 @@
                                   // device pixel per CSS pixel is invisible
                                   // there and nearly halves the fill cost
     LITE_AT_PX: 3_500_000,        // board bigger than this ⇒ big-panel mode
+    /* The freeze raster is the one image this panel encodes on a keypress,
+       and it is the only one that used to ignore every budget here: it took
+       the board at the panel's full native ratio, so a 4K board at 150%
+       scaling meant a 17 Mpx canvas and a synchronous PNG encode while the
+       teacher waited. It is also the image with the least need of those
+       pixels — a frozen box is 62% of the board by default and gets smaller
+       from there, so the raster is never shown at even half the resolution
+       it was captured at. 1.6 Mpx is roughly 1:1 at the default box size on
+       a 4K board, and PNG at that size encodes in ~20ms instead of ~350. */
+    MAX_SNAP_PX: 1_600_000,
   };
   function inkDpr(w, h){
     const dpr = window.devicePixelRatio || 1;
@@ -1257,6 +1267,11 @@
       const href = l.getAttribute("href") || "";
       if(/^https?:\/\//i.test(href)) l.remove();
     });
+    // Same reason as the scripts and the CDN sheets: nothing in a frozen box
+    // or a print sheet may depend on the network being there.
+    doc.querySelectorAll("iframe[src]").forEach(fr => {
+      if(/^https?:\/\//i.test(fr.getAttribute("src") || "")) fr.remove();
+    });
     return doc;
   }
 
@@ -1486,32 +1501,47 @@ for(var i=0;i<cues.length;i++){
   /* compose current page (snapshot + ink) into a dataURL */
   function composeCurrent(withBg){
     const r = board.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    /* Sized to PERF.MAX_SNAP_PX, never to the panel's native grid — see the
+       note on that budget. Ink is REPAINTED here rather than blitted off the
+       live surface, so the raster is as sharp as this scale allows however
+       the board's own ink canvas happens to be capped. */
+    const want = r.width * r.height;
+    const dpr = Math.min(window.devicePixelRatio || 1,
+                         want > 0 ? Math.sqrt(PERF.MAX_SNAP_PX / want) : 1);
     const out = document.createElement("canvas");
-    out.width = Math.round(r.width * dpr);
-    out.height = Math.round(r.height * dpr);
+    out.width = Math.max(1, Math.round(r.width * dpr));
+    out.height = Math.max(1, Math.round(r.height * dpr));
     const o = out.getContext("2d");
-    o.scale(dpr, dpr);
-    if(withBg){ o.fillStyle = "#0b0f19"; o.fillRect(0,0,r.width,r.height); }
+    o.setTransform(dpr, 0, 0, dpr, 0, 0);
+    o.lineCap = o.lineJoin = "round";
+    let under = false;                     // is there anything below the ink?
+    if(withBg){ o.fillStyle = "#0b0f19"; o.fillRect(0,0,r.width,r.height); under = true; }
     const page = state.pages[state.current];
     if(page && page.snap && snapImg.complete && snapImg.naturalWidth){
       const s = page.snap;
       o.drawImage(snapImg, s.x * r.width, s.y * r.height, s.w * r.width, s.h * r.height);
+      under = true;
     }
-    /* Ink is REPAINTED at export resolution rather than upscaled off the live
-       surface. The board's ink canvas is capped to a pixel budget so a 4K
-       panel stays fast (see PERF above); blitting that up to the export size
-       would bake the cap into every archived page. Repainting into a
-       transparent layer of its own also keeps the eraser's destination-out
-       inside the ink, so it rubs out strokes and not the board behind them —
-       exactly what the teacher saw on screen. */
-    const ink = document.createElement("canvas");
-    ink.width = out.width; ink.height = out.height;
-    const ic = ink.getContext("2d");
-    ic.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ic.lineCap = ic.lineJoin = "round";
-    if(page) paintStrokes(page.strokes, ic, r.width, r.height);
-    o.drawImage(ink, 0, 0, r.width, r.height);
+    const strokes = page ? page.strokes : [];
+    /* An eraser stroke is destination-out. Painted straight onto a surface
+       that already carries a background or an older frozen box it would rub
+       a hole through those too, which is not what the board showed — there
+       the ink is its own transparent layer. So it gets one, but ONLY when
+       there is something underneath to protect and something erasing: on a
+       plain page (the usual freeze) this second full-size canvas is never
+       allocated at all. */
+    const needsLayer = under && strokes.some(s => s.mode === "erase");
+    if(needsLayer){
+      const ink = document.createElement("canvas");
+      ink.width = out.width; ink.height = out.height;
+      const ic = ink.getContext("2d");
+      ic.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ic.lineCap = ic.lineJoin = "round";
+      paintStrokes(strokes, ic, r.width, r.height);
+      o.drawImage(ink, 0, 0, r.width, r.height);
+    } else {
+      paintStrokes(strokes, o, r.width, r.height);
+    }
     return out.toDataURL("image/png");
   }
 
@@ -1852,6 +1882,17 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     var wrap = page.querySelector(".wrap");
     if(!wrap) return;
 
+    /* A frame with no layout box at all — the host hides every deck but the
+       one on screen with display:none — reports 0 for clientHeight,
+       offsetHeight, scrollHeight and innerWidth/innerHeight alike. There is
+       nothing to measure and nothing to solve, and the important half is that
+       the bail-out has to happen HERE, before clearFit below. It used to
+       happen after: clearFit strips the inline zoom, the solve then read
+       zeroes and gave up, and the fit the page already had was gone. That is
+       how a deck the teacher had taught came back unfitted the moment
+       something asked an unmeasurable frame to re-fit. */
+    if(!(window.innerWidth > 0 && window.innerHeight > 0)) return;
+
     /* The tail below fires this FIVE times per click or key press, and the
        solve is a read-write-read layout thrash that rewrites .wrap's zoom. Once
        the deck has settled, passes 2-5 recompute an answer they already have —
@@ -1970,6 +2011,45 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      that one page is kept (the payload is one slide, not a whole deck) and
      the head — fonts, the deck's CSS — still comes from the source text the
      host already holds, so nothing is stored twice. */
+  /* A cloned <canvas> is blank — the clone copies the element, never its
+     bitmap. A .scene-frame has a .scene-fallback the printed sheet shows
+     instead; anything else would simply disappear from the page, so its
+     pixels are baked into an <img> while the original is still live.
+
+     Both lists are read from the SAME subtree, live and clone, so index k is
+     the same canvas on both sides. Used by the freeze AND by the export: the
+     two used to disagree, and a chart drawn into a plain canvas printed as a
+     hole in a deck sheet while the identical slide, frozen, kept it.        */
+  function bakeCanvases(liveRoot, cloneRoot){
+    if(!liveRoot || !cloneRoot) return;
+    var srcCans = liveRoot.querySelectorAll("canvas");
+    var cans    = cloneRoot.querySelectorAll("canvas");
+    for(var k = 0; k < cans.length; k++){
+      if(cans[k].closest && cans[k].closest(".scene-frame")) continue;
+      var src = srcCans[k]; if(!src) continue;
+      try{
+        if(!(src.width > 0 && src.height > 0)) continue;
+        var url = src.toDataURL("image/png");
+        if(!url || url.length > 700000) continue;      // keep the payload sane
+        var img = document.createElement("img");
+        /* id and class come along so the deck's own CSS still applies to it;
+           the box is then pinned to the size the canvas actually occupied,
+           because a canvas sized by its width/height attributes has no CSS
+           box of its own and would otherwise come back at its bitmap size. */
+        for(var a = 0; a < cans[k].attributes.length; a++){
+          var at = cans[k].attributes[a];
+          if(at.name === "width" || at.name === "height" || at.name === "src") continue;
+          try{ img.setAttribute(at.name, at.value); }catch(e){}
+        }
+        img.src = url;
+        img.style.display = "block";
+        img.style.width  = src.offsetWidth  + "px";
+        img.style.height = src.offsetHeight + "px";
+        cans[k].parentNode.replaceChild(img, cans[k]);
+      }catch(err){ /* tainted or WebGL without preserveDrawingBuffer */ }
+    }
+  }
+
   function sendFrozenBody(requestId){
     var out = "";
     try{
@@ -1986,35 +2066,19 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
          its pixels are baked into an <img> while the original is still live.
          Both lists are read from the SAME page — the live one and its clone —
          so index k is the same canvas on both sides. */
-      var liveKeep = keep >= 0 ? live[keep] : null;
-      var cloneKeep = body.querySelector(".page.__lf-active");
-      var srcCans = liveKeep  ? liveKeep.querySelectorAll("canvas")  : [];
-      var cans    = cloneKeep ? cloneKeep.querySelectorAll("canvas") : [];
-      for(var k = 0; k < cans.length; k++){
-        if(cans[k].closest && cans[k].closest(".scene-frame")) continue;
-        var src = srcCans[k]; if(!src) continue;
-        try{
-          if(!(src.width > 0 && src.height > 0)) continue;
-          var url = src.toDataURL("image/png");
-          if(!url || url.length > 700000) continue;      // keep the payload sane
-          var img = document.createElement("img");
-          /* id and class come along so the deck's own CSS still applies to it;
-             the box is then pinned to the size the canvas actually occupied,
-             because a canvas sized by its width/height attributes has no CSS
-             box of its own and would otherwise come back at its bitmap size. */
-          for(var a = 0; a < cans[k].attributes.length; a++){
-            var at = cans[k].attributes[a];
-            if(at.name === "width" || at.name === "height" || at.name === "src") continue;
-            try{ img.setAttribute(at.name, at.value); }catch(e){}
-          }
-          img.src = url;
-          img.style.display = "block";
-          img.style.width  = src.offsetWidth  + "px";
-          img.style.height = src.offsetHeight + "px";
-          cans[k].parentNode.replaceChild(img, cans[k]);
-        }catch(err){ /* tainted or WebGL — the CSS hides it */ }
-      }
+      bakeCanvases(keep >= 0 ? live[keep] : null,
+                   body.querySelector(".page.__lf-active"));
       body.querySelectorAll("script,noscript").forEach(function(s){ s.remove(); });
+      /* A [data-video] placeholder ships its own <iframe> so the deck file
+         still works opened in a plain browser. Baked into a frozen box, and
+         from there into the print document, that iframe is a live network
+         fetch that can never render anything useful — the presenter draws
+         the real player itself — and a descendant frame delays its
+         ancestor's load event. In a classroom with no network that is an
+         export that never reaches the print dialog. */
+      body.querySelectorAll("iframe[src]").forEach(function(fr){
+        if(/^https?:\\/\\//i.test(fr.getAttribute("src") || "")) fr.remove();
+      });
       out = body.outerHTML;
     }catch(err){ out = ""; }
     parent.postMessage({
@@ -2046,7 +2110,19 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       }
       /* Leave no page marked active: the export decides which one shows. */
       for(var c = 0; c < ps.length; c++) ps[c].classList.remove("__lf-active");
-      html = "<!DOCTYPE html>" + document.documentElement.outerHTML;
+
+      /* Serialised from a CLONE, not from the live document, so the canvases
+         can be baked into <img> on the way out — a cloned canvas is blank, so
+         the export used to hide them all (canvas{display:none} in the sheet
+         CSS) and any figure a deck drew into a plain canvas printed as a hole
+         in the page. The freeze path had solved this years ago; the export
+         simply never used the same routine. Baking has to happen on the
+         clone while the originals are still live, which is why it is done
+         here and not in the host. */
+      var root = document.documentElement.cloneNode(true);
+      var liveBody = document.body, cloneBody = root.querySelector("body");
+      bakeCanvases(liveBody, cloneBody);
+      html = "<!DOCTYPE html>" + root.outerHTML;
     }catch(err){ html = ""; }
     show(cur, curStep);                 // put the board back as it was
     parent.postMessage({ type:"lf-export-doc", requestId:requestId, html:html }, "*");
@@ -2206,8 +2282,40 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
 
     // MULTI-DECK: every loaded deck gets its own iframe — existing decks and
     // pages are kept, new pages append.
-    const deckId = "d" + Date.now() + "_" + state.decks.length;
     const m = meta || {};
+
+    /* Except when this deck is already open. A folder carries a permanent
+       content code and the exact version the board is showing, so "the same
+       deck" is a fact and not a guess. Picking a folder from the Library
+       twice — done all the time to jump back to a chapter's slides — used to
+       mint a second deckId, a second iframe, a second copy of the deck's
+       whole document and, for a three.js deck, a second set of WebGL
+       contexts, of which a renderer gets about sixteen before it starts
+       force-losing the oldest. The pages still append, which is what the
+       teacher asked for; they simply point at the deck that is already
+       loaded. */
+    const twin = (m.code && m.version)
+      ? state.decks.find(d => d.code === m.code && d.version === m.version && deckFrames[d.id])
+      : null;
+    if(twin){
+      const startIdxT = state.pages.length;
+      for(let i = 0; i < count; i++){
+        const pg = blankPage();
+        pg.deckId = twin.id; pg.deckIndex = i; pg.stepCount = stepCounts[i];
+        state.pages.push(pg);
+      }
+      board.classList.add("visible");
+      emptyState.classList.add("hidden");
+      requestAnimationFrame(() => {
+        sizeCanvas();
+        loadPage(startIdxT);
+        scheduleRecover();
+        if(!quiet) toast(`${sourceName} — ${count} slide${count===1?"":"s"} added`);
+      });
+      return true;
+    }
+
+    const deckId = "d" + Date.now() + "_" + state.decks.length;
     state.decks.push({
       id:deckId, text, count,
       name: sourceName || m.name || "Deck",
@@ -2369,6 +2477,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      than v1 was — it always drew those pixels against the current board — and
      from the first save afterwards the page is correct for good. */
   const BOARD_V = 2;
+  const r4 = n => Math.round(n * 1e4) / 1e4;
   function serializeBoard(){
     return {
       v: BOARD_V,
@@ -2386,7 +2495,18 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       pages: state.pages.map(p => ({
         strokes: (p.strokes || []).map(s => ({
           mode: s.mode, color: s.color, width: s.width,
-          pts: (s.pts || []).map(pt => ({ x: pt.x, y: pt.y }))
+          /* Rounded to four places on the way out, and nowhere else — the
+             live stroke keeps full precision, this is only what gets stored.
+             A point is a fraction of the board, so the fourth place is a
+             quarter of a pixel on a 2560px board and a tenth of one at the
+             size a page thumbnail or a PDF sheet ever redraws it: not a
+             difference anything can render. What it changes is the cost.
+             `{"x":0.3712121212121212,"y":0.5461538461538461}` is 47 bytes
+             where the rounded form is 27, and this array is written into
+             localStorage every six seconds, posted to the host on every
+             save, and chunked into Firestore at the end of the lecture. A
+             sixty-page inked lesson stops being seventeen megabytes. */
+          pts: (s.pts || []).map(pt => ({ x: r4(pt.x), y: r4(pt.y) }))
         })),
         snap: p.snap ? {...p.snap} : null,
         paper: p.paper || "dots",
@@ -2512,6 +2632,44 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   const RECOVER_MAX_AGE = 14 * 3600e3;    // a lesson, not last week
   let saveTimer = 0, lastSaveAt = 0, recoverOffered = false;
 
+  /* Everything that is recoverable from somewhere else, stripped: the deck
+     text comes back from the Library, and a frozen page's baked slide is
+     styled by its deck's head, so it is worth nothing once that text is
+     gone. What is left — the ink, the page order, the boxes — exists nowhere
+     but here, and is a fraction of the size. */
+  function trimBoard(board0){
+    return {
+      ...board0,
+      decks: board0.decks.map(d => ({ ...d, text: "" })),
+      pages: board0.pages.map(p => (p.snap && (p.snap.body || p.snap.url))
+        ? { ...p, snap: { ...p.snap, body: null, url: null } } : p)
+    };
+  }
+
+  /* Browsers give an origin about 5 MB of localStorage. A lecture with two
+     800 KB decks and a few frozen pages passes that inside the first half
+     hour, and the old code met it by serialising the entire board, throwing,
+     rebuilding a second full copy, and throwing again — every six seconds,
+     for the rest of the lesson, on the ink path, saving nothing and saying
+     nothing. Three things fix that:
+
+       · the trimmed form is chosen UP FRONT once the full one is known to be
+         too big, so the expensive path is not the default;
+       · the trimmed form drops snap.url as well as snap.body. Leaving the
+         full-board PNG of every frozen page in was why the fallback so often
+         went over quota too — the trim that was supposed to rescue the write
+         kept the biggest thing in the payload;
+       · a write that still fails STOPS. Retrying a board that only ever
+         grows cannot succeed, so it gives up, tells the teacher once, and
+         re-arms only when the board is meaningfully smaller than the size
+         that failed (a page deleted, a session ended).
+
+     The session save is what actually protects the lecture; this is the
+     crash net under it, and a crash net that quietly stopped being there is
+     worse than one that says so. */
+  const RECOVER_BUDGET = 3_000_000;      // chars, well inside a 5 MB quota
+  let recoverGaveUpAt = 0;               // payload size that could not be stored
+
   function writeRecover(){
     saveTimer = 0;
     lastSaveAt = Date.now();
@@ -2519,23 +2677,53 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     const board0 = serializeBoard();
     const wrap = { at: Date.now(), sessionId: state.sessionId, batchId: state.batchId,
                    userKey: state.userKey, board: board0 };
+
+    let text = JSON.stringify(wrap);
+    if(text.length > RECOVER_BUDGET){
+      wrap.trimmed = true;
+      wrap.board = trimBoard(board0);
+      text = JSON.stringify(wrap);
+    }
+    // Still over the size that already failed, and nothing has been deleted
+    // since — do not spend another stringify proving it every six seconds.
+    if(recoverGaveUpAt && text.length >= recoverGaveUpAt * 0.9) return;
+
     try{
-      localStorage.setItem(recoverKey(), JSON.stringify(wrap));
-    }catch(err){
-      // over quota — the decks are recoverable from the Library, the ink is not.
-      // A frozen page's baked slide goes with them: it is styled by its deck's
-      // head, so it is worth nothing once the deck text is gone.
+      localStorage.setItem(recoverKey(), text);
+      recoverGaveUpAt = 0;
+      return;
+    }catch(err){ /* quota, or another batch's board is holding it */ }
+
+    // One shot at making room: other batches' boards are the only thing here
+    // this session is free to drop, and they are the biggest thing in the
+    // store. The teacher's own current board is what we are trying to save.
+    try{
+      const mine = recoverKey(), stale = [];
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(RECOVER_PREFIX + ":") && k !== mine) stale.push(k);
+      }
+      stale.forEach(k => localStorage.removeItem(k));
+      if(stale.length){
+        localStorage.setItem(recoverKey(), text);
+        recoverGaveUpAt = 0;
+        return;
+      }
+    }catch(err){ /* fall through to giving up */ }
+
+    if(!wrap.trimmed){
       try{
         wrap.trimmed = true;
-        wrap.board = {
-          ...board0,
-          decks: board0.decks.map(d => ({ ...d, text: "" })),
-          pages: board0.pages.map(p => p.snap && p.snap.body
-            ? { ...p, snap: { ...p.snap, body: null } } : p)
-        };
+        wrap.board = trimBoard(board0);
         localStorage.setItem(recoverKey(), JSON.stringify(wrap));
-      }catch(err2){ /* nothing more to try — the session save still covers it */ }
+        recoverGaveUpAt = 0;
+        return;
+      }catch(err){ /* fall through to giving up */ }
     }
+
+    if(!recoverGaveUpAt)
+      toast("This board is too large for crash recovery — your session is still being saved");
+    recoverGaveUpAt = text.length;
   }
   function dropRecover(){ try{ localStorage.removeItem(recoverKey()); }catch(err){} }
 
@@ -2658,6 +2846,16 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       const baked = cur.deckId != null
         ? await requestFrozenBody(deckFrames[cur.deckId])
         : null;
+      /* Freezing a page that is ITSELF a frozen page. That page is a blank
+         page — blankPage() gives it deckId:null — so there is no live deck to
+         ask and the branch above bakes nothing. The slide is not lost: it is
+         sitting in the page's own snap, rendered by the snapDeck iframe. But
+         a canvas cannot capture an iframe, so composeCurrent above returned
+         the ink alone, and without this the new page kept a picture of the
+         writing and dropped the slide it was written on — silently, and only
+         visibly wrong in the PDF, where the sheet prints as ink over a bare
+         board. Inherit what the old freeze recorded instead. */
+      const inherit = (!baked && cur.deckId == null && cur.snap) ? cur.snap : null;
       page.snap = {
         // fractions of the board, centred at 62% — see NORMALISED INK
         url, x:.19, y:.19, w:.62, h:.62,
@@ -2666,10 +2864,12 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
         // Freeze the slide HTML into the box. `body` is the live slide as it
         // was on the board; slide/step stay recorded either way, both as the
         // fallback for a deck that did not answer and as what the box means.
-        deckId: cur.deckId, deckIndex: cur.deckIndex, stepIndex: shownStep(cur),
-        body: baked ? baked.body : null,
-        rootClass: baked ? baked.rootClass : "",
-        rootStyle: baked ? baked.rootStyle : ""
+        deckId:    inherit ? inherit.deckId    : cur.deckId,
+        deckIndex: inherit ? inherit.deckIndex : cur.deckIndex,
+        stepIndex: inherit ? inherit.stepIndex : shownStep(cur),
+        body:      baked ? baked.body      : (inherit ? inherit.body      : null),
+        rootClass: baked ? baked.rootClass : (inherit ? inherit.rootClass : ""),
+        rootStyle: baked ? baked.rootStyle : (inherit ? inherit.rootStyle : "")
       };
     }
     if(!duplicate) at = state.current;
@@ -2691,9 +2891,33 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     const removed = state.pages.length - (state.current + 1);
     if(removed <= 0) return toast("No pages after this one");
     state.pages.splice(state.current + 1);
+    pruneDecks();
     updateChrome();
     scheduleRecover();
     toast(`Cut ${removed} page${removed > 1 ? "s" : ""} after this one`);
+  }
+
+  /* Let go of a deck that no longer has a single page on the board.
+     Nothing did this during a lecture — the only teardown was End session —
+     so a deck loaded by mistake and cut straight back out kept its iframe
+     resident for the rest of the lesson: its document, its heap, its
+     textures, its WebGL contexts, and its full text in every recovery write
+     and every session save from then on. */
+  function pruneDecks(){
+    // A frozen page counts too: one that was baked without a body still
+    // prints from its deck's document, so that deck is still in use even
+    // though no live page points at it.
+    const used = new Set();
+    state.pages.forEach(p => {
+      if(p.deckId != null) used.add(String(p.deckId));
+      if(p.snap && p.snap.deckId != null) used.add(String(p.snap.deckId));
+    });
+    for(const id in deckFrames){
+      if(used.has(String(id))) continue;
+      try{ deckFrames[id].remove(); }catch(err){}
+      delete deckFrames[id];
+    }
+    state.decks = state.decks.filter(d => used.has(String(d.id)));
   }
 
   function goTo(i){
@@ -3587,11 +3811,17 @@ html,body{margin:0!important;padding:0!important}
   /* Every cover page for one end, concatenated in order. Sequential on
      purpose: each one mounts a measuring iframe, and a dozen at once is how
      you get a browser to drop layout on half of them. */
+  /* Built together, not one after another. Each cover has to be measured in
+     a real iframe before it can be placed, and that measurement has a 2.5s
+     cap on it; run in series, twelve starting pages and twelve ending ones
+     could add a full minute of nothing to the end of an export — after every
+     deck had already been baked, with the "Building PDF" toast long gone.
+     They do not depend on each other, so the wait is the slowest cover
+     rather than the sum of all of them. Order is preserved: Promise.all
+     resolves in argument order regardless of which finished first. */
   async function buildCoverSheets(pages, vars, pageCount, badge, W, H){
-    const out = [];
-    for(const p of pages){
-      out.push(await buildCoverSheet(p.html, vars, pageCount, badge, p.fit || "fill", W, H));
-    }
+    const out = await Promise.all(pages.map(p =>
+      buildCoverSheet(p.html, vars, pageCount, badge, p.fit || "fill", W, H)));
     return out.join("");
   }
 
@@ -3600,7 +3830,7 @@ html,body{margin:0!important;padding:0!important}
      ink so it can never hide a teacher's annotation. Percentages of the
      sheet, so one setting looks identical on any board size. Empty string
      when branding is off or unset. */
-  function buildLogoBadge(){
+  function buildLogoBadge(sink){
     const logo = state.exportCfg && state.exportCfg.logo;
     if(!logo || !logo.dataUrl) return "";
     const size = Number(logo.sizePct) > 0 ? Number(logo.sizePct) : 8;
@@ -3622,7 +3852,36 @@ html,body{margin:0!important;padding:0!important}
     else if(vert === "bottom") css.push("bottom:" + y + "%");
     else { css.push("top:50%"); shift.push("translateY(-50%)"); }
     if(shift.length) css.push("transform:" + shift.join(" "));
-    return `<img class="logo-badge" src="${escAttr(logo.dataUrl)}" alt="" style="${css.join(";")}">`;
+    /* The src is a blob URL, not the data URL itself. This markup is pasted
+       into every sheet of the export, and a logo is allowed to be 600 KB —
+       forty sheets meant forty copies of it in one string. A blob URL is
+       forty characters, points at bytes that exist once, and resolves inside
+       the print frame because that frame is same-origin. It stays an <img>:
+       a background would need the aspect ratio declared, and only the file
+       knows what that is. */
+    return `<img class="logo-badge" src="${escAttr(logoObjectUrl(logo.dataUrl, sink))}" `
+      + `alt="" style="${css.join(";")}">`;
+  }
+
+  /* data: → blob:, once per distinct picture. Falls back to the data URL for
+     anything not base64-encoded, and for a browser that will not make one. */
+  const objUrlCache = new Map();
+  function logoObjectUrl(dataUrl, sink){
+    if(objUrlCache.has(dataUrl)) return objUrlCache.get(dataUrl);
+    let url = dataUrl;
+    try{
+      const i = dataUrl.indexOf(",");
+      if(i > 0 && /;base64/i.test(dataUrl.slice(0, i))){
+        const mime = (/data:([^;]+)/.exec(dataUrl) || [, "application/octet-stream"])[1];
+        const bin = atob(dataUrl.slice(i + 1));
+        const buf = new Uint8Array(bin.length);
+        for(let k = 0; k < bin.length; k++) buf[k] = bin.charCodeAt(k);
+        url = URL.createObjectURL(new Blob([buf], { type: mime }));
+        if(sink) sink.push(url);
+      }
+    }catch(err){ url = dataUrl; }
+    objUrlCache.set(dataUrl, url);
+    return url;
   }
 
   /* Ask one deck's live frame for its current DOM. Resolves to null — never
@@ -3779,15 +4038,29 @@ html,body{margin:0!important;padding:0!important}
     return (bgCache[key] = c.toDataURL("image/png"));
   }
 
+  /* An export takes several seconds of awaits — baking every deck, measuring
+     every cover — and the button and the "e" shortcut both stay live through
+     all of it. A second press used to start a second full export: two print
+     frames, two sets of cover measurements, and whichever `print()` won.  */
+  let exporting = false;
+
   async function exportPDF({ through, vars } = {}){
+    if(exporting) return toast("Already building the PDF…");
     if(!state.pages.length) return toast("Nothing to export — add a page first");
     const end = Math.min(
       through != null ? through : state.pages.length - 1,
       state.pages.length - 1
     );
     if(end < 0) return toast("Nothing to export — add a page first");
+    exporting = true;
+    // Backstop: a throw anywhere in the awaits below must not latch the
+    // button shut for the rest of the lesson.
+    setTimeout(() => { exporting = false; }, 120000);
     const exportPages = state.pages.slice(0, end + 1);
     const blobURLs = [];   // ink overlays — revoked once the print frame is gone
+    // Those URLs are revoked a minute after the dialog closes, so a second
+    // export must mint its own rather than reuse a dead one.
+    objUrlCache.clear();
     toast("Building PDF — “Save as PDF”, Margins: None, Scale: Default, and leave the paper size as offered");
 
     const r = board.getBoundingClientRect();
@@ -3811,7 +4084,34 @@ html,body{margin:0!important;padding:0!important}
     // What the board is SHOWING beats what the file says — see the note on
     // sendExportDoc in the deck controller. A deck that does not answer
     // (an old snapshot restored without a live frame) falls back to its text.
-    const live = await Promise.all(state.decks.map(requestDeckSnapshot));
+    /* ── make every deck measurable before asking it to bake ──────────────
+       syncDeck keeps exactly one deck frame displayed; the rest are
+       display:none, which means no layout box, which means the auto-fit
+       engine inside them cannot measure anything. Baking them in that state
+       exported every deck except the one on screen at its authored size —
+       overflowing the sheet and clipped by it — and, if the teacher happened
+       to be standing on a blank or frozen page when they pressed Export,
+       that was EVERY deck, because then no frame is displayed at all.
+
+       visibility:hidden rather than moving them off-screen: it lays the frame
+       out in full, so vmin/clamp/percentage heights resolve exactly as they
+       do on the board, while painting nothing — no flash of six decks
+       strobing through their slides behind the toast. Restored below in a
+       finally, so a bake that throws does not leave the board wrong. */
+    const shown = new Map();
+    for(const id in deckFrames){
+      const f = deckFrames[id];
+      shown.set(f, [f.style.display, f.style.visibility]);
+      if(f.style.display === "none"){ f.style.visibility = "hidden"; f.style.display = "block"; }
+    }
+    let live;
+    try{
+      live = await Promise.all(state.decks.map(requestDeckSnapshot));
+    } finally {
+      shown.forEach(([display, visibility], f) => {
+        f.style.display = display; f.style.visibility = visibility;
+      });
+    }
     for(let di = 0; di < state.decks.length; di++){
       const deck = state.decks[di];
       const doc = new DOMParser().parseFromString(live[di] || deck.text, "text/html");
@@ -3822,8 +4122,50 @@ html,body{margin:0!important;padding:0!important}
         const href = l.getAttribute("href") || "";
         if(/^https?:\/\//i.test(href)) l.remove();
       });
-      deckDocs[deck.id] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+      /* An <iframe> pointing at the network survives the sanitiser above and
+         is why an export can sit forever with nothing to show for it: a
+         descendant frame delays its ancestor's load event, and a deck ships a
+         [data-video] placeholder iframe on purpose so the file still works
+         opened on its own. On the board it is harmless — that frame is
+         sandboxed and dead. In the print document it is not sandboxed, so in
+         a room with no network it stalls the whole PDF. It cannot render
+         anything in a PDF regardless. */
+      doc.querySelectorAll("iframe[src]").forEach(fr => {
+        if(/^https?:\/\//i.test(fr.getAttribute("src") || "")) fr.remove();
+      });
+
+      /* ── one slide per sheet, not one deck per sheet ────────────────────
+         Each sheet embeds its slide in an iframe of its own, and what went
+         into that iframe was the ENTIRE deck — all forty slides — with a
+         script to reveal the one the sheet wanted. Forty sheets meant forty
+         verbatim copies of the deck in one string, each escaped twice on the
+         way in, and forty fully parsed forty-slide documents alive at once
+         inside the print frame. That, not the slides themselves, is the wait
+         on a long lecture, and it is what runs the panel out of memory.
+
+         So the deck is split once: a SHELL (its head, its #bg, its #stage —
+         everything a slide needs around it) with a comment where each slide
+         used to be, and the slides themselves as separate strings. A sheet is
+         the shell with its own slide dropped back in and the others left out.
+         Each slide is marked active here rather than by a script, which also
+         takes the last scripts out of the print document. */
+      const pageEls = [...doc.querySelectorAll(".page")];
+      const pageHTML = pageEls.map(el => { el.classList.add("__lf-x"); return el.outerHTML; });
+      // Each slide is replaced IN PLACE, so a deck that nests its pages
+      // inside a #stage keeps them nested.
+      pageEls.forEach((el, i) => el.replaceWith(doc.createComment("LFP" + i)));
+      deckDocs[deck.id] = {
+        shell: "<!DOCTYPE html>" + doc.documentElement.outerHTML,
+        pages: pageHTML
+      };
     }
+
+    /* The shell with slide `idx` put back and every other slot left empty. */
+    const deckSheet = (deckId, idx) => {
+      const d = deckDocs[deckId];
+      if(!d || idx == null || d.pages[idx] == null) return null;
+      return d.shell.replace(/<!--LFP(\d+)-->/g, (m, k) => +k === idx ? d.pages[idx] : "");
+    };
 
     // per-sheet controls injected into each embedded copy:
     // show ONLY that sheet's page, reveal all steps, keep colors.
@@ -3854,10 +4196,12 @@ html,body{background:#080a14!important}
 <\/style>`;
 
     // One markup string reused on every sheet — the logo is identical each time.
-    const badge = buildLogoBadge();
-    const showPage = i =>
-      `<script>var ps=document.querySelectorAll(".page");` +
-      `if(ps[${i}])ps[${i}].classList.add("__lf-x");<\/script>`;
+    const badge = buildLogoBadge(blobURLs);
+    /* showPage() used to live here: a <script> injected into every sheet to
+       find the right .page and mark it active. It is gone — deckSheet() puts
+       exactly one slide in the sheet and marks it while building, so a print
+       document that used to carry one script per sheet now carries none, and
+       nothing in it has to run before it is correct. */
 
     /* Ink first, for every page at once. Almost all of them come back as SVG
        and cost nothing; only a page that erased more than MAX_SVG_ERASERS
@@ -3870,26 +4214,29 @@ html,body{background:#080a14!important}
     inks.forEach(i => { if(i && /^blob:/.test(i.url)) blobURLs.push(i.url); });
 
     const sheets = [];
+    const bgKinds = new Set();
     for(let pi = 0; pi < exportPages.length; pi++){
       const page = exportPages[pi];
       const ink  = inks[pi];
-      const bgURL = renderBoardBg(W, H, page.paper || "dots");
+      const bgKind = page.paper || "dots";
+      bgKinds.add(bgKind);
       let embed = "";
-      const dd = page.deckId != null ? deckDocs[page.deckId] : null;
-      if(page.deckIndex != null && dd){
-        const srcdoc = dd + EMBED_STYLE + showPage(page.deckIndex);
-        embed = `<iframe class="deck-embed" srcdoc="${escAttr(srcdoc)}"></iframe>`;
+      const dd = page.deckId != null ? deckSheet(page.deckId, page.deckIndex) : null;
+      if(dd){
+        embed = `<iframe class="deck-embed" srcdoc="${escAttr(dd + EMBED_STYLE)}"></iframe>`;
       }
       // Frozen box that carries slide HTML → a scaled iframe placed at the box.
       let snapEmbed = "";
       const s = page.snap;
-      if(s && s.deckId != null && s.deckIndex != null && (s.body || deckDocs[s.deckId])){
+      const snapFallback = (s && !s.body && s.deckId != null)
+        ? deckSheet(s.deckId, s.deckIndex) : null;
+      if(s && s.deckId != null && s.deckIndex != null && (s.body || snapFallback)){
         /* A freeze that recorded the live slide prints exactly that — its own
            step, its own zoom. SNAP_PRINT only re-asserts the colours print
            needs; EMBED_STYLE would fight the baked sheet's own page rules. */
         const srcdoc = s.body
           ? frozenSrcdoc(s) + SNAP_PRINT
-          : deckDocs[s.deckId] + EMBED_STYLE + showPage(s.deckIndex);
+          : snapFallback + EMBED_STYLE;
         const baseW = s.baseW || W, baseH = s.baseH || H;
         // the box is stored in board fractions; the sheet is exactly W×H CSS px,
         // so it multiplies out to plain px here — no vw/vh, which would resolve
@@ -3915,8 +4262,21 @@ html,body{background:#080a14!important}
         : (ink ? `<img class="ink-overlay" style="left:${ink.x}px;top:${ink.y}px;`
                  + `width:${ink.w}px;height:${ink.h}px" src="${ink.url}">` : "");
       sheets.push(
-        `<div class="sheet"><img class="bg-layer" src="${bgURL}">${embed}${snapEmbed}${snapInk}${badge}${inkEl}</div>`);
+        `<div class="sheet"><div class="bg-layer bg-${bgKind}"></div>`
+        + `${embed}${snapEmbed}${snapInk}${badge}${inkEl}</div>`);
     }
+
+    /* ── one copy of each repeated image, not one per sheet ───────────────
+       The board background and the logo are byte-identical on every sheet,
+       and both used to be written into the markup as their own full base64
+       data URL, once per page. On a 4K board that background is a 3.7 Mpx
+       PNG; forty sheets carried forty copies of it, and a branded export
+       carried forty copies of a logo that is allowed to be 600 KB. That was
+       the print document — far more of it than the slides ever were. Declared
+       once as a CSS rule and referenced by class, the same forty sheets cost
+       one copy each. */
+    const bgRules = [...bgKinds]
+      .map(k => `.bg-${k}{background-image:url("${renderBoardBg(W, H, k)}")}`).join("\n");
 
     /* Covers wrap the lesson: every Starting Page first, in the order set in
        Global settings, then the board, then every Ending Page. Each cover is
@@ -3950,7 +4310,9 @@ html,body{background:#080a14!important}
 html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
 .sheet{position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#0b0f19;page-break-after:always;break-after:page;break-inside:avoid;page-break-inside:avoid}
 .sheet:last-child{page-break-after:auto;break-after:auto}
-.bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.bg-layer{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  background-size:100% 100%;background-repeat:no-repeat}
+${bgRules}
 .deck-embed{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#080a14}
 /* Cover pages are positioned and scaled inline per sheet — see buildCoverSheet. */
 /* Under the ink (z-10): a badge must never cover what the teacher wrote. */
@@ -3965,7 +4327,21 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     // without a layout box, which prints as solid white on some sheets.
     f.style.cssText = `position:fixed;left:0;top:0;width:${W}px;height:${H}px;border:0;opacity:0;pointer-events:none;z-index:-1`;
     document.body.appendChild(f);
-    f.onload = () => {
+    /* `load` on the print frame is the ONLY thing that used to lead to
+       print(), and it was the one wait in this whole path with no cap on it.
+       Every other one has one — 2.5s per embed below, 2.5s per cover, 6s per
+       deck bake. A descendant frame delays its ancestor's load event, and a
+       deck legitimately ships a [data-video] YouTube <iframe> so the file
+       still works opened on its own; under the print frame that iframe is
+       live and, in a classroom with no network, hangs until the OS gives up.
+       The teacher gets the "Building PDF" toast and then nothing at all, for
+       minutes. So: whichever comes first, load or the cap, goes on to print
+       — a sheet that is a frame short is a far better outcome than a dialog
+       that never opens. */
+    let started = false;
+    const beginPrint = () => {
+      if(started) return;
+      started = true;
       const embeds = Array.from(f.contentDocument?.querySelectorAll("iframe") || []);
       const waitEmbed = frame => new Promise(resolve => {
         let done = false;
@@ -3989,6 +4365,8 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
         }, 60000);   // keep alive while dialog is open
       }, 200));
     };
+    f.onload = beginPrint;
+    setTimeout(beginPrint, 15000);      // the cap this path never had
     f.srcdoc = printDoc;
 
     // Persist the full board into session history with how far the export reached.
@@ -4001,6 +4379,7 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
       exportedThrough: end
     });
     pingActivity();
+    exporting = false;
   }
 
   /* ═══ PAGE OVERVIEW SHEET ═════════════════════
@@ -4081,6 +4460,13 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
       pageSheet.classList.add("show");
     } else {
       pageSheet.classList.remove("show");
+      /* And actually take the tiles down. The sheet hides with opacity, not
+         display, so everything it built stayed mounted: one live iframe per
+         frozen page, each holding that deck's whole head and a baked slide,
+         for the rest of the lesson — after a single glance at the overview.
+         Cleared after the fade so the panel does not blink empty on its way
+         out, and guarded in case it was reopened in the meantime. */
+      setTimeout(() => { if(!sheetOpen) pageSheetInner.innerHTML = ""; }, 260);
     }
   }
 

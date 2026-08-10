@@ -340,10 +340,34 @@ export async function saveTeachingSession(batchId, boardState, opts = {}) {
     for (let i = 0; i < pagesJson.length; i += CHUNK_CHARS) {
       parts.push(pagesJson.slice(i, i + CHUNK_CHARS))
     }
+
+    // The chunks go FIRST, and the session document that points at them last.
+    //
+    // It used to be the other way round, and the order is the whole story: a
+    // session doc saying `pageChunks: 12` is a promise that twelve chunks
+    // exist. Written before them, any failure in between — a lecture theatre
+    // dropping its wifi, or the batch below being too large — left that
+    // promise permanently broken. readSessionPages then joins nothing, throws
+    // inside JSON.parse, and returns []; the lecture shows up in history with
+    // its real page count and opens completely empty. persistBoard logs the
+    // throw to the console and the teacher is never told.
+    //
+    // Written in this order the worst case is a session doc that never
+    // appears — the board is still on screen, still in the local snapshot,
+    // and the next save writes it again. Nothing claims to hold work it lost.
+    //
+    // Chunks also go in batches of their own rather than one. Firestore caps
+    // a write request at about 10 MiB, so at 700 KB a chunk the single batch
+    // broke somewhere past fifteen of them — which is exactly a long, heavily
+    // inked lecture, the one worth keeping most.
+    const PER_BATCH = 8                                  // ≈5.6 MB per request
+    for (let i = 0; i < parts.length; i += PER_BATCH) {
+      const wb = writeBatch(db)
+      parts.slice(i, i + PER_BATCH)
+        .forEach((text, k) => wb.set(chunkRef(batchId, id, i + k), { i: i + k, text }))
+      await wb.commit()
+    }
     await setDoc(sessionRef(batchId, id), { ...base, pages: null, pageChunks: parts.length })
-    const wb = writeBatch(db)
-    parts.forEach((text, i) => wb.set(chunkRef(batchId, id, i), { i, text }))
-    await wb.commit()
   }
 
   // The local snapshot keeps deck text so a crashed tab can restore instantly;
@@ -379,15 +403,24 @@ async function readSessionPages(batchId, sessionId, data) {
   const n = data.pageChunks || 0
   if (!n) return []
   const snap = await getDocs(chunksCol(batchId, sessionId))
-  const text = snap.docs
+  const found = snap.docs
     .map((d) => d.data())
     .sort((a, b) => (a.i || 0) - (b.i || 0))
-    .map((p) => p.text || '')
-    .join('')
+
+  // A gap here is not a parse problem, and reporting it as one is how a
+  // half-written session used to read back as an ordinary empty board. Say
+  // what actually happened, loudly enough to be found in a bug report.
+  if (found.length !== n) {
+    console.error(
+      `Session ${sessionId}: expected ${n} page chunk${n === 1 ? '' : 's'}, found ${found.length}. ` +
+      'The board this session recorded is incomplete and cannot be restored.')
+    return []
+  }
+
   try {
-    return JSON.parse(text)
+    return JSON.parse(found.map((p) => p.text || '').join(''))
   } catch (err) {
-    console.warn('Session pages could not be parsed:', err)
+    console.error(`Session ${sessionId}: page chunks are present but do not parse.`, err)
     return []
   }
 }
