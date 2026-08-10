@@ -82,6 +82,23 @@ h2.head .small{font-size:28px;color:var(--muted);font-weight:500;letter-spacing:
 .bullet .b{color:var(--accent);font-size:22px;line-height:1.35;font-weight:700;}
 .bullet .t{font-size:23px;line-height:1.5;}
 
+/* fill-in-the-blank: the rule is always visible, the word fades in on its own step */
+.blank{position:relative;display:inline-block;padding:0 3px;}
+.blank::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:2.5px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent-soft),rgba(255,210,31,.3));opacity:.9;}
+.big-answer{font-size:1.35em;font-weight:800;color:var(--accent-soft);}
+
+/* per-slide text scale-ups */
+.q-lg{font-size:25px;line-height:1.5;}
+.q-lg .katex{font-size:1.2em;}
+.page.big-q .eq-lg{font-size:25px;line-height:1.5;}
+.page.big-q .eq-lg .katex{font-size:1.25em;}
+.page.big-q .hint{font-size:22px;line-height:1.5;}
+.page.big-q .card .label{font-size:16px;}
+.page.big-t .hint{font-size:24px;line-height:1.5;}
+.page.big-t .card .label{font-size:18px;}
+.page.big-t .bullet .t{font-size:25px;}
+
 .figure{background:#fdfdfd;border-radius:16px;padding:10px 12px;border:2px solid rgba(46,204,154,.5);
   box-shadow:0 12px 30px rgba(0,0,0,.5);display:flex;justify-content:center;}
 .figure svg,.plain-fig svg{width:100%;height:auto;display:block;}
@@ -218,6 +235,11 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 </div>
 <div class="col">
 <div class="figure step" data-fig="skin-bundle"></div>
+<div class="card note tight">
+<div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Wire type</div>
+<div class="bullet step"><span class="b">DC</span><span class="t">Any type of wire will work.</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">AC</span><span class="t">We use <b style="color:var(--accent-soft)">hollow</b> and <b style="color:var(--accent-soft)">bundled</b> conductors.</span></div>
+</div>
 </div>
 </div>
 </div></section>
@@ -296,21 +318,16 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <div class="col">
 <div class="card formula">
 <div class="label"><span class="dot"></span>Hot wire galvanometer</div>
-<div class="bullet step"><span class="b">▸</span><span class="t">Works on the <b style="color:var(--accent-soft)">heating effect</b>, \(H=I^{2}Rt\)</span></div>
-<div class="bullet step"><span class="b">▸</span><span class="t">It shows the <b style="color:var(--accent-soft)">RMS value</b></span></div>
-<div class="bullet step"><span class="b">▸</span><span class="t">It works for <b style="color:var(--accent-soft)">both</b> supplies</span></div>
-<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Scale is <b style="color:var(--accent-soft)">non-uniform</b> (since \(H\propto I^{2}\))</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">Works on the <span class="blank"><b class="step" style="color:var(--accent-soft)">heating effect</b></span>, \(H=I^{2}Rt\)</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">It shows the <span class="blank"><b class="step" style="color:var(--accent-soft)">RMS value</b></span></span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">It works for <span class="blank"><b class="step" style="color:var(--accent-soft)">both</b></span> supplies</span></div>
+<div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">Scale is <span class="blank"><b class="step" style="color:var(--accent-soft)">non-uniform</b></span> (since \(H\propto I^{2}\))</span></div>
 </div>
 </div>
 <div class="col">
-<div class="card">
-<div class="label" style="background:rgba(255,255,255,.08);color:#dfe5ee"><span class="dot"></span>Wire type</div>
-<div class="bullet step"><span class="b">DC</span><span class="t">Any type of wire will work.</span></div>
-<div class="bullet step" style="margin-bottom:0"><span class="b">AC</span><span class="t">Hollow and bundled conductors are used.</span></div>
-</div>
 <div class="card question">
 <div class="label"><span class="dot"></span>Which is more dangerous?</div>
-<div class="bullet"><span class="b">▸</span><span class="t">In general <b style="color:var(--accent-soft)">DC</b> — in AC the current passes through zero a hundred times a second, giving a chance to let go.</span></div>
+<div class="bullet step"><span class="b">▸</span><span class="t">In general <b style="color:var(--accent-soft)">DC</b> — in AC the current passes through zero a hundred times a second, giving a chance to let go.</span></div>
 <div class="bullet step" style="margin-bottom:0"><span class="b">▸</span><span class="t">But NCERT says <b style="color:var(--accent-soft)">AC</b> for the same rating, because its peak \(=\sqrt2\times\) the quoted RMS value.</span></div>
 </div>
 </div>
@@ -327,11 +344,11 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <div class="rule"></div>
 <div class="cols">
 <div class="col wide">
-<div class="card step"><div class="plain-fig" data-fig="transmission"></div></div>
+<div class="card"><div class="plain-fig" data-fig="transmission"></div></div>
 </div>
 <div class="col narrow">
-<div class="card question">
-<div class="hint" style="margin-top:0">The house wants <b>220 V at 10 A</b>. The plant sends 320 V, but the line itself eats \(V=IR\).</div>
+<div class="card question step">
+<div class="hint" style="margin-top:0">The house wants <b>220 V at 10 A</b>, so the plant has to send 320 V — the line itself eats \(V=IR\).</div>
 </div>
 <div class="card solution step">
 <div class="eq-lg" style="text-align:center">\[P_{loss}=I^{2}R\]</div>
@@ -345,7 +362,7 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <h2 class="head">Transformer <span class="accent">introduction</span></h2>
 <div class="rule"></div>
 <div class="cols" style="flex-direction:column">
-<div class="card step"><div class="plain-fig" data-fig="chain"></div></div>
+<div class="card"><div class="plain-fig" data-fig="chain"></div></div>
 <div class="cols" style="flex:0">
 <div class="col">
 <div class="card solution">
@@ -413,10 +430,8 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 </div>
 </div></section>
 <!-- 14 · CONCEPTUAL QUESTIONS -->
-<section class="page"><div class="wrap">
-<h2 class="head">Conceptual <span class="accent">questions</span></h2>
-<div class="rule"></div>
-<div class="cols">
+<section class="page big-q"><div class="wrap">
+<div class="cols" style="margin-top:6px">
 <div class="col">
 <div class="card question">
 <div class="label"><span class="dot"></span>Question</div>
@@ -471,7 +486,7 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <div class="col">
 <div class="card question">
 <div class="label"><span class="dot"></span>Question 2</div>
-<div class="eq-lg">A <b>200 V DC</b> supply feeds the 100-turn primary; the 20-turn secondary drives a \(4\,\Omega\) bulb. Find the current in the bulb.</div>
+<div class="eq-lg q-lg">A <b>200 V DC</b> supply feeds the 100-turn primary; the 20-turn secondary drives a \(4\,\Omega\) bulb. Find the current in the bulb.</div>
 </div>
 <div class="card solution">
 <div class="label"><span class="dot"></span>Solution</div>
@@ -505,13 +520,18 @@ body[data-lvl="7"] .legend{font-size:15px;bottom:12px;}
 <div class="card question">
 <div class="label"><span class="dot"></span>Copper loss · issue</div>
 <div class="figure" data-fig="copper"></div>
-<div class="hint step"><b>Fix:</b> use a thicker wire of lower resistance so \(I^{2}R\) heating drops.</div>
+<div class="hint step">The windings have resistance, so \(H=I^{2}Rt\) is lost as heat.</div>
+</div>
+<div class="card solution">
+<div class="label"><span class="dot"></span>Fix</div>
+<div class="figure step" data-fig="copper-fix"></div>
+<div class="hint step">Use a <b>thicker wire</b> — lower \(R\), so less \(I^{2}R\) heating.</div>
 </div>
 </div>
 </div>
 </div></section>
 <!-- 17 · LOSSES 2 -->
-<section class="page"><div class="wrap">
+<section class="page big-t"><div class="wrap">
 <h2 class="head">Transformer losses · <span class="accent">iron loss</span></h2>
 <div class="rule"></div>
 <div class="cols">
@@ -631,6 +651,32 @@ function axes(x0,y0,xLen,yLen,id){
   <line x1="${x0}" y1="${y0}" x2="${x0+xLen}" y2="${y0}" stroke="#111" stroke-width="2.2" marker-end="url(#hd${id})"/>
   <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0-yLen}" stroke="#111" stroke-width="2.2" marker-end="url(#hd${id})"/>`;
 }
+
+/* shared power-grid glyphs (dark figures) */
+const pwPlant=(x,y)=>`<rect x="${x}" y="${y}" width="96" height="58" rx="7" fill="rgba(255,255,255,.09)" stroke="#cfd8e6" stroke-width="2"/>
+  <rect x="${x+14}" y="${y-24}" width="16" height="26" fill="rgba(255,255,255,.14)" stroke="#cfd8e6" stroke-width="1.6"/>
+  <rect x="${x+40}" y="${y-32}" width="16" height="34" fill="rgba(255,255,255,.14)" stroke="#cfd8e6" stroke-width="1.6"/>`;
+const pwHouse=(x,y)=>`<rect x="${x}" y="${y+16}" width="84" height="48" rx="5" fill="rgba(140,180,255,.16)" stroke="#9dc0ff" stroke-width="2"/>
+  <path d="M${x-8} ${y+18} L${x+42} ${y-12} L${x+92} ${y+18} z" fill="rgba(140,180,255,.28)" stroke="#9dc0ff" stroke-width="2"/>`;
+const pwZig=(x1,x2,y,n)=>{
+  n=n||16; let d=`M${x1} ${y} `; const st=(x2-x1)/n;
+  for(let i=1;i<=n;i++) d+=`L${(x1+st*i).toFixed(1)} ${(y+(i%2?-9:9))} `;
+  return `<path d="${d}L${x2} ${y}" fill="none" stroke="#fff" stroke-width="2.4"/>`;
+};
+const pwWire=(x1,x2,y)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#8fb0ff" stroke-width="2.4"/>`;
+const pwTx=(cx,cy,col)=>{
+  const h=26; let g='';
+  g+=`<line x1="${cx-5}" y1="${cy-h-6}" x2="${cx-5}" y2="${cy+h+6}" stroke="${col}" stroke-width="2.6"/>`;
+  g+=`<line x1="${cx+5}" y1="${cy-h-6}" x2="${cx+5}" y2="${cy+h+6}" stroke="${col}" stroke-width="2.6"/>`;
+  let dl=`M${cx-11} ${cy-h} `, dr=`M${cx+11} ${cy-h} `;
+  for(let i=0;i<4;i++){ dl+=`a 13 6.5 0 0 0 0 13 `; dr+=`a 13 6.5 0 0 1 0 13 `; }
+  g+=`<path d="${dl}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`;
+  g+=`<path d="${dr}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`;
+  g+=`<line x1="${cx-24}" y1="${cy}" x2="${cx-13}" y2="${cy}" stroke="${col}" stroke-width="2.4"/>`;
+  g+=`<line x1="${cx+13}" y1="${cy}" x2="${cx+24}" y2="${cy}" stroke="${col}" stroke-width="2.4"/>`;
+  return g;
+};
+const TXT=(x,y,fill,size,t,anchor)=>`<text x="${x}" y="${y}" fill="${fill}" font-size="${size}" text-anchor="${anchor||'middle'}" font-family="Inter,sans-serif">${t}</text>`;
 
 const FIGS = {
   trapezoid(){
@@ -851,46 +897,59 @@ Object.assign(FIGS, {
 
 /* ---- why transformers: transmission losses (dark) ---- */
 'transmission'(){
-  const W=760,H=326,Y='#ffd21f';
-  const plant=(x,y)=>`<rect x="${x}" y="${y}" width="96" height="58" rx="7" fill="rgba(255,255,255,.09)" stroke="#cfd8e6" stroke-width="2"/>
-    <rect x="${x+14}" y="${y-24}" width="16" height="26" fill="rgba(255,255,255,.14)" stroke="#cfd8e6" stroke-width="1.6"/>
-    <rect x="${x+40}" y="${y-32}" width="16" height="34" fill="rgba(255,255,255,.14)" stroke="#cfd8e6" stroke-width="1.6"/>`;
-  const house=(x,y)=>`<rect x="${x}" y="${y+16}" width="84" height="48" rx="5" fill="rgba(140,180,255,.16)" stroke="#9dc0ff" stroke-width="2"/>
-    <path d="M${x-8} ${y+18} L${x+42} ${y-12} L${x+92} ${y+18} z" fill="rgba(140,180,255,.28)" stroke="#9dc0ff" stroke-width="2"/>`;
-  const zig=(x1,x2,y)=>{
-    let d=`M${x1} ${y} `; const n=16, st=(x2-x1)/n;
-    for(let i=1;i<=n;i++) d+=`L${(x1+st*i).toFixed(1)} ${(y+(i%2?-9:9))} `;
-    return `<path d="${d}L${x2} ${y}" fill="none" stroke="#fff" stroke-width="2.4"/>`;
-  };
+  const W=760,H=344,Y='#ffd21f',G='#2ecc9a',R='#ff7b7b';
   let s=svgEl(W,H);
-  /* case 1 */
-  s+=plant(24,60)+zig(126,470,88)+house(500,56);
-  s+=`<text x="300" y="66" fill="${Y}" font-size="21" text-anchor="middle" font-family="Inter,sans-serif">R = 10 Ω  →  drop = 100 V</text>`;
-  s+=`<text x="72" y="146" fill="#fff" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">320 V, 10 A</text>`;
-  s+=`<text x="560" y="146" fill="#2ecc9a" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">gets 220 V ✓</text>`;
-  /* case 2 */
-  s+=plant(24,214)+zig(126,470,242)+house(500,210);
-  s+=`<text x="300" y="220" fill="${Y}" font-size="21" text-anchor="middle" font-family="Inter,sans-serif">R = 20 Ω  →  drop = 200 V</text>`;
-  s+=`<text x="72" y="306" fill="#fff" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">320 V, 10 A</text>`;
-  s+=`<text x="560" y="306" fill="#ff7b7b" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">gets 120 V ✗</text>`;
+  /* ---- shown from the start: the setup ---- */
+  s+=pwPlant(24,58)+pwZig(126,470,86)+pwHouse(500,54);
+  s+=TXT(300,58,Y,21,'line resistance  R = 10 Ω');
+  s+=TXT(72,146,'#cfd8e6',20,'power station');
+  s+=TXT(560,146,G,20,'needs 220 V, 10 A');
+  /* ---- step 1: what the plant must therefore send ---- */
+  s+=`<g class="step">`;
+  s+=TXT(300,120,Y,21,'drop = I R = 10 × 10 = 100 V');
+  s+=TXT(24,172,'#fff',21,'so send 320 V, 10 A','start');
+  s+='</g>';
+  /* ---- step 2: same plant, longer line ---- */
+  s+=`<g class="step">`;
+  s+=pwPlant(24,236)+pwZig(126,556,264,20)+pwHouse(586,232);
+  s+=TXT(330,236,Y,21,'a farther house — longer line, R = 20 Ω');
+  s+=TXT(24,324,'#fff',21,'same 320 V, 10 A','start');
+  s+='</g>';
+  /* ---- step 3: the shortfall ---- */
+  s+=`<g class="step">`;
+  s+=TXT(330,300,Y,21,'drop = 10 × 20 = 200 V');
+  s+=TXT(636,324,R,21,'gets only 120 V ✗');
+  s+='</g>';
   return s+'</svg>';
 },
 
 /* ---- step-up / step-down transmission chain (dark) ---- */
 'chain'(){
-  const W=800,H=210,Y='#ffd21f',y=104;
-  const box=(x,label,sub,col)=>`<rect x="${x}" y="${y-34}" width="164" height="70" rx="12"
-      fill="rgba(255,255,255,.06)" stroke="${col}" stroke-width="2"/>
-    <text x="${x+82}" y="${y-6}" fill="${col}" font-size="21" text-anchor="middle" font-family="Inter,sans-serif">${label}</text>
-    <text x="${x+82}" y="${y+22}" fill="#cfd8e6" font-size="19" text-anchor="middle" font-family="Inter,sans-serif">${sub}</text>`;
+  const W=880,H=250,Y='#ffd21f',G='#2ecc9a',B='#5b8cff',y=118;
   let s=svgEl(W,H);
-  s+=`<line x1="8" y1="${y}" x2="792" y2="${y}" stroke="#8fb0ff" stroke-width="2.4"/>`;
-  s+=box(16,'plant','220 V, 10 A','#cfd8e6');
-  s+=box(212,'step up','× 100','#2ecc9a');
-  s+=box(408,'line','22000 V, 0.1 A','#ffd21f');
-  s+=box(604,'step down','× 1/100','#5b8cff');
-  s+=`<text x="440" y="${y-56}" fill="${Y}" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">high V, low I  →  loss = I²R is tiny</text>`;
-  s+=`<text x="686" y="${y+64}" fill="#2ecc9a" font-size="20" text-anchor="middle" font-family="Inter,sans-serif">home: 220 V, 10 A</text>`;
+  /* ---- shown from the start: plant, line, house ---- */
+  s+=pwWire(126,266,y)+pwWire(314,546,y)+pwWire(594,700,y);
+  s+=pwPlant(30,y-28)+pwHouse(706,y-32);
+  s+=TXT(78,y+62,'#cfd8e6',20,'power station');
+  s+=TXT(78,y+88,'#fff',21,'220 V, 10 A');
+  s+=TXT(748,y+62,'#cfd8e6',20,'home');
+  s+=TXT(748,y+88,G,21,'needs 220 V, 10 A');
+  /* ---- step 1: two transformers appear on the line ---- */
+  s+=`<g class="step">`+pwTx(290,y,'#e6ecf7')+pwTx(570,y,'#e6ecf7')+`</g>`;
+  /* ---- step 2: the first one is a step-up ---- */
+  s+=`<g class="step">`;
+  s+=pwTx(290,y,G);
+  s+=TXT(290,y+62,G,21,'step up');
+  s+=TXT(290,y+88,G,20,'× 100');
+  s+=TXT(430,y-58,Y,21,'22000 V, 0.1 A');
+  s+=TXT(430,y-86,Y,20,'high V, low I  →  loss = I²R is tiny');
+  s+='</g>';
+  /* ---- step 3: the second one is a step-down ---- */
+  s+=`<g class="step">`;
+  s+=pwTx(570,y,B);
+  s+=TXT(570,y+62,B,21,'step down');
+  s+=TXT(570,y+88,B,20,'× 1/100');
+  s+='</g>';
   return s+'</svg>';
 },
 
@@ -955,12 +1014,21 @@ Object.assign(FIGS, {
   return s+'</svg>';
 },
 'copper'(){
-  const W=330,H=230,cx=165;
+  const W=430,H=170,cx=215;
   let s=svgEl(W,H);
-  s+=coil(cx,50,180,9,52,'#a56a3c',3.4);
-  s+=`<line x1="40" y1="46" x2="${cx-52}" y2="46" stroke="#a56a3c" stroke-width="3.4"/>`;
-  s+=`<line x1="${cx+52}" y1="184" x2="290" y2="184" stroke="#a56a3c" stroke-width="3.4"/>`;
-  s+=`<text x="${cx}" y="220" font-size="20" text-anchor="middle" font-family="Inter,sans-serif" fill="#a03c1e">heating in the windings · H = I²Rt</text>`;
+  s+=coil(cx,26,124,7,44,'#a56a3c',3.4);
+  s+=`<line x1="70" y1="26" x2="${cx-44}" y2="26" stroke="#a56a3c" stroke-width="3.4"/>`;
+  s+=`<line x1="${cx+44}" y1="124" x2="360" y2="124" stroke="#a56a3c" stroke-width="3.4"/>`;
+  s+=`<text x="${cx}" y="158" font-size="20" text-anchor="middle" font-family="Inter,sans-serif" fill="#a03c1e">heating in the windings · H = I²Rt</text>`;
+  return s+'</svg>';
+},
+'copper-fix'(){
+  const W=430,H=130;
+  let s=svgEl(W,H);
+  s+=`<line x1="40" y1="28" x2="390" y2="28" stroke="#a56a3c" stroke-width="6" stroke-linecap="round"/>`;
+  s+=`<text x="215" y="58" font-size="19" text-anchor="middle" font-family="Inter,sans-serif" fill="#a03c1e">thin wire · high R · runs hot</text>`;
+  s+=`<line x1="40" y1="90" x2="390" y2="90" stroke="#c98a4b" stroke-width="19" stroke-linecap="round"/>`;
+  s+=`<text x="215" y="122" font-size="19" text-anchor="middle" font-family="Inter,sans-serif" fill="#0f7a52">thick wire · low R · stays cool</text>`;
   return s+'</svg>';
 },
 

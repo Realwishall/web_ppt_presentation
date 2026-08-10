@@ -22,6 +22,41 @@
     --danger:#ef4444;
     --sw-navy:#1e293b; --sw-red:#ef4444; --sw-blue:#3b82f6;
     --sw-green:#22c55e; --sw-orange:#f97316; --sw-white:#ffffff;
+
+    /* ── BIG PANEL ──────────────────────────────────────────────────────
+       The two things the board costs a 4K panel that it does not have to.
+       They are custom properties and not a set of "html.lite .thing" rules
+       on purpose: a descendant selector hanging off a root class puts the
+       root in the invalidation set of everything beneath it and costs style
+       work on every press, forever. A custom property costs it once, on the
+       frame the mode actually changes.
+
+       · --board-radius — this is the one that matters. A rounded,
+         overflow:hidden board is a CLIP MASK wrapped around the ink canvas,
+         and a masked layer can never be handed straight to the screen. That
+         is `desynchronized` quietly buying nothing and the pen falling a
+         frame or two behind the nib — the "ink trails behind" feel.
+       · --board-shadow — a 60px blur around a box 3800px wide, re-rendered
+         whenever the board repaints.
+
+       The chrome's backdrop-filter is deliberately NOT in here, though it
+       looks like the obvious candidate. Measured, dropping it makes things
+       worse: the blur is what gives the control strip its own compositing
+       layer, and the prev/next buttons change disabled state on every
+       single press. Without the layer those changes recalc style against
+       the rest of the board instead of inside a box of their own — six
+       times the style recalcs per press, for a blur over a strip 40px
+       tall. It stays. */
+    --board-radius:16px;
+    --board-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  /* Set automatically when the board would be rasterised at more than
+     PERF.LITE_AT_PX device pixels, and forced either way with Shift+P.
+     Nothing here changes what a slide says, what is exported or what is
+     saved — only how much work the panel does per frame. */
+  html.lite{
+    --board-radius:0;
+    --board-shadow:none;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -71,7 +106,7 @@
   }
   .board{
     position:relative;width:100%;height:100%;   /* no aspect cap — take it all */
-    border-radius:16px;overflow:hidden;
+    border-radius:var(--board-radius);overflow:hidden;
     /* Only the gradient lives in CSS now. The paper pattern (dots / graph /
        axes) is painted per page on #paper by one painter that the board, the
        page thumbnails and the PDF export all share, so a page that is graph
@@ -79,7 +114,7 @@
     background:linear-gradient(180deg,#0d1424,#0b101d);
     background-size:100% 100%;background-repeat:no-repeat;   /* see paperImage() */
     border:1px solid var(--border-soft);
-    box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    box-shadow:var(--board-shadow);
     opacity:0;pointer-events:none;transition:opacity .3s ease;
   }
   .board.visible{opacity:1;pointer-events:auto}
@@ -250,7 +285,8 @@
   .center-pill{
     display:flex;align-items:center;gap:3px;
     background:var(--surface-80);border:1px solid var(--border);
-    border-radius:16px;padding:6px 8px;backdrop-filter:blur(10px);
+    border-radius:16px;padding:6px 8px;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     box-shadow:0 10px 30px rgba(0,0,0,.4);
   }
   .pill-btn{
@@ -295,7 +331,8 @@
     position:absolute;bottom:70px;left:50%;transform:translate(-50%,12px);
     max-width:min(86vw,1100px);z-index:45;
     background:var(--surface-80);border:1px solid var(--border);
-    border-radius:18px;padding:12px;backdrop-filter:blur(12px);
+    border-radius:18px;padding:12px;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     box-shadow:0 18px 50px rgba(0,0,0,.55);
     opacity:0;pointer-events:none;
     transition:opacity .2s ease,transform .2s ease;
@@ -336,7 +373,8 @@
   /* ── CONFIRM DIALOG ─────────────────────────── */
   .overlay{
     position:absolute;inset:0;z-index:60;background:rgba(4,7,14,.65);
-    backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
     opacity:0;pointer-events:none;transition:opacity .2s ease;
   }
   .overlay.show{opacity:1;pointer-events:auto}
@@ -931,10 +969,61 @@
   let boardW = 0, boardH = 0;
   let inkRect = { left:0, top:0 };   // cached — never read layout on pointermove
 
+  /* ═══ BIG-PANEL BUDGET ════════════════════════
+     A 4K panel asks for a 3840x2160 ink surface — 8.3 million pixels. Every
+     blit (`present`) copies all of them, every full repaint (`redraw`) walks
+     the page's ink across all of them, and the classroom's OPS stick has an
+     integrated GPU. Ink is thick, high-contrast strokes on a dark board: the
+     backing store can be well under the panel's native grid and no one in the
+     room can tell, while the per-frame cost falls with the pixel count.
+
+     So: pick the largest device-pixel ratio that keeps the surface inside a
+     budget. On a 1080p board this changes nothing (2.0 Mpx < the budget, so
+     the real dpr is used); on 4K it lands the surface near 2560x1440. */
+  const PERF = {
+    MAX_INK_PX: 2_600_000,        // ~2560x1440 — the ink surface budget
+    MIN_INK_DPR: 0.75,            // floor: a 4K panel at 100% scaling still
+                                  // asks for 7.5 Mpx of CSS pixels alone, and
+                                  // strokes are 3-8px wide on a board watched
+                                  // from three metres — three quarters of a
+                                  // device pixel per CSS pixel is invisible
+                                  // there and nearly halves the fill cost
+    LITE_AT_PX: 3_500_000,        // board bigger than this ⇒ big-panel mode
+  };
+  function inkDpr(w, h){
+    const dpr = window.devicePixelRatio || 1;
+    const want = w * h * dpr * dpr;
+    if(!(want > PERF.MAX_INK_PX)) return dpr;
+    return Math.max(PERF.MIN_INK_DPR, dpr * Math.sqrt(PERF.MAX_INK_PX / want));
+  }
+  /* Big-panel mode is a preference when the teacher has set one, and a
+     measurement otherwise — so a 4K panel gets it without anyone knowing it
+     exists, and a laptop demo keeps the rounded board. */
+  let litePref = null;
+  try{
+    const v = localStorage.getItem("lf-lite");
+    if(v === "1" || v === "0") litePref = (v === "1");
+  }catch(err){}
+  function applyLite(w, h){
+    const dpr = window.devicePixelRatio || 1;
+    const on = litePref === null ? (w * h * dpr * dpr > PERF.LITE_AT_PX) : litePref;
+    document.documentElement.classList.toggle("lite", on);
+    return on;
+  }
+  function toggleLite(){
+    litePref = !document.documentElement.classList.contains("lite");
+    try{ localStorage.setItem("lf-lite", litePref ? "1" : "0"); }catch(err){}
+    document.documentElement.classList.toggle("lite", litePref);
+    toast(litePref
+      ? "Big-panel mode on — plainer chrome, faster board"
+      : "Big-panel mode off");
+  }
+
   function sizeCanvas(){
     const r = board.getBoundingClientRect();
     if(r.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = inkDpr(r.width, r.height);
+    applyLite(r.width, r.height);
     boardW = r.width; boardH = r.height;
     inkRect = { left:r.left, top:r.top };
     const pw = Math.round(r.width * dpr), ph = Math.round(r.height * dpr);
@@ -1409,7 +1498,20 @@ for(var i=0;i<cues.length;i++){
       const s = page.snap;
       o.drawImage(snapImg, s.x * r.width, s.y * r.height, s.w * r.width, s.h * r.height);
     }
-    o.drawImage(canvas, 0, 0, r.width, r.height);
+    /* Ink is REPAINTED at export resolution rather than upscaled off the live
+       surface. The board's ink canvas is capped to a pixel budget so a 4K
+       panel stays fast (see PERF above); blitting that up to the export size
+       would bake the cap into every archived page. Repainting into a
+       transparent layer of its own also keeps the eraser's destination-out
+       inside the ink, so it rubs out strokes and not the board behind them —
+       exactly what the teacher saw on screen. */
+    const ink = document.createElement("canvas");
+    ink.width = out.width; ink.height = out.height;
+    const ic = ink.getContext("2d");
+    ic.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ic.lineCap = ic.lineJoin = "round";
+    if(page) paintStrokes(page.strokes, ic, r.width, r.height);
+    o.drawImage(ink, 0, 0, r.width, r.height);
     return out.toDataURL("image/png");
   }
 
@@ -1821,14 +1923,28 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
   /* Same tail without the immediate pass — for things whose effect on layout
      lands after the event (a deck's own key handler, an interactive figure). */
-  function scheduleFitLater(){
+  function scheduleFitLater(tail){
     if(fitRaf) cancelAnimationFrame(fitRaf);
     fitRaf = requestAnimationFrame(function(){ fitActive(); sendRects(); sendMedia(); });
     for(var i = 0; i < fitTimers.length; i++) clearTimeout(fitTimers[i]);
-    fitTimers = [80, 260, 650, 1300].map(function(d){
+    fitTimers = (tail || [80, 260, 650, 1300]).map(function(d){
       return setTimeout(function(){ fitActive(); sendRects(); sendMedia(); }, d);
     });
   }
+  /* A STEP is not a resize. Revealing a step changes opacity and a transform —
+     an element that was already laid out, still occupying its own space — so
+     the answer the fit engine would compute is the answer it computed when
+     the page opened. The old code did not know that: every press ran the full
+     schedule, and each pass is a read-write-read layout thrash that rewrites
+     the .wrap's zoom. Rewriting zoom re-lays out and re-rasterises the whole
+     slide, and on a 4K board that is the freeze you feel before the next line
+     appears — five times per press.
+
+     So a step-only press gets ONE cheap pass. It is not zero because a deck's
+     own script may genuinely add content on a step; fitPage's signature check
+     costs a single reflow and returns immediately when nothing moved, and the
+     one late pass catches anything that lands after a transition. */
+  var STEP_TAIL = [500];
 
   /* ── EXPORT SNAPSHOT ───────────────────────────────────────────────────
      The PDF export cannot run scripts (a deck's own page controller would
@@ -1936,21 +2052,30 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     parent.postMessage({ type:"lf-export-doc", requestId:requestId, html:html }, "*");
   }
 
+  var shownPage = -1;
   function show(i, step){
     var ps = document.querySelectorAll(".page");
+    var pageChanged = (i !== shownPage);
+    shownPage = i;
     for(var k=0;k<ps.length;k++) ps[k].classList.toggle("__lf-active", k===i);
     var act = ps[i];
     if(act){
       var steps = act.querySelectorAll(".step");
       for(var k=0;k<steps.length;k++) steps[k].classList.toggle("__lf-on", k < step);
     }
-    /* A page that was display:none could not be measured while hidden, so it
-       is fitted here — synchronously, before this frame is painted. */
-    scheduleFit();
-    setTimeout(sendRects, 60);
-    setTimeout(sendRects, 700);   // again after CSS transitions settle
-    setTimeout(sendMedia, 60);
-    setTimeout(sendMedia, 700);
+    if(pageChanged){
+      /* A page that was display:none could not be measured while hidden, so
+         it is fitted here — synchronously, before this frame is painted — and
+         then re-fitted along the tail, because fonts, images and a WebGL
+         scene all settle after the first layout. */
+      scheduleFit();
+      setTimeout(sendRects, 60);
+      setTimeout(sendRects, 700);   // again after CSS transitions settle
+      setTimeout(sendMedia, 60);
+      setTimeout(sendMedia, 700);
+    } else {
+      scheduleFitLater(STEP_TAIL);  // see the note on STEP_TAIL above
+    }
   }
   /* Report any [data-video] placeholder on the ACTIVE page so the host can
      position a real player over it. Always posts — an empty list is how the
@@ -2031,8 +2156,11 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      fixed-canvas decks bind 1-7 / +/- to a text-size level, and an
      interactive figure can grow when it is clicked. Re-fit after, not
      during: the deck's own handler has to run first. */
-  document.addEventListener("keydown", scheduleFitLater, true);
-  document.addEventListener("click", scheduleFitLater, true);
+  // wrapped, not passed directly: scheduleFitLater now takes a tail, and an
+  // Event object handed in as one is not an array of delays.
+  var refitAfterInput = function(){ scheduleFitLater(); };
+  document.addEventListener("keydown", refitAfterInput, true);
+  document.addEventListener("click", refitAfterInput, true);
 
   /* ── REPORT THE REAL STEP COUNT ────────────────────────────────────────
      The host budgets presses per page by counting .step in a DOMParser copy
@@ -2639,6 +2767,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   /* ═══ DRAWING & ERASING ═══════════════════════ */
   let activeStroke = null, erasing = false;
   let eraseRaf = 0;
+  // set by pointerrawupdate — see the listener below for what it is for
+  let rawFed = false;
   const MIN_PT_DIST2 = 0.8 * 0.8;    // drop sub-pixel duplicates from high-Hz pens
 
   function cacheInkRect(){
@@ -2688,24 +2818,50 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     }
   }
 
-  function appendInkPoint(p){
-    if(!activeStroke) return;
+  /* Take EVERY point one pointer event carried, in ONE path and ONE stroke().
+     A pen on a big panel delivers 6-10 coalesced points per frame, and the
+     old code issued a separate beginPath/stroke() per point: on a multi-
+     megapixel surface each of those is its own draw the GPU has to set up and
+     flush, so a single visible squiggle cost ten of them per frame. Chained
+     into one path it is one. The points are still stored one by one — the
+     stored stroke is unchanged, only the number of draw calls falls.
+
+     Pen ink goes straight onto the visible (live) canvas, as directly as it
+     can — this is the path latency is actually felt on. The area eraser
+     cannot: destination-out against an empty live layer removes nothing, so
+     it has to bite the committed buffer and be blitted back. */
+  function appendInkPoints(list){
+    if(!activeStroke || !list.length) return;
     const pts = activeStroke.pts;
-    const last = pts[pts.length - 1];
-    const lx = last.x * boardW, ly = last.y * boardH;
-    const dx = p.x - lx, dy = p.y - ly;
-    if(dx*dx + dy*dy < MIN_PT_DIST2 && pts.length > 1) return;
-    pts.push(toFrac(p));
-    /* Pen ink goes to the low-latency live layer. The area eraser cannot:
-       destination-out against an empty live layer removes nothing, so it has
-       to bite the committed buffer — still one small op plus one blit. */
-    /* The pen draws straight onto the visible canvas, as directly as it can —
-       this is the path latency is felt on. The area eraser cannot: it is
-       destination-out, so it has to bite the buffer and be blitted back. */
     const c = activeStroke.mode === "erase" ? bctx : ctx;
-    applyStrokeStyle(activeStroke, c, boardW);
-    c.beginPath(); c.moveTo(lx, ly); c.lineTo(p.x, p.y); c.stroke();
+    let open = false;
+    for(let i=0;i<list.length;i++){
+      const p = list[i];
+      const last = pts[pts.length - 1];
+      const lx = last.x * boardW, ly = last.y * boardH;
+      const dx = p.x - lx, dy = p.y - ly;
+      if(dx*dx + dy*dy < MIN_PT_DIST2 && pts.length > 1) continue;
+      if(!open){
+        applyStrokeStyle(activeStroke, c, boardW);
+        c.beginPath(); c.moveTo(lx, ly);
+        open = true;
+      }
+      c.lineTo(p.x, p.y);
+      pts.push(toFrac(p));
+    }
+    if(!open) return;
+    c.stroke();
     if(activeStroke.mode === "erase") presentSoon();
+  }
+  const appendInkPoint = p => appendInkPoints([p]);
+
+  /* Points carried by one pointer event, coalesced list included. */
+  function eventPoints(e){
+    const raw = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : null;
+    const src = (raw && raw.length) ? raw : [e];
+    const out = new Array(src.length);
+    for(let i=0;i<src.length;i++) out[i] = posFromClient(src[i].clientX, src[i].clientY);
+    return out;
   }
 
   // Fold the finished stroke into the buffer so the next blit still has it.
@@ -2809,6 +2965,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     if(!page) return;
     e.preventDefault();
     cacheInkRect();
+    rawFed = false;                 // this gesture has not been raw-fed yet
     const p = pos(e);
     hoverPt = p;
 
@@ -2873,10 +3030,32 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       return;
     }
     e.preventDefault();
-    const raw = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : null;
-    const events = raw && raw.length ? raw : [e];
-    for(let i=0;i<events.length;i++) appendInkPoint(posFromClient(events[i].clientX, events[i].clientY));
+    // pointerrawupdate already fed this stroke this frame — see below.
+    if(rawFed) return;
+    appendInkPoints(eventPoints(e));
   });
+
+  /* ── pointerrawupdate ──────────────────────────
+     `pointermove` is aligned to the frame: the browser holds the pen's points
+     until just before rendering, so the ink the teacher sees is always at
+     least one frame behind the nib. `pointerrawupdate` delivers the same
+     points as they arrive, which is a whole frame of latency back on a panel
+     that is already working hard — the single biggest thing you can feel.
+
+     It is Chromium-only and does not fire for every input type, so it is a
+     supplement, never a replacement: when it does fire it marks the stroke as
+     already fed for this gesture and pointermove stops appending; when it
+     does not, the flag stays false and pointermove is still the whole story.
+     The flag is cleared on every pointerdown, so a pen that raw-updates and a
+     finger that does not can take turns on the same board. */
+  if(window.PointerEvent && "onpointerrawupdate" in window){
+    canvas.addEventListener("pointerrawupdate", e => {
+      if(!activeStroke) return;
+      rawFed = true;
+      hoverPt = posFromClient(e.clientX, e.clientY);
+      appendInkPoints(eventPoints(e));
+    });
+  }
 
   ["pointerup","pointercancel"].forEach(ev =>
     canvas.addEventListener(ev, () => {
@@ -2895,18 +3074,37 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   });
 
   /* ═══ CHROME / UI SYNC ════════════════════════ */
+  let dotCur = -1;                 // which page dot currently carries .cur
+  let boardClass = "";             // last value written to board.className
   function updateChrome(){
     const n = state.pages.length, c = state.current;
     const page = state.pages[c];
     pageLabel.textContent = n ? `${c+1} / ${n}` : "0 / 0";
-    pageDots.innerHTML = state.pages
-      .map((_,i) => `<span class="${i===c?"cur":""}"></span>`).join("");
+    /* Rebuilt only when the NUMBER of pages changes. This used to re-parse the
+       whole strip on every single press — forty elements thrown away and
+       forty made, plus the style and layout that follows, for a lecture forty
+       pages in — on the same press the board is already re-fitting a slide. */
+    if(pageDots.childElementCount !== n){
+      pageDots.innerHTML = state.pages.map(() => "<span></span>").join("");
+      dotCur = -1;
+    }
+    // and only the two dots that actually change are touched
+    if(dotCur !== c){
+      const was = pageDots.children[dotCur], now = pageDots.children[c];
+      if(was) was.classList.remove("cur");
+      if(now) now.classList.add("cur");
+      dotCur = c;
+    }
     prevBtn.disabled = c < 0 || (c === 0 && !hasPrevStep(page));
     nextBtn.disabled = c < 0 || (c >= n - 1 && !hasNextStep(page));
     const pm = document.getElementById("prevBtnMini"), nm = document.getElementById("nextBtnMini");
     if(pm) pm.disabled = prevBtn.disabled;
     if(nm) nm.disabled = nextBtn.disabled;
-    board.className = "board tool-" + state.tool + (n ? " visible" : "");
+    // Written only on a real change. Assigning className unconditionally
+    // invalidates style for the board and everything under it — the deck
+    // iframe and the ink canvas included — on every single press.
+    const bc = "board tool-" + state.tool + (n ? " visible" : "");
+    if(bc !== boardClass) board.className = boardClass = bc;
     renderRails();
   }
 
@@ -3983,6 +4181,8 @@ html,body{margin:0;padding:0;background:#0b0f19;width:${PW}in}
     if(e.target && typeof e.target.matches === "function" && e.target.matches("input,textarea")) return;
     // Arrows + PowerPoint-style clicker keys (PageUp/PageDown/Space)
     if(handleNavKey(e.key)){ e.preventDefault(); return; }
+    // Shift+P before plain P, or the pen would swallow it.
+    else if(e.shiftKey && e.key.toLowerCase() === "p"){ e.preventDefault(); toggleLite(); }
     else if(e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey) addPage();
     else if(e.key.toLowerCase() === "p") setTool("pen");
     else if(e.key.toLowerCase() === "e") setTool("eraser");
