@@ -2112,6 +2112,96 @@
     body[data-lvl="7"] .sec h1 {
       font-size: 83px
     }
+
+    /* ============ per-slide typography tweaks ============ */
+    /* 29 · question + solution text +5% */
+    #p29 .card.question>:not(.lbl),
+    #p29 .card.solution>:not(.lbl) {
+      font-size: 1.05em
+    }
+
+    /* 31 & 32 · yellow lead line +10% */
+    #p31 .card>p>.k,
+    #p32 .card>p>.k {
+      font-size: 1.10em
+    }
+
+    /* 34 · everything +15%, roomier spotlight box */
+    #p34 h1 {
+      font-size: 71px
+    }
+
+    #p34 h1 .sub {
+      font-size: 39px
+    }
+
+    #p34 .card {
+      font-size: 36px
+    }
+
+    #p34 .mcq {
+      font-size: 31px;
+      padding: 10px 16px
+    }
+
+    #p34 .mcq .t {
+      font-size: 24px
+    }
+
+    #p34 .spot.run .mcq.big {
+      width: min(94%, 960px);
+      font-size: 38px;
+      padding: 24px 36px 26px
+    }
+
+    #p34 .spot.run .mcq.big .t {
+      font-size: 28px
+    }
+
+    #p34 .spot.run .mcq.big .q {
+      font-size: 35px
+    }
+
+    body[data-lvl="6"] #p34 h1 {
+      font-size: 66px
+    }
+
+    body[data-lvl="6"] #p34 h1 .sub {
+      font-size: 36px
+    }
+
+    body[data-lvl="6"] #p34 .card {
+      font-size: 35px
+    }
+
+    body[data-lvl="6"] #p34 .mcq {
+      font-size: 31px
+    }
+
+    body[data-lvl="6"] #p34 .spot.run .mcq.big {
+      font-size: 36px
+    }
+
+    body[data-lvl="7"] #p34 h1 {
+      font-size: 60px
+    }
+
+    body[data-lvl="7"] #p34 h1 .sub {
+      font-size: 33px
+    }
+
+    body[data-lvl="7"] #p34 .card {
+      font-size: 33px
+    }
+
+    body[data-lvl="7"] #p34 .mcq {
+      font-size: 30px
+    }
+
+    body[data-lvl="7"] #p34 .spot.run .mcq.big {
+      font-size: 33px
+    }
+
   </style>
 </head>
 
@@ -9315,7 +9405,7 @@ M1001 80h400000v40h-400000z"></path>
     </section>
 
     <!-- 30 ============================================================ -->
-    <section class="page" style="display: none;">
+    <section id="p29" class="page" style="display: none;">
       <div class="wrap">
         <h1>5 · A new set of fundamental units<span class="sub step"
             style="transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(14px);">Count how many
@@ -9616,7 +9706,7 @@ M1001 80h400000v40h-400000z"></path>
     </section>
 
     <!-- 32 ============================================================ -->
-    <section class="page" style="display: none;">
+    <section id="p31" class="page" style="display: none;">
       <div class="wrap">
         <h1>Limitations</h1>
         <div class="rule"></div>
@@ -9883,7 +9973,7 @@ h400000v40h-400000z"></path>
     </section>
 
     <!-- 33 ============================================================ -->
-    <section class="page" style="display: none;">
+    <section id="p32" class="page" style="display: none;">
       <div class="wrap">
         <h1>Limitations <span class="sub step"
             style="transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(14px);">continued</span>
@@ -10051,21 +10141,14 @@ M834 80h400000v40h-400000z"></path>
                         style="height: 0.6679em;"></span><span class="mop">sin</span></span></span></span></span> can
               never be derived from a bracket</p>
           </div>
-          <div class="card note tight step"
-            style="transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(14px);"><span
-              class="lbl">One sentence</span>
-            <p>Dimensional analysis tells you the <span class="k">shape</span> of a formula, never its
-              <span class="k">soul</span>.
-            </p>
-          </div>
         </div>
       </div>
     </section>
 
     <!-- 34 ============================================================ -->
-    <section class="page" style="display: none;">
+    <section id="p33" class="page" style="display: none;">
       <div class="wrap">
-        <h1>Question<span class="sub step">Which of these three drawings is the best?</span></h1>
+        <h1>Question<span class="sub step">I have drawn my figure drawings and which drawing is the best</span></h1>
         <div class="rule"></div>
         <div class="body">
           <div class="cols c3">
@@ -10153,7 +10236,7 @@ M834 80h400000v40h-400000z"></path>
     </section>
 
     <!-- 34 ============================================================ -->
-    <section class="page" style="display: none;">
+    <section id="p34" class="page" style="display: none;">
       <div class="wrap">
         <h1>Question<span class="sub step">Which of these can be found using dimensional analysis?</span></h1>
         <div class="rule"></div>

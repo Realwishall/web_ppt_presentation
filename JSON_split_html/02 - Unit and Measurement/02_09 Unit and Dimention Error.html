@@ -808,6 +808,158 @@
         body[data-lvl="7"] .page.dense .col.up20 .card .lbl {
             font-size: 18px
         }
+
+        /* === per-slide adjustments (2026-08) ===================================
+   `zoom` scales the whole box (text + padding) uniformly, so a request like
+   "+15% font, the box may grow" lands correctly at every text-size level
+   1-7 without duplicating the px ladders above. */
+
+        /* Slide 2 - Order of magnitude : everything +5% */
+        #s2 h1.h,
+        #s2 .content>* {
+            zoom: 1.05
+        }
+
+        /* Slide 4 - Parallax method : the boxes +15%, radian-conversion line untouched */
+        #s4 .card {
+            zoom: 1.15
+        }
+
+        #s4 .card .noup {
+            zoom: .8696
+        }
+
+        /* Slide 5 - Significant figures / the rules : everything +20% */
+        #s5 h1.h,
+        #s5 .content>* {
+            zoom: 1.2
+        }
+
+        /* Slide 7 - S.F. count table : the "Why" column in pure white */
+        #s7 .rows .r:not(.hd)>span:nth-child(3) {
+            color: #ffffff
+        }
+
+        /* Slide 10 - NCERT 1.31 : question text +15% */
+        #s10 .card.question {
+            zoom: 1.15
+        }
+
+        /* Slide 12 - Positive and negative error : remaining boxes +15% */
+        #s12 .card {
+            zoom: 1.15
+        }
+
+        /* Slide 13 - Random error : left-hand boxes +20% */
+        #s13 .col:first-child .card {
+            zoom: 1.2
+        }
+
+        /* Slide 14 - Systematic error : everything below the heading +20% */
+        #s14 .content>* {
+            zoom: 1.2
+        }
+
+        /* Slide 15 - Question / the difference that matters : body +20% */
+        #s15 .content>* {
+            zoom: 1.2
+        }
+
+        /* Slide 18 - Mean absolute error : everything +15% */
+        #s18 h1.h,
+        #s18 .content>* {
+            zoom: 1.15
+        }
+
+        /* Slide 19 - Four names for one idea : body +20% */
+        #s19 .content>* {
+            zoom: 1.2
+        }
+
+        /* Slide 21 - When the error is not given : body +10% */
+        #s21 .content>* {
+            zoom: 1.1
+        }
+
+        /* Slide 22 - Warning question : question text only +10% */
+        #s22 .card.question {
+            zoom: 1.1
+        }
+
+        /* Slide 24 - Error combination : all four boxes +20% */
+        #s24 .card {
+            zoom: 1.2
+        }
+
+        /* Slides 27-31 - Multiplication & division questions : question text +15% */
+        #s27 .card.question,
+        #s28 .card.question,
+        #s29 .card.question,
+        #s30 .card.question,
+        #s31 .card.question {
+            zoom: 1.15
+        }
+
+        /* Slide 32 - large percentage error : question, wrong attempt and solution +15% */
+        #s32 .card {
+            zoom: 1.15
+        }
+
+        /* Slide 33 - large percentage error : question text +15% */
+        #s33 .card.question {
+            zoom: 1.15
+        }
+
+        /* Slide 34 - Proper error reporting : question +20%, option list +15% */
+        #s34 .card.question {
+            zoom: 1.2
+        }
+
+        #s34 .col:first-child .card.plain {
+            zoom: 1.15
+        }
+
+        /* the option column needs the extra width so (B)-(D) keep their "cm" on one line */
+        #s34 .col:first-child {
+            flex: 1.5 1 0 !important
+        }
+
+        /* Slide 35 - Proper error reporting / more cases : body +15%, labels unchanged */
+        #s35 .content>* {
+            zoom: 1.15
+        }
+
+        #s35 .card .lbl {
+            zoom: .8696
+        }
+
+        /* Slide 36 - absolute vs percentage : question and solution boxes +15% */
+        #s36 .card {
+            zoom: 1.15
+        }
+
+        /* Slides 40-41 - Question : question text +15% */
+        #s40 .card.question,
+        #s41 .card.question {
+            zoom: 1.15
+        }
+
+        /* keep slides 2 and 30 clear of the auto-shrink guard at the two largest
+   text sizes: buy the few pixels back from spacing, not from the type */
+        body[data-lvl="6"] #s30 .content,
+        body[data-lvl="7"] #s2 .content,
+        body[data-lvl="7"] #s30 .content {
+            gap: 5px
+        }
+
+        body[data-lvl="7"] #s2 .card,
+        body[data-lvl="7"] #s30 .card {
+            padding: 7px 15px
+        }
+
+        body[data-lvl="6"] #s30 .card {
+            padding: 9px 17px
+        }
     </style>
 </head>
 
@@ -826,7 +978,7 @@
                 </div>
             </div>
         </section>
-        <section class="page">
+        <section id="s2" class="page">
             <div class="wrap">
                 <h1 class="h">Order of magnitude</h1>
                 <div class="rule"></div>
@@ -929,7 +1081,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s4" class="page dense">
             <div class="wrap">
                 <h1 class="h">Parallax method</h1>
                 <div class="rule"></div>
@@ -953,7 +1105,7 @@
                                 <span class="step"><span class="eq m">&#952; =
                                         4<sup>&#176;</sup>2&#8242;6&#8243;</span></span>
                                 <br>
-                                <span class="step"><span class="eq m">use = <span style="font-style:normal">(</span>4 +
+                                <span class="step noup"><span class="eq m">use = <span style="font-style:normal">(</span>4 +
                                         <span class="fr"><span>2</span><span>60</span></span> + <span
                                             class="fr"><span>6</span><span>3600</span></span><span
                                             style="font-style:normal">)</span> <span
@@ -1098,7 +1250,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s5" class="page dense">
             <div class="wrap">
                 <h1 class="h">Significant figures <span class="lite">&#183; the rules</span></h1>
                 <div class="rule"></div>
@@ -1137,7 +1289,7 @@
                 <div class="rule step"></div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s7" class="page dense">
             <div class="wrap">
                 <div class="content">
                     <div class="rows">
@@ -1289,7 +1441,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s10" class="page dense">
             <div class="wrap">
                 <h1 class="h">NCERT question <span class="lite">&#183; 1.31</span></h1>
                 <div class="rule"></div>
@@ -1347,7 +1499,7 @@
                 </div>
             </div>
         </section>
-        <section class="page">
+        <section id="s12" class="page">
             <div class="wrap">
                 <h1 class="h">Positive and negative error</h1>
                 <div class="rule"></div>
@@ -1375,17 +1527,10 @@
                         <span class="step">For a <span class="rd">negative error</span>, we apply a <span
                                 class="acc">positive correction</span>.</span>
                     </div>
-                    <div class="card formula">
-                        <span class="lbl">Two families</span>
-                        <span class="step"><span class="am">Random error</span> &#8212; sign and size keep
-                            changing</span> &nbsp;&#183;&nbsp;
-                        <span class="step"><span class="am">Systematic error</span> &#8212; same sign and size every
-                            time.</span>
-                    </div>
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s13" class="page dense">
             <div class="wrap">
                 <h1 class="h">Random error</h1>
                 <div class="rule"></div>
@@ -1463,7 +1608,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s14" class="page dense">
             <div class="wrap">
                 <h1 class="h">Systematic error</h1>
                 <div class="rule"></div>
@@ -1519,7 +1664,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s15" class="page dense">
             <div class="wrap">
                 <h1 class="h">Question <span class="lite">&#183; the difference that matters</span></h1>
                 <div class="rule"></div>
@@ -1602,7 +1747,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s18" class="page dense">
             <div class="wrap">
                 <h1 class="h">Mean absolute error</h1>
                 <div class="rule"></div>
@@ -1646,7 +1791,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s19" class="page dense">
             <div class="wrap">
                 <h1 class="h">Four names for one idea</h1>
                 <div class="rule"></div>
@@ -1711,7 +1856,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s21" class="page dense">
             <div class="wrap">
                 <h1 class="h">When the error is not given</h1>
                 <div class="rule"></div>
@@ -1748,7 +1893,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s22" class="page dense">
             <div class="wrap">
                 <h1 class="h">Warning question</h1>
                 <div class="rule"></div>
@@ -1809,7 +1954,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s24" class="page dense">
             <div class="wrap">
                 <h1 class="h">Error combination <span class="lite">&#183; important</span></h1>
                 <div class="rule"></div>
@@ -1897,7 +2042,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s27" class="page dense">
             <div class="wrap">
                 <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
                 <div class="rule"></div>
@@ -1937,7 +2082,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s28" class="page dense">
             <div class="wrap">
                 <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
                 <div class="rule"></div>
@@ -1979,7 +2124,7 @@
                 </div>
             </div>
         </section>
-        <section class="page">
+        <section id="s29" class="page">
             <div class="wrap">
                 <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
                 <div class="rule"></div>
@@ -2001,7 +2146,7 @@
                 </div>
             </div>
         </section>
-        <section class="page">
+        <section id="s30" class="page">
             <div class="wrap">
                 <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
                 <div class="rule"></div>
@@ -2030,7 +2175,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s31" class="page dense">
             <div class="wrap">
                 <h1 class="h">Multiplication &amp; division <span class="lite">&#183; question</span></h1>
                 <div class="rule"></div>
@@ -2069,7 +2214,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s32" class="page dense">
             <div class="wrap">
                 <h1 class="h">When the percentage error is <span class="lite">large</span></h1>
                 <div class="rule"></div>
@@ -2105,7 +2250,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s33" class="page dense">
             <div class="wrap">
                 <h1 class="h">When the percentage error is <span class="lite">large</span></h1>
                 <div class="rule"></div>
@@ -2132,7 +2277,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s34" class="page dense">
             <div class="wrap">
                 <h1 class="h">Proper error reporting</h1>
                 <div class="rule"></div>
@@ -2191,7 +2336,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s35" class="page dense">
             <div class="wrap">
                 <h1 class="h">Proper error reporting <span class="lite">&#183; more cases</span></h1>
                 <div class="rule"></div>
@@ -2232,7 +2377,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s36" class="page dense">
             <div class="wrap">
                 <h1 class="h">Question <span class="lite">&#183; absolute vs percentage</span></h1>
                 <div class="rule"></div>
@@ -2413,7 +2558,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s40" class="page dense">
             <div class="wrap">
                 <h1 class="h">Question</h1>
                 <div class="rule"></div>
@@ -2461,7 +2606,7 @@
                 </div>
             </div>
         </section>
-        <section class="page dense">
+        <section id="s41" class="page dense">
             <div class="wrap">
                 <h1 class="h">Question</h1>
                 <div class="rule"></div>
