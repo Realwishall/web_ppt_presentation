@@ -1515,6 +1515,39 @@ for(var i=0;i<cues.length;i++){
     renderMedia(e.data.media, page ? page.deckId : null);
   });
 
+  /* ═══ STEP BUDGET, CORRECTED BY THE LIVE DECK ══════════════════════════
+     loadDeckFromText counts .step on a DOMParser copy, which is the only
+     thing available before the iframe exists — but it is the file, not the
+     running deck. A deck that mints steps at runtime (KaTeX
+     \htmlClass{step}{…} in a formula is the common one) really has more of
+     them than the file shows, and the missing presses are always the LAST
+     ones: the tail of the page stays at opacity:0 for the whole lesson with
+     no way to reveal it. The deck reports its true count once it is live;
+     adopt it. Reports that agree with what we have change nothing, so this
+     is quiet in the normal case. */
+  window.addEventListener("message", e => {
+    if(!e.data || e.data.type !== "lf-stepcounts") return;
+    const counts = e.data.counts;
+    if(!Array.isArray(counts)) return;
+    let deckId = null;
+    for(const id in deckFrames)
+      if(deckFrames[id].contentWindow === e.source) deckId = id;
+    if(deckId === null) return;
+    let changed = false;
+    state.pages.forEach(p => {
+      if(String(p.deckId) !== String(deckId)) return;
+      const n = counts[p.deckIndex];
+      if(typeof n !== "number" || n === p.stepCount) return;
+      p.stepCount = n;
+      if(p.stepIndex > n) p.stepIndex = n;   // a shrunk page must stay in range
+      changed = true;
+    });
+    // With animations off a page shows stepCount steps, so the slide on the
+    // board is repainted; with them on stepIndex is untouched and syncDeck
+    // is a no-op repaint. Either way the Next button's state has to follow.
+    if(changed){ syncDeck(); updateChrome(); }
+  });
+
   /* ═══ ANIMATION SWITCH ════════════════════════
      With animations off a page is never half-told: the deck is asked to show
      every step of it at once, and Next/Previous move whole pages. The page's
@@ -2001,10 +2034,31 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   document.addEventListener("keydown", scheduleFitLater, true);
   document.addEventListener("click", scheduleFitLater, true);
 
+  /* ── REPORT THE REAL STEP COUNT ────────────────────────────────────────
+     The host budgets presses per page by counting .step in a DOMParser copy
+     of the file — a snapshot taken before a single script in the deck has
+     run. Any step that only exists once the deck is LIVE is invisible to
+     that count: KaTeX \\htmlClass{step}{…} inside a formula, a preset that
+     wraps a figure, anything a deck builds at runtime. The page then ends
+     with fewer presses than it has reveals, and its last steps can never be
+     switched on — the content is right there in the file and simply never
+     appears. So count what the DOM actually holds and tell the host. Sent
+     more than once because KaTeX, webfonts and the preset runtime each land
+     at a different moment; the host ignores a report that changes nothing. */
+  function sendSteps(){
+    var ps = document.querySelectorAll(".page"), out = [];
+    for(var k = 0; k < ps.length; k++) out.push(ps[k].querySelectorAll(".step").length);
+    parent.postMessage({ type:"lf-stepcounts", counts:out }, "*");
+  }
+
   applyAnim(animOn);
   // the preset runtime installs itself on load; re-assert after it exists
-  window.addEventListener("load", function(){ applyAnim(animOn); scheduleFit(); });
+  window.addEventListener("load", function(){
+    applyAnim(animOn); scheduleFit();
+    sendSteps(); setTimeout(sendSteps, 400); setTimeout(sendSteps, 1500);
+  });
   show(0, 0);
+  sendSteps();
 })();
 <\/script>`;
 
