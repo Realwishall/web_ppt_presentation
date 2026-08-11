@@ -1,0 +1,2658 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03  Mechanics Part 1 Level 2.pdf — LessonForge Deck</title>
+<style>
+/* ============================================================================
+   LessonForge deck-base.css  —  canonical design system for converted decks
+   ----------------------------------------------------------------------------
+   "Midnight + gold": a near-black indigo stage, warm gold headings, frosted
+   glass surfaces lit from the top edge. Everything below is presentation scale
+   (rule 9) and pure CSS — no script, no web font, no external asset — so the
+   look survives PDF export and an offline classroom.
+
+   This file is INLINED into every generated deck by tools/build-deck.mjs.
+   Deck authors never write CSS. If a slide needs something that isn't here,
+   the component gets added HERE and documented in docs/components.md — never
+   as inline styles in a deck.
+
+   Compliance notes (see public/deck-authoring-prompt.md):
+     rule 1  — nothing here hides .page (no display:none / opacity:0 / visibility)
+     rule 3  — no hover state carries information; hover never fires in class
+     rule 8  — .page is a bare full-height surface; all layout lives on .wrap
+     rule 9  — dark stage, presentation-scale type via clamp()
+     rule 10 — vmin/clamp everywhere; no fixed px for anything that must scale
+     rule 11 — @media print block at the bottom; nothing depends on JS
+     rule 17 — Calibri stack; equations in Cambria Math, UPRIGHT (never italic);
+              NO logo/brand styles
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+:root{
+  /* stage */
+  --bg-body:      #05060d;
+  --bg-stage:     #080a14;
+  --bg-deep:      #0d1020;
+
+  /* ink */
+  --ink:          #f4f7fb;   /* primary text            */
+  --sub:          #c7d2e1;   /* secondary / explanatory */
+  --muted:        #93a1b5;   /* notes, captions         */
+
+  /* accents — gold is the heading/label colour throughout */
+  --gold:         #f5c542;
+  --gold-soft:    #ffe9a8;
+  --gold-deep:    #b98a12;
+  --yellow:       #f5c542;   /* legacy alias, same hue  */
+  --accent:       #7c8cff;
+  --accent2:      #a78bfa;
+  --blue:         #2b3a68;   /* table header base       */
+  --green:        #34d399;
+  --red:          #fb7185;
+  --cyan:         #56ccf2;
+
+  /* surfaces — layered glass, lit from the top edge */
+  --card-bg:      linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  --card-flat:    rgba(255,255,255,.035);
+  --card-border:  rgba(255,255,255,.12);
+  --rule:         rgba(255,255,255,.07);
+  --hairline:     rgba(255,255,255,.09);
+  --lip:          inset 0 .1vmin 0 rgba(255,255,255,.10);
+  --lift:         0 1.2vmin 3.6vmin rgba(0,0,0,.45);
+  --lift-lg:      0 2.4vmin 7vmin rgba(0,0,0,.55);
+  --radius:       1.5vmin;
+  --radius-lg:    2.1vmin;
+
+  /* type scale — presentation scale, NOT web scale (rule 9) */
+  --fs-title:     clamp(36px, 8.8vmin, 100px);
+  --fs-h2:        clamp(26px, 5.6vmin, 60px);
+  --fs-h3:        clamp(22px, 4.4vmin, 46px);
+  --fs-body:      clamp(19px, 3.3vmin, 38px);
+  --fs-small:     clamp(17px, 2.8vmin, 32px);
+  --fs-note:      clamp(16px, 2.6vmin, 28px);
+  --fs-eq:        clamp(20px, 3.9vmin, 44px);
+  --fs-th:        clamp(15px, 2.2vmin, 25px);
+  --fs-td:        clamp(15px, 2.35vmin, 26px);
+
+  /* fonts (rule 17) */
+  --font-ui:      Calibri, Candara, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  /* UPRIGHT math face. Cambria Math ships with Windows/Office and is a real
+     math font (true Greek, true operators, digits on the baseline). Georgia
+     is deliberately NOT in this stack: its italic is what made older decks
+     look tilted and wrong. System fonts only — no @font-face, no CDN, so a
+     deck still sets correctly with no classroom network (rule 2). */
+  --font-math:    'Cambria Math', Cambria, 'STIX Two Math', 'Times New Roman', serif;
+
+  /* rhythm */
+  --gap:          2.2vmin;
+  --pad-y:        8.5vmin;
+  --pad-x:        7.5vmin;
+}
+
+html,body{height:100%;margin:0}
+body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
+     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+     font-kerning:normal;font-variant-numeric:tabular-nums}
+::selection{background:rgba(245,197,66,.28)}
+
+/* --------------------------------------------- persistent layers (rule 1) --
+   Siblings of .page — the host only toggles .page, never these. The two
+   pseudo-elements are a slow, cheap aurora: gradients only, no blur filter,
+   no script, and they never carry information (rule 11).                    */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:
+      radial-gradient(120vmin 80vmin at 12% -18%, rgba(245,197,66,.055), transparent 62%),
+      radial-gradient(110vmin 90vmin at 108% 112%, rgba(124,140,255,.09), transparent 60%),
+      linear-gradient(165deg, var(--bg-deep) 0%, var(--bg-stage) 45%, var(--bg-body) 100%);}
+#bg:before,#bg:after{content:"";position:absolute;border-radius:50%;
+    will-change:transform;pointer-events:none}
+#bg:before{width:90vmin;height:90vmin;left:-24vmin;top:-30vmin;
+    background:radial-gradient(circle,rgba(245,197,66,.10),transparent 66%);
+    animation:lf-drift-a 48s ease-in-out infinite alternate}
+#bg:after{width:110vmin;height:110vmin;right:-32vmin;bottom:-38vmin;
+    background:radial-gradient(circle,rgba(124,140,255,.13),transparent 64%);
+    animation:lf-drift-b 62s ease-in-out infinite alternate}
+@keyframes lf-drift-a{from{transform:translate3d(0,0,0) scale(1)}
+                      to  {transform:translate3d(9vmin,6vmin,0) scale(1.14)}}
+@keyframes lf-drift-b{from{transform:translate3d(0,0,0) scale(1)}
+                      to  {transform:translate3d(-8vmin,-7vmin,0) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){#bg:before,#bg:after{animation:none}}
+#bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.32}
+/* Chapter motif "graph" (manifest "motif":"graph"): squared paper behind the
+   whole deck, with one pale axis pair and a rising curve low-left. Carried at
+   a higher base opacity than the hex weave because its own strokes are set
+   far fainter; it must stay a texture, never a figure the class reads.      */
+#bg svg.motif-graph{opacity:.62}
+/* Chapter motif "rail" (manifest "motif":"rail"): a constant-velocity chapter's
+   quiet signature — a long-exposure streak field down the right-hand side and a
+   track with its sleepers running low across the board. Both live outside the
+   centre / upper-left, which is where the teacher writes. Texture, never
+   information (rule 11).                                                     */
+#bg svg.motif-rail{opacity:.7}
+
+.kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
+    font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    padding:.7vmin 1.6vmin;border-radius:99px;opacity:.72;
+    background:rgba(245,197,66,.08);border:.1vmin solid rgba(245,197,66,.22);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    pointer-events:none}
+
+/* ------------------------------------------------------- page + wrappers --
+   rule 8: .page is forced to display:block by the host, so NO flex here.    */
+.page{position:relative;z-index:1;height:100%;box-sizing:border-box;color:var(--ink)}
+/* a single hairline of light along the top edge of every slide */
+.page:before{content:"";position:absolute;left:0;right:0;top:0;height:.28vmin;
+    background:linear-gradient(90deg,transparent,rgba(245,197,66,.55),rgba(124,140,255,.4),transparent);
+    opacity:.7;pointer-events:none}
+
+.wrap{height:100%;box-sizing:border-box;overflow:auto;
+      padding:var(--pad-y) var(--pad-x) 6vmin;
+      display:flex;flex-direction:column;gap:var(--gap)}
+.wrap.center{align-items:center;justify-content:center;text-align:center}
+.wrap.tight{gap:1.2vmin}
+.wrap.dense{padding:6vmin 5.5vmin 4vmin;gap:1.5vmin}   /* heavy tables/derivations */
+.wrap.fit{overflow:hidden;gap:1.4vmin;padding-top:6.5vmin;padding-bottom:3.5vmin}
+.split-fill{display:grid;grid-template-columns:1fr 1fr;gap:3.2vmin;flex:1;min-height:0;
+            align-items:center;margin-top:.4vmin}
+.split-fill .stack{gap:1.4vmin;justify-content:center}
+.scene-frame.fill{aspect-ratio:auto;height:100%;min-height:28vmin;max-height:58vmin}
+
+.wrap::-webkit-scrollbar{width:.9vmin}
+.wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
+.wrap::-webkit-scrollbar-track{background:transparent}
+
+/* The host controls the hidden→shown transition with !important. Never set
+   opacity/visibility on .step yourself (rule 4).                            */
+.step{opacity:1}
+
+/* ------------------------------------------------------------- headings --- */
+h1.title{margin:0;font-size:var(--fs-title);font-weight:700;line-height:1.06;
+    letter-spacing:-.015em;color:#fff;
+    background:linear-gradient(174deg,#ffffff 12%,var(--gold-soft) 78%,var(--gold) 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
+.wrap.center h1.title:after{content:"";display:block;width:13vmin;height:.5vmin;
+    margin:2.6vmin auto 0;border-radius:99px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+h2.heading{position:relative;margin:0 0 1.2vmin;padding-left:2.8vmin;
+    font-size:var(--fs-h2);color:var(--gold);font-weight:700;
+    line-height:1.12;letter-spacing:-.005em}
+h2.heading:before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:.55vmin;
+    border-radius:99px;
+    background:linear-gradient(180deg,var(--gold),rgba(245,197,66,.15))}
+h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--gold);font-weight:700}
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--gold);
+    font-weight:700;letter-spacing:.005em}
+h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
+
+.inline-lead{color:var(--ink);font-weight:400;font-size:var(--fs-body);margin-left:1.2vmin}
+.paren      {font-size:.55em;font-weight:400;color:var(--sub)}   /* "(contd.)" */
+
+/* ----------------------------------------------------------------- text --- */
+p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
+.sub    {color:var(--sub)}
+.note   {color:var(--muted);font-style:italic;font-size:var(--fs-note);line-height:1.45}
+.caption{color:var(--muted);font-size:var(--fs-note)}
+.example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
+.example b{color:var(--ink);font-style:normal}
+.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.4;
+         letter-spacing:-.01em}
+
+/* -------------------------------------------------------------- layouts --- */
+.two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
+.split-6040{display:grid;grid-template-columns:3fr 2fr;gap:4vmin;margin-top:1vmin}
+.split-4060{display:grid;grid-template-columns:2fr 3fr;gap:4vmin;margin-top:1vmin}
+.grid3     {display:grid;grid-template-columns:repeat(3,1fr);gap:3vmin;margin-top:.5vmin}
+.grid4     {display:grid;grid-template-columns:repeat(4,1fr);gap:2.4vmin;margin-top:.5vmin}
+.col p     {margin-bottom:1.2vmin}
+.cell p    {font-size:var(--fs-small);color:var(--sub)}
+.stack     {display:flex;flex-direction:column;gap:1.6vmin}
+.row       {display:flex;flex-wrap:wrap;align-items:center;gap:2vmin}
+
+/* -------------------------------------------- glossary / definition list --
+   rule 17: the LABEL is never a .step — only the definition steps in.       */
+.glossary{display:flex;flex-direction:column;gap:2.4vmin;margin-top:1vmin}
+.g-row{position:relative;display:grid;grid-template-columns:24vmin 1fr;gap:2.4vmin;
+       align-items:start;padding-left:1.8vmin}
+.g-row:before{content:"";position:absolute;left:0;top:.35em;bottom:.2em;width:.28vmin;
+       border-radius:99px;background:linear-gradient(180deg,rgba(245,197,66,.55),transparent)}
+.g-row.wide{grid-template-columns:34vmin 1fr}
+/* a bare <span> definition would otherwise fall back to the 16px UA default —
+   both sides of the pair read at body scale (rule 9). */
+.g-row>*{font-size:var(--fs-body);line-height:1.5;color:var(--ink);min-width:0}
+.label{color:var(--gold);font-weight:700;font-size:var(--fs-body);letter-spacing:.005em}
+.g-row .sub-list{margin-top:.6vmin;display:flex;flex-direction:column;gap:.3vmin}
+.g-row .sub-list span{display:block;font-size:var(--fs-small);color:var(--sub);padding-left:2vmin}
+
+/* -------------------------------------------------------------- bullets --- */
+ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.5vmin}
+ul.bullets li{position:relative;padding-left:3.2vmin;font-size:var(--fs-body);line-height:1.45}
+ul.bullets li:before{content:"\2605";position:absolute;left:0;top:.05em;color:var(--gold);font-size:.7em}
+ul.bullets.box   li:before{content:"\2b1c";color:var(--gold);font-size:.6em;top:.15em}
+ul.bullets.arrow li:before{content:"\27a4";color:var(--gold);font-size:.7em}
+ul.bullets.dot   li:before{content:"\2022";color:var(--gold);font-size:1em;top:-.05em}
+ul.bullets.tight{gap:.9vmin}
+ul.bullets.small li{font-size:var(--fs-small)}
+ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
+
+/* ------------------------------------------------------------------ Q&A --
+   rule 17: question always visible, answer stepped.                         */
+.qa{margin-bottom:1.6vmin;padding:1.6vmin 2vmin;border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
+    box-shadow:var(--lip)}
+.qa .q{color:var(--gold);font-weight:700;font-size:clamp(18px,2.9vmin,32px);line-height:1.35}
+.qa .a{margin-top:.8vmin;padding-left:2.4vmin;color:var(--sub);
+       font-size:clamp(17px,2.7vmin,30px);line-height:1.45}
+
+/* -------------------------------------------------------------- surfaces --- */
+.card{background:var(--card-bg);border:.12vmin solid var(--card-border);
+      border-radius:var(--radius);padding:2.2vmin 2.6vmin;box-sizing:border-box;
+      box-shadow:var(--lip),var(--lift)}
+
+.callout{position:relative;border:0;border-radius:var(--radius);
+         padding:1.7vmin 2.2vmin 1.7vmin 3vmin;font-size:var(--fs-small);
+         line-height:1.45;color:var(--ink);
+         background:linear-gradient(180deg,rgba(124,140,255,.16),rgba(124,140,255,.05));
+         box-shadow:var(--lip),var(--lift)}
+.callout:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
+         width:.45vmin;border-radius:99px;background:var(--accent)}
+.callout--note{background:linear-gradient(180deg,rgba(86,204,242,.16),rgba(86,204,242,.05))}
+.callout--note:before{background:var(--cyan)}
+.callout--warn{background:linear-gradient(180deg,rgba(251,113,133,.16),rgba(251,113,133,.05))}
+.callout--warn:before{background:var(--red)}
+.callout--tip {background:linear-gradient(180deg,rgba(52,211,153,.16),rgba(52,211,153,.05))}
+.callout--tip:before{background:var(--green)}
+.callout .callout-label{display:block;color:var(--gold);font-weight:700;
+         font-size:.86em;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.6vmin}
+
+/* --------------------------------------------------------------- tables ---
+   rule 17: .step goes on each data <td>, NEVER on the <tr>, and the first
+   column (td.prop) stays unstepped so it reads as a row header.
+   Rounded glass panel, gold header band, zebra body, no boxy 1px grid.     */
+table.data{border-collapse:separate;border-spacing:0;width:100%;margin-top:1.4vmin;
+      background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+      border:.12vmin solid var(--card-border);border-radius:var(--radius-lg);
+      overflow:hidden;box-shadow:var(--lip),var(--lift-lg)}
+table.data th{
+      background:linear-gradient(180deg,rgba(245,197,66,.20),rgba(245,197,66,.06));
+      color:var(--gold-soft);font-weight:700;text-align:left;
+      padding:1.5vmin 1.9vmin;font-size:var(--fs-th);
+      letter-spacing:.11em;text-transform:uppercase;white-space:nowrap;
+      border-bottom:.18vmin solid rgba(245,197,66,.45)}
+table.data th+th{box-shadow:inset .1vmin 0 0 rgba(255,255,255,.08)}
+table.data td{padding:1.5vmin 1.9vmin;font-size:var(--fs-td);color:var(--ink);
+      border-bottom:.1vmin solid var(--rule);vertical-align:middle;line-height:1.35}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+table.data td.prop{color:var(--gold);font-weight:700;
+      box-shadow:inset .35vmin 0 0 rgba(245,197,66,.6)}
+table.data td.num{text-align:right;font-family:var(--font-math)}
+table.data.compact th{padding:1.05vmin 1.3vmin}
+table.data.compact td{padding:1.05vmin 1.3vmin}
+table.data.center td{text-align:center}
+/* Presentation bump: every cell 40% larger (requested on dense unit tables). */
+table.data.fs-140 th{font-size:calc(var(--fs-th) * 1.4)}
+table.data.fs-140 td{font-size:calc(var(--fs-td) * 1.4)}
+table.data.fs-140 td .note,table.data.fs-140 .note,table.data.fs-140 td.note-cell{font-size:calc(var(--fs-note) * 1.4)}
+table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!important;line-height:1.45}
+.ok{color:var(--green);font-weight:900}
+.no{color:var(--red);font-weight:900}
+
+/* ------------------------------------------------------------ equations ---
+   Two mechanisms, both script-free so they survive PDF export (rule 11):
+     1. .eq / .frac / .radical  — hand-built markup for inline symbol math
+     2. MathML emitted by tools/build-deck.mjs from LaTeX in the slide plan   */
+.eq{font-family:var(--font-math);font-style:normal;color:var(--ink);font-size:var(--fs-eq);
+    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25em;letter-spacing:.005em}
+.eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
+.eq-note{font-style:italic;color:var(--muted);font-size:var(--fs-note)}
+.eq.small{font-size:var(--fs-small)}
+/* `.eq` is a flex run, and a flex container blockifies every inline child —
+   which silently destroys <sub> and <sup> (each one becomes its own flex item,
+   sitting on the baseline with a gap in front of it). `.eq.inline` lays the run
+   out as ordinary inline content instead: subscripts behave, and .frac falls
+   back to its own vertical-align:middle, which is what an inline formatting
+   context wants anyway. Use it for any run carrying a subscript, and inside
+   `.derivation .line` / `.graph-cell .cap`, which are flex containers too. */
+.eq.inline{display:inline-block;gap:normal;flex-wrap:nowrap;vertical-align:baseline;
+           white-space:nowrap}
+.eq.big  {font-size:clamp(24px,5vmin,56px);color:var(--gold-soft);
+          text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
+
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
+      margin:0 .2em;line-height:1.15}
+.frac .num{border-bottom:.08em solid currentColor;padding:0 .2em .08em}
+.frac .den{padding:.08em .2em 0}
+
+.radical{display:inline-flex;align-items:flex-start}
+.radical .sym{font-size:1.25em;line-height:.9;margin-right:-.06em}
+.radical .content{border-top:.08em solid currentColor;padding:0 .16em}
+
+.vec{position:relative;display:inline-block}
+.vec:after{content:"\2192";position:absolute;left:0;right:0;top:-.62em;
+           font-size:.72em;text-align:center;font-style:normal}
+
+/* MathML rendered at build time — inherit the deck's math font.
+   Browsers italicise a single-letter <mi> via `text-transform: math-auto` in
+   the UA sheet, which `font-style` does NOT override — it has to be turned
+   off explicitly or MathML formulas lean while hand-built .eq does not.   */
+math{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink)}
+math mi,math mn,math mo,math mtext,math ms{text-transform:none;font-style:normal}
+math[display="block"]{display:block;margin:.8vmin 0}
+.eq math{font-size:inherit}
+/* Inline MathML draws <mfrac> in "compact" style: numerator and denominator
+   drop a script level, so 96/8 next to full-size prose reads as a footnote.
+   These decks are presentation-scale (rule 9) and get read from the back of
+   the room, so force display style everywhere. */
+math{math-style:normal}
+
+/* ------------------------------------------------- annotated highlights ---
+   For "A rod of [length] [4][m]" style examples, where parts of an expression
+   are colour-coded to the terms defined below them. Colour is the mapping, so
+   each mark must pair with a .label of the same hue.                         */
+.mark-quantity,.mark-number,.mark-unit{
+  padding:.08em .34em;border-radius:.32em;font-style:normal}
+.mark-quantity{background:linear-gradient(180deg,rgba(217,119,6,.7),rgba(180,83,9,.55));color:#fff}
+.mark-number  {background:linear-gradient(180deg,rgba(52,211,153,.45),rgba(16,185,129,.3));color:#fff}
+.mark-unit    {background:linear-gradient(180deg,rgba(203,213,225,.45),rgba(148,163,184,.32));color:#fff}
+
+.label.for-quantity{color:#fbbf24}
+.label.for-number  {color:var(--green)}
+.label.for-unit    {color:#dbe4ef}
+
+/* ------------------------------------------- spotlight statement (.spot) ---
+   Same marks, but they start PLAIN and light up only when the matching
+   definition is revealed. `[data-lights="key"]` on the .step, `[data-lit="key"]`
+   on the mark; tools/build-deck.mjs ships the observer that pairs them within a
+   page. Scripts are stripped on export, so @media print forces every mark lit
+   (rule 11) and the slide still teaches with JS off.                         */
+.eq.spot{font-family:var(--font-math);gap:.32em;
+  padding:2.4vmin 3.2vmin;border-radius:var(--radius-lg);line-height:1.35;
+  background:var(--card-bg);border:.12vmin solid var(--card-border);
+  box-shadow:var(--lip),var(--lift)}
+.eq.spot [data-lit]{background:transparent;color:inherit;box-shadow:none;
+  transition:background .4s ease,color .4s ease,box-shadow .4s ease}
+.eq.spot .mark-quantity.is-lit{background:rgba(217,119,6,.68);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(251,191,36,.55)}
+.eq.spot .mark-number.is-lit{background:rgba(52,211,153,.45);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(52,211,153,.6)}
+.eq.spot .mark-unit.is-lit{background:rgba(203,213,225,.45);color:#fff;
+  box-shadow:0 0 0 .26vmin rgba(203,213,225,.55)}
+
+/* ------------------------------------------------------------ term cards ---
+   Two grids on the SAME column track: a row of colour-coded chips, and the
+   definition cards that land underneath them.
+
+   NEVER nest a .step inside a .step — the host reveals every .step in document
+   order, and some hosts propagate the reveal to descendants, so a stepped row
+   wrapping stepped children fires two reveals on one press. That is why the
+   chips row and the definitions row are SIBLINGS: `.term-row.chips` is one
+   .step (all names together), and each `.term-card` below is its own.        */
+.term-row{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4vmin;
+  margin-top:.6vmin;align-items:start}
+.term-row.two{grid-template-columns:repeat(2,1fr)}
+.term-row.chips{margin-top:1.8vmin;margin-bottom:.4vmin}
+.wrap.center .term-row{justify-items:center}
+.wrap.center .term-row .term{justify-self:center}
+.term-row .term{justify-self:start;padding:1vmin 2.6vmin;border-radius:99px;
+  font-family:var(--font-ui);font-weight:700;font-size:var(--fs-small);
+  letter-spacing:.02em;line-height:1.3;box-shadow:var(--lip),var(--lift)}
+.term-card{background:var(--card-bg);border:.12vmin solid var(--card-border);
+  border-radius:var(--radius);padding:1.9vmin 2.1vmin;box-sizing:border-box;
+  margin:0;font-family:var(--font-ui);font-size:var(--fs-small);
+  color:var(--sub);line-height:1.45;box-shadow:var(--lip),var(--lift)}
+.term-card.for-quantity{border-left:.5vmin solid rgba(251,191,36,.75)}
+.term-card.for-unit    {border-left:.5vmin solid rgba(203,213,225,.7)}
+.term-card.for-number  {border-left:.5vmin solid rgba(52,211,153,.75)}
+.term.for-quantity{background:linear-gradient(180deg,rgba(217,119,6,.62),rgba(146,64,14,.5));
+  color:#fff;border:.14vmin solid rgba(251,191,36,.5)}
+.term.for-number{background:linear-gradient(180deg,rgba(52,211,153,.35),rgba(16,185,129,.22));
+  color:#eafaf0;border:.14vmin solid rgba(52,211,153,.55)}
+.term.for-unit{background:linear-gradient(180deg,rgba(203,213,225,.34),rgba(148,163,184,.22));
+  color:#f4f7fb;border:.14vmin solid rgba(203,213,225,.45)}
+
+/* --------------------------------------------------- derivation / steps --- */
+.derivation{display:flex;flex-direction:column;gap:1.3vmin}
+.derivation .line{font-family:var(--font-math);font-size:var(--fs-eq);color:var(--ink);
+                  display:flex;align-items:baseline;gap:.5em}
+.derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
+                       font-size:var(--fs-note)}
+.stack>.result,.graph-cell>.result{align-self:flex-start}
+.result{display:inline-block;border:.14vmin solid rgba(245,197,66,.7);border-radius:1.1vmin;
+        padding:1vmin 2vmin;color:var(--gold-soft);font-family:var(--font-math);
+        font-size:var(--fs-eq);font-weight:700;
+        background:linear-gradient(180deg,rgba(245,197,66,.16),rgba(245,197,66,.05));
+        box-shadow:var(--lip),0 0 4vmin rgba(245,197,66,.16)}
+
+/* ------------------------------------------------------- worked example --- */
+.worked{display:flex;flex-direction:column;gap:1.5vmin}
+.worked .given   {color:var(--sub);font-size:var(--fs-small)}
+.worked .asked   {color:var(--gold);font-weight:700;font-size:var(--fs-small)}
+.worked .solution{display:flex;flex-direction:column;gap:1.1vmin}
+
+/* -------------------------------------------------------------- figures ---
+   Inline <svg> lives inside .figure-frame; the frame owns the sizing so the
+   SVG only needs a viewBox (never fixed width/height).                      */
+.figure-frame{display:flex;align-items:center;justify-content:center;
+              background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+              border:.12vmin solid var(--card-border);
+              border-radius:var(--radius-lg);padding:2.4vmin;box-sizing:border-box;
+              min-height:0;box-shadow:var(--lip),var(--lift-lg)}
+.figure-frame svg{width:100%;height:auto;max-height:52vh;color:var(--ink)}
+.figure-frame img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:1vmin}
+.figure-frame.plain{background:none;border:0;padding:0;box-shadow:none}
+.figure-frame.tall svg,.figure-frame.tall img{max-height:64vh}
+/* A wide schematic that shares its board with the working underneath: cap it
+   low so the algebra and the answer chip still fit above the fold. */
+.figure-frame.short svg,.figure-frame.short img{max-height:32vh}
+.fig-caption{margin-top:1vmin;text-align:center;color:var(--muted);font-size:var(--fs-note);
+             letter-spacing:.02em}
+
+/* ------------------------------------------------------ graph primitives ---
+   A chapter whose subject IS the graph draws dozens of the same small figure,
+   so the ink is a component, not a per-slide decision. Put `class="gph"` on
+   the <svg> and use these part classes inside it; every stroke then matches
+   across the deck and survives PDF export (pure SVG + CSS, no script).
+
+     .axis    the x/y frame and its tick marks — scaffolding, never a .step
+     .curve   the plotted quantity (gold: this is the thing being read)
+     .curve2  a second plot on the same axes (indigo)
+     .guide   dashed projection lines down to an axis / a reference level
+     .area    the shaded region under a curve (integration slides)
+     .tangent the slope line at a point + .dot for the point itself
+     text.lab axis names and numbers                                         */
+svg.gph{overflow:visible}
+svg.gph .axis   {fill:none;stroke:rgba(255,255,255,.62);stroke-width:2.2;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .curve  {fill:none;stroke:var(--gold-soft);stroke-width:3.6;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .curve2 {fill:none;stroke:var(--accent);stroke-width:3.2;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.gph .guide  {fill:none;stroke:rgba(159,180,255,.62);stroke-width:1.7;
+                 stroke-dasharray:7 7;stroke-linecap:round}
+svg.gph .area   {fill:rgba(124,140,255,.30);stroke:none}
+svg.gph .area.gold{fill:rgba(245,197,66,.24)}
+svg.gph .tangent{fill:none;stroke:rgba(255,255,255,.55);stroke-width:2;
+                 stroke-dasharray:9 7;stroke-linecap:round}
+svg.gph .dot    {fill:var(--gold);stroke:none}
+svg.gph .dot.open{fill:none;stroke:var(--gold);stroke-width:3}
+svg.gph text    {font-family:var(--font-math);font-size:34px;fill:var(--sub)}
+svg.gph text.lab{fill:rgba(255,255,255,.9)}
+svg.gph text.num{font-size:30px;fill:var(--muted)}
+
+/* ---------------------------------------------- motion schematics (.dgm) ---
+   A kinematics chapter draws the same handful of props over and over — a
+   train on a track, a pole, a bridge span, a boat on a river, an escalator —
+   so the ink is a component, exactly like svg.gph above. Put `class="dgm"` on
+   the <svg> and use the part classes below; every figure in the deck then
+   matches, no fragment needs a style attribute, and because it is pure SVG +
+   CSS it survives PDF export (rule 11).
+
+     .rail .sleeper    the track a vehicle stands on — scaffolding, never a .step
+     .body (+.b)       a vehicle hull; .b is the second (gold) vehicle
+     .nose .glass .wheel      its driving end, windows, bogies
+     .post .span .pier        a pole, a bridge deck, its supports
+     .arw + .arwhead (+.b)    a motion arrow: a line and a solid head
+     .dim .tick               a dimension line and its end ticks
+     .water .wave .hull .sail .mast   the river band and the boat on it
+     .stair .figr (+.b)       escalator treads and the person on them
+     text.lab text.num        labels (UI face) and numbers (math face)
+
+   Arrowheads are drawn as <path class="arwhead">, never as SVG markers: a
+   marker needs an id, and a deck is one document with a dozen figures in it. */
+svg.dgm{overflow:visible}
+svg.dgm .rail   {fill:none;stroke:rgba(255,255,255,.45);stroke-width:3;stroke-linecap:round}
+svg.dgm .sleeper{fill:none;stroke:rgba(255,255,255,.17);stroke-width:4;stroke-linecap:round}
+svg.dgm .body   {fill:rgba(124,140,255,.20);stroke:rgba(206,216,232,.85);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .body.b {fill:rgba(245,197,66,.15);stroke:rgba(245,197,66,.8)}
+svg.dgm .stripe {fill:none;stroke:var(--accent);stroke-width:3.4;stroke-linecap:round}
+svg.dgm .stripe.b{stroke:var(--gold)}
+svg.dgm .nose   {fill:rgba(251,113,133,.5);stroke:rgba(251,113,133,.9);
+                 stroke-width:2;stroke-linejoin:round}
+svg.dgm .glass  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.34);stroke-width:1.6}
+svg.dgm .wheel  {fill:rgba(255,255,255,.18);stroke:rgba(255,255,255,.45);stroke-width:2}
+svg.dgm .post   {fill:rgba(86,204,242,.32);stroke:var(--cyan);stroke-width:2.4}
+svg.dgm .span   {fill:none;stroke:var(--cyan);stroke-width:4.4;stroke-linecap:round}
+svg.dgm .pier   {fill:none;stroke:rgba(86,204,242,.55);stroke-width:3;stroke-linecap:round}
+svg.dgm .arw    {fill:none;stroke:var(--gold);stroke-width:3.4;stroke-linecap:round}
+svg.dgm .arw.b  {stroke:var(--accent)}
+svg.dgm .arwhead{fill:var(--gold);stroke:none}
+svg.dgm .arwhead.b{fill:var(--accent)}
+svg.dgm .dim    {fill:none;stroke:rgba(255,255,255,.72);stroke-width:2;stroke-linecap:round}
+svg.dgm .tick   {fill:none;stroke:rgba(255,255,255,.72);stroke-width:2;stroke-linecap:round}
+svg.dgm .water  {fill:rgba(124,140,255,.22);stroke:none}
+svg.dgm .wave   {fill:none;stroke:rgba(159,180,255,.5);stroke-width:2.4;stroke-linecap:round}
+svg.dgm .hull   {fill:rgba(245,197,66,.18);stroke:rgba(245,197,66,.85);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .sail   {fill:rgba(255,255,255,.13);stroke:rgba(255,255,255,.58);
+                 stroke-width:2;stroke-linejoin:round}
+svg.dgm .mast   {fill:none;stroke:rgba(255,255,255,.58);stroke-width:2.4;stroke-linecap:round}
+/* 2-D motion additions: a schematic in this chapter is a free path through
+   space rather than a vehicle on a rail, so it needs a trajectory stroke, a
+   marked body, a projection guide and an angle arc. Same ink language as the
+   props above; pure SVG + CSS, so they survive PDF export.                  */
+svg.dgm .traj   {fill:none;stroke:var(--accent);stroke-width:3.2;stroke-linecap:round}
+svg.dgm .traj.b {stroke:var(--gold-soft)}
+svg.dgm .traj.w {stroke:rgba(255,255,255,.8)}
+svg.dgm .dot    {fill:var(--gold);stroke:none}
+svg.dgm .dot.b  {fill:var(--accent)}
+svg.dgm .dot.w  {fill:rgba(255,255,255,.88)}
+svg.dgm .guide  {fill:none;stroke:rgba(159,180,255,.55);stroke-width:1.8;
+                 stroke-dasharray:9 9;stroke-linecap:round}
+svg.dgm .arc    {fill:none;stroke:rgba(255,255,255,.62);stroke-width:2}
+svg.dgm .arw.w  {stroke:rgba(255,255,255,.85)}
+svg.dgm .arwhead.w{fill:rgba(255,255,255,.85)}
+svg.dgm .stair  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.4);stroke-width:2}
+svg.dgm .figr   {fill:rgba(245,197,66,.6);stroke:none}
+svg.dgm .figr.b {fill:rgba(159,180,255,.65)}
+svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
+svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
+svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
+
+/* Small-multiple grid — the "here are four graphs, which one" layout that
+   this chapter repeats on nearly every slide. The GRID is never the .step;
+   each `.graph-cell` is, so the class meets one figure at a time.           */
+.graph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.8vmin;
+            margin-top:.6vmin;align-items:start}
+.graph-grid.two {grid-template-columns:repeat(2,1fr)}
+.graph-grid.four{grid-template-columns:repeat(4,1fr);gap:2.2vmin}
+.graph-cell{display:flex;flex-direction:column;gap:.9vmin;min-width:0}
+.graph-cell svg{width:100%;height:auto;max-height:34vh}
+.graph-cell .cap{text-align:center;color:var(--sub);font-size:var(--fs-note);
+                 line-height:1.3}
+.graph-cell .cap .ok,.graph-cell .cap .no{font-size:1.35em;line-height:1}
+/* Two or three graphs stacked down a column instead of across a row. They have
+   to SHARE the board's height, so the per-figure cap comes down; without this
+   the last figure walks off the bottom of the slide. */
+.graph-stack{display:flex;flex-direction:column;gap:1.6vmin;min-height:0}
+.graph-stack .graph-cell svg{max-height:26vh}
+.graph-stack.three .graph-cell svg{max-height:17vh}
+/* the verdict mark the source deck stamps on a graph: a big ✓ or ✗ */
+.verdict{display:block;text-align:center;font-size:clamp(22px,4.4vmin,48px);
+         font-weight:900;line-height:1}
+.verdict.ok{color:var(--green)}
+.verdict.no{color:var(--red)}
+
+/* ------------------------------------------------------------ questions ---
+   Only .option carries .clickable (rule 3): ≥44px, stable position.
+   No hover state — hover never fires while teaching.                        */
+.options{display:flex;flex-direction:column;gap:1.5vmin;margin-top:1vmin}
+.options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5vmin}
+/* Options that ARE graphs — the "which of these four curves" question this
+   chapter asks over and over. The badge sits above its own figure so the
+   class can call an answer by letter without reading a caption.            */
+.options.graphs{display:grid;grid-template-columns:repeat(4,1fr);gap:2vmin}
+.options.graphs.two{grid-template-columns:repeat(2,1fr)}
+.options.graphs .option{flex-direction:column;align-items:stretch;
+                        gap:.9vmin;padding:1.6vmin 1.4vmin}
+.options.graphs .option svg{width:100%;height:auto;max-height:30vh}
+.options.graphs .opt-badge{align-self:flex-start}
+.option{position:relative;display:flex;align-items:center;gap:1.4vmin;
+        border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
+        padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        min-height:44px;box-sizing:border-box;line-height:1.3;
+        background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+        box-shadow:var(--lip),var(--lift);
+        transition:border-color .3s ease,background .3s ease,box-shadow .3s ease}
+/* An option paired with an aside (the formula that disqualifies it, a ✓/✗).
+   Two cells so the option text and its aside can be separate reveals. */
+.option-row{display:grid;grid-template-columns:minmax(0,1fr) auto;
+            gap:2.4vmin;align-items:center}
+.option-row .option{margin:0}
+.option.picked {border-color:rgba(167,139,250,.8);
+                background:linear-gradient(180deg,rgba(167,139,250,.22),rgba(167,139,250,.06));
+                box-shadow:var(--lip),0 0 0 .22vmin rgba(167,139,250,.35)}
+.option.correct{border-color:rgba(52,211,153,.85);
+                background:linear-gradient(180deg,rgba(52,211,153,.24),rgba(52,211,153,.06));
+                box-shadow:var(--lip),0 0 0 .22vmin rgba(52,211,153,.4),0 0 5vmin rgba(52,211,153,.22)}
+.option.wrong  {border-color:rgba(251,113,133,.8);
+                background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(251,113,133,.05))}
+.opt-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+           width:1.9em;height:1.9em;border-radius:99px;font-size:.72em;font-weight:700;
+           color:#241a02;background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+           box-shadow:0 .3vmin 1.4vmin rgba(245,197,66,.35)}
+.option.correct .opt-badge{background:linear-gradient(180deg,#bbf7d0,var(--green));color:#04291d}
+.option.wrong   .opt-badge{background:linear-gradient(180deg,#fecdd3,var(--red));color:#3f0a14}
+.answer-box{position:relative;margin-top:1.2vmin;padding:1.7vmin 2.2vmin 1.7vmin 3vmin;
+            border-radius:var(--radius);font-size:clamp(17px,2.8vmin,32px);line-height:1.4;
+            background:linear-gradient(180deg,rgba(52,211,153,.18),rgba(52,211,153,.05));
+            box-shadow:var(--lip),var(--lift)}
+.answer-box:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
+            width:.45vmin;border-radius:99px;background:var(--green)}
+.answer-box .ok{margin-right:.6vmin}
+.answer-box i{color:var(--sub)}
+
+/* ------------------------------------------------- focus boxes (reveals) ---
+   "One idea per box, and the box holds the floor while you teach it."
+   The box itself is NOT a .step — its label stays visible (rule 17) and the
+   explanation inside it is what reveals. tools/build-deck.mjs ships an observer
+   that runs each box through its own three-beat cycle:
+
+     press 1   box grows to 120%, every other box dims back
+     press 2…  its content appears, one line per press, inside the big box
+     press N   box settles back to 100%, dimming clears
+     press N+1 the next box starts its own cycle
+
+   Grow and shrink are each their OWN press — build-deck.mjs injects a zero-size
+   sentinel .step at each end of the box to make that so. Nothing is on a timer,
+   so the box stays big for exactly as long as the teacher is on it.
+   The transform lives on the BOX, never on the .step, because the host owns
+   .step opacity and transform with !important.                               */
+.box-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.4vmin;margin-top:1.2vmin}
+.box-grid.three{grid-template-columns:repeat(3,1fr)}
+.box-grid.one  {grid-template-columns:1fr}
+.info-box{position:relative;background:var(--card-bg);
+          border:.12vmin solid var(--card-border);border-left:.5vmin solid var(--gold);
+          border-radius:var(--radius-lg);padding:1.9vmin 2.2vmin;box-sizing:border-box;
+          box-shadow:var(--lip),var(--lift);will-change:transform;
+          /* a touch of overshoot, so "the box opened" reads as its own beat
+             even when the teacher presses Next quickly */
+          transition:transform .45s cubic-bezier(.34,1.36,.5,1),opacity .4s ease,
+                     box-shadow .4s ease,border-color .4s ease,background .4s ease}
+.info-box h4.cell-heading{margin:0 0 .5vmin}
+.info-box p{font-size:var(--fs-small);color:var(--sub);line-height:1.45}
+
+/* Grow INWARD, so a 120% box never pushes past the slide's padding: the outer
+   column pins its outer edge, a lone column grows from its centre.           */
+.box-grid > .info-box{transform-origin:center center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(odd) {transform-origin:left center}
+.box-grid:not(.one):not(.three) > .info-box:nth-child(even){transform-origin:right center}
+.box-grid.three > .info-box:nth-child(3n+1){transform-origin:left center}
+.box-grid.three > .info-box:nth-child(3n)  {transform-origin:right center}
+
+.page.has-focus .info-box{opacity:.45}          /* only once a box holds the floor */
+/* The enlarged box overlaps its neighbours, so its background must be nearly
+   solid — at card transparency the text underneath bleeds through and the two
+   sets of words mix. Just enough translucency to read as a raised panel.     */
+.page.has-focus .info-box.is-active,
+.info-box.is-active{
+  opacity:1;transform:scale(1.2);z-index:5;border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(23,27,44,.97),rgba(13,16,32,.97));
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 0 0 .2vmin rgba(245,197,66,.4),0 2.4vmin 7vmin rgba(0,0,0,.65),
+             0 0 9vmin rgba(245,197,66,.14);
+}
+/* Zero-size sentinel steps injected by tools/build-deck.mjs: one before the
+   box's content and one after it, so "grow" and "shrink" are each their own
+   press. Never display:none — the fx observer needs an offsetParent to test. */
+.box-zoom{display:block;width:0;height:0;margin:0;padding:0;border:0;overflow:hidden}
+
+/* ------------------------------------------------------------ 3D scenes ---
+   `<div class="scene-frame" data-three="globe|stars|screw-gauge">` — build-deck.mjs
+   inlines three and starts a WebGL scene sized to this box (rule 7: after load,
+   zero-size guard, WebGL feature-detect, try/catch, silent failure).
+
+   Scripts are STRIPPED in PDF export and the room may have no GPU, so the frame
+   MUST contain a `.scene-fallback` — inline SVG or a sentence. It is what
+   prints and what shows when WebGL is unavailable; the runtime only hides it
+   once a canvas is actually live. Never put an idea only in the 3D layer.   */
+.scene-frame{position:relative;width:100%;aspect-ratio:16/10;box-sizing:border-box;
+  border-radius:var(--radius-lg);overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift-lg)}
+.scene-frame.tall{aspect-ratio:4/3}
+.scene-frame canvas{position:absolute;inset:0;width:100%;height:100%}
+.scene-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:2.4vmin;box-sizing:border-box;text-align:center;
+  color:var(--sub);font-size:var(--fs-note);line-height:1.4}
+.scene-fallback svg{width:100%;height:100%;color:var(--ink)}
+.scene-frame.is-live .scene-fallback{display:none}
+
+/* ---------------------------------------------------------------- video ---
+   16:9 embed. Scripts are stripped in PDF export (rule 11) and the classroom
+   may be offline, so every video MUST carry a .video-fallback with the URL and
+   the in/out points — that is what prints and what the teacher reads if the
+   embed refuses to load.                                                     */
+.video-frame{position:relative;width:100%;max-width:158vh;aspect-ratio:16/9;margin:0 auto;
+             border-radius:var(--radius-lg);overflow:hidden;background:#000;
+             border:.12vmin solid var(--card-border);box-shadow:var(--lift-lg)}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-fallback{margin-top:1.2vmin;text-align:center;color:var(--sub);font-size:var(--fs-note)}
+.video-fallback .url{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;
+                     color:var(--cyan);word-break:break-all}
+.video-fallback .cue{color:var(--gold);font-weight:700}
+
+/* -------------------------------------------------- live instrument (sim) ---
+   `<div class="sim-lab" data-sim="screw-gauge">` — a click-driven virtual
+   instrument. tools/build-deck.mjs ships the engine (a no-op when no [data-sim]
+   is present); the fragment carries the WHOLE instrument as inline SVG, already
+   drawn at its start state, because scripts are stripped in PDF export (rule 11)
+   — the printed slide must still show a real, readable measurement. The engine
+   only moves what is already there and rewrites the [data-out] read-outs.
+
+   Only .sim-btn carries .clickable (rule 3): ≥44 px, fixed position, and the
+   whole control bar sits BELOW the instrument so the teacher can write on the
+   scales without hitting a button.                                           */
+/* `.sim` is the rig root: it must CONTAIN the control bar, because the engine
+   only binds [data-act] buttons found inside the [data-sim] element. */
+.sim{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.sim-lab{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);
+  gap:2.2vmin;align-items:stretch;margin-top:.4vmin;min-height:0}
+.sim-lab.wide{grid-template-columns:minmax(0,1fr)}
+.sim-stage{display:flex;align-items:center;justify-content:center;min-width:0;
+  padding:1.4vmin;box-sizing:border-box;border-radius:var(--radius-lg);
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift-lg)}
+.sim-stage svg{width:100%;height:auto;max-height:54vh}
+/* 3D micrometer nested in the stage: the scene-frame owns the chrome */
+.sim-stage .scene-frame{width:100%;max-height:54vh;aspect-ratio:16/10;
+  border:0;box-shadow:none;background:transparent;border-radius:calc(var(--radius-lg) - .4vmin)}
+.sim-stage:has(.scene-frame){padding:.4vmin}
+.sim-stage .scene-fallback{padding:.6vmin}
+.sim-stage .scene-fallback svg{max-height:52vh}
+
+.sim-panel{display:flex;flex-direction:column;justify-content:center;gap:.2vmin;
+  min-width:0;padding:1.6vmin 1.9vmin;box-sizing:border-box;
+  border-radius:var(--radius-lg);background:var(--card-bg);
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip),var(--lift)}
+.sim-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.2vmin;
+  align-items:baseline;padding:.62vmin 0;
+  border-bottom:.1vmin solid var(--rule)}
+.sim-row:last-child{border-bottom:0}
+.sim-key{color:var(--gold);font-weight:700;line-height:1.2;
+  font-size:clamp(13px,2vmin,22px);letter-spacing:.015em}
+.sim-val{font-family:var(--font-math);text-align:right;white-space:nowrap;
+  color:var(--ink);font-size:clamp(14px,2.2vmin,25px)}
+.sim-row.total{margin-top:.5vmin;padding-top:.9vmin;border-bottom:0;
+  border-top:.16vmin solid rgba(245,197,66,.5)}
+.sim-row.total .sim-key{font-size:clamp(14px,2.2vmin,24px)}
+.sim-row.total .sim-val{color:var(--gold-soft);font-weight:700;
+  font-size:clamp(18px,3.1vmin,35px)}
+.sim-note{margin-top:.9vmin;color:var(--muted);font-style:italic;line-height:1.35;
+  font-size:clamp(12px,1.85vmin,20px)}
+
+.sim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;
+  gap:1.4vmin 2.6vmin;margin-top:1.4vmin}
+.sim-group{display:flex;flex-direction:column;gap:.7vmin;min-width:0}
+.sim-group-label{color:var(--muted);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;font-size:clamp(11px,1.7vmin,18px)}
+.sim-keys{display:flex;flex-wrap:wrap;gap:.9vmin}
+.sim-btn{display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:.9vmin 1.7vmin;box-sizing:border-box;cursor:pointer;
+  border-radius:1.1vmin;border:.12vmin solid rgba(255,255,255,.18);
+  font-family:var(--font-ui);font-weight:700;line-height:1.15;color:var(--ink);
+  font-size:clamp(13px,2vmin,23px);
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  box-shadow:var(--lip),var(--lift);
+  transition:border-color .25s ease,background .25s ease,color .25s ease}
+.sim-btn.is-on{color:#241a02;border-color:rgba(245,197,66,.9);
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  box-shadow:0 .4vmin 2vmin rgba(245,197,66,.32)}
+.sim-btn.act{color:#e9f6ff;border-color:rgba(86,204,242,.55);
+  background:linear-gradient(180deg,rgba(86,204,242,.24),rgba(86,204,242,.07))}
+
+/* ------------------------------------------------------------- utilities --- */
+.center-y{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          height:100%;gap:2vmin;text-align:center}
+
+/* --------------------------------------------------------------- button --- */
+.btn{border:0;border-radius:1.2vmin;padding:1.3vmin 2.4vmin;
+     font:700 2.4vmin var(--font-ui);color:#241a02;min-height:44px;
+     background:linear-gradient(180deg,var(--gold-soft),var(--gold));cursor:pointer;
+     box-shadow:0 .6vmin 2.4vmin rgba(245,197,66,.3)}
+
+/* ------------------------------------------------------- print / export ---
+   rule 11: all steps flat, on-screen chrome gone, dark stage preserved.
+   Gradients, glass and glow are screen luxuries — print gets solid ink.     */
+@media print{
+  .step{opacity:1!important;transform:none!important;visibility:visible!important}
+  /* the observer is gone with the scripts — show every mark lit */
+  .eq.spot .mark-quantity{background:rgba(217,119,6,.68)!important;color:#fff!important}
+  .eq.spot .mark-number  {background:rgba(52,211,153,.45)!important;color:#fff!important}
+  .eq.spot .mark-unit    {background:rgba(203,213,225,.45)!important;color:#fff!important}
+  /* Keep #bg. Hiding it left transparent .page over a CSS-var body paint that
+     nested print iframes (presenter export) often drop → washed-out white. */
+  #bg{display:block!important;background:#080a14!important}
+  #bg:before,#bg:after{display:none!important;animation:none!important}
+  /* the motif is texture, not information — drop it out of the PDF entirely */
+  #bg svg.motif-graph{opacity:.28!important}
+  #bg svg.motif-rail {opacity:.24!important}
+  .kicker-tag,.no-print{display:none!important}
+  html,body,.page{background:#080a14!important}
+  .page:before{background:none!important;height:0!important}
+  /* gradient-clipped text can rasterise blank — print it as solid ink */
+  h1.title{color:var(--gold-soft)!important;background:none!important;
+           -webkit-text-fill-color:var(--gold-soft)!important}
+  .wrap{overflow:visible}
+  .figure-frame svg,.figure-frame img{max-height:60vh}
+  .figure-frame,.card,.callout,.option,.answer-box,.term-card,.qa,.result,
+  table.data,.info-box{box-shadow:none!important}
+  .eq.big{text-shadow:none!important}
+  .info-box{transform:none!important;opacity:1!important;
+            backdrop-filter:none!important}
+  .page.has-focus .info-box{opacity:1!important}
+  .box-zoom{display:none!important}
+  /* WebGL renders blank on paper — print the fallback instead */
+  .scene-frame canvas{display:none!important}
+  .scene-frame .scene-fallback{display:flex!important}
+  .video-frame{display:none!important}
+  .video-fallback{font-size:var(--fs-small)}
+  /* the instrument is drawn in static SVG, so it prints — but its buttons do
+     nothing on paper, and the read-out is frozen at the deck's start state */
+  .sim-controls{display:none!important}
+  .sim-stage,.sim-panel{box-shadow:none!important}
+  .sim-stage svg{max-height:58vh}
+}
+
+/* ============================================================================
+   Operator chain — the calculus road between quantities
+   ----------------------------------------------------------------------------
+   This chapter's whole idea is a two-way street: differentiate forward
+   (r -> v -> a), integrate back. The component draws it as quantity nodes
+   joined by an arrow that carries its operator above the shaft — the same
+   figure the source PowerPoint draws by hand.
+
+   Gold arrow = differentiate.  Cyan arrow (.int) = integrate.
+   Pure CSS, no script, so it survives PDF export (rule 11).
+   ========================================================================== */
+.op-chain{display:flex;align-items:center;flex-wrap:wrap;gap:1.2vmin;row-gap:4.2vmin;
+  margin:.6vmin 0}
+.op-node{display:inline-flex;align-items:center;padding:.7vmin 1.9vmin;
+  border-radius:1.2vmin;background:var(--card-flat);
+  border:.12vmin solid var(--card-border);box-shadow:var(--lip);
+  font-family:var(--font-math);font-style:normal;font-size:var(--fs-eq);
+  color:var(--ink);line-height:1.25}
+.op-node.is-focus{color:var(--gold-soft);border-color:rgba(245,197,66,.55);
+  background:linear-gradient(180deg,rgba(245,197,66,.15),rgba(245,197,66,.035))}
+.op-node math{font-size:inherit}
+.op-arrow{position:relative;flex:0 0 auto;display:inline-block;align-self:center;
+  min-width:12vmin;height:.24vmin;border-radius:99px;margin:0 .7vmin;
+  color:var(--gold);background:currentColor;
+  box-shadow:0 0 1.6vmin rgba(245,197,66,.35)}
+.op-arrow:after{content:"";position:absolute;right:-.15vmin;top:50%;
+  transform:translateY(-50%);border-left:1.2vmin solid currentColor;
+  border-top:.66vmin solid transparent;border-bottom:.66vmin solid transparent}
+.op-arrow .op-label{position:absolute;left:50%;bottom:.9vmin;transform:translateX(-50%);
+  font-family:var(--font-math);font-style:normal;white-space:nowrap;line-height:1;
+  font-size:var(--fs-small);color:var(--gold)}
+.op-arrow .op-label math{font-size:inherit}
+.op-arrow.int{color:var(--cyan);box-shadow:0 0 1.6vmin rgba(86,204,242,.35)}
+.op-arrow.int .op-label{color:var(--cyan)}
+.op-chain.mini{row-gap:3.2vmin;margin-bottom:1.4vmin}
+.op-chain.mini .op-node{padding:.35vmin 1.35vmin;font-size:var(--fs-small)}
+.op-chain.mini .op-arrow{min-width:8.5vmin}
+.op-chain.mini .op-arrow .op-label{font-size:var(--fs-note);bottom:.7vmin}
+
+/* --------------------------------------------------- Q&A heads and flags ---
+   The source decks label the two halves "Question" / "Solution". Both are
+   labels, never reveals (rule 17). Inline math inside a question or an answer
+   sits at the surrounding text size, not at --fs-eq.                         */
+.qa .q-head,.qa .a-head{display:block;margin-bottom:.5vmin;
+  font-family:var(--font-ui);font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;font-size:clamp(12px,1.9vmin,21px)}
+.qa .q-head{color:var(--gold-deep)}
+.qa .a-head{color:var(--muted)}
+.qa .q math,.qa .a math{font-size:inherit}
+
+/* a question the source deck flags as worth extra attention */
+.tag-hot{display:inline-flex;align-items:center;margin-left:1.2vmin;
+  padding:.2vmin 1.4vmin;border-radius:99px;vertical-align:middle;
+  font-family:var(--font-ui);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;font-size:clamp(12px,1.8vmin,20px);color:#ffd8a6;
+  border:.12vmin solid rgba(251,146,60,.5);
+  background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(217,119,6,.1))}
+
+@media print{
+  .op-arrow{box-shadow:none!important}
+  .op-node{background:none!important;box-shadow:none!important}
+  .op-node.is-focus{background:none!important}
+  .tag-hot{background:none!important}
+}
+
+/* ------------------------------------------------- head-less pages (rule 21) --
+   A page whose source slide carried no title has no h1/h2 at all. Give its
+   first block the clearance the heading used to provide, so it never crowds
+   the kicker tag in the top-left corner.                                     */
+.wrap:not(:has(> h1)):not(:has(> h2)){padding-top:10vmin}
+.wrap.dense:not(:has(> h1)):not(:has(> h2)){padding-top:8.5vmin}
+/* the operator label floats above the shaft — reserve room for it so it never
+   sits on the line above (e.g. the "Solution" head of a .qa) */
+.op-chain{margin:2.8vmin 0 .8vmin}
+.op-chain.mini{margin:2.4vmin 0 1.4vmin}
+</style>
+</head>
+<body>
+
+<!-- Persistent layers: visible on EVERY slide, OUTSIDE any .page (rule 1) -->
+<div id="bg" aria-hidden="true">
+  <svg class="motif-graph" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-grid-fine" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M40 0H0V40" fill="none" stroke="#9fb4ff" stroke-opacity="0.055" stroke-width="1"/>
+      </pattern>
+      <pattern id="lf-grid-major" width="200" height="200" patternUnits="userSpaceOnUse">
+        <rect width="200" height="200" fill="url(#lf-grid-fine)"/>
+        <path d="M200 0H0V200" fill="none" stroke="#9fb4ff" stroke-opacity="0.10" stroke-width="1.4"/>
+      </pattern>
+      <linearGradient id="lf-curve-ink" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.02"/>
+        <stop offset="0.55" stop-color="#f5c542" stop-opacity="0.30"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.16"/>
+      </linearGradient>
+      <linearGradient id="lf-curve-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.055"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-grid-major)"/>
+    <g stroke="#f5c542" stroke-opacity="0.13" stroke-width="2.4" stroke-linecap="round">
+      <path d="M120 820 V 210"/>
+      <path d="M120 820 H 1500"/>
+    </g>
+    <path d="M120 820 C 470 812 700 700 900 520 C 1090 350 1250 268 1470 232 L 1470 820 Z" fill="url(#lf-curve-fill)"/>
+    <path d="M120 820 C 470 812 700 700 900 520 C 1090 350 1250 268 1470 232" fill="none" stroke="url(#lf-curve-ink)" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M660 820 C 860 800 1010 690 1140 500 C 1250 340 1340 262 1470 214" fill="none" stroke="#7c8cff" stroke-opacity="0.10" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="14 20"/>
+  </svg>
+</div>
+<div class="kicker-tag">Motion in 1D</div>
+
+<!-- 001  (source slide 29)   the three classics, with NO air -->
+<section class="page">
+  <div class="wrap">
+    <div class="two-col">
+      <div class="qa">
+        <span class="q-head">Question</span>
+        <div class="q">Two body are projected with same speed, one is lighter and other is heavier then which one will receive greater height.</div>
+        <div class="a">
+          <span class="a-head">Solution</span>
+          <div class="answer-box step">Both will reach same height.</div>
+          <div class="note step">With no air the only acceleration is g, and g does not ask what the mass is.</div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">A body is projected compare it&#8217;s time of assent vs time of descent.</div>
+          <div class="a">
+            <span class="a-head">Solution</span>
+            <div class="result step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mrow><mi>u</mi><mi>p</mi></mrow></msub><mo>=</mo><msub><mi>t</mi><mrow><mi>d</mi><mi>o</mi><mi>w</mi><mi>n</mi></mrow></msub></mrow><annotation encoding="application/x-tex">t_{up}=t_{down}</annotation></semantics></math></span></div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">A body is projected compare of initial and final velocity.</div>
+          <div class="a">
+            <span class="a-head">Solution</span>
+            <div class="result step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">u=v</annotation></semantics></math></span></div>
+          </div>
+        </div>
+        <div class="note step">Going up and coming down are the same journey run backwards.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 002  (source slide 30)   the same three, now IN AIR -->
+<section class="page">
+  <div class="wrap">
+    <div class="two-col">
+      <div class="qa">
+        <span class="q-head">Question</span>
+        <div class="q">Two body are projected with same speed <b>in air</b> one is lighter and other is heavier then which one will receive greater height.</div>
+        <div class="a">
+          <span class="a-head">Solution</span>
+          <div class="answer-box step">Heavier mass will achieve higher height</div>
+          <div class="note step">Air pushes back with roughly the same force on both, but that force is a smaller <i>share</i> of the heavier body&#8217;s weight &mdash; so it is slowed less.</div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">A body is projected <b>in air</b> compare it&#8217;s time of assent vs time of descent.</div>
+          <div class="a">
+            <span class="a-head">Solution</span>
+            <div class="result step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mrow><mi>u</mi><mi>p</mi></mrow></msub><mo>&lt;</mo><msub><mi>t</mi><mrow><mi>d</mi><mi>o</mi><mi>w</mi><mi>n</mi></mrow></msub></mrow><annotation encoding="application/x-tex">t_{up}\lt t_{down}</annotation></semantics></math></span></div>
+            <div class="note step">Going up, friction helps gravity &mdash; the trip is quick. Coming down, friction fights gravity &mdash; the trip is slow.</div>
+          </div>
+        </div>
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">A body is projected <b>in air</b> compare of initial and final velocity.</div>
+          <div class="a">
+            <span class="a-head">Solution</span>
+            <div class="result step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>&gt;</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">u\gt v</annotation></semantics></math></span></div>
+            <div class="note step">Some of the energy has been left behind in the air.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 003  (source slide 31)   constant friction, up and down -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading">Free fall with friction <span class="inline-lead">Friction is constant</span> <span class="tag-hot">Tough</span></h2>
+    <div class="split-4060">
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 300 380">
+          <path class="rail" d="M18 348 H282"/>
+          <path class="guide" d="M116 340 C 122 190 136 100 150 82"/>
+          <path class="guide" d="M150 82 C 166 100 180 200 186 340"/>
+          <circle class="dot b" cx="116" cy="340" r="13"/>
+          <text class="num" x="24" y="216">g + a</text>
+          <text class="num" x="204" y="216">g &#8722; a</text>
+        </svg>
+      </div>
+      <div class="two-col">
+        <div class="stack">
+          <h3 class="sub-heading">Upword</h3>
+          <span class="eq big step"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msqrt><mfrac><mrow><mn>2</mn><mi>h</mi></mrow><mrow><mi>g</mi><mo>+</mo><mi>a</mi></mrow></mfrac></msqrt></mrow><annotation encoding="application/x-tex">t=\sqrt{\frac{2h}{g+a}}</annotation></semantics></math></span>
+          <span class="eq big step"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><msqrt><mrow><mn>2</mn><mo stretchy="false">(</mo><mi>g</mi><mo>+</mo><mi>a</mi><mo stretchy="false">)</mo><mi>h</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">u=\sqrt{2(g+a)h}</annotation></semantics></math></span>
+        </div>
+        <div class="stack">
+          <h3 class="sub-heading">Downword</h3>
+          <span class="eq big step"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msqrt><mfrac><mrow><mn>2</mn><mi>h</mi></mrow><mrow><mi>g</mi><mo>−</mo><mi>a</mi></mrow></mfrac></msqrt></mrow><annotation encoding="application/x-tex">t=\sqrt{\frac{2h}{g-a}}</annotation></semantics></math></span>
+          <span class="eq big step"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><msqrt><mrow><mn>2</mn><mo stretchy="false">(</mo><mi>g</mi><mo>−</mo><mi>a</mi><mo stretchy="false">)</mo><mi>h</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">v=\sqrt{2(g-a)h}</annotation></semantics></math></span>
+        </div>
+      </div>
+    </div>
+    <div class="note step">Same height h both ways, but a bigger retardation going up and a smaller one coming down &mdash; so <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mrow><mi>u</mi><mi>p</mi></mrow></msub><mo>&lt;</mo><msub><mi>t</mi><mrow><mi>d</mi><mi>o</mi><mi>w</mi><mi>n</mi></mrow></msub></mrow><annotation encoding="application/x-tex">t_{up}\lt t_{down}</annotation></semantics></math></span> and <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>&gt;</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">u\gt v</annotation></semantics></math></span>.</div>
+  </div>
+</section>
+
+<!-- 004  (source slide 32)   which a-t graph -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 300 380">
+          <path class="rail" d="M18 348 H282"/>
+          <path class="guide" d="M116 340 C 122 190 136 100 150 82"/>
+          <path class="guide" d="M150 82 C 166 100 180 200 186 340"/>
+          <circle class="dot b" cx="116" cy="340" r="13"/>
+          <text class="num" x="24" y="216">g + a</text>
+          <text class="num" x="204" y="216">g &#8722; a</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Which one is right if air friction is preset [assume constant magnitude]</div>
+        </div>
+        <div class="options graphs">
+          <div class="option clickable" onclick="this.classList.add('correct')">
+            <span class="opt-badge">A</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M50 20 V160"/><path class="axis" d="M50 160 H320"/>
+              <text class="lab" x="28" y="38">a</text><text class="lab" x="324" y="170">t</text>
+              <path class="curve" d="M60 54 H164"/>
+              <path class="curve" d="M176 96 H300"/>
+              <text class="num" x="96" y="196">t<tspan dy="9" font-size="21">1</tspan></text>
+              <text class="num" x="222" y="196">t<tspan dy="9" font-size="21">2</tspan></text>
+            </svg>
+          </div>
+          <div class="option clickable" onclick="this.classList.add('wrong')">
+            <span class="opt-badge">B</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M50 20 V160"/><path class="axis" d="M50 160 H320"/>
+              <text class="lab" x="28" y="38">a</text><text class="lab" x="324" y="170">t</text>
+              <path class="curve" d="M60 96 H164"/>
+              <path class="curve" d="M176 54 H300"/>
+              <text class="num" x="96" y="196">t<tspan dy="9" font-size="21">1</tspan></text>
+              <text class="num" x="222" y="196">t<tspan dy="9" font-size="21">2</tspan></text>
+            </svg>
+          </div>
+          <div class="option clickable" onclick="this.classList.add('wrong')">
+            <span class="opt-badge">C</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M50 20 V160"/><path class="axis" d="M50 160 H320"/>
+              <text class="lab" x="28" y="38">a</text><text class="lab" x="324" y="170">t</text>
+              <path class="curve" d="M60 54 H164"/>
+              <path class="curve" d="M176 196 H300"/>
+              <text class="num" x="96" y="186">t<tspan dy="9" font-size="21">1</tspan></text>
+              <text class="num" x="222" y="186">t<tspan dy="9" font-size="21">2</tspan></text>
+            </svg>
+          </div>
+        </div>
+        <div class="note step">Going up, gravity and friction both pull backwards &mdash; the retardation is <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>+</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">g+a</annotation></semantics></math></span>, the bigger of the two.</div>
+        <div class="note step">Coming down, friction now fights gravity &mdash; the acceleration drops to <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>−</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">g-a</annotation></semantics></math></span>. It never changes sign.</div>
+        <div class="answer-box step"><span class="ok">&#10003;</span> A &mdash; high flat level over <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">t_1</annotation></semantics></math></span>, lower flat level over <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">t_2</annotation></semantics></math></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 005  (source slide 33)   which area is greater - change in velocity -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 300 380">
+          <path class="rail" d="M18 348 H282"/>
+          <path class="guide" d="M116 340 C 122 190 136 100 150 82"/>
+          <path class="guide" d="M150 82 C 166 100 180 200 186 340"/>
+          <circle class="dot b" cx="116" cy="340" r="13"/>
+          <text class="num" x="24" y="216">g + a</text>
+          <text class="num" x="204" y="216">g &#8722; a</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Which area is greater if air friction is preset [assume constant magnitude]</div>
+        </div>
+        <div class="callout callout--tip">
+          <span class="callout-label">Hint</span>Area give change in velocity
+        </div>
+        <div class="figure-frame plain short">
+          <svg class="gph" viewBox="0 0 420 230">
+            <path class="area gold" d="M70 62 H196 V166 H70 Z"/>
+            <path class="area" d="M196 104 H344 V166 H196 Z"/>
+            <path class="axis" d="M70 166 V62 H196 V166"/>
+            <path class="axis" d="M196 166 V104 H344 V166"/>
+            <path class="axis" d="M50 20 V166"/>
+            <path class="axis" d="M50 166 H400"/>
+            <text class="lab" x="28" y="38">a</text><text class="lab" x="404" y="176">t</text>
+            <text class="num" x="112" y="126">A<tspan dy="9" font-size="21">1</tspan></text>
+            <text class="num" x="248" y="146">A<tspan dy="9" font-size="21">2</tspan></text>
+            <text class="num" x="116" y="202">t<tspan dy="9" font-size="21">1</tspan></text>
+            <text class="num" x="256" y="202">t<tspan dy="9" font-size="21">2</tspan></text>
+          </svg>
+        </div>
+        <div class="note step">The rising strip is taller but narrower; the falling strip is shorter but wider &mdash; you cannot read it off by eye.</div>
+        <div class="note step">Area under an <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mtext> ⁣</mtext><mo>−</mo><mtext> ⁣</mtext><mi>t</mi></mrow><annotation encoding="application/x-tex">a\!-\!t</annotation></semantics></math></span> graph is <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">\Delta v</annotation></semantics></math></span>. Up it is <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi></mrow><annotation encoding="application/x-tex">u</annotation></semantics></math></span>, down it is <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span> &mdash; and we already know <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>&gt;</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">u\gt v</annotation></semantics></math></span>.</div>
+        <div class="answer-box step">As area in this case show change in velocity so <b>1st one is greater</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 006  (source slide 34)   draw the velocity-time graph -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 300 380">
+          <path class="rail" d="M18 348 H282"/>
+          <path class="guide" d="M116 340 C 122 190 136 100 150 82"/>
+          <path class="guide" d="M150 82 C 166 100 180 200 186 340"/>
+          <circle class="dot b" cx="116" cy="340" r="13"/>
+          <text class="num" x="24" y="216">g + a</text>
+          <text class="num" x="204" y="216">g &#8722; a</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Draw velocity time graph for above case</div>
+        </div>
+        <div class="options graphs">
+          <div class="option clickable" onclick="this.classList.add('wrong')">
+            <span class="opt-badge">A</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M62 16 V206"/><path class="axis" d="M40 110 H320"/>
+              <text class="lab" x="38" y="34">u</text><text class="lab" x="324" y="128">t</text>
+              <path class="curve" d="M64 40 L 186 110 L 258 200"/>
+            </svg>
+          </div>
+          <div class="option clickable" onclick="this.classList.add('correct')">
+            <span class="opt-badge">B</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M62 16 V206"/><path class="axis" d="M40 110 H320"/>
+              <text class="lab" x="38" y="34">u</text><text class="lab" x="324" y="128">t</text>
+              <path class="curve" d="M64 40 L 152 110 L 306 182"/>
+            </svg>
+          </div>
+          <div class="option clickable" onclick="this.classList.add('wrong')">
+            <span class="opt-badge">C</span>
+            <svg class="gph" viewBox="0 0 340 220">
+              <path class="axis" d="M62 16 V206"/><path class="axis" d="M40 110 H320"/>
+              <text class="lab" x="38" y="34">u</text><text class="lab" x="324" y="128">t</text>
+              <path class="curve" d="M64 40 L 268 204"/>
+            </svg>
+          </div>
+        </div>
+        <div class="note step">Slope of a <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mtext> ⁣</mtext><mo>−</mo><mtext> ⁣</mtext><mi>t</mi></mrow><annotation encoding="application/x-tex">v\!-\!t</annotation></semantics></math></span> graph is the acceleration, and we just showed the acceleration changes at the top.</div>
+        <div class="note step">Steep line while it climbs <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>g</mi><mo>+</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(g+a)</annotation></semantics></math></span>, then a gentler line on the way down <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>g</mi><mo>−</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(g-a)</annotation></semantics></math></span> &mdash; one kink, at the top.</div>
+        <div class="answer-box step"><span class="ok">&#10003;</span> B &mdash; steep first, shallow after crossing the axis</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 007  (source slide 35)   which area is greater - displacement -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="split-4060">
+      <div class="figure-frame plain short">
+        <svg class="dgm" viewBox="0 0 300 380">
+          <path class="rail" d="M18 348 H282"/>
+          <path class="guide" d="M116 340 C 122 190 136 100 150 82"/>
+          <path class="guide" d="M150 82 C 166 100 180 200 186 340"/>
+          <circle class="dot b" cx="116" cy="340" r="13"/>
+          <text class="num" x="24" y="216">g + a</text>
+          <text class="num" x="204" y="216">g &#8722; a</text>
+        </svg>
+      </div>
+      <div class="stack">
+        <div class="qa">
+          <span class="q-head">Question</span>
+          <div class="q">Which area is greater</div>
+        </div>
+        <div class="callout callout--tip">
+          <span class="callout-label">Hint</span>Area give displacement
+        </div>
+        <div class="figure-frame plain short">
+          <svg class="gph" viewBox="0 0 420 230">
+            <path class="area" d="M70 44 L 176 120 L 70 120 Z"/>
+            <path class="area" d="M176 120 L 372 190 L 372 120 Z"/>
+            <path class="axis" d="M70 16 V210"/>
+            <path class="axis" d="M50 120 H400"/>
+            <text class="lab" x="44" y="36">u</text><text class="lab" x="404" y="138">t</text>
+            <path class="curve" d="M70 44 L 176 120 L 372 190"/>
+            <text class="num" x="104" y="106">A<tspan dy="9" font-size="21">1</tspan></text>
+            <text class="num" x="300" y="182">A<tspan dy="9" font-size="21">2</tspan></text>
+          </svg>
+        </div>
+        <div class="note step">The two patches look nothing alike &mdash; one is tall and thin, the other long and low.</div>
+        <div class="note step">But area here is <b>displacement</b>, and the ball comes back to exactly where it started, so the up-trip and the down-trip must cover the same h.</div>
+        <div class="answer-box step">As area give displacement it&#8217;s magnitude is <b>same</b> in both direction so answer is same</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 008  (source slide 36)   the hook -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">When a ball is dropped from a tower it do not start burning</h1>
+    <div class="lead">?</div>
+  </div>
+</section>
+
+<!-- 009  (source slide 37)   section divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title">Friction &#8733; velocity</h1>
+  </div>
+</section>
+
+<!-- 010  (source slide 38)   what velocity-proportional drag looks like -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Free fall with friction <span class="inline-lead">Friction &#8733; velocity</span> <span class="tag-hot">Tough</span></h2>
+    <div class="split-4060">
+      <div class="figure-frame plain">
+        <svg class="dgm" viewBox="0 0 340 380">
+          <path class="rail" d="M14 348 H326"/>
+          <path class="guide" d="M132 340 C 140 190 152 96 166 78"/>
+          <path class="guide" d="M166 78 C 182 96 196 200 202 340"/>
+          <path class="arw b" d="M52 96 V150"/><path class="arwhead b" d="M40 150 l12 26 l12 -26 z"/>
+          <path class="arw b" d="M52 196 V250"/><path class="arwhead b" d="M40 250 l12 26 l12 -26 z"/>
+          <path class="arw b" d="M52 288 V318"/><path class="arwhead b" d="M40 318 l12 26 l12 -26 z"/>
+          <path class="arw" d="M104 118 V128"/><path class="arwhead" d="M96 128 l8 16 l8 -16 z"/>
+          <path class="arw" d="M104 208 V228"/><path class="arwhead" d="M96 228 l8 18 l8 -18 z"/>
+          <path class="arw" d="M104 288 V314"/><path class="arwhead" d="M96 314 l8 20 l8 -20 z"/>
+          <path class="arw b" d="M264 96 V150"/><path class="arwhead b" d="M252 150 l12 26 l12 -26 z"/>
+          <path class="arw b" d="M264 196 V250"/><path class="arwhead b" d="M252 250 l12 26 l12 -26 z"/>
+          <path class="arw b" d="M264 288 V318"/><path class="arwhead b" d="M252 318 l12 26 l12 -26 z"/>
+          <path class="arw" d="M228 148 V128"/><path class="arwhead" d="M220 128 l8 -16 l8 16 z"/>
+          <path class="arw" d="M228 248 V214"/><path class="arwhead" d="M220 214 l8 -18 l8 18 z"/>
+          <path class="arw" d="M228 336 V294"/><path class="arwhead" d="M220 294 l8 -20 l8 20 z"/>
+        </svg>
+        <div class="fig-caption">blue is weight, gold is drag &mdash; drag shrinks as it slows, grows as it speeds up</div>
+      </div>
+      <div class="graph-stack">
+        <div class="graph-cell step">
+          <svg class="gph" viewBox="0 0 420 190">
+            <path class="axis" d="M56 16 V150"/><path class="axis" d="M56 150 H400"/>
+            <text class="lab" x="32" y="34">a</text><text class="lab" x="404" y="160">t</text>
+            <path class="guide" d="M56 94 H360"/>
+            <path class="curve" d="M66 30 C 118 38 148 84 196 112 C 246 138 300 148 386 150"/>
+            <circle class="dot" cx="66" cy="30" r="6"/><circle class="dot" cx="104" cy="44" r="6"/>
+            <circle class="dot" cx="146" cy="72" r="6"/><circle class="dot" cx="196" cy="104" r="6"/>
+            <circle class="dot" cx="262" cy="134" r="6"/><circle class="dot" cx="320" cy="145" r="6"/>
+            <text class="num" x="368" y="86">g</text>
+          </svg>
+          <div class="cap">a falls from <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>+</mo><mi>k</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">g+kv</annotation></semantics></math></span> through g and dies to zero</div>
+        </div>
+        <div class="graph-cell step">
+          <svg class="gph" viewBox="0 0 420 190">
+            <path class="axis" d="M56 16 V178"/><path class="axis" d="M56 58 H400"/>
+            <text class="lab" x="32" y="34">v</text><text class="lab" x="404" y="68">t</text>
+            <path class="guide" d="M66 152 H386"/>
+            <path class="curve" d="M66 22 C 114 44 144 90 190 116 C 248 142 310 150 386 152"/>
+          </svg>
+          <div class="cap">v flattens onto the terminal value <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mi mathvariant="normal">/</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">g/k</annotation></semantics></math></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 011  (source slide 39)   integrating dv/(g - kv) = dt -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading">Free fall with friction <span class="inline-lead">Friction &#8733; velocity</span> <span class="tag-hot">Tough</span></h2>
+    <div class="two-col">
+      <div class="stack">
+        <div class="lead">Suppose a body is dropped and friction is proportional to velocity.</div>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mi>a</mi><mo>=</mo><mi>g</mi><mo>+</mo><mi>k</mi><mo stretchy="false">(</mo><mo>−</mo><mi>v</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Rightarrow\ a=g+k(-v)</annotation></semantics></math></span><span class="why">drag opposes the motion</span></div>
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">\Rightarrow\ \frac{dv}{dt}=g-kv</annotation></semantics></math></span></div>
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi></mrow></mfrac><mo>=</mo><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\Rightarrow\ \frac{dv}{g-kv}=dt</annotation></semantics></math></span><span class="why">separate the variables</span></div>
+        </div>
+        <div class="note step">Now integrating</div>
+      </div>
+      <div class="stack">
+        <h3 class="sub-heading">Using limit</h3>
+        <div class="derivation">
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mfrac><mrow><mi>ln</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi><mo stretchy="false">)</mo><msubsup><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">∣</mo><mn>0</mn><mi>v</mi></msubsup></mrow><mrow><mo>−</mo><mi>k</mi></mrow></mfrac><mo>=</mo><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mi>t</mi><msubsup><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mn>0</mn><mi>t</mi></msubsup></mrow><annotation encoding="application/x-tex">\Rightarrow\ \frac{\ln(g-kv)\big|_{0}^{v}}{-k}=\big[t\big]_{0}^{t}</annotation></semantics></math></span></div>
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mfrac><mrow><mi>ln</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi><mo stretchy="false">)</mo><mo>−</mo><mi>ln</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>g</mi><mo stretchy="false">)</mo></mrow><mrow><mo>−</mo><mi>k</mi></mrow></mfrac><mo>=</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">\Rightarrow\ \frac{\ln(g-kv)-\ln(g)}{-k}=t</annotation></semantics></math></span></div>
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mi>ln</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mfrac><mrow><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi></mrow><mi>g</mi></mfrac><mo fence="true">)</mo></mrow><mo>=</mo><mo>−</mo><mi>k</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\Rightarrow\ \ln\left(\frac{g-kv}{g}\right)=-kt</annotation></semantics></math></span></div>
+          <div class="line step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mrow><mo fence="true">(</mo><mfrac><mrow><mi>g</mi><mo>−</mo><mi>k</mi><mi>v</mi></mrow><mi>g</mi></mfrac><mo fence="true">)</mo></mrow><mo>=</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>k</mi><mi>t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\Rightarrow\ \left(\frac{g-kv}{g}\right)=e^{-kt}</annotation></semantics></math></span></div>
+        </div>
+        <div class="result step"><span class="eq inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mtext> </mtext><mi>v</mi><mo>=</mo><mfrac><mi>g</mi><mi>k</mi></mfrac><mrow><mo fence="true">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>k</mi><mi>t</mi></mrow></msup><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Rightarrow\ v=\frac{g}{k}\left(1-e^{-kt}\right)</annotation></semantics></math></span></div>
+        <div class="note step">As <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow><annotation encoding="application/x-tex">t\to\infty</annotation></semantics></math></span> the exponential dies and v settles at <span class="eq small inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mi mathvariant="normal">/</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">g/k</annotation></semantics></math></span> &mdash; the terminal velocity. That is why the ball never keeps speeding up, and never burns.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Box spotlight on reveal (no-op without .info-box) -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    var boxes = [].slice.call(document.querySelectorAll('.info-box'));
+    if (!boxes.length) return;
+
+    function shown(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;   // hidden page
+      return parseFloat(getComputedStyle(el).opacity || '1') > 0.5;
+    }
+    function marks(box){
+      try { return box.querySelectorAll(':scope > .box-zoom'); }
+      catch (e) { return box.querySelectorAll('.box-zoom'); }
+    }
+    /* 'shut' -> not reached yet | 'open' -> holding the floor | 'done' -> shrunk */
+    function state(box){
+      var z = marks(box);
+      if (z.length < 2){                     // uninstrumented box: open on any step
+        var st = box.querySelectorAll('.step');
+        for (var i = 0; i < st.length; i++) if (shown(st[i])) return 'open';
+        return 'shut';
+      }
+      if (shown(z[z.length - 1])) return 'done';
+      if (shown(z[0]))            return 'open';
+      return 'shut';
+    }
+
+    var current = null;
+    function sync(){
+      var next = null;
+      for (var i = 0; i < boxes.length; i++)
+        if (state(boxes[i]) === 'open') next = boxes[i];
+      if (next === current) return;          // also stops our own class writes
+                                             // from re-entering the observer
+      var page = (next || current) ? (next || current).closest('.page') : null;
+      if (current) current.classList.remove('is-active');
+      if (next)    next.classList.add('is-active');
+      if (page)    page.classList.toggle('has-focus', !!next);
+      current = next;
+    }
+
+    setTimeout(function(){                   // after host/fallback has hidden pages
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes:true, subtree:true, attributeFilter:['style','class'] });
+      } catch (e) { /* no observer -> the lf-show hook below still works */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>
+
+<!-- Mark spotlight on reveal (no-op without [data-lights]) -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    var cues = [].slice.call(document.querySelectorAll('[data-lights]'));
+    if (!cues.length) return;
+
+    function shown(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;   // hidden page
+      return parseFloat(getComputedStyle(el).opacity || '1') > 0.5;
+    }
+    function sync(){
+      cues.forEach(function(cue){
+        var on = shown(cue);
+        var scope = cue.closest('.page') || document;
+        cue.getAttribute('data-lights').split(/\s+/).forEach(function(key){
+          if (!key) return;
+          var hits = scope.querySelectorAll('[data-lit~="' + key + '"]');
+          for (var i = 0; i < hits.length; i++) hits[i].classList.toggle('is-lit', on);
+        });
+      });
+    }
+
+    setTimeout(function(){                   // after host/fallback has hidden pages
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes:true, subtree:true, attributeFilter:['style','class'] });
+      } catch (e) { /* no observer -> the lf-show hook below still works */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>
+
+<!-- anime.js presets on reveal (no-op without [data-anime]) -->
+<script>
+(function(){
+  if (!document.querySelector('[data-anime]')) return;
+  window.addEventListener('load', function(){
+    var A = window.anime;
+    if (!A || typeof A.animate !== 'function') return;      // lib missing -> silent
+    var nodes = [].slice.call(document.querySelectorAll('[data-anime]'));
+    var played = [];
+
+    function visible(el){
+      if (!el.offsetParent && !el.offsetHeight) return false;      // hidden page
+      var n = el;
+      while (n && n.nodeType === 1){
+        if (parseFloat(getComputedStyle(n).opacity || '1') < 0.5) return false;
+        n = n.parentElement;
+      }
+      return true;
+    }
+    function stroked(svg){
+      return [].slice.call(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect'))
+        .filter(function(s){
+          var st = getComputedStyle(s).stroke;
+          return st && st !== 'none' && st !== 'rgba(0, 0, 0, 0)';
+        });
+    }
+    function draw(el){
+      var svg = el.tagName && el.tagName.toLowerCase() === 'svg' ? el : el.querySelector('svg');
+      if (!svg) return;
+      var items = stroked(svg).filter(function(s){
+        var len = 0;
+        try { len = s.getTotalLength ? s.getTotalLength() : 0; } catch (e) { len = 0; }
+        if (!len) return false;
+        s.style.strokeDasharray  = len + ' ' + len;
+        s.style.strokeDashoffset = len;
+        return true;
+      });
+      if (!items.length) return;
+      A.animate(items, {
+        strokeDashoffset: 0, duration: 850, ease: 'inOut(2)',
+        delay: A.stagger ? A.stagger(70) : 0,
+        onComplete: function(){
+          items.forEach(function(s){ s.style.strokeDasharray = ''; s.style.strokeDashoffset = ''; });
+        }
+      });
+    }
+    function count(el){
+      var text = el.textContent || '';
+      var target = parseFloat(text.replace(/[^0-9.\-]/g, ''));
+      if (isNaN(target)) return;
+      var tail = text.replace(/^[^0-9.\-]*[0-9.\-]+/, '');
+      var head = (text.match(/^[^0-9.\-]*/) || [''])[0];
+      var dp = (String(target).split('.')[1] || '').length;
+      var o = { v: 0 };
+      A.animate(o, { v: target, duration: 900, ease: 'out(3)', onUpdate: function(){
+        el.textContent = head + o.v.toFixed(dp) + tail;
+      }});
+    }
+    function pulse(el){ A.animate(el, { scale: [1, 1.06, 1], duration: 700, ease: 'inOut(2)' }); }
+    function float(el){ A.animate(el, { y: [0, -6, 0], duration: 4200, loop: true, ease: 'inOut(2)' }); }
+
+    var presets = { draw: draw, count: count, pulse: pulse, float: float };
+
+    function sync(){
+      nodes.forEach(function(el){
+        if (played.indexOf(el) !== -1 || !visible(el)) return;
+        var run = presets[(el.getAttribute('data-anime') || '').trim()];
+        played.push(el);
+        if (!run) return;
+        if (el.classList.contains('step') && run !== draw && run !== count) return;
+        try { run(el); } catch (e) { /* a broken preset must never blank a slide */ }
+      });
+    }
+
+    setTimeout(function(){
+      sync();
+      try {
+        new MutationObserver(sync).observe(document.body,
+          { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
+      } catch (e) { /* the lf-show hook below still fires */ }
+    }, 700);
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') setTimeout(sync, 40);
+    });
+  });
+})();
+</script>
+
+<!-- three.js scenes (no-op without [data-three]) -->
+<script>
+/* Inlined by build-deck.mjs inside a <script> tag whenever a deck asks for
+   data-three. Authors never import this — they write data-three="…" only. */
+(function(){
+  var frames = [].slice.call(document.querySelectorAll('[data-three]'));
+  if (!frames.length) return;
+  window.addEventListener('load', function(){
+    var T = window.THREE;
+    if (!T || !T.WebGLRenderer) return;
+    try {
+      var probe = document.createElement('canvas');
+      if (!(probe.getContext('webgl') || probe.getContext('experimental-webgl'))) return;
+    } catch (e) { return; }
+
+    frames.forEach(function(frame){
+      try { start(frame); } catch (e) { /* a dead scene must not blank the slide */ }
+    });
+
+    function start(frame){
+      var w = frame.clientWidth, h = frame.clientHeight;
+      if (!w || !h) { requestAnimationFrame(function(){ start(frame); }); return; }
+
+      var kind = (frame.getAttribute('data-three') || 'globe').trim();
+      if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
+      if (kind === 'solid-angle') { startSolidAngle(frame, w, h); return; }
+      if (kind === 'solid-angle-cone') { startSolidAngleCone(frame, w, h); return; }
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(45, w / h, 0.1, 100);
+      camera.position.set(0, 0, 5);
+      var group = new T.Group();
+      scene.add(group);
+
+      if (kind === 'stars'){
+        var n = 900, pos = new Float32Array(n * 3);
+        for (var i = 0; i < n; i++){
+          pos[i*3] = (Math.random() - 0.5) * 18;
+          pos[i*3+1] = (Math.random() - 0.5) * 12;
+          pos[i*3+2] = (Math.random() - 0.5) * 12;
+        }
+        var geo = new T.BufferGeometry();
+        geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+        group.add(new T.Points(geo, new T.PointsMaterial({
+          color: 0xf5c542, size: 0.045, transparent: true, opacity: 0.75
+        })));
+      } else {
+        group.add(new T.LineSegments(
+          new T.WireframeGeometry(new T.SphereGeometry(1.7, 24, 16)),
+          new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.45 })));
+        group.add(new T.Mesh(
+          new T.SphereGeometry(1.68, 48, 32),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.55 })));
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.0022;
+        group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ---------------------------------------------- solid angle (steradian) ---
+       Sphere of radius r with a square pyramidal solid angle from the centre.
+       Same Ω cuts patch A on the sphere and a larger patch A′ further out at r′.
+       Slow auto-orbit; no OrbitControls (pointer-events are owned by the host). */
+    function startSolidAngle(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 100);
+      camera.position.set(4.6, 2.8, 5.4);
+      camera.lookAt(0.4, 0.2, 0.6);
+
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.55));
+      var key = new T.DirectionalLight(0xffffff, 0.85);
+      key.position.set(4, 6, 5); scene.add(key);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      var r = 2.0, rPrime = 3.35, half = 0.55;
+      var origin = new T.Vector3(0, 0, 0);
+      var axis = new T.Vector3(0.55, 0.35, 1).normalize();
+
+      /* soft filled sphere (classroom blue) */
+      group.add(new T.Mesh(
+        new T.SphereGeometry(r, 48, 32),
+        new T.MeshPhongMaterial({
+          color: 0x1a3a8a, transparent: true, opacity: 0.55,
+          shininess: 28, specular: 0x334466, depthWrite: false
+        })));
+      group.add(new T.LineSegments(
+        new T.WireframeGeometry(new T.SphereGeometry(r * 1.002, 24, 16)),
+        new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.18 })));
+      group.add(new T.Mesh(
+        new T.SphereGeometry(0.06, 16, 12),
+        new T.MeshBasicMaterial({ color: 0x9ad0ff })));
+
+      /* four corner directions of the solid-angle pyramid */
+      var u = new T.Vector3(), v = new T.Vector3();
+      if (Math.abs(axis.y) < 0.9) u.set(0, 1, 0).cross(axis).normalize();
+      else u.set(1, 0, 0).cross(axis).normalize();
+      v.copy(axis).cross(u).normalize();
+      var corners = [
+        axis.clone().add(u.clone().multiplyScalar(half)).add(v.clone().multiplyScalar(half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(-half)).add(v.clone().multiplyScalar(half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(-half)).add(v.clone().multiplyScalar(-half)).normalize(),
+        axis.clone().add(u.clone().multiplyScalar(half)).add(v.clone().multiplyScalar(-half)).normalize()
+      ];
+
+      var edgeMat = new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.9 });
+      corners.forEach(function(c){
+        var geo = new T.BufferGeometry().setFromPoints([
+          origin, c.clone().multiplyScalar(rPrime * 1.05)
+        ]);
+        group.add(new T.Line(geo, edgeMat));
+      });
+
+      function greatArc(a, b, rad, segs){
+        var start = a.clone().normalize(), end = b.clone().normalize();
+        var rot = new T.Vector3().crossVectors(start, end).normalize();
+        var ang = start.angleTo(end), pts = [];
+        for (var i = 0; i <= segs; i++){
+          pts.push(start.clone().applyAxisAngle(rot, (i / segs) * ang).multiplyScalar(rad));
+        }
+        return pts;
+      }
+
+      function addSphericalPatch(rad, fillColor, fillOpacity, edgeColor){
+        var ring = [];
+        for (var i = 0; i < 4; i++){
+          ring = ring.concat(greatArc(corners[i], corners[(i + 1) % 4], rad, 24));
+        }
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints(ring),
+          new T.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.95 })));
+
+        /* fan triangulation from the patch centre for a soft fill */
+        var mid = new T.Vector3();
+        corners.forEach(function(c){ mid.add(c); });
+        mid.normalize().multiplyScalar(rad);
+        var pos = [];
+        for (var k = 0; k < 4; k++){
+          var arc = greatArc(corners[k], corners[(k + 1) % 4], rad, 16);
+          for (var j = 0; j < arc.length - 1; j++){
+            pos.push(mid.x, mid.y, mid.z,
+                     arc[j].x, arc[j].y, arc[j].z,
+                     arc[j + 1].x, arc[j + 1].y, arc[j + 1].z);
+          }
+        }
+        var g = new T.BufferGeometry();
+        g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+        g.computeVertexNormals();
+        group.add(new T.Mesh(g, new T.MeshBasicMaterial({
+          color: fillColor, transparent: true, opacity: fillOpacity,
+          side: T.DoubleSide, depthWrite: false
+        })));
+      }
+
+      addSphericalPatch(r, 0x3b6fd9, 0.45, 0x8eb6ff);
+      addSphericalPatch(rPrime, 0x9aa3b5, 0.28, 0xc5cad4);
+
+      /* radius arrows r and r′ (gold accents) */
+      function addRadius(len, color){
+        var tip = axis.clone().multiplyScalar(len);
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints([origin, tip]),
+          new T.LineBasicMaterial({ color: color })));
+        var cone = new T.Mesh(
+          new T.ConeGeometry(0.07, 0.22, 10),
+          new T.MeshBasicMaterial({ color: color }));
+        cone.position.copy(tip);
+        cone.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), axis);
+        group.add(cone);
+      }
+      addRadius(r, 0x7c8cff);
+      addRadius(rPrime, 0xf5c542);
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.0035;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ----------------------------------------- solid angle of a cone (sr) ---
+       Sphere + right circular cone of semi-vertical angle α from the centre.
+       The cone cuts a spherical cap; slow auto-orbit for the classroom.       */
+    function startSolidAngleCone(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 100);
+      camera.position.set(3.8, 2.2, 4.6);
+      camera.lookAt(0, 0.15, 0);
+
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.55));
+      var key = new T.DirectionalLight(0xffffff, 0.9);
+      key.position.set(4, 6, 5); scene.add(key);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      var r = 2.0, alpha = Math.PI / 5; /* 36° semi-vertical */
+      var axis = new T.Vector3(0.35, 0.55, 1).normalize();
+
+      group.add(new T.Mesh(
+        new T.SphereGeometry(r, 48, 32),
+        new T.MeshPhongMaterial({
+          color: 0x1a3a8a, transparent: true, opacity: 0.42,
+          shininess: 28, specular: 0x334466, depthWrite: false
+        })));
+      group.add(new T.LineSegments(
+        new T.WireframeGeometry(new T.SphereGeometry(r * 1.002, 20, 14)),
+        new T.LineBasicMaterial({ color: 0x7c8cff, transparent: true, opacity: 0.16 })));
+      group.add(new T.Mesh(
+        new T.SphereGeometry(0.055, 14, 12),
+        new T.MeshBasicMaterial({ color: 0x9ad0ff })));
+
+      /* cone body: apex at origin, axis along +Y then reoriented */
+      var coneH = r * Math.cos(alpha);
+      var coneR = r * Math.sin(alpha);
+      var cone = new T.Mesh(
+        new T.ConeGeometry(coneR, coneH, 48, 1, true),
+        new T.MeshPhongMaterial({
+          color: 0x38bdf8, transparent: true, opacity: 0.28,
+          side: T.DoubleSide, depthWrite: false, shininess: 40
+        }));
+      /* ConeGeometry apex at +y = h/2; shift so apex sits at origin */
+      cone.geometry.translate(0, -coneH / 2, 0);
+      cone.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), axis);
+      group.add(cone);
+
+      /* two silhouette generators + axis */
+      function perpBasis(ax){
+        var u = new T.Vector3();
+        if (Math.abs(ax.y) < 0.9) u.set(0, 1, 0).cross(ax).normalize();
+        else u.set(1, 0, 0).cross(ax).normalize();
+        return u;
+      }
+      var u = perpBasis(axis);
+      var edgeMat = new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.95 });
+      [1, -1].forEach(function(sign){
+        var side = u.clone().multiplyScalar(sign * Math.sin(alpha));
+        var tip = axis.clone().multiplyScalar(Math.cos(alpha)).add(side).normalize().multiplyScalar(r);
+        group.add(new T.Line(
+          new T.BufferGeometry().setFromPoints([new T.Vector3(0, 0, 0), tip]),
+          edgeMat));
+      });
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints([
+          new T.Vector3(0, 0, 0), axis.clone().multiplyScalar(r)
+        ]),
+        new T.LineBasicMaterial({ color: 0xf5c542, transparent: true, opacity: 0.85 })));
+
+      /* spherical cap rim (circle of angular radius α) */
+      var rim = [];
+      var v = new T.Vector3().crossVectors(axis, u).normalize();
+      for (var i = 0; i <= 64; i++){
+        var t = (i / 64) * Math.PI * 2;
+        var dir = axis.clone().multiplyScalar(Math.cos(alpha))
+          .add(u.clone().multiplyScalar(Math.sin(alpha) * Math.cos(t)))
+          .add(v.clone().multiplyScalar(Math.sin(alpha) * Math.sin(t)))
+          .normalize().multiplyScalar(r);
+        rim.push(dir);
+      }
+      group.add(new T.Line(
+        new T.BufferGeometry().setFromPoints(rim),
+        new T.LineBasicMaterial({ color: 0xf2d024, transparent: true, opacity: 0.95 })));
+
+      /* soft cap fill */
+      var capPos = [];
+      var pole = axis.clone().multiplyScalar(r);
+      for (var k = 0; k < rim.length - 1; k++){
+        capPos.push(pole.x, pole.y, pole.z,
+                    rim[k].x, rim[k].y, rim[k].z,
+                    rim[k + 1].x, rim[k + 1].y, rim[k + 1].z);
+      }
+      var capGeo = new T.BufferGeometry();
+      capGeo.setAttribute('position', new T.Float32BufferAttribute(capPos, 3));
+      capGeo.computeVertexNormals();
+      group.add(new T.Mesh(capGeo, new T.MeshBasicMaterial({
+        color: 0xf2d024, transparent: true, opacity: 0.22,
+        side: T.DoubleSide, depthWrite: false
+      })));
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+      (function loop(){
+        requestAnimationFrame(loop);
+        group.rotation.y += 0.004;
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ---------------------------------------------------- screw-gauge 3D ---
+       Micrometer with FLAT scale plates (perfect classroom numbering) plus
+       orbit controls. Sim drives state via __sgUpdate; view via __sgOrbit /
+       __sgView (wired from data-act="orbit"|"view" buttons).                 */
+    function startScrewGauge(frame, w, h){
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      renderer.domElement.style.display = 'block';
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(30, w / h, 0.05, 100);
+
+      /* camera targets — lerped for view presets */
+      var cam = {
+        x: 0.2, y: 1.85, z: 9.0,
+        lx: 0.35, ly: 0.2, lz: 0
+      };
+      var camGoal = { x: cam.x, y: cam.y, z: cam.z, lx: cam.lx, ly: cam.ly, lz: cam.lz };
+      function snapCam(){
+        camera.position.set(cam.x, cam.y, cam.z);
+        camera.lookAt(cam.lx, cam.ly, cam.lz);
+      }
+      snapCam();
+
+      scene.add(new T.AmbientLight(0xd8deee, 0.62));
+      var key = new T.DirectionalLight(0xfff4e0, 1.0);
+      key.position.set(5, 8, 7); scene.add(key);
+      var rim = new T.DirectionalLight(0x8ea0ff, 0.4);
+      rim.position.set(-6, 2, -4); scene.add(rim);
+      var jawLight = new T.PointLight(0xffe6a8, 0.5, 8);
+      jawLight.position.set(-1.6, 1.2, 2.2); scene.add(jawLight);
+
+      var ground = new T.Mesh(
+        new T.CircleGeometry(4.4, 48),
+        new T.MeshBasicMaterial({ color: 0x0a0c16, transparent: true, opacity: 0.5 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -2.1;
+      scene.add(ground);
+
+      function mat(color, shin, spec){
+        return new T.MeshPhongMaterial({ color: color, shininess: shin, specular: spec || 0x778899 });
+      }
+      var chrome = mat(0xe8eef6, 110, 0xb0c0d0);
+      var steel = mat(0xb8c4d4, 70, 0x8899aa);
+      var steelDark = mat(0x7a8799, 55, 0x556677);
+      var frameMat = mat(0x5c6a82, 45, 0x334455);
+      var accent = mat(0xc0392b, 40, 0x662211);
+      var copper = mat(0xd4894a, 75, 0xaa6633);
+      var glassMat = new T.MeshPhongMaterial({
+        color: 0x7ec8e3, shininess: 120, specular: 0xffffff,
+        transparent: true, opacity: 0.55, side: T.DoubleSide
+      });
+      var ballMat = mat(0xd5dde8, 140, 0xffffff);
+
+      /* orbit pivot — teacher rotates the whole instrument with buttons */
+      var orbit = new T.Group();
+      orbit.rotation.order = 'YXZ';
+      scene.add(orbit);
+      var view = { yaw: -0.28, pitch: 0.10 };
+      function applyOrbit(){
+        orbit.rotation.y = view.yaw;
+        orbit.rotation.x = view.pitch;
+      }
+      applyOrbit();
+
+      var root = new T.Group();
+      root.position.set(0.1, 0.1, 0);
+      orbit.add(root);
+
+      var AXIS_Y = 0.42;
+      var ANVIL_FACE = -2.05;
+      var GAP_SCALE = 0.38;
+      var SLEEVE_LEN = 2.55;
+      var SLEEVE_R = 0.40;
+      var THIMBLE_R = 0.50;
+      var FACE_R = 0.26;
+      var sleeveStart = 0.20;
+
+      function cyl(rt, rb, len, seg, material){
+        return new T.Mesh(new T.CylinderGeometry(rt, rb, len, seg), material);
+      }
+      function layX(mesh){ mesh.rotation.z = Math.PI / 2; }
+      function addBox(parent, sx, sy, sz, x, y, z, material){
+        var m = new T.Mesh(new T.BoxGeometry(sx, sy, sz), material);
+        m.position.set(x, y, z);
+        parent.add(m);
+        return m;
+      }
+
+      /* ---------- frame ---------- */
+      var frameG = new T.Group(); root.add(frameG);
+      addBox(frameG, 0.55, 1.35, 0.55, ANVIL_FACE - 0.55, AXIS_Y - 0.35, 0, frameMat);
+      addBox(frameG, 0.70, 1.55, 0.60, 0.55, AXIS_Y - 0.55, 0, frameMat);
+      var bow = new T.Mesh(new T.TorusGeometry(1.55, 0.28, 16, 48, Math.PI), frameMat);
+      bow.rotation.z = Math.PI / 2; bow.rotation.y = Math.PI / 2;
+      bow.position.set((ANVIL_FACE - 0.2 + 0.55) / 2, AXIS_Y - 1.75, 0);
+      frameG.add(bow);
+      addBox(frameG, 2.6, 0.42, 0.55, (ANVIL_FACE + 0.4) / 2, AXIS_Y - 0.95, 0, frameMat);
+
+      /* ---------- anvil ---------- */
+      var anvilBody = cyl(FACE_R * 0.95, FACE_R * 0.95, 0.70, 32, chrome);
+      layX(anvilBody); anvilBody.position.set(ANVIL_FACE - 0.38, AXIS_Y, 0); root.add(anvilBody);
+      var anvilFace = cyl(FACE_R, FACE_R, 0.05, 48, chrome);
+      layX(anvilFace); anvilFace.position.set(ANVIL_FACE - 0.02, AXIS_Y, 0); root.add(anvilFace);
+      var anvilDisc = new T.Mesh(
+        new T.CircleGeometry(FACE_R * 0.92, 48),
+        new T.MeshPhongMaterial({ color: 0xf4f7fb, shininess: 160, specular: 0xffffff })
+      );
+      anvilDisc.position.set(ANVIL_FACE + 0.005, AXIS_Y, 0);
+      anvilDisc.rotation.y = Math.PI / 2; root.add(anvilDisc);
+
+      /* ---------- plain metal sleeve + red datum ---------- */
+      var sleeve = cyl(SLEEVE_R, SLEEVE_R, SLEEVE_LEN, 48, steel);
+      layX(sleeve);
+      sleeve.position.set(sleeveStart + SLEEVE_LEN / 2, AXIS_Y, 0);
+      root.add(sleeve);
+      var collar = cyl(SLEEVE_R + 0.06, SLEEVE_R + 0.02, 0.22, 32, steelDark);
+      layX(collar); collar.position.set(sleeveStart + 0.05, AXIS_Y, 0); root.add(collar);
+      var lock = cyl(0.48, 0.48, 0.22, 8, steelDark);
+      layX(lock); lock.position.set(sleeveStart - 0.18, AXIS_Y, 0); root.add(lock);
+      addBox(root, SLEEVE_LEN * 0.92, 0.016, 0.016,
+        sleeveStart + SLEEVE_LEN / 2, AXIS_Y, SLEEVE_R + 0.008, accent);
+
+      /* ===== FLAT main-scale plate — perfect numbering for the board ===== */
+      var mainScaleMap = makeMainScalePlate();
+      var mainScale = new T.Mesh(
+        new T.PlaneGeometry(SLEEVE_LEN * 0.95, 0.72),
+        new T.MeshBasicMaterial({ map: mainScaleMap, transparent: true })
+      );
+      mainScale.position.set(
+        sleeveStart + SLEEVE_LEN / 2,
+        AXIS_Y + SLEEVE_R + 0.42,
+        SLEEVE_R + 0.04
+      );
+      root.add(mainScale);
+      /* small leader line from plate down to sleeve datum */
+      addBox(root, 0.012, 0.28, 0.012,
+        sleeveStart + SLEEVE_LEN / 2, AXIS_Y + SLEEVE_R + 0.14, SLEEVE_R + 0.03, accent);
+
+      /* ---------- moving spindle / thimble ---------- */
+      var moving = new T.Group(); root.add(moving);
+
+      var spindleLen = 2.85;
+      var spindle = cyl(0.175, 0.175, spindleLen, 28, chrome);
+      layX(spindle); spindle.position.set(spindleLen / 2, AXIS_Y, 0); moving.add(spindle);
+      var spindleFace = cyl(FACE_R, FACE_R, 0.05, 48, chrome);
+      layX(spindleFace); spindleFace.position.set(0.02, AXIS_Y, 0); moving.add(spindleFace);
+      var spindleDisc = new T.Mesh(
+        new T.CircleGeometry(FACE_R * 0.92, 48),
+        new T.MeshPhongMaterial({ color: 0xf4f7fb, shininess: 160, specular: 0xffffff })
+      );
+      spindleDisc.position.set(-0.01, AXIS_Y, 0);
+      spindleDisc.rotation.y = -Math.PI / 2; moving.add(spindleDisc);
+
+      for (var ti = 0; ti < 18; ti++){
+        var ring = new T.Mesh(new T.TorusGeometry(0.185, 0.022, 8, 20), steelDark);
+        ring.rotation.y = Math.PI / 2;
+        ring.position.set(0.55 + ti * 0.085, AXIS_Y, 0);
+        moving.add(ring);
+      }
+
+      var thimbleSpin = new T.Group();
+      thimbleSpin.position.set(0, AXIS_Y, 0);
+      moving.add(thimbleSpin);
+
+      var thimbleLen = 1.70;
+      var thimbleLocalX = sleeveStart + SLEEVE_LEN * 0.55 + thimbleLen / 2;
+      var thimble = cyl(THIMBLE_R * 0.96, THIMBLE_R, thimbleLen, 48, steel);
+      layX(thimble); thimble.position.set(thimbleLocalX, 0, 0); thimbleSpin.add(thimble);
+      var bevel = cyl(THIMBLE_R * 0.96, SLEEVE_R + 0.02, 0.10, 48, steelDark);
+      layX(bevel); bevel.position.set(thimbleLocalX - thimbleLen / 2 - 0.02, 0, 0); thimbleSpin.add(bevel);
+
+      for (var k = 0; k < 28; k++){
+        var ang = (k / 28) * Math.PI * 2;
+        var ridge = new T.Mesh(new T.BoxGeometry(0.55, 0.032, 0.032), steelDark);
+        ridge.position.set(
+          thimbleLocalX + 0.15,
+          Math.sin(ang) * (THIMBLE_R + 0.008),
+          Math.cos(ang) * (THIMBLE_R + 0.008)
+        );
+        ridge.rotation.x = ang;
+        thimbleSpin.add(ridge);
+      }
+
+      var ratchet = cyl(0.30, 0.34, 0.58, 12, steelDark);
+      layX(ratchet); ratchet.position.set(thimbleLocalX + thimbleLen / 2 + 0.35, AXIS_Y, 0); moving.add(ratchet);
+      for (var rg = 0; rg < 4; rg++){
+        addBox(moving, 0.025, 0.48, 0.10,
+          thimbleLocalX + thimbleLen / 2 + 0.18 + rg * 0.09, AXIS_Y, 0.22, frameMat);
+      }
+      var ratchetCap = cyl(0.22, 0.28, 0.18, 16, steel);
+      layX(ratchetCap); ratchetCap.position.set(thimbleLocalX + thimbleLen / 2 + 0.72, AXIS_Y, 0); moving.add(ratchetCap);
+
+      moving.position.x = ANVIL_FACE;
+
+      /* ===== FLAT circular-scale window (fixed to instrument front) =====
+         Numbers stay crisp; texture redraws so the CSR sits on the red line. */
+      var circCanvas = document.createElement('canvas');
+      circCanvas.width = 512; circCanvas.height = 1024;
+      var circTex = new T.CanvasTexture(circCanvas);
+      circTex.minFilter = T.LinearFilter;
+      circTex.magFilter = T.LinearFilter;
+      var circMat = new T.MeshBasicMaterial({ map: circTex, transparent: true });
+      var circPlate = new T.Mesh(new T.PlaneGeometry(0.95, 1.85), circMat);
+      /* sits just in front of the thimble bevel — readable on the board */
+      circPlate.position.set(
+        sleeveStart + SLEEVE_LEN * 0.72,
+        AXIS_Y,
+        THIMBLE_R + 0.55
+      );
+      root.add(circPlate);
+
+      var circTitle = makeTextSprite('Circular scale', {
+        w: 512, h: 96, font: 'bold 44px Calibri, Segoe UI, sans-serif',
+        color: '#f5c542', pw: 0.95, ph: 0.18
+      });
+      circTitle.position.set(
+        sleeveStart + SLEEVE_LEN * 0.72,
+        AXIS_Y + 1.05,
+        THIMBLE_R + 0.56
+      );
+      root.add(circTitle);
+
+      var mainTitle = makeTextSprite('Main scale (mm)', {
+        w: 640, h: 96, font: 'bold 44px Calibri, Segoe UI, sans-serif',
+        color: '#f5c542', pw: 1.4, ph: 0.18
+      });
+      mainTitle.position.set(
+        sleeveStart + SLEEVE_LEN / 2,
+        AXIS_Y + SLEEVE_R + 0.85,
+        SLEEVE_R + 0.05
+      );
+      root.add(mainTitle);
+
+      /* ---------- specimens ---------- */
+      var specimen = new T.Group(); root.add(specimen);
+      var wireMesh = cyl(0.12, 0.12, 1.55, 24, copper);
+      wireMesh.position.set(0, AXIS_Y, 0); specimen.add(wireMesh);
+      var wireTop = new T.Mesh(new T.SphereGeometry(0.12, 12, 8), copper);
+      wireTop.position.set(0, AXIS_Y + 0.75, 0); specimen.add(wireTop);
+      var wireBot = new T.Mesh(new T.SphereGeometry(0.12, 12, 8), copper);
+      wireBot.position.set(0, AXIS_Y - 0.75, 0); specimen.add(wireBot);
+      var plateMesh = addBox(specimen, 0.3, 1.15, 0.95, 0, AXIS_Y, 0, glassMat);
+      var plateEdge = addBox(specimen, 0.32, 1.15, 0.04, 0, AXIS_Y, 0.48,
+        new T.MeshPhongMaterial({ color: 0xc5eef8, shininess: 80, transparent: true, opacity: 0.7 }));
+      var ballMesh = new T.Mesh(new T.SphereGeometry(0.4, 48, 32), ballMat);
+      ballMesh.position.set(0, AXIS_Y, 0); specimen.add(ballMesh);
+      wireMesh.visible = wireTop.visible = wireBot.visible = false;
+      plateMesh.visible = plateEdge.visible = false;
+      ballMesh.visible = false;
+
+      var tgt = { gap: 0.84, reading: 0.84, csr: 34, thick: 0.84, name: 'Thin wire', divs: 50 };
+      var cur = { gap: 0.84, rot: 0 };
+      var lastCsrDrawn = -999;
+
+      function drawCircScale(csr, divs){
+        divs = divs || 50;
+        csr = ((Math.round(csr) % divs) + divs) % divs;
+        if (csr === lastCsrDrawn && divs === tgt.divs) return;
+        lastCsrDrawn = csr;
+        var ctx = circCanvas.getContext('2d');
+        var W = circCanvas.width, H = circCanvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        /* card background */
+        ctx.fillStyle = 'rgba(18, 24, 40, 0.92)';
+        roundRect(ctx, 8, 8, W - 16, H - 16, 28);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(245,197,66,0.45)';
+        ctx.lineWidth = 4;
+        roundRect(ctx, 8, 8, W - 16, H - 16, 28);
+        ctx.stroke();
+
+        /* sleeve stub on the left */
+        ctx.fillStyle = '#c9d3e1';
+        ctx.fillRect(24, H * 0.35, W * 0.28, H * 0.30);
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(24, H * 0.5);
+        ctx.lineTo(W * 0.34, H * 0.5);
+        ctx.stroke();
+
+        /* thimble body */
+        ctx.fillStyle = '#b3c0d2';
+        ctx.fillRect(W * 0.32, 40, W * 0.60, H - 80);
+
+        var span = 4;
+        var gap = (H - 160) / (span * 2);
+        var midY = H * 0.5;
+        var x0 = W * 0.36;
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        for (var k = -span; k <= span; k++){
+          var d = (((csr + k) % divs) + divs) % divs;
+          var y = midY - k * gap;
+          var major = d % 5 === 0;
+          var here = k === 0;
+          ctx.strokeStyle = here ? '#c0392b' : '#1a2433';
+          ctx.lineWidth = here ? 7 : (major ? 5 : 3);
+          ctx.beginPath();
+          ctx.moveTo(x0, y);
+          ctx.lineTo(x0 + (major || here ? 110 : 70), y);
+          ctx.stroke();
+          if (major || here){
+            ctx.fillStyle = here ? '#c0392b' : '#1a2433';
+            ctx.font = 'bold ' + (here ? 64 : 52) + 'px Calibri, Segoe UI, sans-serif';
+            ctx.fillText(String(d), x0 + 125, y);
+          }
+        }
+
+        /* highlight chip */
+        ctx.fillStyle = 'rgba(192,57,43,0.12)';
+        ctx.fillRect(x0 - 8, midY - gap * 0.55, W * 0.55, gap * 1.1);
+
+        circTex.needsUpdate = true;
+      }
+
+      function applyVisual(){
+        var g = Math.max(0, cur.gap) * GAP_SCALE;
+        moving.position.x = ANVIL_FACE + g;
+        thimbleSpin.rotation.x = -cur.rot;
+
+        /* circular plate stays aligned with the thimble front as jaws open */
+        circPlate.position.x = sleeveStart + SLEEVE_LEN * 0.55 + g + 0.15;
+        circTitle.position.x = circPlate.position.x;
+
+        drawCircScale(tgt.csr, tgt.divs);
+
+        var thick = Math.max(0, tgt.thick);
+        var show = thick > 0.001;
+        specimen.visible = show;
+        if (!show) return;
+
+        specimen.position.x = ANVIL_FACE + g / 2;
+        var name = (tgt.name || '').toLowerCase();
+        var isWire = name.indexOf('wire') >= 0;
+        var isPlate = name.indexOf('plate') >= 0 || name.indexOf('glass') >= 0;
+        var isBall = name.indexOf('ball') >= 0;
+        if (!isWire && !isPlate && !isBall) isWire = true;
+
+        wireMesh.visible = wireTop.visible = wireBot.visible = isWire;
+        plateMesh.visible = plateEdge.visible = isPlate;
+        ballMesh.visible = isBall;
+
+        var diam = Math.max(0.06, g);
+        if (isWire){
+          var r = diam / 2;
+          wireMesh.geometry.dispose();
+          wireMesh.geometry = new T.CylinderGeometry(r, r, 1.55, 28);
+          wireTop.geometry.dispose();
+          wireTop.geometry = new T.SphereGeometry(r, 14, 10);
+          wireBot.geometry.dispose();
+          wireBot.geometry = new T.SphereGeometry(r, 14, 10);
+          wireTop.position.set(0, AXIS_Y + 0.75, 0);
+          wireBot.position.set(0, AXIS_Y - 0.75, 0);
+          wireMesh.position.set(0, AXIS_Y, 0);
+        }
+        if (isPlate){
+          plateMesh.scale.set(Math.max(0.08, diam), 1, 1);
+          plateEdge.scale.set(Math.max(0.08, diam) * 1.05, 1, 1);
+          plateMesh.position.set(0, AXIS_Y, 0);
+          plateEdge.position.set(0, AXIS_Y, 0.48);
+        }
+        if (isBall){
+          ballMesh.geometry.dispose();
+          ballMesh.geometry = new T.SphereGeometry(diam / 2, 48, 32);
+          ballMesh.position.set(0, AXIS_Y, 0);
+        }
+      }
+
+      frame.__sgUpdate = function(s){
+        if (!s) return;
+        if (typeof s.gap === 'number') tgt.gap = Math.max(0, s.gap);
+        if (typeof s.reading === 'number') tgt.reading = s.reading;
+        if (typeof s.csr === 'number') { tgt.csr = s.csr; lastCsrDrawn = -999; }
+        if (typeof s.thick === 'number') tgt.thick = Math.max(0, s.thick);
+        if (typeof s.name === 'string') tgt.name = s.name;
+        if (typeof s.divs === 'number' && s.divs > 0) tgt.divs = s.divs;
+      };
+
+      frame.__sgOrbit = function(dyaw, dpitch){
+        view.yaw += dyaw || 0;
+        view.pitch = clamp(view.pitch + (dpitch || 0), -0.75, 0.85);
+        applyOrbit();
+      };
+
+      frame.__sgView = function(name){
+        name = (name || 'reset').toLowerCase();
+        if (name === 'left') { view.yaw -= 0.35; applyOrbit(); return; }
+        if (name === 'right') { view.yaw += 0.35; applyOrbit(); return; }
+        if (name === 'up') { view.pitch = clamp(view.pitch + 0.2, -0.75, 0.85); applyOrbit(); return; }
+        if (name === 'down') { view.pitch = clamp(view.pitch - 0.2, -0.75, 0.85); applyOrbit(); return; }
+        if (name === 'jaws'){
+          view.yaw = -0.95; view.pitch = 0.22; applyOrbit();
+          setCam( -1.2, 1.4, 6.2, -1.4, 0.35, 0 );
+          return;
+        }
+        if (name === 'scales'){
+          view.yaw = 0.05; view.pitch = 0.02; applyOrbit();
+          setCam( 1.4, 1.2, 5.4, 1.3, 0.4, 0.4 );
+          return;
+        }
+        /* reset / overall */
+        view.yaw = -0.28; view.pitch = 0.10; applyOrbit();
+        setCam( 0.2, 1.85, 9.0, 0.35, 0.2, 0 );
+      };
+
+      function setCam(x, y, z, lx, ly, lz){
+        camGoal.x = x; camGoal.y = y; camGoal.z = z;
+        camGoal.lx = lx; camGoal.ly = ly; camGoal.lz = lz;
+      }
+      function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+      try {
+        var rig = frame.closest('[data-sim="screw-gauge"]');
+        if (rig && typeof rig.__sgRefresh === 'function') rig.__sgRefresh();
+      } catch (e) {}
+
+      applyVisual();
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+
+      (function loop(){
+        requestAnimationFrame(loop);
+        cur.gap += (tgt.gap - cur.gap) * 0.2;
+        var targetRot = (tgt.csr / Math.max(1, tgt.divs)) * Math.PI * 2;
+        var d = targetRot - cur.rot;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        cur.rot += d * 0.24;
+
+        cam.x += (camGoal.x - cam.x) * 0.12;
+        cam.y += (camGoal.y - cam.y) * 0.12;
+        cam.z += (camGoal.z - cam.z) * 0.12;
+        cam.lx += (camGoal.lx - cam.lx) * 0.12;
+        cam.ly += (camGoal.ly - cam.ly) * 0.12;
+        cam.lz += (camGoal.lz - cam.lz) * 0.12;
+        snapCam();
+
+        applyVisual();
+        renderer.render(scene, camera);
+      })();
+
+      /* ---------- texture / sprite helpers ---------- */
+      function makeMainScalePlate(){
+        var c = document.createElement('canvas');
+        c.width = 1536; c.height = 384;
+        var ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, c.width, c.height);
+
+        ctx.fillStyle = 'rgba(18, 24, 40, 0.92)';
+        roundRect(ctx, 6, 6, c.width - 12, c.height - 12, 24);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(245,197,66,0.45)';
+        ctx.lineWidth = 4;
+        roundRect(ctx, 6, 6, c.width - 12, c.height - 12, 24);
+        ctx.stroke();
+
+        /* scale body */
+        var pad = 48;
+        var yMid = c.height * 0.58;
+        ctx.fillStyle = '#d5dde8';
+        roundRect(ctx, pad, yMid - 55, c.width - pad * 2, 110, 12);
+        ctx.fill();
+
+        /* red datum */
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(pad + 10, yMid);
+        ctx.lineTo(c.width - pad - 10, yMid);
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (var mm = 0; mm <= 6; mm++){
+          var x = pad + 40 + mm * ((c.width - pad * 2 - 80) / 6);
+          ctx.strokeStyle = '#1a2433';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(x, yMid);
+          ctx.lineTo(x, yMid - 48);
+          ctx.stroke();
+          ctx.fillStyle = '#f4f7fb';
+          ctx.font = 'bold 72px Calibri, Segoe UI, sans-serif';
+          ctx.fillText(String(mm), x, yMid - 95);
+          if (mm < 6){
+            var hx = x + ((c.width - pad * 2 - 80) / 12);
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(hx, yMid);
+            ctx.lineTo(hx, yMid + 40);
+            ctx.stroke();
+          }
+        }
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        tex.magFilter = T.LinearFilter;
+        tex.anisotropy = 8;
+        return tex;
+      }
+
+      function makeTextSprite(text, opt){
+        var c = document.createElement('canvas');
+        c.width = opt.w; c.height = opt.h;
+        var ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.fillStyle = opt.color;
+        ctx.font = opt.font;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, c.width / 2, c.height / 2);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(
+          new T.PlaneGeometry(opt.pw, opt.ph),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+        );
+        return m;
+      }
+
+      function roundRect(ctx, x, y, w, h, r){
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+    }
+  });
+})();
+
+</script>
+
+<!-- Screw-gauge instrument (no-op without [data-sim="screw-gauge"]) -->
+<script>
+(function(){
+  var rigs = [].slice.call(document.querySelectorAll('[data-sim="screw-gauge"]'));
+  if (!rigs.length) return;
+  window.addEventListener('load', function(){
+    rigs.forEach(function(r){
+      try { init(r); } catch (e) { /* a dead rig must never blank the slide */ }
+    });
+  });
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var UI = "Calibri, Candara, 'Segoe UI', sans-serif";
+  var MINUS = '−';
+
+  function num(el, name, dflt){
+    if (!el) return dflt;
+    var v = parseFloat(el.getAttribute(name));
+    return isNaN(v) ? dflt : v;
+  }
+
+  function init(root){
+    var pitch  = num(root, 'data-pitch', 0.5);
+    var divs   = Math.round(num(root, 'data-divisions', 50));
+    var lc     = pitch / divs;
+    var dp     = lc < 0.005 ? 3 : 2;
+    var maxPos = Math.round(num(root, 'data-open-max', 6) / lc);
+    var slack  = Math.round(num(root, 'data-open-gap', 1.2) / lc);
+
+    var movers  = [].slice.call(root.querySelectorAll('[data-sg-move]'));
+    var ticks   = root.querySelector('.sg-csr-ticks');
+    var objRect = root.querySelector('.sg-object');
+    var objTag  = root.querySelector('.sg-object-label');
+
+    var tkX = num(ticks, 'data-x', 156);
+    var tkY = num(ticks, 'data-y', 470);
+    var tkG = num(ticks, 'data-gap', 22);
+    var tkN = Math.round(num(ticks, 'data-span', 4));
+    var objU = num(objRect, 'data-u', 40);
+
+    var objBtns = [].slice.call(root.querySelectorAll('[data-act="obj"]'));
+    var zeBtns  = [].slice.call(root.querySelectorAll('[data-act="ze"]'));
+
+    var on0 = root.querySelector('[data-act="obj"].is-on');
+    var on1 = root.querySelector('[data-act="ze"].is-on');
+    var st = {
+      t:    num(on0, 'data-thick', 0),
+      name: (on0 && on0.getAttribute('data-name')) || '',
+      ze:   Math.round(num(on1, 'data-val', 0)),
+      pos:  0
+    };
+
+    function contact(){ return Math.round(st.t / lc) + st.ze; }
+    function clamp(p){ return Math.max(contact(), Math.min(maxPos, p)); }
+    st.pos = contact();
+
+    function mm(v){ return (v < 0 ? MINUS : '') + Math.abs(v).toFixed(dp) + ' mm'; }
+    function out(key, text){
+      var cells = root.querySelectorAll('[data-out="' + key + '"]');
+      for (var i = 0; i < cells.length; i++) cells[i].textContent = text;
+    }
+    function mark(group, hit){
+      group.forEach(function(b){ b.classList.toggle('is-on', b === hit); });
+    }
+
+    function drawTicks(csr){
+      if (!ticks) return;
+      while (ticks.firstChild) ticks.removeChild(ticks.firstChild);
+      for (var k = -tkN; k <= tkN; k++){
+        var d = (((csr + k) % divs) + divs) % divs;
+        var y = tkY - k * tkG;
+        var major = d % 5 === 0;
+        var here = k === 0;
+        var ln = document.createElementNS(NS, 'line');
+        ln.setAttribute('x1', tkX);
+        ln.setAttribute('y1', y);
+        ln.setAttribute('x2', tkX + (major || here ? 54 : 34));
+        ln.setAttribute('y2', y);
+        ln.setAttribute('stroke', here ? '#c0392b' : '#16202f');
+        ln.setAttribute('stroke-width', here ? 5 : (major ? 4 : 2.6));
+        ln.setAttribute('stroke-linecap', 'round');
+        ticks.appendChild(ln);
+        if (major || here){
+          var tx = document.createElementNS(NS, 'text');
+          tx.setAttribute('x', tkX + 66);
+          tx.setAttribute('y', y + 9);
+          tx.setAttribute('font-family', UI);
+          tx.setAttribute('font-size', '26');
+          tx.setAttribute('font-weight', '700');
+          tx.setAttribute('fill', here ? '#c0392b' : '#16202f');
+          tx.textContent = d;
+          ticks.appendChild(tx);
+        }
+      }
+    }
+
+    function render(){
+      var R    = st.pos * lc;                       // what the scales indicate
+      var zeMm = st.ze * lc;
+      var gap  = Math.max(0, R - zeMm);             // the true jaw opening
+      var csr  = ((st.pos % divs) + divs) % divs;
+      var msr  = R >= 0 ? Math.floor(R / pitch + 1e-9) * pitch : 0;
+
+      movers.forEach(function(g){
+        var v = g.getAttribute('data-sg-move') === 'jaw' ? gap : R;
+        g.setAttribute('transform',
+          'translate(' + (v * num(g, 'data-u', 58)).toFixed(2) + ',0)');
+      });
+      if (objRect){
+        objRect.setAttribute('width', Math.max(0, st.t * objU).toFixed(2));
+        objRect.setAttribute('opacity', st.t > 0 ? '1' : '0');
+      }
+      if (objTag){
+        objTag.setAttribute('opacity', st.t > 0 ? '1' : '0');
+        objTag.textContent = st.name;
+      }
+      drawTicks(csr);
+
+      out('pitch', pitch.toFixed(dp) + ' mm');
+      out('divs',  String(divs));
+      out('lc',    mm(lc));
+      out('object', st.t > 0 ? st.name : 'nothing (jaws closed)');
+      out('msr',   R >= 0 ? mm(msr) : mm(0));
+      out('csr',   csr + ' ' + '×' + ' ' + lc.toFixed(dp) + ' = ' + mm(csr * lc));
+      out('obs',   mm(R));
+      out('ze',    st.ze === 0 ? 'nil'
+                 : (st.ze > 0 ? '+' : MINUS) + Math.abs(st.ze) + ' div = '
+                   + (st.ze > 0 ? '+' : MINUS) + Math.abs(st.ze * lc).toFixed(dp) + ' mm');
+      out('true',  mm(R - zeMm));
+
+      var note;
+      if (R < 0){
+        note = 'The thimble has not even reached the main-scale zero: the circular zero sits '
+             + Math.abs(st.ze) + ' divisions ABOVE the line, so the reading is '
+             + MINUS + '(' + divs + ' ' + MINUS + ' ' + csr + ') ' + '×' + ' L.C.';
+      } else if (st.pos > contact()){
+        note = 'Jaws still open by ' + mm(gap - st.t) + ' more than the object — keep closing.';
+      } else if (st.t > 0){
+        note = 'The ratchet is slipping: the jaws are just gripping the ' + st.name + '.';
+      } else {
+        note = st.ze === 0
+          ? 'Jaws closed on nothing and the scales read zero — no zero error.'
+          : 'Jaws closed on nothing, yet the scales do not read zero — this IS the zero error.';
+      }
+      out('note', note);
+
+      /* drive a nested Three.js micrometer, if the fragment asked for one */
+      var frame3d = root.querySelector('[data-three="screw-gauge"]');
+      if (frame3d && typeof frame3d.__sgUpdate === 'function'){
+        try {
+          frame3d.__sgUpdate({
+            gap: gap,
+            reading: R,
+            csr: csr,
+            thick: st.t,
+            name: st.name || '',
+            ze: st.ze,
+            pitch: pitch,
+            divs: divs,
+            lc: lc
+          });
+        } catch (e) { /* 3D is decoration — never break the panel */ }
+      }
+    }
+
+    function act(btn){
+      var a = btn.getAttribute('data-act');
+      if (a === 'obj'){
+        st.t = num(btn, 'data-thick', 0);
+        st.name = btn.getAttribute('data-name') || '';
+        mark(objBtns, btn);
+        st.pos = clamp(contact() + slack);
+      } else if (a === 'ze'){
+        var was = contact();
+        st.ze = Math.round(num(btn, 'data-val', 0));
+        mark(zeBtns, btn);
+        st.pos = clamp(st.pos + (contact() - was));
+      } else if (a === 'turn'){
+        st.pos = clamp(st.pos + Math.round(num(btn, 'data-val', 0)));
+      } else if (a === 'close'){
+        st.pos = contact();
+      } else if (a === 'open'){
+        st.pos = clamp(contact() + slack);
+      } else if (a === 'orbit' || a === 'view'){
+        var frame3d = root.querySelector('[data-three="screw-gauge"]');
+        if (frame3d){
+          try {
+            if (a === 'orbit' && typeof frame3d.__sgOrbit === 'function'){
+              frame3d.__sgOrbit(num(btn, 'data-yaw', 0), num(btn, 'data-pitch', 0));
+            } else if (a === 'view' && typeof frame3d.__sgView === 'function'){
+              frame3d.__sgView(btn.getAttribute('data-val') || 'reset');
+            }
+          } catch (e) {}
+        }
+        return; /* view-only — do not re-render scale readouts */
+      }
+      render();
+    }
+
+    [].slice.call(root.querySelectorAll('[data-act]')).forEach(function(btn){
+      btn.addEventListener('click', function(){ act(btn); });
+    });
+
+    root.__sgRefresh = render;
+    render();
+  }
+})();
+</script>
+
+<!-- Standalone fallback controller (rule 6) — LAST -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;      // host present -> stand down
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+
+</body>
+</html>

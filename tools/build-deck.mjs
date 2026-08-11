@@ -920,7 +920,20 @@ if (texCount) {
               (texFailed ? `, ${texFailed} FAILED` : '') +
               (katex ? '' : '  (katex not installed — run: npm i -D katex)'));
 }
-if (expected && pageCount !== expected) {
-  console.error(`  !! page count ${pageCount} != source slide count ${expected}`);
+/* A declared merge folds several morph frames into one page; a declared split
+   opens a two-up board into one page per question. Both are conversions, not
+   losses, and validate-deck.mjs accounts for them the same way — so the build
+   has to as well, or a legitimately split deck can never be assembled. */
+const mergedCount = Array.isArray(manifest.merged_slides) ? manifest.merged_slides.length : 0;
+const splitExtra = (Array.isArray(manifest.split_slides) ? manifest.split_slides : [])
+  .reduce((a, s) => a + Math.max(0, (Number(s.into) || 2) - 1), 0);
+const accounted = pageCount + mergedCount - splitExtra;
+if (mergedCount || splitExtra) {
+  console.log(`  count ${pageCount} pages${mergedCount ? ` + ${mergedCount} declared merge(s)` : ''}` +
+              `${splitExtra ? ` - ${splitExtra} declared split page(s)` : ''} = ${accounted}`);
+}
+if (expected && accounted !== expected) {
+  console.error(`  !! page count ${pageCount} != source slide count ${expected}` +
+                (mergedCount || splitExtra ? ` (after declared merges/splits: ${accounted})` : ''));
   process.exit(2);
 }

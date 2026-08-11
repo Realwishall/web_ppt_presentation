@@ -34,11 +34,7 @@ serviceAccountKey.json
 # PPT conversion pipeline scratch (rendered slide PNGs, extracted media).
 # plan.json and fragments/ are the durable artefacts — commit those explicitly.
 __pycache__/
-build/_smoke/
-build/*/slide-*.png
-build/*/media/
-build/*/*.html
-build/status.csv
+build/
 
 # Local split JSON / HTML data and extra files (excluded from version control)
 JSON_split_data/
@@ -51,3 +47,4 @@ JSON_split_html/28 - Optics/desktop.ini
 JSON_split_html/33 - Semi Conductor/~$26 - Semi Conductor - 03 PN junction Diode.pptx
 JSON_split_html/33 - Semi Conductor/~$26 - Semi Conductor - 02 Semiconductor.pptx
 JSON_split_html/13 - Fluid/~$07 - Fluid - 05 Surface Tension - Bearable.pptx
+build/03-mech-l2-04-distance-and-catching/manifest.json

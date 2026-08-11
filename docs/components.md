@@ -289,6 +289,8 @@ Long derivations: wrap in `.two-col` and continue in the second column.
 SVG rules: `viewBox` only, no fixed width/height, `currentColor` or the deck
 tokens for strokes, labels as real `<text>`. `.figure-frame.plain` removes the
 card; `.figure-frame.tall` allows a taller figure.
+`.scene-frame.tall` is a 4:3 WebGL box; `.scene-frame.short` is a wide one
+capped at 40vh, for a scene that shares its board with the words underneath.
 
 ### `question` (MCQ)
 
@@ -390,6 +392,10 @@ that element becomes visible.
 | `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
 | `data-three="solid-angle-cone"` | `<div class="scene-frame">` | cone of semi-vertical angle α on a sphere |
 | `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
+| `data-three="xy-independence"` | `<div class="scene-frame">` | a particle on a curved path with its x-shadow and y-shadow sliding along the two axes |
+| `data-three="vector-rva"` | `<div class="scene-frame">` | `r` from the origin, `v` along the tangent, `a` — the three vectors of a position-vector question |
+| `data-three="tangent-normal"` | `<div class="scene-frame">` | a fixed `a` resolved into `a_t` (along `v`) and `a_c` (perpendicular) as the particle rounds a bend |
+| `data-three="curvature-circle"` | `<div class="scene-frame">` | the osculating circle riding an ellipse — tight at a sharp bend, wide where the path is nearly straight |
 
 ```html
 <div class="step">
@@ -403,6 +409,17 @@ that element becomes visible.
   <div class="scene-fallback">A sphere seen from its centre — surface 4πr².</div>
 </div>
 ```
+
+The four **plane scenes** (`xy-independence`, `vector-rva`, `tangent-normal`,
+`curvature-circle`) share one stage — an x-y plane in perspective with a slow
+yaw — so a motion-in-a-plane deck reads as one system. They are the only place
+in the vocabulary where a *figure moves*, and they are worth it exactly where
+the still figure cannot show the thing: the two shadows moving independently,
+`a_t` flipping sign as the particle crosses the crest, the osculating circle
+growing as the bend eases. Give each one a `.scene-fallback` carrying the
+still version of the same figure (the source slide's own diagram, as
+`svg.dgm`), because that is what prints and what a no-WebGL room sees. They
+render nothing but geometry — no lesson text lives inside the canvas.
 
 For the live instrument, nest the 3D frame in `.sim-stage` and keep the existing
 SVG as `.scene-fallback` (PDF / no-WebGL). The sim engine calls
@@ -552,6 +569,7 @@ and what the teacher reads if the player is blocked.
 | `h2.heading` + `<span class="inline-lead">` | Heading with a trailing plain-text lead |
 | `<span class="paren">(contd.)</span>` | Small parenthetical inside a heading |
 | `.two-col` `.split-6040` `.split-4060` `.split-fill` `.grid3` `.grid4` | Multi-column layouts |
+| `.rail-split` + `.formula-rail` | A pinned reference column of already-taught formulas beside the working board. The rail is reference, **never** stepped — it was on screen from the first moment of the source slide |
 | `.stack` `.row` | Generic vertical / horizontal flow |
 | `.card` | Bordered surface |
 | `.box-grid` + `.info-box` | Focus boxes; each runs grow → content → shrink, one press per beat |

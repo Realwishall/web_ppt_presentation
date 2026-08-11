@@ -23,6 +23,10 @@
       if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
       if (kind === 'solid-angle') { startSolidAngle(frame, w, h); return; }
       if (kind === 'solid-angle-cone') { startSolidAngleCone(frame, w, h); return; }
+      if (kind === 'xy-independence' || kind === 'vector-rva' ||
+          kind === 'tangent-normal' || kind === 'curvature-circle'){
+        startPlane2D(frame, w, h, kind); return;
+      }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -68,6 +72,338 @@
         requestAnimationFrame(loop);
         group.rotation.y += 0.0022;
         group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
+        renderer.render(scene, camera);
+      })();
+    }
+
+
+    /* ------------------------------------------------ 2D-motion plane scenes ---
+       Four WebGL scenes for a "motion in a plane" deck. All four share one
+       stage: an x-y plane drawn in perspective with a slow yaw, so the class
+       reads it as a plane in space rather than a flat picture.
+
+         xy-independence   a particle on a curved path with its x-shadow and
+                           y-shadow sliding along the two axes — the chapter's
+                           whole thesis, that 2D motion is two 1D motions
+         vector-rva        r from the origin, v along the tangent, a — the
+                           three vectors of a position-vector question
+         tangent-normal    a fixed a resolved into a_t (along v) and a_c
+                           (perpendicular to v) as the particle rounds a bend
+         curvature-circle  the osculating circle riding an ellipse: tight where
+                           the path bends hard, wide where it is nearly straight
+
+       Nothing here carries an idea on its own — every frame ships a
+       .scene-fallback that prints (rule 20).                                  */
+    function startPlane2D(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
+          GREEN = 0x34d399, RED = 0xfb7185, INK = 0xf4f7fb;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0.15, 9.6);
+      camera.lookAt(0, 0, 0);
+      /* pull back just far enough that the whole 8x5 plane is in the box,
+         whatever shape the box is — a short wide frame must not shrink the
+         figure to the middle third of the board. */
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(3.05 / t2, 4.45 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+      var world = new T.Group();          /* plane coords: x 0..8, y 0..5 */
+      world.position.set(-4, -2.5, 0);
+      group.add(world);
+
+      var X1 = 8, Y1 = 5;
+
+      /* squared paper, kept faint — it is texture, not information */
+      var gp = [], i;
+      for (i = 0; i <= X1 * 2; i++) gp.push(i / 2, 0, 0, i / 2, Y1, 0);
+      for (i = 0; i <= Y1 * 2; i++) gp.push(0, i / 2, 0, X1, i / 2, 0);
+      var ggeo = new T.BufferGeometry();
+      ggeo.setAttribute('position', new T.Float32BufferAttribute(gp, 3));
+      world.add(new T.LineSegments(ggeo, new T.LineBasicMaterial({
+        color: INDIGO, transparent: true, opacity: 0.13 })));
+
+      function line(pts, color, opacity, width){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true, opacity: opacity === undefined ? 1 : opacity }));
+      }
+
+      function cone(color, size, at, dir){
+        var m = new T.Mesh(new T.ConeGeometry(size, size * 2.6, 12),
+          new T.MeshBasicMaterial({ color: color }));
+        m.position.copy(at);
+        m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.clone().normalize());
+        return m;
+      }
+
+      /* an arrow that can be re-aimed every frame: unit cylinder + cone */
+      function makeArrow(color, rad, opacity){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color,
+          transparent: opacity !== undefined, opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.04){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+
+      /* classroom-size label drawn to a canvas — no webfont, no external asset */
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 74px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 2, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        return m;
+      }
+
+      /* axes with arrowheads — scaffolding, drawn once */
+      world.add(line([new T.Vector3(0, 0, 0), new T.Vector3(X1, 0, 0)], INK, 0.55));
+      world.add(line([new T.Vector3(0, 0, 0), new T.Vector3(0, Y1, 0)], INK, 0.55));
+      world.add(cone(INK, 0.09, new T.Vector3(X1, 0, 0), new T.Vector3(1, 0, 0)));
+      world.add(cone(INK, 0.09, new T.Vector3(0, Y1, 0), new T.Vector3(0, 1, 0)));
+      var lx = label('x', '#f4f7fb', 0.5); lx.position.set(X1 - 0.15, -0.42, 0); world.add(lx);
+      var ly = label('y', '#f4f7fb', 0.5); ly.position.set(-0.42, Y1 - 0.12, 0); world.add(ly);
+
+      /* -------------------------------------------------------- the paths -- */
+      function parabola(u){ return new T.Vector3(0.5 + 7 * u, 0.35 + 4.1 * (4 * u * (1 - u)), 0); }
+      function parabolaD(u){ return new T.Vector3(7, 4.1 * 4 * (1 - 2 * u), 0); }
+      function hill(u){ return new T.Vector3(0.6 + 6.8 * u, 1.0 + 3.0 * Math.sin(Math.PI * u), 0); }
+      function hillD(u){ return new T.Vector3(6.8, 3.0 * Math.PI * Math.cos(Math.PI * u), 0); }
+      var EA = 2.7, EB = 2.05, ECX = 4.0, ECY = 2.4;
+      function ellipse(th){ return new T.Vector3(ECX + EA * Math.cos(th), ECY + EB * Math.sin(th), 0); }
+
+      function polyline(fn, n, from, to, color, opacity){
+        var pts = [];
+        for (var k = 0; k <= n; k++) pts.push(fn(from + (to - from) * k / n));
+        return line(pts, color, opacity);
+      }
+
+      var mover = new T.Mesh(new T.SphereGeometry(0.15, 20, 14),
+        new T.MeshBasicMaterial({ color: GOLD }));
+      world.add(mover);
+
+      var parts = {};      /* per-kind objects, updated in the loop */
+
+      if (kind === 'xy-independence'){
+        var TRAIL = 160;
+        var tpos = new Float32Array((TRAIL + 1) * 3);
+        var tgeo = new T.BufferGeometry();
+        tgeo.setAttribute('position', new T.BufferAttribute(tpos, 3));
+        tgeo.setDrawRange(0, 0);
+        world.add(new T.Line(tgeo, new T.LineBasicMaterial({ color: GOLD })));
+
+        var shX = new T.Mesh(new T.SphereGeometry(0.13, 16, 12),
+          new T.MeshBasicMaterial({ color: CYAN }));
+        var shY = new T.Mesh(new T.SphereGeometry(0.13, 16, 12),
+          new T.MeshBasicMaterial({ color: INDIGO }));
+        world.add(shX); world.add(shY);
+
+        function liveLine(color, opacity){
+          var g = new T.BufferGeometry();
+          g.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3));
+          var l = new T.Line(g, new T.LineBasicMaterial({
+            color: color, transparent: true, opacity: opacity }));
+          world.add(l);
+          return l;
+        }
+        var gX = liveLine(CYAN, 0.5), gY = liveLine(INDIGO, 0.5);
+        var lbX = label('x(t)', '#56ccf2', 0.44);
+        var lbY = label('y(t)', '#7c8cff', 0.44);
+        world.add(lbX); world.add(lbY);
+        parts = { tgeo: tgeo, tpos: tpos, TRAIL: TRAIL, shX: shX, shY: shY,
+                  gX: gX, gY: gY, lbX: lbX, lbY: lbY };
+      }
+
+      if (kind === 'vector-rva'){
+        world.add(polyline(parabola, 90, 0, 1, INK, 0.28));
+        var aR = makeArrow(INDIGO, 0.045), aV = makeArrow(GOLD, 0.05), aA = makeArrow(RED, 0.05);
+        world.add(aR); world.add(aV); world.add(aA);
+        var lR = label('r', '#7c8cff', 0.46),
+            lV = label('v', '#f5c542', 0.46),
+            lA = label('a', '#fb7185', 0.46);
+        world.add(lR); world.add(lV); world.add(lA);
+        parts = { aR: aR, aV: aV, aA: aA, lR: lR, lV: lV, lA: lA };
+      }
+
+      if (kind === 'tangent-normal'){
+        world.add(polyline(hill, 90, 0, 1, INK, 0.3));
+        var tV = makeArrow(GOLD, 0.05), tA = makeArrow(RED, 0.05),
+            tT = makeArrow(GREEN, 0.045), tC = makeArrow(CYAN, 0.045);
+        world.add(tV); world.add(tA); world.add(tT); world.add(tC);
+        function dash(color){
+          var g = new T.BufferGeometry();
+          g.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3));
+          var l = new T.Line(g, new T.LineBasicMaterial({
+            color: color, transparent: true, opacity: 0.4 }));
+          world.add(l); return l;
+        }
+        var d1 = dash(GREEN), d2 = dash(CYAN);
+        var lv = label('v', '#f5c542', 0.44),
+            la = label('a', '#fb7185', 0.44),
+            lt = label('at', '#34d399', 0.44),
+            lc = label('ac', '#56ccf2', 0.44);
+        world.add(lv); world.add(la); world.add(lt); world.add(lc);
+        parts = { tV: tV, tA: tA, tT: tT, tC: tC, d1: d1, d2: d2,
+                  lv: lv, la: la, lt: lt, lc: lc };
+      }
+
+      if (kind === 'curvature-circle'){
+        world.add(polyline(ellipse, 160, 0, Math.PI * 2, INK, 0.32));
+        var N = 96;
+        var cpos = new Float32Array((N + 1) * 3);
+        var cgeo = new T.BufferGeometry();
+        cgeo.setAttribute('position', new T.BufferAttribute(cpos, 3));
+        world.add(new T.Line(cgeo, new T.LineBasicMaterial({
+          color: INDIGO, transparent: true, opacity: 0.85 })));
+        var centre = new T.Mesh(new T.SphereGeometry(0.1, 14, 10),
+          new T.MeshBasicMaterial({ color: INDIGO }));
+        world.add(centre);
+        var rgeo = new T.BufferGeometry();
+        rgeo.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3));
+        world.add(new T.Line(rgeo, new T.LineBasicMaterial({
+          color: CYAN, transparent: true, opacity: 0.8 })));
+        var lr = label('r', '#56ccf2', 0.44);
+        world.add(lr);
+        parts = { cpos: cpos, cgeo: cgeo, N: N, centre: centre, rgeo: rgeo, lr: lr };
+      }
+
+      /* ------------------------------------------------------------ loop -- */
+      var t0 = Date.now(), lastW = w, lastH = h;
+      function setLive(geo, ax, ay, bx, by){
+        var a = geo.getAttribute('position');
+        a.array[0] = ax; a.array[1] = ay; a.array[2] = 0;
+        a.array[3] = bx; a.array[4] = by; a.array[5] = 0;
+        a.needsUpdate = true;
+      }
+
+      (function loop(){
+        requestAnimationFrame(loop);
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;                    /* page hidden — don't burn a GPU */
+        if (nw !== lastW || nh !== lastH){
+          lastW = nw; lastH = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        var t = (Date.now() - t0) / 1000;
+        group.rotation.y = Math.sin(t / 7) * 0.13;
+        group.rotation.x = -0.06;
+
+        if (kind === 'xy-independence'){
+          var cycle = 7.0, u = Math.min(Math.max((t % cycle) / 5.4, 0), 1);
+          var P = parabola(u);
+          mover.position.copy(P);
+          parts.shX.position.set(P.x, 0, 0);
+          parts.shY.position.set(0, P.y, 0);
+          setLive(parts.gX.geometry, P.x, P.y, P.x, 0);
+          setLive(parts.gY.geometry, P.x, P.y, 0, P.y);
+          parts.lbX.position.set(P.x, -0.45, 0);
+          parts.lbY.position.set(-0.55, P.y, 0);
+          var n = Math.max(1, Math.round(u * parts.TRAIL));
+          for (var q = 0; q <= n; q++){
+            var Q = parabola(u * q / n);
+            parts.tpos[q * 3] = Q.x; parts.tpos[q * 3 + 1] = Q.y; parts.tpos[q * 3 + 2] = 0;
+          }
+          parts.tgeo.setDrawRange(0, n + 1);
+          parts.tgeo.getAttribute('position').needsUpdate = true;
+          parts.tgeo.computeBoundingSphere();
+        }
+
+        if (kind === 'vector-rva'){
+          var uu = (Math.sin(t / 3.4 - Math.PI / 2) + 1) / 2;
+          var Pv = parabola(uu), D = parabolaD(uu);
+          var V = D.clone().multiplyScalar(0.19);
+          var A = new T.Vector3(0, -4.1 * 8, 0).multiplyScalar(0.032);
+          mover.position.copy(Pv);
+          aim(parts.aR, new T.Vector3(0, 0, 0), Pv);
+          aim(parts.aV, Pv, Pv.clone().add(V));
+          aim(parts.aA, Pv, Pv.clone().add(A));
+          parts.lR.position.copy(Pv.clone().multiplyScalar(0.5).add(new T.Vector3(-0.32, 0.3, 0)));
+          parts.lV.position.copy(Pv.clone().add(V).add(new T.Vector3(0.3, 0.22, 0)));
+          parts.lA.position.copy(Pv.clone().add(A).add(new T.Vector3(0.34, -0.16, 0)));
+        }
+
+        if (kind === 'tangent-normal'){
+          var uh = (Math.sin(t / 4.2 - Math.PI / 2) + 1) / 2;
+          var Ph = hill(uh), Dh = hillD(uh).normalize();
+          var Nh = new T.Vector3(-Dh.y, Dh.x, 0);
+          var Av = new T.Vector3(0.62, 1.5, 0);            /* a: fixed, as on the board */
+          var at = Dh.clone().multiplyScalar(Av.dot(Dh));
+          var ac = Nh.clone().multiplyScalar(Av.dot(Nh));
+          mover.position.copy(Ph);
+          aim(parts.tV, Ph, Ph.clone().add(Dh.clone().multiplyScalar(1.5)));
+          aim(parts.tA, Ph, Ph.clone().add(Av));
+          aim(parts.tT, Ph, Ph.clone().add(at));
+          aim(parts.tC, Ph, Ph.clone().add(ac));
+          var tip = Ph.clone().add(Av);
+          var ta = Ph.clone().add(at), ca = Ph.clone().add(ac);
+          setLive(parts.d1.geometry, ta.x, ta.y, tip.x, tip.y);
+          setLive(parts.d2.geometry, ca.x, ca.y, tip.x, tip.y);
+          parts.lv.position.copy(Ph.clone().add(Dh.clone().multiplyScalar(1.75)).add(new T.Vector3(0, 0.28, 0)));
+          parts.la.position.copy(tip.clone().add(new T.Vector3(0.3, 0.24, 0)));
+          parts.lt.position.copy(ta.clone().add(at.clone().normalize().multiplyScalar(0.42))
+            .add(new T.Vector3(0, -0.26, 0)));
+          parts.lc.position.copy(ca.clone().add(ac.clone().normalize().multiplyScalar(0.42))
+            .add(new T.Vector3(-0.3, 0.1, 0)));
+        }
+
+        if (kind === 'curvature-circle'){
+          var th = t * 0.42;
+          var Pe = ellipse(th);
+          var dx = -EA * Math.sin(th), dy = EB * Math.cos(th);
+          var ddx = -EA * Math.cos(th), ddy = -EB * Math.sin(th);
+          var sp = Math.sqrt(dx * dx + dy * dy);
+          var cross = dx * ddy - dy * ddx;
+          var R = Math.abs(cross) < 1e-4 ? 40 : (sp * sp * sp) / Math.abs(cross);
+          var nx = -dy / sp, ny = dx / sp;
+          if (cross < 0){ nx = -nx; ny = -ny; }
+          var cx = Pe.x + nx * R, cy = Pe.y + ny * R;
+          mover.position.copy(Pe);
+          parts.centre.position.set(cx, cy, 0);
+          for (var s = 0; s <= parts.N; s++){
+            var a2 = s / parts.N * Math.PI * 2;
+            parts.cpos[s * 3] = cx + R * Math.cos(a2);
+            parts.cpos[s * 3 + 1] = cy + R * Math.sin(a2);
+            parts.cpos[s * 3 + 2] = 0;
+          }
+          parts.cgeo.getAttribute('position').needsUpdate = true;
+          parts.cgeo.computeBoundingSphere();
+          setLive(parts.rgeo, cx, cy, Pe.x, Pe.y);
+          parts.lr.position.set((cx + Pe.x) / 2 + 0.24, (cy + Pe.y) / 2 + 0.2, 0);
+        }
+
         renderer.render(scene, camera);
       })();
     }
