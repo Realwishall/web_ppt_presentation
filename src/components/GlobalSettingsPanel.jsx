@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Globe, X, Loader2, Plus, Trash2, BookOpen, FileUp, Image as ImageIcon,
   Save, ClipboardPaste, Check, AlertTriangle, Tag, Eye, ArrowUp, ArrowDown,
-  Power,
+  Power, Keyboard,
 } from 'lucide-react'
 import { makeId } from '../lib/content'
 import {
@@ -12,21 +12,25 @@ import {
   parseChapterTopicMap, chaptersToMapText, normaliseChapters,
   EXPORT_VARIABLES, findPlaceholders, substituteVariables,
   FIT_MODES, LOGO_ANCHORS, MAX_COVER_PAGES,
-  EMPTY_CURRICULUM, EMPTY_COVER_PAGES, EMPTY_BRANDING,
+  EMPTY_CURRICULUM, EMPTY_COVER_PAGES, EMPTY_BRANDING, EMPTY_SHORTCUTS,
+  getShortcuts, saveShortcuts, shortcutLabel, shortcutFromKeydown,
+  DEFAULT_ADD_PAGE_SHORTCUT,
 } from '../lib/globalSettings'
 
 const TABS = [
   { id: 'chapters', label: 'Chapters & Topics', icon: BookOpen },
   { id: 'covers', label: 'Start & End Pages', icon: FileUp },
   { id: 'branding', label: 'Logo', icon: ImageIcon },
+  { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
 ]
 
 /**
  * Global settings — one modal for everything shared by every batch of THIS
  * account: the chapter & topic map, the cover pages wrapped around every
- * export, and the logo stamped on every sheet. Each tab owns its own Firestore
- * document so a slow tab never blocks the others and a save touches only what
- * changed. Nothing auto-saves: teaching data is worth an explicit click.
+ * export, the logo stamped on every sheet, and presenter keyboard shortcuts.
+ * Each tab owns its own Firestore document so a slow tab never blocks the
+ * others and a save touches only what changed. Nothing auto-saves: teaching
+ * data is worth an explicit click.
  */
 export default function GlobalSettingsPanel({ onClose }) {
   const [tab, setTab] = useState('chapters')
@@ -41,7 +45,7 @@ export default function GlobalSettingsPanel({ onClose }) {
           <Globe className="h-4 w-4 text-violet-400" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-slate-100">Global settings</div>
-            <div className="truncate text-xs text-slate-500">Shared by every batch in your account</div>
+            <div className="truncate text-xs text-slate-500">Shared by every batch in your account — chapters, covers, logo, shortcuts</div>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-white/10 hover:text-slate-200">
             <X className="h-5 w-5" />
@@ -71,6 +75,7 @@ export default function GlobalSettingsPanel({ onClose }) {
           {tab === 'chapters' && <ChaptersTab />}
           {tab === 'covers' && <CoversTab />}
           {tab === 'branding' && <BrandingTab />}
+          {tab === 'shortcuts' && <ShortcutsTab />}
         </div>
       </div>
     </div>
@@ -699,6 +704,112 @@ function BrandingTab() {
 
       <SaveBar onSave={save} busy={busy} dirty={dirty} saved={saved} error={err}>
         {anchorLabel} of every exported sheet · applies to all batches
+      </SaveBar>
+    </div>
+  )
+}
+
+/* ─────────────────────────── Shortcuts ─────────────────────────── */
+
+function ShortcutsTab() {
+  const [data, setData, loadErr] = useDoc(() => getShortcuts(), EMPTY_SHORTCUTS, [])
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [err, setErr] = useState('')
+  const [dirty, setDirty] = useState(false)
+  const [capturing, setCapturing] = useState(false)
+  const [bindErr, setBindErr] = useState('')
+
+  useEffect(() => { if (!saved) return undefined; const t = setTimeout(() => setSaved(false), 2500); return () => clearTimeout(t) }, [saved])
+
+  useEffect(() => {
+    if (!capturing) return undefined
+    const onKey = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.key === 'Escape') {
+        setCapturing(false)
+        setBindErr('')
+        return
+      }
+      const result = shortcutFromKeydown(e)
+      if (!result.ok) { setBindErr(result.error); return }
+      setData((prev) => ({ ...(prev || EMPTY_SHORTCUTS), addPage: result.shortcut }))
+      setDirty(true)
+      setCapturing(false)
+      setBindErr('')
+      setErr('')
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [capturing, setData])
+
+  if (!data) return <Spinner />
+
+  async function save() {
+    setBusy(true); setErr('')
+    try {
+      await saveShortcuts(data)
+      setDirty(false); setSaved(true)
+    } catch (e) { setErr(e.message || 'Save failed.') } finally { setBusy(false) }
+  }
+
+  const label = shortcutLabel(data.addPage)
+
+  return (
+    <div>
+      {loadErr && <Banner tone="red">{loadErr}</Banner>}
+      <Banner tone="violet">
+        These keys apply in <b>presentation mode</b> on every machine you sign into. Default for a new blank page is <b>N</b>.
+      </Banner>
+
+      <div className="rounded-xl border border-white/10 bg-white/4 p-3">
+        <SectionTitle icon={Keyboard}>Add a blank page</SectionTitle>
+        <p className="mb-3 text-xs text-slate-400">
+          Press this key during the lesson to insert a blank page after the current one.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <kbd className={`grid min-w-[2.75rem] place-items-center rounded-lg border px-3 py-2 text-sm font-bold tracking-wide ${
+            capturing
+              ? 'border-violet-400 bg-violet-500/20 text-violet-100'
+              : 'border-white/15 bg-black/30 text-slate-100'
+          }`}>
+            {capturing ? '…' : label}
+          </kbd>
+          <button
+            type="button"
+            onClick={() => { setCapturing((v) => !v); setBindErr('') }}
+            className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+              capturing
+                ? 'bg-violet-600 text-white'
+                : 'border border-white/10 text-slate-300 hover:border-violet-400/40 hover:text-white'
+            }`}
+          >
+            {capturing ? 'Listening…' : 'Change shortcut'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCapturing(false)
+              setBindErr('')
+              setData({ ...data, addPage: { ...DEFAULT_ADD_PAGE_SHORTCUT } })
+              setDirty(true)
+            }}
+            className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-white/20 hover:text-white"
+          >
+            Reset to N
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">
+          {capturing
+            ? 'Press the key you want — Esc to cancel. Ctrl / Shift / Alt / Cmd can be held as modifiers.'
+            : 'Arrows, Space, Page Up/Down and Enter stay reserved for moving through the lesson.'}
+        </p>
+        {bindErr && <p className="mt-1.5 text-xs text-red-400">{bindErr}</p>}
+      </div>
+
+      <SaveBar onSave={save} busy={busy} dirty={dirty} saved={saved} error={err}>
+        Add blank page is {label} · used by every presentation
       </SaveBar>
     </div>
   )

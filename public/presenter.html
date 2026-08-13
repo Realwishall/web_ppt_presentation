@@ -58,6 +58,9 @@
     --board-radius:0;
     --board-shadow:none;
   }
+  /* A 4K radial gradient is a full-viewport blur the panel GPU re-paints
+     under the board. Lite drops it; the board itself is already opaque. */
+  html.lite body{background:var(--bg)}
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{
@@ -106,6 +109,7 @@
   }
   .board{
     position:relative;width:100%;height:100%;   /* no aspect cap — take it all */
+    contain:layout paint;
     border-radius:var(--board-radius);overflow:hidden;
     /* Only the gradient lives in CSS now. The paper pattern (dots / graph /
        axes) is painted per page on #paper by one painter that the board, the
@@ -706,11 +710,11 @@
     </div>
   </div>
 
-  <!-- Presenter settings — shortcuts that live on this machine -->
+  <!-- Presenter settings — shortcuts also live in Global settings (account-wide) -->
   <div class="overlay" id="settingsOverlay">
     <div class="dialog form" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <h2 id="settingsTitle">Presenter settings</h2>
-      <p>These stay on this computer. They apply every time you teach from this browser.</p>
+      <p>These follow your account (Global settings on the dashboard). Changing them here updates the same setting.</p>
 
       <div class="field">
         <label>Add a blank page</label>
@@ -756,8 +760,9 @@
   const deckFrames = {};   // deckId → iframe element
   // stroke = { mode:"draw"|"erase", color, width, pts:[{x,y}] }
 
-  /* Add-page shortcut — default N, remapped in Presenter settings.
-     Stored as a small object so Ctrl/Shift/Alt/Cmd can be part of it. */
+  /* Add-page shortcut — default N, remapped in Global settings (or here).
+     Cached locally so the first keypress works before the host answers;
+     the host's Firestore copy is the source of truth across machines. */
   const DEFAULT_ADD_PAGE = { key:"n", ctrl:false, shift:false, alt:false, meta:false };
   function loadAddPageShortcut(){
     try{
@@ -772,12 +777,18 @@
     }catch(err){ return Object.assign({}, DEFAULT_ADD_PAGE); }
   }
   let addPageShortcut = loadAddPageShortcut();
-  function saveAddPageShortcut(s){
+  function applyAddPageShortcut(s){
+    if(!s || typeof s.key !== "string" || !s.key) return;
     addPageShortcut = {
       key: String(s.key).toLowerCase(),
       ctrl: !!s.ctrl, shift: !!s.shift, alt: !!s.alt, meta: !!s.meta
     };
     try{ localStorage.setItem("lf-shortcut-add-page", JSON.stringify(addPageShortcut)); }catch(err){}
+    if(typeof renderRails === "function") renderRails();
+  }
+  function saveAddPageShortcut(s){
+    applyAddPageShortcut(s);
+    tellHost({ type:"lf-save-shortcuts", addPage: addPageShortcut });
   }
   function shortcutLabel(s){
     const bits = [];
@@ -1113,16 +1124,14 @@
      room can tell, while the per-frame cost falls with the pixel count.
 
      So: pick the largest device-pixel ratio that keeps the surface inside a
-     budget. On a 1080p board this changes nothing (2.0 Mpx < the budget, so
-     the real dpr is used); on 4K it lands the surface near 2560x1440. */
+     budget. On a 1080p board this changes nothing (the real dpr is used);
+     on a 4K MaxHub it lands the surface near 1600×875. */
   const PERF = {
-    MAX_INK_PX: 2_600_000,        // ~2560x1440 — the ink surface budget
-    MIN_INK_DPR: 0.75,            // floor: a 4K panel at 100% scaling still
-                                  // asks for 7.5 Mpx of CSS pixels alone, and
-                                  // strokes are 3-8px wide on a board watched
-                                  // from three metres — three quarters of a
-                                  // device pixel per CSS pixel is invisible
-                                  // there and nearly halves the fill cost
+    MAX_INK_PX: 2_200_000,        // ~1920x1140 — laptop / 1080p budget
+    MAX_INK_PX_LITE: 1_400_000,   // ~1600x875 — 4K classroom panel budget
+    MIN_INK_DPR: 0.4,             // MUST stay below sqrt(budget / 4K CSS) or a
+                                  // 3840×2160 board at dpr=1 (MaxHub default)
+                                  // ignores the budget and allocates ~4.7 Mpx
     LITE_AT_PX: 3_500_000,        // board bigger than this ⇒ big-panel mode
     /* The freeze raster is the one image this panel encodes on a keypress,
        and it is the only one that used to ignore every budget here: it took
@@ -1137,9 +1146,16 @@
   };
   function inkDpr(w, h){
     const dpr = window.devicePixelRatio || 1;
-    const want = w * h * dpr * dpr;
-    if(!(want > PERF.MAX_INK_PX)) return dpr;
-    return Math.max(PERF.MIN_INK_DPR, dpr * Math.sqrt(PERF.MAX_INK_PX / want));
+    const cssPx = w * h;
+    if(!(cssPx > 0)) return dpr;
+    /* Cap is sqrt(budget / CSS pixels) — independent of the reported dpr.
+       The old MIN_INK_DPR of 0.75 was HIGHER than that cap on a 4K panel at
+       100% scaling, so the budget was silently ignored and every blit copied
+       twice as many pixels as intended. Note 3 does not have this layer. */
+    const lite = document.documentElement.classList.contains("lite");
+    const budget = lite ? PERF.MAX_INK_PX_LITE : PERF.MAX_INK_PX;
+    const cap = Math.sqrt(budget / cssPx);
+    return Math.min(dpr, Math.max(PERF.MIN_INK_DPR, cap));
   }
   /* Big-panel mode is a preference when the teacher has set one, and a
      measurement otherwise — so a 4K panel gets it without anyone knowing it
@@ -1159,6 +1175,7 @@
     litePref = !document.documentElement.classList.contains("lite");
     try{ localStorage.setItem("lf-lite", litePref ? "1" : "0"); }catch(err){}
     document.documentElement.classList.toggle("lite", litePref);
+    sizeCanvas();
     toast(litePref
       ? "Big-panel mode on — plainer chrome, faster board"
       : "Big-panel mode off");
@@ -1167,8 +1184,8 @@
   function sizeCanvas(){
     const r = board.getBoundingClientRect();
     if(r.width === 0) return;
-    const dpr = inkDpr(r.width, r.height);
     applyLite(r.width, r.height);
+    const dpr = inkDpr(r.width, r.height);
     boardW = r.width; boardH = r.height;
     inkRect = { left:r.left, top:r.top };
     const pw = Math.round(r.width * dpr), ph = Math.round(r.height * dpr);
@@ -1235,14 +1252,64 @@
      Anything that is not ink (the eraser's ring, the laser's trail) is painted
      on afterwards, and is therefore gone again on the next blit without ever
      needing a clear of its own. */
-  function present(){
+  /* Overlay (laser / eraser ring) lives on the live canvas. Wiping it used
+     to copy the whole ink buffer every frame — on a 4K panel that is the
+     lag you feel while the laser is moving. Restore only the dirty rect. */
+  let overlayDirty = null;   // surface-pixel rect, or null = full canvas
+  function present(opt){
+    const dirty = opt && opt.dirty;
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
     ctx.globalCompositeOperation = "copy";
-    ctx.drawImage(buf, 0, 0);
+    if(dirty && dirty.w > 0 && dirty.h > 0){
+      ctx.drawImage(buf, dirty.x, dirty.y, dirty.w, dirty.h,
+                         dirty.x, dirty.y, dirty.w, dirty.h);
+    } else {
+      ctx.drawImage(buf, 0, 0);
+      overlayDirty = null;
+    }
     ctx.restore();
     ctx.globalCompositeOperation = "source-over";
     paintOverlay();
+  }
+  function cssRectToSurf(x, y, w, h){
+    const sx = boardW ? canvas.width / boardW : 1;
+    const sy = boardH ? canvas.height / boardH : 1;
+    const x0 = Math.max(0, Math.floor(x * sx));
+    const y0 = Math.max(0, Math.floor(y * sy));
+    const x1 = Math.min(canvas.width,  Math.ceil((x + w) * sx));
+    const y1 = Math.min(canvas.height, Math.ceil((y + h) * sy));
+    return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+  }
+  function unionSurf(a, b){
+    if(!a) return b;
+    if(!b) return a;
+    const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+    const x1 = Math.max(a.x + a.w, b.x + b.w), y1 = Math.max(a.y + a.h, b.y + b.h);
+    return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+  }
+  function overlayBounds(){
+    const pad = 28 * scaleFor(boardW);
+    if(state.tool === "laser" && laserPts.length){
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for(let i = 0; i < laserPts.length; i++){
+        const p = laserPts[i];
+        if(p.x < x0) x0 = p.x; if(p.y < y0) y0 = p.y;
+        if(p.x > x1) x1 = p.x; if(p.y > y1) y1 = p.y;
+      }
+      return cssRectToSurf(x0 - pad, y0 - pad, (x1 - x0) + pad * 2, (y1 - y0) + pad * 2);
+    }
+    if(ringTools[state.tool] && hoverPt){
+      const r = Math.max(3, eraseRadiusPx()) + pad;
+      return cssRectToSurf(hoverPt.x - r, hoverPt.y - r, r * 2, r * 2);
+    }
+    return null;
+  }
+  function presentOverlay(){
+    const next = overlayBounds();
+    const dirty = unionSurf(overlayDirty, next);
+    present(dirty ? { dirty } : undefined);
+    overlayDirty = next;
   }
 
   /* The area eraser bites the buffer once per point, and a 120Hz pen delivers a
@@ -1957,6 +2024,36 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     }catch(err){ /* a frozen library must never blank a slide */ }
   }
 
+  /* Classroom 4K boards (MaxHub) give the deck a huge CSS box. Three.js then
+     builds an antialiased buffer at devicePixelRatio (up to 2) and every
+     [data-three] scene keeps a render loop even on hidden slides. Note 3
+     does not do that. Cap the ratio and skip renders for pages that are
+     not on screen — this runs BEFORE the deck's load handler starts scenes. */
+  function installGfxCap(){
+    var T = window.THREE;
+    if(!T || !T.WebGLRenderer || T.WebGLRenderer.__lfCap) return;
+    T.WebGLRenderer.__lfCap = true;
+    var proto = T.WebGLRenderer.prototype;
+    var cssPx = Math.max(1, (window.innerWidth || 1) * (window.innerHeight || 1));
+    var capDpr = cssPx > 2000000 ? 1 : Math.min(window.devicePixelRatio || 1, 1.25);
+    var origPR = proto.setPixelRatio;
+    proto.setPixelRatio = function(r){
+      return origPR.call(this, Math.min(Number(r) || 1, capDpr));
+    };
+    var origRender = proto.render;
+    proto.render = function(scene, camera){
+      var el = this.domElement;
+      if(el){
+        if(document.hidden) return;
+        var page = el.closest && el.closest(".page");
+        if(page && !page.classList.contains("__lf-active")) return;
+      }
+      return origRender.call(this, scene, camera);
+    };
+  }
+  installGfxCap();
+  window.addEventListener("load", installGfxCap);
+
   /* ── AUTO-FIT ENGINE ───────────────────────────────────────────────────
      Why this exists: a deck sizes itself with vmin/clamp (or a fixed px
      canvas), which is only correct if the browser has already settled on
@@ -2582,6 +2679,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       // export memory. Re-sent whenever the host reloads them, so the export
       // form is never stale.
       state.exportCfg = d.config || null;
+    } else if(d.type === "lf-shortcuts"){
+      // Account-wide add-page key from Global settings.
+      if(d.addPage) applyAddPageShortcut(d.addPage);
+      if(typeof refreshShortcutUI === "function") refreshShortcutUI();
     } else if(d.type === "lf-restore-session" && d.payload){
       // the host's copy wins — don't also offer the local crash snapshot
       recoverOffered = true;
@@ -3222,6 +3323,25 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
   const appendInkPoint = p => appendInkPoints([p]);
 
+  /* MaxHub IR touch fires pointerrawupdate at 200+ Hz. Each event used to
+     stroke() a multi-megapixel canvas of its own. Coalesce touch to one
+     path per frame; a real pen still takes the raw path for latency. */
+  let inkQ = [], inkQRaf = 0;
+  function feedInk(e){
+    const pts = eventPoints(e);
+    if(e.pointerType === "pen"){
+      appendInkPoints(pts);
+      return;
+    }
+    for(let i = 0; i < pts.length; i++) inkQ.push(pts[i]);
+    if(inkQRaf) return;
+    inkQRaf = requestAnimationFrame(() => {
+      inkQRaf = 0;
+      const list = inkQ; inkQ = [];
+      if(list.length) appendInkPoints(list);
+    });
+  }
+
   /* Points carried by one pointer event, coalesced list included. */
   function eventPoints(e){
     const raw = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : null;
@@ -3267,7 +3387,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
   const scheduleRing = () => {
     if(hoverRaf) return;
-    hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; present(); });
+    hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; presentOverlay(); });
   };
 
   /* Everything on the board that is not ink. Painted after each blit and gone
@@ -3315,7 +3435,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       if(!l || now - l.t > 30) laserPts.push({ x:hoverPt.x, y:hoverPt.y, t:now });
     }
     while(laserPts.length && now - laserPts[0].t > LASER_MS) laserPts.shift();
-    present();                                   // blit wipes the old trail
+    presentOverlay();                                   // blit wipes the old trail
     if(laserPts.length) laserRaf = requestAnimationFrame(laserTick);
   }
   function pushLaser(p){
@@ -3399,7 +3519,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     e.preventDefault();
     // pointerrawupdate already fed this stroke this frame — see below.
     if(rawFed) return;
-    appendInkPoints(eventPoints(e));
+    feedInk(e);
   });
 
   /* ── pointerrawupdate ──────────────────────────
@@ -3414,10 +3534,14 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      already fed for this gesture and pointermove stops appending; when it
      does not, the flag stays false and pointermove is still the whole story.
      The flag is cleared on every pointerdown, so a pen that raw-updates and a
-     finger that does not can take turns on the same board. */
+     finger that does not can take turns on the same board.
+
+     Touch (MaxHub IR, finger) is excluded: those devices flood this event
+     faster than a frame, and feeding them here is how ink felt sticky. */
   if(window.PointerEvent && "onpointerrawupdate" in window){
     canvas.addEventListener("pointerrawupdate", e => {
       if(!activeStroke) return;
+      if(e.pointerType !== "pen") return;
       rawFed = true;
       hoverPt = posFromClient(e.clientX, e.clientY);
       appendInkPoints(eventPoints(e));
@@ -3426,6 +3550,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
 
   ["pointerup","pointercancel"].forEach(ev =>
     canvas.addEventListener(ev, () => {
+      if(inkQRaf){ cancelAnimationFrame(inkQRaf); inkQRaf = 0; }
+      if(inkQ.length){ appendInkPoints(inkQ); inkQ = []; }
       endStroke();
       erasing = false;
       if(eraseRaf){ cancelAnimationFrame(eraseRaf); eraseRaf = 0; redraw(); }

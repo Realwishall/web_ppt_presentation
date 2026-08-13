@@ -6,6 +6,7 @@
 //   users/{uid}/appSettings/exportPages/pages/{pageId}     { role, name, fit, html | chunks }
 //   users/{uid}/appSettings/exportPages/pages/{pageId}/parts/{i}  ← chunks for big HTML
 //   users/{uid}/appSettings/branding                       { logo…, anchor, offsetXPct, offsetYPct }
+//   users/{uid}/appSettings/shortcuts                      { addPage{ key, ctrl, shift, alt, meta } }
 //
 // "Global" here means global to ONE ACCOUNT: one teacher runs every one of
 // their batches off the same chapter map, the same cover pages and the same
@@ -46,6 +47,10 @@ const partsCol = (pageId) => ucol('appSettings', 'exportPages', 'pages', pageId,
 const partRef = (pageId, i) =>
   udoc('appSettings', 'exportPages', 'pages', pageId, 'parts', String(i))
 const brandingRef = () => udoc('appSettings', 'branding')
+const shortcutsRef = () => udoc('appSettings', 'shortcuts')
+
+/** Same key the presenter panel caches so a remapped N still works if Firestore is slow. */
+export const ADD_PAGE_SHORTCUT_CACHE = 'lf-shortcut-add-page'
 
 // ───────────────────────── chapter & topic map ─────────────────────────
 
@@ -510,6 +515,142 @@ export function fileToLogoDataUrl(file) {
     }
     reader.readAsDataURL(file)
   })
+}
+
+// ───────────────────────── presenter shortcuts ─────────────────────────
+
+/**
+ * Keys the board already uses for navigation / dialogs, so they cannot be
+ * rebound as "add a blank page". Letters that pick tools (P/E/L/…) are
+ * allowed — binding add-page to P simply takes precedence over the pen.
+ */
+export const BLOCKED_BIND_KEYS = new Set([
+  'escape', 'tab', 'enter', 'backspace', 'delete',
+  'arrowleft', 'arrowright', 'arrowup', 'arrowdown',
+  'pageup', 'pagedown', 'space', 'home', 'end',
+])
+
+export const DEFAULT_ADD_PAGE_SHORTCUT = {
+  key: 'n', ctrl: false, shift: false, alt: false, meta: false,
+}
+
+export const EMPTY_SHORTCUTS = {
+  addPage: { ...DEFAULT_ADD_PAGE_SHORTCUT },
+}
+
+export function eventKeyName(e) {
+  if (e.key === ' ' || e.key === 'Spacebar') return 'space'
+  return String(e.key || '').toLowerCase()
+}
+
+export function normaliseShortcut(o) {
+  if (!o || typeof o.key !== 'string' || !o.key) return { ...DEFAULT_ADD_PAGE_SHORTCUT }
+  return {
+    key: String(o.key).toLowerCase(),
+    ctrl: !!o.ctrl,
+    shift: !!o.shift,
+    alt: !!o.alt,
+    meta: !!o.meta,
+  }
+}
+
+export function shortcutLabel(s) {
+  const sc = normaliseShortcut(s)
+  const bits = []
+  if (sc.ctrl) bits.push('Ctrl')
+  if (sc.alt) bits.push('Alt')
+  if (sc.shift) bits.push('Shift')
+  if (sc.meta) bits.push('Cmd')
+  const k = !sc.key ? '?' : (sc.key.length === 1 ? sc.key.toUpperCase() : sc.key)
+  bits.push(k)
+  return bits.join('+')
+}
+
+export function matchesShortcut(e, s) {
+  const sc = normaliseShortcut(s)
+  if (!sc.key) return false
+  return eventKeyName(e) === sc.key
+    && !!e.ctrlKey === !!sc.ctrl
+    && !!e.shiftKey === !!sc.shift
+    && !!e.altKey === !!sc.alt
+    && !!e.metaKey === !!sc.meta
+}
+
+/**
+ * Turn a keydown into a bindable shortcut, or explain why that key is reserved.
+ * Keep this in step with public/presenter.html (applyCapturedShortcut).
+ */
+export function shortcutFromKeydown(e) {
+  const name = eventKeyName(e)
+  if (
+    BLOCKED_BIND_KEYS.has(name)
+    || name === 'control' || name === 'shift' || name === 'alt' || name === 'meta'
+  ) {
+    return { ok: false, error: 'That key is reserved — pick a letter or digit.' }
+  }
+  if (name === 'z' && (e.ctrlKey || e.metaKey)) {
+    return { ok: false, error: 'Ctrl+Z is undo — pick another shortcut.' }
+  }
+  return {
+    ok: true,
+    shortcut: {
+      key: name,
+      ctrl: !!e.ctrlKey,
+      shift: !!e.shiftKey,
+      alt: !!e.altKey,
+      meta: !!e.metaKey,
+    },
+  }
+}
+
+export function cacheAddPageShortcut(s) {
+  try {
+    localStorage.setItem(ADD_PAGE_SHORTCUT_CACHE, JSON.stringify(normaliseShortcut(s)))
+  } catch { /* private mode / blocked storage */ }
+}
+
+export function readCachedAddPageShortcut() {
+  try {
+    const raw = localStorage.getItem(ADD_PAGE_SHORTCUT_CACHE)
+    if (!raw) return null
+    return normaliseShortcut(JSON.parse(raw))
+  } catch {
+    return null
+  }
+}
+
+export async function getShortcuts() {
+  try {
+    const snap = await getDoc(shortcutsRef())
+    if (snap.exists() && snap.data().addPage) {
+      const addPage = normaliseShortcut(snap.data().addPage)
+      cacheAddPageShortcut(addPage)
+      return { addPage }
+    }
+  } catch (err) {
+    console.warn('Shortcuts read failed:', err)
+  }
+  const cached = readCachedAddPageShortcut()
+  const addPage = cached || { ...DEFAULT_ADD_PAGE_SHORTCUT }
+  // A remap that only lived on this browser (the old presenter-settings
+  // store) becomes account-wide the first time Global settings or Teach
+  // reads it, so the teacher does not have to bind the key twice.
+  const remapped = cached && (
+    cached.key !== DEFAULT_ADD_PAGE_SHORTCUT.key
+    || cached.ctrl || cached.shift || cached.alt || cached.meta
+  )
+  if (remapped) saveShortcuts({ addPage }).catch(() => {})
+  return { addPage }
+}
+
+export async function saveShortcuts(patch) {
+  const addPage = normaliseShortcut(patch?.addPage)
+  cacheAddPageShortcut(addPage)
+  await setDoc(
+    shortcutsRef(),
+    { addPage, updatedAt: serverTimestamp(), updatedAtMs: Date.now() },
+    { merge: true },
+  )
 }
 
 // ───────────────────────── export variable substitution ─────────────────────────

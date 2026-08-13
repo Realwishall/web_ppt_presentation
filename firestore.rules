@@ -11,7 +11,7 @@ rules_version = '2';
 //   users/{uid}/content/{code}/versions/{v}/parts/{i}
 //   users/{uid}/batches/{batchId}/sessions/{sessionId}/chunks/{i}
 //   users/{uid}/batches/{batchId}/meta/{settings|roster|sessionHistory}
-//   users/{uid}/appSettings/{curriculum|exportPages|branding}
+//   users/{uid}/appSettings/{curriculum|exportPages|branding|shortcuts}
 //
 // So the whole app reduces to one question: is the owner segment of this path
 // your own uid? That is the second of two defences — the client already builds
@@ -61,7 +61,7 @@ service cloud.firestore {
       allow read, write: if isOwner(uid);
     }
 
-    // ------- account-wide settings: chapter map, cover pages, logo -------
+    // ------- account-wide settings: chapter map, cover pages, logo, shortcuts -------
     match /users/{uid}/appSettings/{document=**} {
       allow read, write: if isOwner(uid);
     }

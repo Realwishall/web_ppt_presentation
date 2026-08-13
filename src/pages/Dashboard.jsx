@@ -35,7 +35,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           {user && <span className="hidden text-sm text-slate-400 sm:inline">{user.email || user.phoneNumber}</span>}
           <button onClick={() => setGlobalOpen(true)}
-            title="Chapter & topic map, Start/End pages and logo — shared by every batch in your account"
+            title="Chapter & topic map, Start/End pages, logo and shortcuts — shared by every batch in your account"
             className="inline-flex items-center gap-1.5 rounded-lg border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-sm font-medium text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-500/20 hover:text-white">
             <Globe className="h-4 w-4" /> Global settings
           </button>

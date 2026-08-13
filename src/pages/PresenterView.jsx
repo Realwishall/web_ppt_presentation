@@ -14,6 +14,10 @@ import {
   loadSessionForReview,
 } from '../lib/sessions'
 import { loadPresenterExportConfig, rememberExportValues } from '../lib/batchSettings'
+import {
+  getShortcuts, saveShortcuts, cacheAddPageShortcut, matchesShortcut,
+  DEFAULT_ADD_PAGE_SHORTCUT, readCachedAddPageShortcut, normaliseShortcut,
+} from '../lib/globalSettings'
 import { useAuth } from '../context/AuthContext'
 import ChapterIcon from '../components/ChapterIcon'
 
@@ -90,6 +94,9 @@ export default function PresenterView() {
   // panel. The exit save compares against this and stays silent if the board
   // has not moved since.
   const lastSavedSignatureRef = useRef(EMPTY_BOARD_SIGNATURE)
+  const addPageShortcutRef = useRef(
+    readCachedAddPageShortcut() || { ...DEFAULT_ADD_PAGE_SHORTCUT },
+  )
   // Saves run one at a time, in order. Dropping a concurrent save (the old
   // behaviour) could throw away an export archive because an idle snapshot
   // happened to be in flight.
@@ -322,6 +329,19 @@ export default function PresenterView() {
     }
   }, [post])
 
+  const pushShortcuts = useCallback(async () => {
+    try {
+      const { addPage } = await getShortcuts()
+      addPageShortcutRef.current = addPage
+      cacheAddPageShortcut(addPage)
+      post({ type: 'lf-shortcuts', addPage })
+    } catch (err) {
+      console.warn('Shortcuts load failed:', err)
+      const fallback = addPageShortcutRef.current || { ...DEFAULT_ADD_PAGE_SHORTCUT }
+      post({ type: 'lf-shortcuts', addPage: fallback })
+    }
+  }, [post])
+
   // When the iframe finishes loading, configure the session and flush queues.
   const onIframeLoad = useCallback(async () => {
     // Prefer board focus so keyboard + clicker keys land in the presenter.
@@ -330,6 +350,7 @@ export default function PresenterView() {
     // Always sent, batch or not: it also carries the user key that scopes the
     // panel's crash-recovery store, and a Preview has no batch.
     pushSessionConfig(batchId, batchId ? sessionIdRef.current : null)
+    pushShortcuts()
     if (batchId) pushExportConfig(batchId)
 
     // Review an old session (full snapshot) takes priority over auto-restore.
@@ -408,7 +429,7 @@ export default function PresenterView() {
         console.warn('Unfinished session restore failed:', err)
       }
     }
-  }, [batchId, freshStart, loadFolder, post, pushExportConfig, pushSessionConfig])
+  }, [batchId, freshStart, loadFolder, post, pushExportConfig, pushSessionConfig, pushShortcuts])
 
   useEffect(() => {
     if (!restoreNote) return
@@ -493,6 +514,12 @@ export default function PresenterView() {
           return
         }
         persistBoard(d)
+      } else if (d.type === 'lf-save-shortcuts' && d.addPage) {
+        const next = normaliseShortcut(d.addPage)
+        addPageShortcutRef.current = next
+        cacheAddPageShortcut(next)
+        saveShortcuts({ addPage: next }).catch((err) =>
+          console.warn('Could not save shortcut:', err))
       }
     }
     const onFsChange = () => post({ type: 'lf-fs-state', on: !!document.fullscreenElement })
@@ -502,32 +529,10 @@ export default function PresenterView() {
     const NAV_KEYS = new Set([
       'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' ', 'Spacebar', 'Backspace',
     ])
-    const readAddPageShortcut = () => {
-      try {
-        const raw = localStorage.getItem('lf-shortcut-add-page')
-        if (!raw) return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
-        const o = JSON.parse(raw)
-        if (!o || typeof o.key !== 'string' || !o.key) {
-          return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
-        }
-        return {
-          key: String(o.key).toLowerCase(),
-          ctrl: !!o.ctrl, shift: !!o.shift, alt: !!o.alt, meta: !!o.meta,
-        }
-      } catch {
-        return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
-      }
-    }
     const onKey = (e) => {
       if (libOpen) return
       if (e.target?.matches?.('input,textarea,[contenteditable="true"]')) return
-      const sc = readAddPageShortcut()
-      const name = e.key === ' ' || e.key === 'Spacebar' ? 'space' : String(e.key || '').toLowerCase()
-      const isAddPage = name === sc.key
-        && !!e.ctrlKey === !!sc.ctrl
-        && !!e.shiftKey === !!sc.shift
-        && !!e.altKey === !!sc.alt
-        && !!e.metaKey === !!sc.meta
+      const isAddPage = matchesShortcut(e, addPageShortcutRef.current)
       if (!NAV_KEYS.has(e.key) && !isAddPage) return
       e.preventDefault()
       touchActivity()
@@ -565,6 +570,7 @@ export default function PresenterView() {
         allow="fullscreen"
         onLoad={onIframeLoad}
         className="h-full w-full border-0"
+        style={{ contain: 'strict' }}
         tabIndex={-1}
       />
 

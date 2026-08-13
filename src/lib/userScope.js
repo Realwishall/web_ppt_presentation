@@ -5,7 +5,7 @@
 //   users/{uid}/content/{code}/versions/{v}/parts/{i}
 //   users/{uid}/batches/{batchId}/sessions/{sessionId}/chunks/{i}
 //   users/{uid}/batches/{batchId}/meta/{settings|roster|sessionHistory}
-//   users/{uid}/appSettings/{curriculum|exportPages|branding}
+//   users/{uid}/appSettings/{curriculum|exportPages|branding|shortcuts}
 //
 // Two teachers signing into the same deployment therefore see two completely
 // separate libraries, batch lists, session histories and global settings.
