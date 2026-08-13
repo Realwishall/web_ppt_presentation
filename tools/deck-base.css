@@ -144,6 +144,12 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
       padding:var(--pad-y) var(--pad-x) 6vmin;
       display:flex;flex-direction:column;gap:var(--gap)}
 .wrap.center{align-items:center;justify-content:center;text-align:center}
+/* A centred wrap shrinks its children to their own content, which collapses a
+   figure or a WebGL box to nothing (a .scene-frame sizes itself from the
+   canvas, and the canvas is absolutely positioned). Let the visual blocks of a
+   title slide span the board; the text inside them is still centred.        */
+.wrap.center>.step,.wrap.center>.figure-frame,.wrap.center>.scene-frame{align-self:stretch}
+.wrap.center .scene-frame,.wrap.center .figure-frame{width:100%}
 .wrap.tight{gap:1.2vmin}
 .wrap.dense{padding:6vmin 5.5vmin 4vmin;gap:1.5vmin}   /* heavy tables/derivations */
 .wrap.fit{overflow:hidden;gap:1.4vmin;padding-top:6.5vmin;padding-bottom:3.5vmin}
@@ -479,6 +485,9 @@ math{math-style:normal}
 svg.gph{overflow:visible}
 svg.gph .axis   {fill:none;stroke:rgba(255,255,255,.62);stroke-width:2.2;
                  stroke-linecap:round;stroke-linejoin:round}
+/* the solid arrowhead that closes an axis — .axis is stroke-only, so a head
+   drawn with it comes out hollow */
+svg.gph .axis-head{fill:rgba(255,255,255,.62);stroke:none}
 svg.gph .curve  {fill:none;stroke:var(--gold-soft);stroke-width:3.6;
                  stroke-linecap:round;stroke-linejoin:round}
 svg.gph .curve2 {fill:none;stroke:var(--accent);stroke-width:3.2;
@@ -561,6 +570,75 @@ svg.dgm .arwhead.w{fill:rgba(255,255,255,.85)}
 svg.dgm .stair  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.4);stroke-width:2}
 svg.dgm .figr   {fill:rgba(245,197,66,.6);stroke:none}
 svg.dgm .figr.b {fill:rgba(159,180,255,.65)}
+/* Variable-mass additions: this chapter's props are a pipe throwing a jet at a
+   plate, a chain falling onto the ground, a stream of bullets, a rocket burning
+   its own mass, and a loaded block. Same reasoning as the kinematics set above
+   — the deck draws each of them a dozen times, so the ink is a component, not
+   a per-slide decision, and it stays pure SVG + CSS so it prints (rule 11).
+
+     .pipe .mouth       the hose barrel and the grid of streamlines at its lip
+     .jet               a streamline of moving fluid (the water itself)
+     .plate .hatch      the wall the jet strikes and the hatching behind it
+     .ground            the floor the chain piles onto
+     .chain .link       a hanging chain and one of its links
+     .bullet            a round in flight
+     .rocket .flame     the rocket hull and its exhaust plume
+     .block             a labelled block / cart / freight body
+     .heap              sand, coal, or chain already delivered                */
+svg.dgm .pipe   {fill:rgba(86,204,242,.30);stroke:rgba(140,205,245,.85);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .mouth  {fill:none;stroke:rgba(226,240,252,.9);stroke-width:2.2;stroke-linecap:round}
+svg.dgm .jet    {fill:none;stroke:rgba(196,228,255,.85);stroke-width:2.6;stroke-linecap:round}
+svg.dgm .jet.b  {stroke:rgba(245,197,66,.8)}
+svg.dgm .plate  {fill:rgba(124,140,255,.55);stroke:rgba(159,180,255,.95);stroke-width:2.4}
+svg.dgm .hatch  {fill:none;stroke:rgba(159,180,255,.55);stroke-width:2;stroke-linecap:round}
+svg.dgm .ground {fill:none;stroke:rgba(124,140,255,.95);stroke-width:6;stroke-linecap:round}
+svg.dgm .chain  {fill:none;stroke:rgba(226,232,240,.75);stroke-width:2.6}
+svg.dgm .link   {fill:none;stroke:rgba(226,232,240,.8);stroke-width:2.4}
+svg.dgm .bullet {fill:rgba(245,197,66,.85);stroke:rgba(255,228,150,.9);stroke-width:1.4}
+svg.dgm .rocket {fill:rgba(226,232,240,.16);stroke:rgba(226,232,240,.9);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .flame  {fill:rgba(251,146,60,.45);stroke:rgba(253,186,116,.9);
+                 stroke-width:2;stroke-linejoin:round}
+svg.dgm .block  {fill:rgba(124,140,255,.34);stroke:rgba(159,180,255,.95);
+                 stroke-width:2.4;stroke-linejoin:round}
+svg.dgm .heap   {fill:rgba(226,232,240,.35);stroke:rgba(226,232,240,.6);stroke-width:1.8}
+svg.dgm .box    {fill:none;stroke:var(--gold);stroke-width:2.6}   /* ring a group */
+/* Work / energy additions: this chapter's props are a wedge, a circular track,
+   a pulley and its cord, a spring, a lift cage, a beaker of liquid and a stick
+   figure. Same reasoning as the sets above — a Work deck draws each of them a
+   dozen times, so the ink is a component, not a per-slide decision, and it
+   stays pure SVG + CSS so it prints (rule 11).
+
+     .plane             a wedge / inclined surface / curved ramp, filled
+     .ring              a circular track the body runs on (never filled)
+     .disc              a rolling wheel or disc, with .spoke for its diameter
+     .pulley .cord      the pulley wheel and the light thread over it
+     .spring            the zig-zag coil of a spring
+     .cage .floor       a lift cabin and the floor the passenger stands on
+     .vessel .liquid    a beaker outline and the column of liquid in it
+     .man               a stick figure (runner, climber, passenger)          */
+svg.dgm .plane  {fill:rgba(124,140,255,.30);stroke:rgba(159,180,255,.9);
+                 stroke-width:2.6;stroke-linejoin:round}
+svg.dgm .plane.hollow{fill:none}
+svg.dgm .ring   {fill:none;stroke:rgba(255,255,255,.85);stroke-width:3}
+svg.dgm .disc   {fill:rgba(124,140,255,.45);stroke:rgba(159,180,255,.95);stroke-width:2.4}
+svg.dgm .spoke  {fill:none;stroke:rgba(255,255,255,.7);stroke-width:1.8;
+                 stroke-dasharray:8 6;stroke-linecap:round}
+svg.dgm .pulley {fill:rgba(124,140,255,.5);stroke:rgba(159,180,255,.95);stroke-width:2.4}
+svg.dgm .cord   {fill:none;stroke:rgba(159,180,255,.95);stroke-width:2.2;stroke-linecap:round}
+svg.dgm .spring {fill:none;stroke:rgba(226,232,240,.9);stroke-width:2.6;
+                 stroke-linejoin:round;stroke-linecap:round}
+svg.dgm .cage   {fill:none;stroke:rgba(226,232,240,.85);stroke-width:2.6}
+svg.dgm .floor  {fill:none;stroke:rgba(124,140,255,.95);stroke-width:5;stroke-linecap:round}
+svg.dgm .vessel {fill:none;stroke:rgba(226,232,240,.85);stroke-width:2.6;
+                 stroke-linejoin:round}
+svg.dgm .liquid {fill:rgba(179,201,239,.72);stroke:none}
+svg.dgm .man    {fill:rgba(255,255,255,.9);stroke:none}
+svg.dgm .man.b  {fill:var(--gold-soft)}
+svg.dgm .limb   {fill:none;stroke:rgba(255,255,255,.9);stroke-width:4;
+                 stroke-linecap:round;stroke-linejoin:round}
+svg.dgm .limb.b {stroke:var(--gold-soft)}
 svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
 svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
 svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
@@ -929,3 +1007,31 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
    sits on the line above (e.g. the "Solution" head of a .qa) */
 .op-chain{margin:2.8vmin 0 .8vmin}
 .op-chain.mini{margin:2.4vmin 0 1.4vmin}
+
+/* ============================================================================
+   Fill-in-the-blank — .blank
+   ----------------------------------------------------------------------------
+   The source decks teach with a ruled gap: the class answers it out loud, and
+   only then is the answer written on the rule. The answer is IN the markup, so
+   the deck is complete with JS off and the PDF prints as the filled worksheet —
+   it is simply invisible on its rule until the teacher taps it.
+
+   A blank is NOT a .step. A line arriving and a blank being answered are two
+   different beats, and the second one belongs to the room, not to the deck.
+   Clicking is the only input the host forwards (rule 3), so .blank carries
+   `clickable` and a one-line toggle handler. Print forces every blank open.
+   ========================================================================== */
+.blank{display:inline-block;min-width:12vmin;
+  padding:0 1.2vmin .3vmin;margin:0 .4vmin;
+  border-bottom:.3vmin solid rgba(245,197,66,.45);border-radius:.35vmin;
+  color:transparent;font-weight:700;line-height:1.35;
+  transition:color .35s ease,background .35s ease,border-color .35s ease}
+.blank.shown{color:var(--gold);background:rgba(245,197,66,.09);
+  border-bottom-color:var(--gold)}
+.blank.math{font-family:var(--font-math);font-style:normal}
+.blank.wide{min-width:26vmin}
+
+@media print{
+  .blank{color:var(--gold)!important;background:none!important;
+         border-bottom-color:rgba(245,197,66,.5)!important}
+}

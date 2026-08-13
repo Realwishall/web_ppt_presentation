@@ -27,6 +27,15 @@
           kind === 'tangent-normal' || kind === 'curvature-circle'){
         startPlane2D(frame, w, h, kind); return;
       }
+      if (kind === 'com-vectors' || kind === 'com-cube' ||
+          kind === 'com-translate' || kind === 'com-solids'){
+        startCOM(frame, w, h, kind); return;
+      }
+      if (kind === 'work-dot'){ startWorkDot(frame, w, h); return; }
+      if (kind === 'impulse-wall' || kind === 'explosion-momentum' ||
+          kind === 'recoil-momentum' || kind === 'collision-momentum'){
+        startMech2D(frame, w, h, kind); return;
+      }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -404,6 +413,398 @@
           parts.lr.position.set((cx + Pe.x) / 2 + 0.24, (cy + Pe.y) / 2 + 0.2, 0);
         }
 
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ------------------------------------------------------ centre of mass ---
+       Four scenes for the Centre of Mass chapter. A C.O.M. question is always
+       a point in SPACE that no drawing on a flat board can put you inside of,
+       so these are the four places where turning the figure earns its bytes:
+
+         com-vectors    three point masses, the three position vectors r1 r2 r3
+                        drawn from the origin, and the gold r_com the weighted
+                        average actually lands on — the formula slide, in space
+         com-cube       the eight-corner cube question: 8 masses on the
+                        vertices of a cube of edge a, the gold C.O.M. floating
+                        inside it, and the three drop-lines that give x, y, z
+         com-translate  the same push, twice: through the C.O.M. the bar only
+                        slides; off the C.O.M. it slides AND spins — yet the
+                        gold dot still runs down one straight line. That is
+                        the whole content of "translation motion only"
+         com-solids     hemisphere shell, solid hemisphere, hollow cone and
+                        solid cone standing side by side with the C.O.M.
+                        height marked on each — why the solid cone is h/4 and
+                        the hollow one h/3 is a fact about volume, and volume
+                        is what a flat picture cannot show
+
+       Nothing here carries an idea alone (rule 20): every frame ships a
+       .scene-fallback with the source slide's own figure, and that is what
+       prints and what a room with no WebGL sees.                              */
+    function startCOM(frame, w, h, kind){
+      var GOLD = 0xf5c542, GOLDS = 0xffe9a8, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
+          INK = 0xf4f7fb, RED = 0xfb7185;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(42, w / h, 0.1, 200);
+      scene.add(new T.AmbientLight(0xb8c4e0, 0.62));
+      var key = new T.DirectionalLight(0xffffff, 0.78);
+      key.position.set(4, 7, 6); scene.add(key);
+      var rim = new T.DirectionalLight(0x9ab0ff, 0.34);
+      rim.position.set(-5, 2, -5); scene.add(rim);
+
+      var group = new T.Group();          /* the thing that turns */
+      scene.add(group);
+
+      /* ---------------------------------------------------------- helpers -- */
+
+      /* Classroom-size label drawn to a canvas — no webfont, no external asset.
+         The canvas is sized to the text (a long name must not be squeezed into
+         a 2:1 box), and the plane is drawn with depthTest off so a solid body
+         can never swallow the name of the thing it is.                        */
+      function label(text, css, size){
+        var FONT = 'bold 70px Calibri, Candara, "Segoe UI", sans-serif';
+        var c = document.createElement('canvas');
+        var ctx = c.getContext('2d');
+        ctx.font = FONT;
+        var tw = Math.max(64, Math.ceil(ctx.measureText(text).width) + 24);
+        c.width = tw; c.height = 104;
+        ctx = c.getContext('2d');
+        ctx.font = FONT;
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, tw / 2, 52);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * (tw / 104), size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true,
+            depthWrite: false, depthTest: false }));
+        m.renderOrder = 12;
+        m.userData.billboard = true;
+        return m;
+      }
+
+      function seg(a, b, color, opacity, dashed){
+        var g = new T.BufferGeometry().setFromPoints([a, b]);
+        var mat = dashed
+          ? new T.LineDashedMaterial({ color: color, transparent: true,
+              opacity: opacity, dashSize: 0.13, gapSize: 0.11 })
+          : new T.LineBasicMaterial({ color: color, transparent: true, opacity: opacity });
+        var l = new T.Line(g, mat);
+        if (dashed) l.computeLineDistances();
+        return l;
+      }
+
+      /* a straight arrow built once: shaft + head, aimed from a to b */
+      function arrow(a, b, color, rad, opacity, overlay){
+        var g = new T.Group();
+        var dir = new T.Vector3().subVectors(b, a), len = dir.length();
+        if (len < 1e-4) return g;
+        var mat = new T.MeshBasicMaterial({ color: color,
+          transparent: true, opacity: opacity === undefined ? 1 : opacity,
+          depthTest: !overlay, depthWrite: !overlay });
+        if (overlay) g.renderOrder = 9;
+        var hl = Math.min(rad * 7.5, len * 0.42), sl = Math.max(len - hl, 1e-3);
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, sl, 12), mat);
+        shaft.position.set(0, sl / 2, 0);
+        var head = new T.Mesh(new T.ConeGeometry(rad * 2.9, hl, 16), mat);
+        head.position.set(0, sl + hl / 2, 0);
+        g.add(shaft); g.add(head);
+        g.position.copy(a);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+        return g;
+      }
+
+      function ball(at, r, color, opacity){
+        var m = new T.Mesh(new T.SphereGeometry(r, 24, 16),
+          new T.MeshPhongMaterial({ color: color, shininess: 40, specular: 0x445577,
+            transparent: opacity !== undefined, opacity: opacity === undefined ? 1 : opacity }));
+        m.position.copy(at);
+        return m;
+      }
+
+      /* the gold C.O.M. marker: a bright core inside a soft halo, so it reads
+         as "the point" from the back of the room */
+      function comMarker(at, r){
+        var g = new T.Group();
+        g.add(new T.Mesh(new T.SphereGeometry(r, 24, 16),
+          new T.MeshBasicMaterial({ color: GOLDS })));
+        g.add(new T.Mesh(new T.SphereGeometry(r * 2.1, 20, 14),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.22,
+            depthWrite: false })));
+        g.position.copy(at);
+        return g;
+      }
+
+      function V(x, y, z){ return new T.Vector3(x, y, z); }
+
+      var billboards = [];
+      function put(mesh){ group.add(mesh); if (mesh.userData.billboard) billboards.push(mesh); return mesh; }
+
+      /* x-y-z axes from the origin, drawn once — scaffolding, never the idea */
+      function axes(lx, ly, lz, color, opacity){
+        var o = V(0, 0, 0);
+        group.add(seg(o, V(lx, 0, 0), color, opacity));
+        group.add(seg(o, V(0, ly, 0), color, opacity));
+        group.add(seg(o, V(0, 0, lz), color, opacity));
+        group.add(arrow(V(lx * 0.86, 0, 0), V(lx, 0, 0), color, 0.035, Math.min(1, opacity + 0.2)));
+        group.add(arrow(V(0, ly * 0.86, 0), V(0, ly, 0), color, 0.035, Math.min(1, opacity + 0.2)));
+        group.add(arrow(V(0, 0, lz * 0.86), V(0, 0, lz), color, 0.035, Math.min(1, opacity + 0.2)));
+        put(label('x', '#c7d2e1', 0.30)).position.set(lx + 0.24, -0.16, 0);
+        put(label('y', '#c7d2e1', 0.30)).position.set(-0.20, ly + 0.22, 0);
+        put(label('z', '#c7d2e1', 0.30)).position.set(0, -0.18, lz + 0.26);
+      }
+
+      var spin = 0.0024, tick = null, lookAt = V(0, 0, 0);
+      var camDir = V(0, 0, 1), fitH = 2, fitW = 2;   /* half-extents to keep in frame */
+
+      /* ------------------------------------------------------ com-vectors -- */
+      if (kind === 'com-vectors'){
+        axes(3.3, 2.7, 2.7, INK, 0.42);
+
+        var pts = [
+          { p: V(1.00, 1.45, 0.90), m: 1, t: 'm1' },
+          { p: V(2.50, 1.90, -0.45), m: 2, t: 'm2' },
+          { p: V(1.90, 0.55, 1.75), m: 1, t: 'm3' }
+        ];
+        var tot = 0, cx = 0, cy = 0, cz = 0;
+        pts.forEach(function(q){
+          tot += q.m; cx += q.m * q.p.x; cy += q.m * q.p.y; cz += q.m * q.p.z;
+          group.add(arrow(V(0, 0, 0), q.p, INDIGO, 0.026, 0.9));
+          group.add(ball(q.p, 0.085 + 0.045 * q.m, CYAN));
+          put(label(q.t, '#9ad0ff', 0.34)).position.copy(q.p).add(V(0.30, 0.26, 0));
+        });
+        var C = V(cx / tot, cy / tot, cz / tot);
+        group.add(arrow(V(0, 0, 0), C, GOLD, 0.040, 1));
+        group.add(comMarker(C, 0.10));
+        put(label('C.O.M.', '#ffe9a8', 0.30)).position.copy(C).add(V(0.10, -0.40, 0));
+        /* each mass tied to the answer, so the eye sees an average, not a 4th point */
+        pts.forEach(function(q){ group.add(seg(q.p, C, GOLD, 0.22, true)); });
+
+        group.position.set(-1.55, -1.15, -0.45);
+        camDir = V(3.7, 2.5, 5.0); fitH = 1.95; fitW = 2.45;
+        lookAt = V(0, 0.05, 0);
+      }
+
+      /* --------------------------------------------------------- com-cube -- */
+      if (kind === 'com-cube'){
+        var a = 2.30;
+        /* the eight corner masses of the source slide, in units of m:
+           x=a side sums to 8, y=a side to 10, z=a side to 9 — exactly the
+           three numerators the solution writes down                          */
+        var V8 = [
+          { x: 0, y: 0, z: 0, m: 4 }, { x: 1, y: 0, z: 0, m: 3 },
+          { x: 0, y: 1, z: 0, m: 3 }, { x: 1, y: 1, z: 0, m: 1 },
+          { x: 0, y: 0, z: 1, m: 1 }, { x: 1, y: 0, z: 1, m: 2 },
+          { x: 0, y: 1, z: 1, m: 4 }, { x: 1, y: 1, z: 1, m: 2 }
+        ];
+        var box = new T.Mesh(new T.BoxGeometry(a, a, a),
+          new T.MeshPhongMaterial({ color: 0x1a2a5e, transparent: true, opacity: 0.16,
+            shininess: 20, depthWrite: false }));
+        box.position.set(a / 2, a / 2, a / 2);
+        group.add(box);
+        var edges = new T.LineSegments(
+          new T.EdgesGeometry(new T.BoxGeometry(a, a, a)),
+          new T.LineBasicMaterial({ color: 0xd8e2f5, transparent: true, opacity: 0.72 }));
+        edges.position.set(a / 2, a / 2, a / 2);
+        group.add(edges);
+
+        axes(a * 1.42, a * 1.34, a * 1.34, CYAN, 0.42);
+
+        var sx = 0, sy = 0, sz = 0, sm = 0;
+        V8.forEach(function(v){
+          var p = V(v.x * a, v.y * a, v.z * a);
+          sm += v.m; sx += v.m * p.x; sy += v.m * p.y; sz += v.m * p.z;
+          group.add(ball(p, 0.085 + 0.030 * v.m, 0x6ee7a8));
+          put(label(v.m === 1 ? 'm' : v.m + 'm', '#d9f7e6', 0.36))
+            .position.copy(p).add(V(v.x ? 0.44 : -0.44, v.y ? 0.36 : -0.36, 0));
+        });
+        var Cc = V(sx / sm, sy / sm, sz / sm);
+        /* the three drop lines ARE x_com, y_com, z_com */
+        group.add(seg(Cc, V(Cc.x, 0, Cc.z), GOLD, 0.42, true));
+        group.add(seg(V(Cc.x, 0, Cc.z), V(Cc.x, 0, 0), GOLD, 0.30, true));
+        group.add(seg(V(Cc.x, 0, Cc.z), V(0, 0, Cc.z), GOLD, 0.30, true));
+        var cm = comMarker(Cc, 0.155);
+        cm.children.forEach(function(ch){ ch.material.depthTest = false; ch.renderOrder = 9; });
+        group.add(cm);
+        put(label('C.O.M.', '#ffe9a8', 0.36)).position.copy(Cc).add(V(0.92, -0.30, 0));
+
+        group.position.set(-a / 2, -a / 2 - 0.15, -a / 2);
+        camDir = V(4.1, 3.1, 5.7); fitH = 2.35; fitW = 2.85;
+        lookAt = V(0, 0, 0);
+        spin = 0.0021;
+      }
+
+      /* ---------------------------------------------------- com-translate -- */
+      if (kind === 'com-translate'){
+        spin = 0;
+        var barGeo = new T.BoxGeometry(1.95, 0.19, 0.42);
+        var barMat = new T.MeshPhongMaterial({ color: 0x3a5bd0, shininess: 45,
+          specular: 0x8899cc });
+
+        function rig(yy, text){
+          var g = new T.Group();
+          g.position.y = yy;
+          var pivot = new T.Group();            /* spins about the C.O.M. */
+          var bar = new T.Mesh(barGeo, barMat);
+          pivot.add(bar);
+          /* the C.O.M. dot rides in front of the hull, so the class can watch
+             it hold its line while the bar itself tumbles */
+          var dot = new T.Mesh(new T.SphereGeometry(0.135, 22, 16),
+            new T.MeshBasicMaterial({ color: GOLDS, depthTest: false }));
+          dot.position.z = 0.26; dot.renderOrder = 9;
+          pivot.add(dot);
+          var halo = new T.Mesh(new T.SphereGeometry(0.28, 20, 14),
+            new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.22,
+              depthWrite: false, depthTest: false }));
+          halo.position.z = 0.26; halo.renderOrder = 8;
+          pivot.add(halo);
+          g.add(pivot);
+          group.add(g);
+          /* the straight line the C.O.M. runs down, whatever the bar does */
+          group.add(seg(V(-3.35, yy, 0), V(3.35, yy, 0), GOLD, 0.26, true));
+          var lb = put(label(text, '#c7d2e1', 0.36));
+          lb.position.set(-1.55, yy + 0.78, 0);
+          return { g: g, pivot: pivot };
+        }
+
+        var top = rig(1.05, 'at C.O.M.');
+        var bot = rig(-1.05, 'off C.O.M.');
+
+        /* the push: a red arrow that sits still and lets the bar arrive at it */
+        var pushA = arrow(V(-3.05, 1.05, 0), V(-2.35, 1.05, 0), RED, 0.055, 0.95);
+        var pushB = arrow(V(-3.05, -1.05 + 0.40, 0), V(-2.35, -1.05 + 0.40, 0), RED, 0.055, 0.95);
+        group.add(pushA); group.add(pushB);
+        put(label('F', '#fb7185', 0.34)).position.set(-2.70, 1.36, 0);
+        put(label('F', '#fb7185', 0.34)).position.set(-2.70, -0.34, 0);
+
+        camDir = V(0, 0.25, 7.0); fitH = 2.05; fitW = 3.75;
+        lookAt = V(0, 0, 0);
+
+        tick = function(t){
+          var u = (t % 5.6) / 5.6;                 /* one run every 5.6 s */
+          var e = u < 0.82 ? u / 0.82 : 1;         /* travel, then hold */
+          var x = -2.15 + 4.3 * e;
+          top.g.position.x = x;
+          bot.g.position.x = x;
+          bot.pivot.rotation.z = -e * Math.PI * 2.4;
+          var fade = u < 0.82 ? 1 : Math.max(0, 1 - (u - 0.82) / 0.18);
+          top.g.visible = bot.g.visible = fade > 0.02;
+        };
+      }
+
+      /* ------------------------------------------------------- com-solids -- */
+      if (kind === 'com-solids'){
+        var R = 0.98, hh = 2.05, rr = 0.86;
+        var shellMat = new T.MeshPhongMaterial({ color: 0xe8eefc, shininess: 60,
+          specular: 0xffffff, transparent: true, opacity: 0.42, side: T.DoubleSide });
+        /* the solids are glassy on purpose: the whole point of the slide is
+           WHERE inside the body the point sits, so you have to see into it */
+        var solidMat = new T.MeshPhongMaterial({ color: 0x3a6ad0, shininess: 42,
+          specular: 0x88a0dd, transparent: true, opacity: 0.62 });
+
+        function stand(x, mesh, comY, tag, name){
+          var g = new T.Group();
+          g.position.x = x;
+          g.add(mesh);
+          /* the C.O.M. height, as an arrow off the base — the printed answer */
+          var ar = arrow(V(0, 0.02, 0), V(0, comY, 0), GOLD, 0.036, 1, true);
+          g.add(ar);
+          var dot = new T.Mesh(new T.SphereGeometry(0.095, 18, 12),
+            new T.MeshBasicMaterial({ color: GOLDS, depthTest: false }));
+          dot.position.set(0, comY, 0); dot.renderOrder = 10;
+          g.add(dot);
+          group.add(g);
+          var lt = put(label(tag, '#ffe9a8', 0.46));
+          lt.position.set(x + 0.74, comY * 0.66, 0);
+          var ln = put(label(name, '#c7d2e1', 0.32));
+          ln.position.set(x, -0.66, 0);
+          return g;
+        }
+
+        /* hemispherical shell — C.O.M. at R/2 */
+        stand(-3.70, new T.Mesh(
+          new T.SphereGeometry(R, 40, 22, 0, Math.PI * 2, 0, Math.PI / 2), shellMat),
+          R / 2, 'R/2', 'hollow sphere');
+
+        /* solid hemisphere — C.O.M. at 3R/8, lower, because the mass is packed
+           near the flat face */
+        var solidHemi = new T.Group();
+        solidHemi.add(new T.Mesh(
+          new T.SphereGeometry(R, 40, 22, 0, Math.PI * 2, 0, Math.PI / 2), solidMat));
+        var disc = new T.Mesh(new T.CircleGeometry(R, 40), solidMat);
+        disc.rotation.x = Math.PI / 2;
+        solidHemi.add(disc);
+        stand(-1.24, solidHemi, 3 * R / 8, '3R/8', 'solid sphere');
+
+        /* hollow cone — C.O.M. at h/3 */
+        var hollowCone = new T.Mesh(
+          new T.ConeGeometry(rr, hh, 40, 1, true), shellMat);
+        hollowCone.position.y = hh / 2;
+        stand(1.24, hollowCone, hh / 3, 'h/3', 'hollow cone');
+
+        /* solid cone — C.O.M. at h/4 */
+        var solidConeG = new T.Group();
+        var sc = new T.Mesh(new T.ConeGeometry(rr, hh, 40), solidMat);
+        sc.position.y = hh / 2;
+        solidConeG.add(sc);
+        stand(3.70, solidConeG, hh / 4, 'h/4', 'solid cone');
+
+        group.position.y = -0.72;
+        camDir = V(0.5, 2.2, 7.9); fitH = 1.55; fitW = 5.05;
+        lookAt = V(0, 0.25, 0);
+        spin = 0.0026;
+      }
+
+      /* ------------------------------------------------------------ loop --- */
+      var TAN = Math.tan((42 * Math.PI / 180) / 2);
+      function place(aspect){
+        var d = Math.max(fitH / TAN, fitW / (TAN * aspect));
+        camera.position.copy(camDir).normalize().multiplyScalar(d).add(lookAt);
+        camera.lookAt(lookAt);
+      }
+      place(w / h);
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+        place(nw / nh);
+        refDist = camera.position.distanceTo(lookAt);
+      }
+      window.addEventListener('resize', resize);
+
+      var t0 = Date.now();
+      var qGroup = new T.Quaternion(), qFace = new T.Quaternion(), refDist = 1;
+      refDist = camera.position.distanceTo(lookAt);
+      var wp = new T.Vector3();
+      (function loop(){
+        requestAnimationFrame(loop);
+        var t = (Date.now() - t0) / 1000;
+        if (spin){
+          group.rotation.y += spin;
+          group.rotation.x = Math.sin(t / 11) * 0.10;
+        }
+        if (tick) tick(t);
+        /* labels always face the class, however far the body has turned: the
+           parent's rotation is cancelled out, so a name never reads mirrored */
+        if (billboards.length){
+          qGroup.setFromEuler(group.rotation).invert();
+          qFace.copy(qGroup).multiply(camera.quaternion);
+          scene.updateMatrixWorld(true);
+          for (var i = 0; i < billboards.length; i++){
+            var bb = billboards[i];
+            bb.quaternion.copy(qFace);
+            bb.getWorldPosition(wp);
+            var k = camera.position.distanceTo(wp) / refDist;
+            bb.scale.setScalar(Math.max(0.55, Math.min(1.7, k)));
+          }
+        }
         renderer.render(scene, camera);
       })();
     }
@@ -1205,5 +1606,592 @@
         ctx.closePath();
       }
     }
+
+    /* ------------------------------------------------------------- work ------
+       `data-three="work-dot"`. The one thing a still figure cannot show about
+       W = F·s: that the answer is the SHADOW of F on s, and that the shadow
+       flips sense as the angle opens past 90 degrees. A gold F swings slowly
+       around the fixed indigo s; the green segment on s is F cos(theta), and
+       the readout under it reads +ve / 0 / -ve as the projection crosses the
+       tail. Nothing here carries an idea alone (rule 20) — the frame ships a
+       .scene-fallback with the same figure drawn flat, and that is what prints
+       and what a room with no WebGL sees.                                     */
+    function startWorkDot(frame, w, h){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
+          RED = 0xfb7185, INK = 0xf4f7fb;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0.1, 9);
+      camera.lookAt(0, 0, 0);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(2.75 / t2, 5.3 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+      var world = new T.Group();
+      world.position.set(-3.2, -1.75, 0);  /* the whole figure, centred in the box */
+      group.add(world);
+
+      function line(pts, color, opacity){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function makeArrow(color, rad){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 12), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 16), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad, mat: mat };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.42);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 74px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 4, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        m.userData = { redraw: function(txt, colour){
+          ctx.clearRect(0, 0, 512, 128);
+          ctx.fillStyle = colour; ctx.fillText(txt, 256, 64);
+          tex.needsUpdate = true;
+        } };
+        return m;
+      }
+
+      var O = new T.Vector3(0, 0, 0);
+      var S = new T.Vector3(7.2, 0, 0);          /* the displacement, fixed */
+      var FLEN = 3.4;
+
+      /* the line s runs along, drawn past both ends: the projection needs a
+         road to land on even when the angle is obtuse */
+      world.add(line([new T.Vector3(-2, 0, 0), new T.Vector3(8.4, 0, 0)], INK, 0.22));
+
+      var aS = makeArrow(INDIGO, 0.055);
+      var aF = makeArrow(GOLD, 0.06);
+      world.add(aS); world.add(aF);
+      aim(aS, O, S);
+
+      /* the projection: a fat segment on the line, plus the dropped dashed
+         perpendicular from the tip of F down onto it */
+      var projGeo = new T.BufferGeometry();
+      projGeo.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3));
+      var projLine = new T.Line(projGeo, new T.LineBasicMaterial({ color: GREEN }));
+      world.add(projLine);
+      var projTube = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 1, 10),
+        new T.MeshBasicMaterial({ color: GREEN }));
+      world.add(projTube);
+      var dropGeo = new T.BufferGeometry();
+      dropGeo.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3));
+      world.add(new T.Line(dropGeo, new T.LineBasicMaterial({
+        color: INK, transparent: true, opacity: 0.34 })));
+
+      /* the angle arc between s and F, redrawn every frame */
+      var ARC = 36;
+      var arcPos = new Float32Array((ARC + 1) * 3);
+      var arcGeo = new T.BufferGeometry();
+      arcGeo.setAttribute('position', new T.BufferAttribute(arcPos, 3));
+      world.add(new T.Line(arcGeo, new T.LineBasicMaterial({
+        color: INK, transparent: true, opacity: 0.55 })));
+
+      var lF = label('F', '#f5c542', 0.5);
+      var lS = label('s', '#7c8cff', 0.5);
+      var lT = label('θ', '#f4f7fb', 0.44);
+      var lP = label('F cos θ', '#34d399', 0.42);
+      var lW = label('W  +ve', '#34d399', 0.5);
+      world.add(lF); world.add(lS); world.add(lT); world.add(lP); world.add(lW);
+      lS.position.set(S.x * 0.62, -0.62, 0);
+      lW.position.set(3.2, 3.95, 0);
+
+      var t0 = Date.now(), lastW = w, lastH = h, lastBand = null;
+
+      (function loop(){
+        requestAnimationFrame(loop);
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;                 /* page hidden — don't burn a GPU */
+        if (nw !== lastW || nh !== lastH){
+          lastW = nw; lastH = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        var t = (Date.now() - t0) / 1000;
+        group.rotation.y = Math.sin(t / 8) * 0.11;
+        group.rotation.x = -0.05;
+
+        /* theta sweeps 8 deg -> 172 deg and back, slowly, so the class has time
+           to watch the shadow shrink through zero and turn around */
+        var u = 0.5 - 0.5 * Math.cos(t * 0.42);
+        var th = (8 + 164 * u) * Math.PI / 180;
+        var tip = new T.Vector3(FLEN * Math.cos(th), FLEN * Math.sin(th), 0);
+        aim(aF, O, tip);
+        lF.position.set(tip.x + 0.42, tip.y + 0.3, 0);
+
+        var px = FLEN * Math.cos(th);           /* the projection, signed */
+        var a = projGeo.getAttribute('position');
+        a.array[0] = 0; a.array[1] = 0; a.array[2] = 0;
+        a.array[3] = px; a.array[4] = 0; a.array[5] = 0;
+        a.needsUpdate = true;
+        var len = Math.abs(px);
+        projTube.visible = len > 0.06;
+        projTube.scale.set(1, Math.max(len, 0.001), 1);
+        projTube.rotation.z = Math.PI / 2;
+        projTube.position.set(px / 2, 0, 0);
+
+        var d = dropGeo.getAttribute('position');
+        d.array[0] = tip.x; d.array[1] = tip.y; d.array[2] = 0;
+        d.array[3] = px;    d.array[4] = 0;     d.array[5] = 0;
+        d.needsUpdate = true;
+
+        for (var k = 0; k <= ARC; k++){
+          var ang = th * k / ARC;
+          arcPos[k * 3]     = 1.3 * Math.cos(ang);
+          arcPos[k * 3 + 1] = 1.3 * Math.sin(ang);
+          arcPos[k * 3 + 2] = 0;
+        }
+        arcGeo.getAttribute('position').needsUpdate = true;
+        arcGeo.computeBoundingSphere();
+        lT.position.set(1.82 * Math.cos(th / 2), 1.82 * Math.sin(th / 2), 0);
+        lP.position.set(px / 2, -0.62, 0);
+        lP.visible = len > 0.25;
+
+        /* the readout only redraws when the sign actually changes — a canvas
+           texture rebuilt every frame is the one thing that makes this scene
+           expensive */
+        var band = px > 0.12 ? 'p' : (px < -0.12 ? 'n' : 'z');
+        if (band !== lastBand){
+          lastBand = band;
+          if (band === 'p'){ lW.userData.redraw('W  +ve', '#34d399');
+                             projTube.material.color.setHex(GREEN);
+                             projLine.material.color.setHex(GREEN); }
+          else if (band === 'n'){ lW.userData.redraw('W  −ve', '#fb7185');
+                             projTube.material.color.setHex(RED);
+                             projLine.material.color.setHex(RED); }
+          else { lW.userData.redraw('W = 0', '#f4f7fb');
+                 projTube.material.color.setHex(0xf4f7fb);
+                 projLine.material.color.setHex(0xf4f7fb); }
+        }
+
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ------------------------------------------------ mechanics scenes 2D --
+       Two scenes for the Laws-of-Motion / momentum decks. Both draw geometry
+       only — no lesson text lives in the canvas, and every frame carries a
+       .scene-fallback that prints (rule 20).
+
+         impulse-wall        a ball reflecting off a wall at data-angle degrees
+                             FROM THE NORMAL, with p, p' drawn tail-to-tail and
+                             Dp = p' - p closing them. The one thing a still
+                             figure cannot show: the tangential part survives,
+                             only the normal part reverses, so Dp always lies
+                             along the normal however the ball comes in.
+         explosion-momentum  a body at rest bursting into three fragments whose
+                             momentum vectors close on themselves: p1 + p2 = -p3.
+         recoil-momentum     a gun at rest fires a bullet: the bullet's p and the
+                             gun's -p grow together out of one origin and always
+                             cancel. A still figure can draw the two arrows but
+                             not the fact that they are BORN together out of zero.
+         collision-momentum  two bodies meet and leave with different velocities
+                             while the tail-to-tip sum underneath them keeps the
+                             same length through the collision — the one thing
+                             "momentum is conserved" means and a still figure
+                             has to assert rather than show.
+    */
+    function startMech2D(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
+          GREEN = 0x34d399, INK = 0xf4f7fb;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9.6);
+      camera.lookAt(0, 0, 0);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(2.9 / t2, 4.35 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var world = new T.Group();
+      world.position.set(-4, -2.5, 0);          /* plane coords: x 0..8, y 0..5 */
+      scene.add(world);
+
+      function line(pts, color, opacity){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true, opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(a, b, color, opacity, dash){
+        var g = new T.Group(), d = dash || 0.22,
+            v = new T.Vector3().subVectors(b, a), len = v.length(), n = v.clone().normalize();
+        for (var s = 0; s < len; s += d * 2){
+          g.add(line([a.clone().addScaledVector(n, s),
+                      a.clone().addScaledVector(n, Math.min(s + d, len))], color, opacity));
+        }
+        return g;
+      }
+      function arrow(color, rad, opacity){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad, mat: mat };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 76px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 2, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        return m;
+      }
+      function dot(color, r){
+        return new T.Mesh(new T.SphereGeometry(r || 0.14, 18, 12),
+          new T.MeshBasicMaterial({ color: color }));
+      }
+      function fade(objs, o){
+        objs.forEach(function(m){
+          if (!m) return;
+          m.visible = o > 0.02;
+          m.traverse(function(c){
+            if (c.material){ c.material.transparent = true; c.material.opacity = o; }
+          });
+        });
+      }
+
+      var live = [];        /* things whose opacity the loop drives */
+      var tick = null;
+
+      /* ------------------------------------------------------ impulse-wall -- */
+      if (kind === 'impulse-wall'){
+        var deg = parseFloat(frame.getAttribute('data-angle'));
+        if (!isFinite(deg)) deg = 60;
+        var th = Math.max(0, Math.min(80, deg)) * Math.PI / 180;
+
+        var WX = 6.5, P = new T.Vector3(WX, 2.9, 0);
+        world.add(line([new T.Vector3(WX, 0.5, 0), new T.Vector3(WX, 4.7, 0)], INK, 0.85));
+        for (var yy = 0.5; yy <= 4.7; yy += 0.34){          /* hatching behind it */
+          world.add(line([new T.Vector3(WX, yy, 0),
+                          new T.Vector3(WX + 0.34, yy + 0.34, 0)], INDIGO, 0.5));
+        }
+        world.add(dashed(new T.Vector3(WX - 2.9, P.y, 0), new T.Vector3(WX, P.y, 0), INK, 0.4));
+
+        /* the normal is horizontal (the dashed line), so th opens off it */
+        var dIn  = new T.Vector3(Math.cos(th), -Math.sin(th), 0);
+        var dOut = new T.Vector3(-Math.cos(th), -Math.sin(th), 0);
+        var LEG = 2.6;
+        var A = P.clone().addScaledVector(dIn, -LEG);
+        var B = P.clone().addScaledVector(dOut, LEG);
+
+        world.add(dashed(A, P, INK, 0.22, 0.16));
+        world.add(dashed(P, B, INK, 0.22, 0.16));
+
+        var ball = dot(GOLD, 0.17); world.add(ball);
+        var vIn  = arrow(GOLD, 0.055);  world.add(vIn);
+        var vOut = arrow(GOLD, 0.055);  world.add(vOut);
+
+        /* the triad: p and p' tail to tail, Dp closing them */
+        var O = new T.Vector3(2.05, 1.55, 0), S = 1.75;
+        var pI = arrow(GOLD, 0.062),  pF = arrow(INDIGO, 0.062), dP = arrow(GREEN, 0.07);
+        world.add(pI); world.add(pF); world.add(dP);
+        var tipI = O.clone().addScaledVector(dIn, S);
+        var tipF = O.clone().addScaledVector(dOut, S);
+        aim(pI, O, tipI); aim(pF, O, tipF); aim(dP, tipI, tipF);
+        var lI = label('p', '#f5c542', 0.44), lF = label('p′', '#9fb4ff', 0.44),
+            lD = label('Δp', '#34d399', 0.5);
+        lI.position.copy(tipI).add(new T.Vector3(0.26, -0.2, 0));
+        lF.position.copy(tipF).add(new T.Vector3(-0.3, -0.2, 0));
+        lD.position.copy(tipI).lerp(tipF, 0.5).add(new T.Vector3(0, 0.36, 0));
+        world.add(lI); world.add(lF); world.add(lD);
+        var triad = [pI, pF, dP, lI, lF, lD];
+        fade(triad, 0);
+        fade([vOut], 0);
+
+        tick = function(t){
+          var T0 = 6.4, u = (t % T0) / T0;
+          var seg;
+          if (u < 0.34){                                  /* coming in */
+            seg = u / 0.34;
+            ball.position.copy(A).lerp(P, seg);
+            aim(vIn, ball.position.clone().addScaledVector(dIn, -1.15), ball.position);
+            vIn.visible = true;
+            fade([vOut], 0); fade(triad, 0);
+          } else if (u < 0.72){                           /* going out */
+            seg = (u - 0.34) / 0.38;
+            ball.position.copy(P).lerp(B, seg);
+            vIn.visible = false;
+            fade([vOut], 1);
+            aim(vOut, ball.position.clone().addScaledVector(dOut, -1.15), ball.position);
+            fade(triad, Math.min(1, seg * 2.6));
+          } else {                                        /* hold on the triad */
+            ball.position.copy(B);
+            vIn.visible = false;
+            fade([vOut], 1);
+            aim(vOut, B.clone().addScaledVector(dOut, -1.15), B);
+            fade(triad, Math.max(0, 1 - Math.max(0, (u - 0.92) / 0.08)));
+          }
+        };
+      }
+
+      /* ------------------------------------------------ explosion-momentum -- */
+      if (kind === 'explosion-momentum'){
+        var C = new T.Vector3(3.5, 2.3, 0);
+        var v1 = new T.Vector3(2.35, 0, 0);                /* p1, to the right   */
+        var v2 = new T.Vector3(0, 1.85, 0);                /* p2, at right angles */
+        var vR = new T.Vector3().addVectors(v1, v2);       /* their resultant     */
+        var v3 = vR.clone().multiplyScalar(-1);            /* p3 closes the sum   */
+
+        var g1 = dashed(C.clone().add(v1), C.clone().add(vR), INK, 0.3);
+        var g2 = dashed(C.clone().add(v2), C.clone().add(vR), INK, 0.3);
+        world.add(g1); world.add(g2);
+        var res = arrow(INK, 0.045, 0.42); world.add(res);
+        aim(res, C, C.clone().add(vR));
+
+        var a1 = arrow(GOLD, 0.062), a2 = arrow(CYAN, 0.062), a3 = arrow(INDIGO, 0.07);
+        world.add(a1); world.add(a2); world.add(a3);
+        aim(a1, C, C.clone().add(v1));
+        aim(a2, C, C.clone().add(v2));
+        aim(a3, C, C.clone().add(v3));
+
+        var l1 = label('p₁', '#f5c542', 0.46),
+            l2 = label('p₂', '#8fdcff', 0.46),
+            l3 = label('p₃', '#9fb4ff', 0.46);
+        l1.position.copy(C).add(v1).add(new T.Vector3(0.16, 0.34, 0));
+        l2.position.copy(C).add(v2).add(new T.Vector3(0.38, 0.14, 0));
+        l3.position.copy(C).add(v3).add(new T.Vector3(-0.16, -0.34, 0));
+        world.add(l1); world.add(l2); world.add(l3);
+
+        var body = dot(INK, 0.2); body.position.copy(C); world.add(body);
+        var f1 = dot(GOLD, 0.14), f2 = dot(CYAN, 0.14), f3 = dot(INDIGO, 0.18);
+        world.add(f1); world.add(f2); world.add(f3);
+        var vecs = [a1, a2, a3, l1, l2, l3, res, g1, g2];
+        fade(vecs, 0);
+
+        tick = function(t){
+          var T0 = 6.0, u = (t % T0) / T0, k;
+          if (u < 0.22){                                   /* the body, at rest */
+            body.visible = true;
+            body.scale.setScalar(1 + 0.06 * Math.sin(t * 5));
+            f1.visible = f2.visible = f3.visible = false;
+            fade(vecs, 0);
+          } else {
+            body.visible = false;
+            f1.visible = f2.visible = f3.visible = true;
+            k = Math.min(1, (u - 0.22) / 0.42);
+            k = 1 - Math.pow(1 - k, 3);
+            f1.position.copy(C).addScaledVector(v1, k);
+            f2.position.copy(C).addScaledVector(v2, k);
+            f3.position.copy(C).addScaledVector(v3, k);
+            fade(vecs, Math.min(1, k * 1.6) * (1 - Math.max(0, (u - 0.93) / 0.07)));
+          }
+        };
+      }
+
+      /* an outline rectangle, drawn as a closed line loop (geometry only) */
+      function boxOutline(cx, cy, bw, bh, color, opacity){
+        var x0 = cx - bw / 2, x1 = cx + bw / 2, y0 = cy - bh / 2, y1 = cy + bh / 2;
+        return line([new T.Vector3(x0, y0, 0), new T.Vector3(x1, y0, 0),
+                     new T.Vector3(x1, y1, 0), new T.Vector3(x0, y1, 0),
+                     new T.Vector3(x0, y0, 0)], color, opacity);
+      }
+      function ground(y, x0, x1){
+        var g = new T.Group();
+        g.add(line([new T.Vector3(x0, y, 0), new T.Vector3(x1, y, 0)], INDIGO, 0.95));
+        for (var gx = x0 + 0.2; gx <= x1; gx += 0.44){
+          g.add(line([new T.Vector3(gx, y, 0),
+                      new T.Vector3(gx - 0.3, y - 0.3, 0)], INDIGO, 0.34));
+        }
+        return g;
+      }
+
+      /* --------------------------------------------------- recoil-momentum -- */
+      if (kind === 'recoil-momentum'){
+        var GY = 1.0;
+        world.add(ground(GY, 0.5, 7.6));
+
+        var X0 = 3.55;                                   /* where both start   */
+        var gun = new T.Group();                         /* breech + barrel    */
+        gun.add(boxOutline(-0.5, GY + 0.44, 1.5, 0.6, INK, 0.85));
+        gun.add(boxOutline(0.62, GY + 0.5, 0.9, 0.2, INK, 0.85));
+        gun.add(line([new T.Vector3(-1.1, GY + 0.14, 0),
+                      new T.Vector3(-0.62, GY - 0.02, 0)], INK, 0.6));
+        gun.position.set(X0, 0, 0);
+        world.add(gun);
+
+        var slug = dot(GOLD, 0.13);
+        world.add(slug);
+
+        /* the two momenta, born together out of one origin */
+        var O2 = new T.Vector3(3.9, 3.55, 0), K = 1.55;
+        var hub = dot(GREEN, 0.075); hub.position.copy(O2); world.add(hub);
+        var pB = arrow(GOLD, 0.062), pG = arrow(INDIGO, 0.062);
+        world.add(pB); world.add(pG);
+        var lB = label('p', '#f5c542', 0.44), lG = label('−p', '#9fb4ff', 0.5),
+            lS = label('Σp = 0', '#34d399', 0.62);
+        lS.position.copy(O2).add(new T.Vector3(0, -0.62, 0));
+        world.add(lB); world.add(lG); world.add(lS);
+        var triadR = [pB, pG, lB, lG, hub, lS];
+        fade(triadR, 0);
+
+        tick = function(t){
+          var T0 = 6.2, u = (t % T0) / T0, k;
+          if (u < 0.2){                                  /* both at rest       */
+            gun.position.x = X0;
+            slug.position.set(X0 + 1.12, GY + 0.5, 0);
+            fade(triadR, 0);
+          } else {
+            k = Math.min(1, (u - 0.2) / 0.5);
+            k = 1 - Math.pow(1 - k, 3);
+            gun.position.x = X0 - 0.85 * k;              /* light kick back    */
+            slug.position.set(X0 + 1.12 + 3.05 * k, GY + 0.5, 0);
+            var s = Math.min(1, k * 1.5) * K;
+            aim(pB, O2, O2.clone().add(new T.Vector3(s, 0, 0)));
+            aim(pG, O2, O2.clone().add(new T.Vector3(-s, 0, 0)));
+            lB.position.copy(O2).add(new T.Vector3(s + 0.34, 0.3, 0));
+            lG.position.copy(O2).add(new T.Vector3(-s - 0.42, 0.3, 0));
+            fade(triadR, Math.min(1, k * 2.2) * (1 - Math.max(0, (u - 0.93) / 0.07)));
+          }
+        };
+      }
+
+      /* ------------------------------------------------ collision-momentum -- */
+      if (kind === 'collision-momentum'){
+        var LY = 3.45, MEET = 4.0;
+        world.add(dashed(new T.Vector3(0.6, LY, 0), new T.Vector3(7.5, LY, 0), INK, 0.16, 0.18));
+
+        /* m1 = 1, m2 = 2 · u1 = +2.4, u2 = −0.6 · v1 = −1.6, v2 = +1.4     */
+        var U1 = 2.4, U2 = -0.6, V1 = -1.6, V2 = 1.4, R1 = 0.26, R2 = 0.4;
+        var b1 = dot(GOLD, R1), b2 = dot(INDIGO, R2);
+        world.add(b1); world.add(b2);
+        var m1L = label('m₁', '#f5c542', 0.4), m2L = label('m₂', '#9fb4ff', 0.4);
+        world.add(m1L); world.add(m2L);
+        var w1 = arrow(GOLD, 0.05), w2 = arrow(INDIGO, 0.05);
+        world.add(w1); world.add(w2);
+
+        /* the tail-to-tip sum, underneath, in the same gold as the answer */
+        var OB = new T.Vector3(1.5, 1.75, 0), SC = 0.78;
+        var q1 = arrow(GOLD, 0.055), q2 = arrow(INDIGO, 0.055), qT = arrow(GREEN, 0.07);
+        world.add(q1); world.add(q2); world.add(qT);
+        var lq1 = label('p₁', '#f5c542', 0.4), lq2 = label('p₂', '#9fb4ff', 0.4),
+            lqT = label('Σp', '#34d399', 0.44);
+        world.add(lq1); world.add(lq2); world.add(lqT);
+        var TOT = 1 * U1 + 2 * U2;                        /* = 1.2, and stays  */
+        var OT = OB.clone().add(new T.Vector3(0, -0.72, 0));
+        aim(qT, OT, OT.clone().add(new T.Vector3(TOT * SC, 0, 0)));
+        lqT.position.copy(OT).add(new T.Vector3(TOT * SC + 0.4, 0, 0));
+
+        function sum(p1, p2){
+          var t1 = OB.clone().add(new T.Vector3(p1 * SC, 0, 0));
+          aim(q1, OB, t1);
+          aim(q2, t1, t1.clone().add(new T.Vector3(p2 * SC, 0, 0)));
+          lq1.position.copy(OB).lerp(t1, 0.5).add(new T.Vector3(0, 0.38, 0));
+          lq2.position.copy(t1).add(new T.Vector3(p2 * SC / 2, -0.4, 0));
+        }
+
+        tick = function(t){
+          var T0 = 7.4, u = (t % T0) / T0, s, x1, x2, a1v, a2v;
+          if (u < 0.42){                                  /* coming together   */
+            s = u / 0.42;
+            x1 = MEET - (R1 + R2) - U1 * 1.05 * (1 - s);
+            x2 = MEET + (R1 + R2) - U2 * 1.05 * (1 - s);
+            a1v = U1; a2v = U2;
+          } else if (u < 0.5){                            /* contact           */
+            x1 = MEET - (R1 + R2); x2 = MEET + (R1 + R2);
+            a1v = 0; a2v = 0;
+          } else {                                        /* leaving           */
+            s = Math.min(1, (u - 0.5) / 0.42);
+            x1 = MEET - (R1 + R2) + V1 * 1.15 * s;
+            x2 = MEET + (R1 + R2) + V2 * 1.15 * s;
+            a1v = V1; a2v = V2;
+          }
+          b1.position.set(x1, LY, 0); b2.position.set(x2, LY, 0);
+          m1L.position.set(x1, LY - 0.62, 0);
+          m2L.position.set(x2, LY - 0.72, 0);
+          if (a1v === 0){ w1.visible = false; w2.visible = false; }
+          else {
+            aim(w1, new T.Vector3(x1, LY + 0.62, 0),
+                    new T.Vector3(x1 + a1v * 0.42, LY + 0.62, 0));
+            aim(w2, new T.Vector3(x2, LY + 0.62, 0),
+                    new T.Vector3(x2 + a2v * 0.42, LY + 0.62, 0));
+          }
+          sum(u < 0.46 ? U1 : V1, u < 0.46 ? 2 * U2 : 2 * V2);
+        };
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+
+      var t0 = Date.now();
+      (function loop(){
+        requestAnimationFrame(loop);
+        if (tick) tick((Date.now() - t0) / 1000);
+        renderer.render(scene, camera);
+      })();
+      return live;
+    }
+
   });
 })();

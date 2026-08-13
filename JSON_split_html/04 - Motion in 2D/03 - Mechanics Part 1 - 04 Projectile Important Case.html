@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>03  Mechanics Part 1 04 Projectile Important Case Bearable — LessonForge Deck</title>
+<title>03 - Mechanics Part 1 - 04 Projectile Important Case.html</title>
 <style>
 /* ============================================================================
    LessonForge deck-base.css  —  canonical design system for converted decks
@@ -66,15 +66,15 @@
   --radius-lg:    2.1vmin;
 
   /* type scale — presentation scale, NOT web scale (rule 9) */
-  --fs-title:     clamp(36px, 8.8vmin, 100px);
-  --fs-h2:        clamp(26px, 5.6vmin, 60px);
-  --fs-h3:        clamp(22px, 4.4vmin, 46px);
-  --fs-body:      clamp(19px, 3.3vmin, 38px);
-  --fs-small:     clamp(17px, 2.8vmin, 32px);
-  --fs-note:      clamp(16px, 2.6vmin, 28px);
-  --fs-eq:        clamp(20px, 3.9vmin, 44px);
-  --fs-th:        clamp(15px, 2.2vmin, 25px);
-  --fs-td:        clamp(15px, 2.35vmin, 26px);
+  --fs-title:     clamp(39.6px, 9.68vmin, 110px);
+  --fs-h2:        clamp(28.6px, 6.16vmin, 66px);
+  --fs-h3:        clamp(24.2px, 4.84vmin, 50.6px);
+  --fs-body:      clamp(20.9px, 3.63vmin, 41.8px);
+  --fs-small:     clamp(18.7px, 3.08vmin, 35.2px);
+  --fs-note:      clamp(17.6px, 2.86vmin, 30.8px);
+  --fs-eq:        clamp(22px, 4.29vmin, 48.4px);
+  --fs-th:        clamp(16.5px, 2.42vmin, 27.5px);
+  --fs-td:        clamp(16.5px, 2.585vmin, 28.6px);
 
   /* fonts (rule 17) */
   --font-ui:      Calibri, Candara, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
@@ -133,7 +133,7 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 #bg svg.motif-rail{opacity:.7}
 
 .kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
-    font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    font-size:1.925vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
     padding:.7vmin 1.6vmin;border-radius:99px;opacity:.72;
     background:rgba(245,197,66,.08);border:.1vmin solid rgba(245,197,66,.22);
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
@@ -184,7 +184,7 @@ h2.heading:before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;wid
     border-radius:99px;
     background:linear-gradient(180deg,var(--gold),rgba(245,197,66,.15))}
 h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--gold);font-weight:700}
-h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--gold);
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(20.9px,3.74vmin,39.6px);color:var(--gold);
     font-weight:700;letter-spacing:.005em}
 h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
 
@@ -198,7 +198,7 @@ p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
 .caption{color:var(--muted);font-size:var(--fs-note)}
 .example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
 .example b{color:var(--ink);font-style:normal}
-.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.4;
+.lead   {font-size:clamp(26.4px,5.94vmin,63.8px);font-weight:700;line-height:1.4;
          letter-spacing:-.01em}
 
 /* -------------------------------------------------------------- layouts --- */
@@ -243,9 +243,9 @@ ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
 .qa{margin-bottom:1.6vmin;padding:1.6vmin 2vmin;border-radius:var(--radius);
     background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
     box-shadow:var(--lip)}
-.qa .q{color:var(--gold);font-weight:700;font-size:clamp(18px,2.9vmin,32px);line-height:1.35}
+.qa .q{color:var(--gold);font-weight:700;font-size:clamp(19.8px,3.19vmin,35.2px);line-height:1.35}
 .qa .a{margin-top:.8vmin;padding-left:2.4vmin;color:var(--sub);
-       font-size:clamp(17px,2.7vmin,30px);line-height:1.45}
+       font-size:clamp(18.7px,2.97vmin,33px);line-height:1.45}
 
 /* -------------------------------------------------------------- surfaces --- */
 .card{background:var(--card-bg);border:.12vmin solid var(--card-border);
@@ -319,7 +319,7 @@ table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!imp
    `.derivation .line` / `.graph-cell .cap`, which are flex containers too. */
 .eq.inline{display:inline-block;gap:normal;flex-wrap:nowrap;vertical-align:baseline;
            white-space:nowrap}
-.eq.big  {font-size:clamp(24px,5vmin,56px);color:var(--gold-soft);
+.eq.big  {font-size:clamp(26.4px,5.5vmin,61.6px);color:var(--gold-soft);
           text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
 
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
@@ -479,9 +479,9 @@ svg.gph .tangent{fill:none;stroke:rgba(255,255,255,.55);stroke-width:2;
                  stroke-dasharray:9 7;stroke-linecap:round}
 svg.gph .dot    {fill:var(--gold);stroke:none}
 svg.gph .dot.open{fill:none;stroke:var(--gold);stroke-width:3}
-svg.gph text    {font-family:var(--font-math);font-size:34px;fill:var(--sub)}
+svg.gph text    {font-family:var(--font-math);font-size:37.4px;fill:var(--sub)}
 svg.gph text.lab{fill:rgba(255,255,255,.9)}
-svg.gph text.num{font-size:30px;fill:var(--muted)}
+svg.gph text.num{font-size:33px;fill:var(--muted)}
 
 /* ---------------------------------------------- motion schematics (.dgm) ---
    A kinematics chapter draws the same handful of props over and over — a
@@ -549,9 +549,9 @@ svg.dgm .arwhead.w{fill:rgba(255,255,255,.85)}
 svg.dgm .stair  {fill:rgba(255,255,255,.15);stroke:rgba(255,255,255,.4);stroke-width:2}
 svg.dgm .figr   {fill:rgba(245,197,66,.6);stroke:none}
 svg.dgm .figr.b {fill:rgba(159,180,255,.65)}
-svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
-svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
-svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
+svg.dgm text    {font-family:var(--font-math);font-size:33px;fill:var(--sub)}
+svg.dgm text.lab{font-family:var(--font-ui);font-size:30.8px;fill:rgba(255,255,255,.9)}
+svg.dgm text.num{font-size:31.9px;fill:var(--gold-soft)}
 
 /* Small-multiple grid — the "here are four graphs, which one" layout that
    this chapter repeats on nearly every slide. The GRID is never the .step;
@@ -572,7 +572,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 .graph-stack .graph-cell svg{max-height:26vh}
 .graph-stack.three .graph-cell svg{max-height:17vh}
 /* the verdict mark the source deck stamps on a graph: a big ✓ or ✗ */
-.verdict{display:block;text-align:center;font-size:clamp(22px,4.4vmin,48px);
+.verdict{display:block;text-align:center;font-size:clamp(24.2px,4.84vmin,52.8px);
          font-weight:900;line-height:1}
 .verdict.ok{color:var(--green)}
 .verdict.no{color:var(--red)}
@@ -593,7 +593,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 .options.graphs .opt-badge{align-self:flex-start}
 .option{position:relative;display:flex;align-items:center;gap:1.4vmin;
         border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
-        padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        padding:1.6vmin 2.2vmin;font-size:clamp(19.8px,3.3vmin,37.4px);cursor:pointer;
         min-height:44px;box-sizing:border-box;line-height:1.3;
         background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
         box-shadow:var(--lip),var(--lift);
@@ -618,7 +618,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 .option.correct .opt-badge{background:linear-gradient(180deg,#bbf7d0,var(--green));color:#04291d}
 .option.wrong   .opt-badge{background:linear-gradient(180deg,#fecdd3,var(--red));color:#3f0a14}
 .answer-box{position:relative;margin-top:1.2vmin;padding:1.7vmin 2.2vmin 1.7vmin 3vmin;
-            border-radius:var(--radius);font-size:clamp(17px,2.8vmin,32px);line-height:1.4;
+            border-radius:var(--radius);font-size:clamp(18.7px,3.08vmin,35.2px);line-height:1.4;
             background:linear-gradient(180deg,rgba(52,211,153,.18),rgba(52,211,153,.05));
             box-shadow:var(--lip),var(--lift)}
 .answer-box:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
@@ -754,28 +754,28 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
   border-bottom:.1vmin solid var(--rule)}
 .sim-row:last-child{border-bottom:0}
 .sim-key{color:var(--gold);font-weight:700;line-height:1.2;
-  font-size:clamp(13px,2vmin,22px);letter-spacing:.015em}
+  font-size:clamp(14.3px,2.2vmin,24.2px);letter-spacing:.015em}
 .sim-val{font-family:var(--font-math);text-align:right;white-space:nowrap;
-  color:var(--ink);font-size:clamp(14px,2.2vmin,25px)}
+  color:var(--ink);font-size:clamp(15.4px,2.42vmin,27.5px)}
 .sim-row.total{margin-top:.5vmin;padding-top:.9vmin;border-bottom:0;
   border-top:.16vmin solid rgba(245,197,66,.5)}
-.sim-row.total .sim-key{font-size:clamp(14px,2.2vmin,24px)}
+.sim-row.total .sim-key{font-size:clamp(15.4px,2.42vmin,26.4px)}
 .sim-row.total .sim-val{color:var(--gold-soft);font-weight:700;
-  font-size:clamp(18px,3.1vmin,35px)}
+  font-size:clamp(19.8px,3.41vmin,38.5px)}
 .sim-note{margin-top:.9vmin;color:var(--muted);font-style:italic;line-height:1.35;
-  font-size:clamp(12px,1.85vmin,20px)}
+  font-size:clamp(13.2px,2.035vmin,22px)}
 
 .sim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;
   gap:1.4vmin 2.6vmin;margin-top:1.4vmin}
 .sim-group{display:flex;flex-direction:column;gap:.7vmin;min-width:0}
 .sim-group-label{color:var(--muted);font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;font-size:clamp(11px,1.7vmin,18px)}
+  text-transform:uppercase;font-size:clamp(12.1px,1.87vmin,19.8px)}
 .sim-keys{display:flex;flex-wrap:wrap;gap:.9vmin}
 .sim-btn{display:inline-flex;align-items:center;justify-content:center;
   min-height:44px;padding:.9vmin 1.7vmin;box-sizing:border-box;cursor:pointer;
   border-radius:1.1vmin;border:.12vmin solid rgba(255,255,255,.18);
   font-family:var(--font-ui);font-weight:700;line-height:1.15;color:var(--ink);
-  font-size:clamp(13px,2vmin,23px);
+  font-size:clamp(14.3px,2.2vmin,25.3px);
   background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
   box-shadow:var(--lip),var(--lift);
   transition:border-color .25s ease,background .25s ease,color .25s ease}
@@ -883,7 +883,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
    sits at the surrounding text size, not at --fs-eq.                         */
 .qa .q-head,.qa .a-head{display:block;margin-bottom:.5vmin;
   font-family:var(--font-ui);font-weight:700;letter-spacing:.12em;
-  text-transform:uppercase;font-size:clamp(12px,1.9vmin,21px)}
+  text-transform:uppercase;font-size:clamp(13.2px,2.09vmin,23.1px)}
 .qa .q-head{color:var(--gold-deep)}
 .qa .a-head{color:var(--muted)}
 .qa .q math,.qa .a math{font-size:inherit}
@@ -892,7 +892,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 .tag-hot{display:inline-flex;align-items:center;margin-left:1.2vmin;
   padding:.2vmin 1.4vmin;border-radius:99px;vertical-align:middle;
   font-family:var(--font-ui);font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;font-size:clamp(12px,1.8vmin,20px);color:#ffd8a6;
+  text-transform:uppercase;font-size:clamp(13.2px,1.98vmin,22px);color:#ffd8a6;
   border:.12vmin solid rgba(251,146,60,.5);
   background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(217,119,6,.1))}
 
@@ -913,6 +913,17 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
    sits on the line above (e.g. the "Solution" head of a .qa) */
 .op-chain{margin:2.8vmin 0 .8vmin}
 .op-chain.mini{margin:2.4vmin 0 1.4vmin}
+
+/* ------------------------------------------------------- upright override --
+   rule 17, enforced globally: nothing on a slide leans. Browsers italicise a
+   single-letter <mi> through `text-transform:math-auto` in the UA sheet (which
+   font-style cannot undo), and the deck's own note/caption/aside classes used
+   to lean by design. Both are cancelled here. Notes stay legible as notes via
+   colour (--muted / --sub), not slant.                                       */
+*,*:before,*:after{font-style:normal!important}
+math,math *{text-transform:none!important;font-style:normal!important}
+math mi{font-family:var(--font-math)}
+i,em,cite,var,dfn,address{font-style:normal!important}
 </style>
 </head>
 <body>

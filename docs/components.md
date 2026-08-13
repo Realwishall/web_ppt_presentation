@@ -396,6 +396,12 @@ that element becomes visible.
 | `data-three="vector-rva"` | `<div class="scene-frame">` | `r` from the origin, `v` along the tangent, `a` — the three vectors of a position-vector question |
 | `data-three="tangent-normal"` | `<div class="scene-frame">` | a fixed `a` resolved into `a_t` (along `v`) and `a_c` (perpendicular) as the particle rounds a bend |
 | `data-three="curvature-circle"` | `<div class="scene-frame">` | the osculating circle riding an ellipse — tight at a sharp bend, wide where the path is nearly straight |
+| `data-three="work-dot"` | `<div class="scene-frame">` | the dot product itself: a gold `F` swinging slowly around a fixed indigo `s`, with the projection `F cos θ` marked **on** `s` and a readout that flips **+ve → 0 → −ve** as the angle opens past 90°. The one thing about `W = F·s` a still figure cannot show — that the answer is a shadow, and that the shadow changes sense |
+| `data-three="impulse-wall"` | `<div class="scene-frame">` | a ball reflecting off a wall at `data-angle` degrees **from the normal** (0 = head-on), then `p` and `p′` drawn tail-to-tail with `Δp = p′ − p` closing them. The one thing a still figure cannot show: the along-the-wall part survives untouched, so `Δp` lies along the normal whatever the angle — and shrinks to `2mV cos θ`. Pairs with the wall-impulse PYQ cluster |
+| `data-three="explosion-momentum"` | `<div class="scene-frame">` | a body at rest bursting into three fragments whose momentum vectors close on themselves: `p₁ + p₂ = −p₃`, with the parallelogram of the first two drawn faint. The figure a momentum-conservation question draws by hand |
+| `data-three="recoil-momentum"` | `<div class="scene-frame">` | a gun at rest fires: the bullet's `p` and the gun's `−p` grow **together** out of one origin and always cancel, under a green `Σp = 0`. A still figure can draw the two arrows; it cannot show that they are born together out of nothing, which is the whole of the recoil question |
+| `data-three="collision-momentum"` | `<div class="scene-frame">` | two bodies (`m₁`, `m₂ = 2m₁`) meet and leave with different velocities, while the tail-to-tip sum drawn underneath keeps **exactly the same length** through the collision. "Momentum is conserved" is a statement about a quantity that survives an event — so it needs the event |
+| `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle, turning, with `ω` drawn **along the axle** in the right-hand sense — the one thing a still figure cannot show, that `ω` stands on the axis rather than lying in the plane. `data-sense="ccw"` (default) turns anticlockwise seen from above and points `ω` up / out of the plane; `data-sense="cw"` reverses both |
 
 ```html
 <div class="step">
@@ -722,6 +728,21 @@ never needs a `style` attribute to draw one.
 | `.guide` | a dashed projection / construction line |
 | `.arc` | the little arc that names an angle |
 | `.arw.w` + `.arwhead.w` | a neutral (white) motion arrow, for the source decks that draw most vectors in white |
+
+**Work / energy props.** The Work chapter draws the same handful of things on
+page after page — a wedge, a circular track, a pulley and its cord, a lift
+cage, a beaker of liquid, a stick figure — so they are components too.
+
+| Part class | What it draws |
+|---|---|
+| `.plane` (`.hollow` for outline only) | a wedge, an inclined surface, a curved ramp |
+| `.ring` | a circular track the body runs on — never filled |
+| `.disc` + `.spoke` | a rolling wheel and its dashed diameter |
+| `.pulley` + `.cord` | the pulley wheel and the light thread over it |
+| `.spring` | the zig-zag coil of a spring |
+| `.cage` + `.floor` | a lift cabin and the surface a body stands on |
+| `.vessel` + `.liquid` | a beaker outline and the column of liquid in it |
+| `.man` + `.limb` (`.b` gold) | a stick figure — runner, climber, passenger |
 
 Arrowheads are drawn as `<path class="arwhead">`, **never** as SVG markers — a
 marker needs an id and a deck is one document with a dozen figures in it.
