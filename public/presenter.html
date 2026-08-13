@@ -234,6 +234,9 @@
      "off" is the state worth spotting from the back of the room */
   .tool-btn.anim-off{color:#fbbf24;background:rgba(251,191,36,.12)}
   .tool-btn.anim-off:hover{background:rgba(251,191,36,.22)}
+  /* skip-from-PDF: lit rose while this page is excluded from export */
+  .tool-btn.skip-on{color:#fda4af;background:rgba(244,63,94,.16)}
+  .tool-btn.skip-on:hover{background:rgba(244,63,94,.26)}
   .tool-btn.danger{color:var(--danger)}
   .tool-btn.danger:hover{background:rgba(239,68,68,.16)}
   .tool-btn svg{width:14px;height:14px}
@@ -349,6 +352,8 @@
   }
   .page-tile:hover{transform:translateY(-3px);border-color:#475569}
   .page-tile.cur{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,58,237,.35)}
+  .page-tile.skip{opacity:.72}
+  .page-tile.skip img{filter:grayscale(.35)}
   .page-tile img{display:block;width:150px;height:auto;position:relative;z-index:1}
   .pt-snap{position:absolute;overflow:hidden;z-index:0}
   .pt-snap iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none}
@@ -363,6 +368,13 @@
     background:rgba(2,6,16,.7);border-radius:6px;padding:3px 6px;
   }
   .page-tile.cur .pt-label{color:#c4b5fd}
+  .pt-skip{
+    position:absolute;top:6px;right:6px;z-index:3;line-height:1;
+    font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:#fecdd3;background:rgba(2,6,16,.75);border:1px solid rgba(244,63,94,.35);
+    border-radius:6px;padding:3px 6px;cursor:pointer;
+  }
+  .page-tile.skip .pt-skip{color:#fff;background:rgba(244,63,94,.75);border-color:transparent}
   .page-dots{display:none;gap:5px}
   .page-dots span{
     width:6px;height:6px;border-radius:50%;background:#334155;
@@ -450,6 +462,18 @@
     border:1px solid var(--border);border-radius:9px;padding:8px 10px;margin-bottom:14px;
   }
   .cfg-note b{color:var(--text)}
+  .key-bind{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .key-bind kbd{
+    display:inline-flex;align-items:center;justify-content:center;min-width:42px;
+    padding:8px 12px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:.04em;
+    color:var(--text);background:rgba(148,163,184,.1);border:1px solid var(--border);
+    font-family:inherit;
+  }
+  .key-bind.listening kbd{
+    border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,58,237,.22);color:#c4b5fd;
+  }
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
@@ -538,6 +562,12 @@
           <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#3b82f6"/>
           <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#22c55e"/>
           <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#ef4444"/>
+        </svg>
+      </button>
+      <button class="pill-btn" data-action="settings" title="Presenter settings — shortcuts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
         </svg>
       </button>
       <button class="pill-btn" data-action="undo" title="Undo (Ctrl+Z)">
@@ -676,6 +706,28 @@
     </div>
   </div>
 
+  <!-- Presenter settings — shortcuts that live on this machine -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="dialog form" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Presenter settings</h2>
+      <p>These stay on this computer. They apply every time you teach from this browser.</p>
+
+      <div class="field">
+        <label>Add a blank page</label>
+        <div class="key-bind" id="addPageBind">
+          <kbd id="addPageKbd">N</kbd>
+          <button class="btn-ghost" type="button" id="captureAddPage">Change shortcut</button>
+          <button class="btn-ghost" type="button" id="resetAddPage">Reset</button>
+        </div>
+        <span class="hint" id="addPageHint">Press this key during the lesson to insert a blank page after the current one. Default is N.</span>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-primary" id="closeSettings">Done</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -703,6 +755,57 @@
   try{ state.anim = localStorage.getItem("lf-anim") !== "0"; }catch(err){}
   const deckFrames = {};   // deckId → iframe element
   // stroke = { mode:"draw"|"erase", color, width, pts:[{x,y}] }
+
+  /* Add-page shortcut — default N, remapped in Presenter settings.
+     Stored as a small object so Ctrl/Shift/Alt/Cmd can be part of it. */
+  const DEFAULT_ADD_PAGE = { key:"n", ctrl:false, shift:false, alt:false, meta:false };
+  function loadAddPageShortcut(){
+    try{
+      const raw = localStorage.getItem("lf-shortcut-add-page");
+      if(!raw) return Object.assign({}, DEFAULT_ADD_PAGE);
+      const o = JSON.parse(raw);
+      if(!o || typeof o.key !== "string" || !o.key) return Object.assign({}, DEFAULT_ADD_PAGE);
+      return {
+        key: String(o.key).toLowerCase(),
+        ctrl: !!o.ctrl, shift: !!o.shift, alt: !!o.alt, meta: !!o.meta
+      };
+    }catch(err){ return Object.assign({}, DEFAULT_ADD_PAGE); }
+  }
+  let addPageShortcut = loadAddPageShortcut();
+  function saveAddPageShortcut(s){
+    addPageShortcut = {
+      key: String(s.key).toLowerCase(),
+      ctrl: !!s.ctrl, shift: !!s.shift, alt: !!s.alt, meta: !!s.meta
+    };
+    try{ localStorage.setItem("lf-shortcut-add-page", JSON.stringify(addPageShortcut)); }catch(err){}
+  }
+  function shortcutLabel(s){
+    const bits = [];
+    if(s.ctrl) bits.push("Ctrl");
+    if(s.alt) bits.push("Alt");
+    if(s.shift) bits.push("Shift");
+    if(s.meta) bits.push("Cmd");
+    const k = !s.key ? "?" : (s.key.length === 1 ? s.key.toUpperCase() : s.key);
+    bits.push(k);
+    return bits.join("+");
+  }
+  function eventKeyName(e){
+    if(e.key === " " || e.key === "Spacebar") return "space";
+    return String(e.key || "").toLowerCase();
+  }
+  function matchesShortcut(e, s){
+    if(!s || !s.key) return false;
+    return eventKeyName(e) === s.key
+      && !!e.ctrlKey === !!s.ctrl
+      && !!e.shiftKey === !!s.shift
+      && !!e.altKey === !!s.alt
+      && !!e.metaKey === !!s.meta;
+  }
+  const BLOCKED_BIND_KEYS = new Set([
+    "escape","tab","enter","backspace","delete",
+    "arrowleft","arrowright","arrowup","arrowdown",
+    "pageup","pagedown","space","home","end"
+  ]);
 
   const COLOR_HEX = {
     navy:"#1e293b", red:"#ef4444", blue:"#3b82f6",
@@ -834,7 +937,9 @@
     zap:    S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>`),
     zapOff: S(`<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/><path d="M3 3 21 21"/>`),
     laser:  S(`<circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/>`),
-    grid:   S(`<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>`)
+    grid:   S(`<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>`),
+    eye:    S(`<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>`),
+    eyeOff: S(`<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a18.2 18.2 0 0 1-1.82 2.62"/><path d="M6.61 6.61C3.45 8.66 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.39-1.02"/><path d="M2 2l20 20"/>`)
   };
 
   /* ═══ RAILS ═══════════════════════════════════
@@ -847,16 +952,25 @@
   ];
   const ACTIONS = [
     { id:"clear",      icon:"trash", title:"Clear ink on this page" },
-    { id:"add-page",   icon:"plus",  title:"Add blank page (N)" },
+    { id:"add-page",   icon:"plus",  title:"Add blank page" },
     { id:"paper",      icon:"grid",  title:"Page background — dots / graph / axes / plain (G)" },
     { id:"duplicate",  icon:"copy",  title:"Duplicate & freeze this page" },
     { id:"fullscreen", icon:"frame", title:"Enter / exit full screen (F)" },
     { id:"close",      icon:"close", title:"End session", cls:"danger" }
   ];
 
+  function curSkip(){
+    const p = state.pages[state.current];
+    return !!(p && p.skipExport);
+  }
+  function addPageTitle(){
+    return "Add blank page (" + shortcutLabel(addPageShortcut) + ")";
+  }
+
   function railHTML(){
-    // Animation switch, top of both rails: the one control that changes what a
-    // page DOES when it opens, so it sits above the ink tools, not among them.
+    // Animation switch + skip-from-PDF, top of both rails: they change what a
+    // page DOES (how it opens / whether it exports), so they sit above the ink.
+    const skip = curSkip();
     let h = `
       <button class="tool-btn ${state.anim ? "" : "anim-off"}" data-action="anim"
               title="${state.anim
@@ -864,6 +978,13 @@
                 : "Animations off — every page opens with its full content (A)"}"
               aria-pressed="${!state.anim}">
         ${ICONS[state.anim ? "zap" : "zapOff"]}
+      </button>
+      <button class="tool-btn ${skip ? "skip-on" : ""}" data-action="skip-export"
+              title="${skip
+                ? "This page is skipped in the PDF — click to include it"
+                : "Skip this page in the PDF export"}"
+              aria-pressed="${skip}">
+        ${ICONS[skip ? "eyeOff" : "eye"]}
       </button>
       <div class="divider" role="separator"></div>`;
 
@@ -890,8 +1011,9 @@
       // the two frame icons read almost the same at 20px, so the button also
       // lights up while full screen is on — otherwise "exit" looks like a no-op
       if(a.id === "fullscreen" && isFS()){ icon = "unframe"; cls += " is-active"; }
+      const title = a.id === "add-page" ? addPageTitle() : a.title;
       return `
-      <button class="tool-btn ${cls}" data-action="${a.id}" title="${a.title}">
+      <button class="tool-btn ${cls}" data-action="${a.id}" title="${title}">
         ${ICONS[icon]}
       </button>`;
     }).join("");
@@ -905,7 +1027,7 @@
      otherwise patch only the attributes that differ. */
   let railsBuilt = false, railKey = "";
   function renderRails(){
-    const key = [state.tool, state.color, state.width, state.anim, isFS(), curPaper()].join("|");
+    const key = [state.tool, state.color, state.width, state.anim, isFS(), curPaper(), curSkip() ? 1 : 0, shortcutLabel(addPageShortcut)].join("|");
     if(railsBuilt && key === railKey) return;
     const first = !railsBuilt;
     railKey = key; railsBuilt = true;
@@ -930,6 +1052,19 @@
         const want = ICONS[state.anim ? "zap" : "zapOff"];
         if(anim.innerHTML !== want) anim.innerHTML = want;   // only re-parse the SVG on a real flip
       }
+      const skipBtn = r.querySelector('[data-action="skip-export"]');
+      if(skipBtn){
+        const on = curSkip();
+        skipBtn.classList.toggle("skip-on", on);
+        skipBtn.setAttribute("aria-pressed", on ? "true" : "false");
+        skipBtn.title = on
+          ? "This page is skipped in the PDF — click to include it"
+          : "Skip this page in the PDF export";
+        const wantSkip = ICONS[on ? "eyeOff" : "eye"];
+        if(skipBtn.innerHTML !== wantSkip) skipBtn.innerHTML = wantSkip;
+      }
+      const addBtn = r.querySelector('[data-action="add-page"]');
+      if(addBtn) addBtn.title = addPageTitle();
       const fs = r.querySelector('[data-action="fullscreen"]');
       if(fs){
         const on = isFS();
@@ -1546,7 +1681,7 @@ for(var i=0;i<cues.length;i++){
   }
 
   /* ═══ PAGES ═══════════════════════════════════ */
-  function blankPage(){ return { strokes:[], snap:null, undo:[], deckId:null, deckIndex:null, stepCount:0, stepIndex:0, paper:"dots" }; }
+  function blankPage(){ return { strokes:[], snap:null, undo:[], deckId:null, deckIndex:null, stepCount:0, stepIndex:0, paper:"dots", skipExport:false }; }
 
   /* clickable pass-through: rects of .clickable elements reported by
      the active deck; taps inside them click instead of drawing */
@@ -2465,6 +2600,12 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       });
     } else if(d.type === "lf-key"){
       // Clicker / host-forwarded keys when the iframe does not hold focus.
+      const fake = {
+        key: d.key,
+        ctrlKey: !!d.ctrlKey, shiftKey: !!d.shiftKey,
+        altKey: !!d.altKey, metaKey: !!d.metaKey
+      };
+      if(matchesShortcut(fake, addPageShortcut)){ addPage(); return; }
       handleNavKey(d.key);
     }
   });
@@ -2510,6 +2651,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
         })),
         snap: p.snap ? {...p.snap} : null,
         paper: p.paper || "dots",
+        skipExport: !!p.skipExport,
         deckId: p.deckId, deckIndex: p.deckIndex,
         stepCount: p.stepCount || 0, stepIndex: p.stepIndex || 0
       }))
@@ -2585,6 +2727,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       if(p.snap && p.snap.deckId != null && idMap[p.snap.deckId])
         p.snap.deckId = idMap[p.snap.deckId];
       p.paper = PAPERS.indexOf(src.paper) >= 0 ? src.paper : "dots";
+      p.skipExport = !!src.skipExport;
       p.deckId = src.deckId != null && idMap[src.deckId] ? idMap[src.deckId] : null;
       p.deckIndex = src.deckIndex;
       p.stepCount = src.stepCount || 0;
@@ -3303,7 +3446,9 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   function updateChrome(){
     const n = state.pages.length, c = state.current;
     const page = state.pages[c];
-    pageLabel.textContent = n ? `${c+1} / ${n}` : "0 / 0";
+    pageLabel.textContent = n
+      ? (page && page.skipExport ? `${c+1} / ${n} · skip` : `${c+1} / ${n}`)
+      : "0 / 0";
     /* Rebuilt only when the NUMBER of pages changes. This used to re-parse the
        whole strip on every single press — forty elements thrown away and
        forty made, plus the style and layout that follows, for a lecture forty
@@ -3363,9 +3508,22 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     toast("Page background — " + PAPER_LABEL[page.paper]);
   }
 
+  function toggleSkipExport(at){
+    const i = at == null ? state.current : at;
+    const page = state.pages[i];
+    if(!page) return toast("No page yet — add one first");
+    page.skipExport = !page.skipExport;
+    updateChrome();
+    scheduleRecover();
+    toast(page.skipExport
+      ? "Page " + (i + 1) + " will not be in the PDF"
+      : "Page " + (i + 1) + " will be in the PDF");
+  }
+
   function handleAction(id){
     switch(id){
       case "add-page":  addPage(); break;
+      case "skip-export": toggleSkipExport(); break;
       case "paper":     cyclePaper(); break;
       case "duplicate": state.current < 0 ? addPage() : addPage({duplicate:true}); break;
       case "clear": {
@@ -3387,6 +3545,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       case "fullscreen": toggleFS(); break;
       case "anim": setAnim(!state.anim); break;
       case "library": openLibrary(); break;
+      case "settings": openSettings(); break;
       // Back to the main screen. The host does the work — it saves the board
       // first unless every page has already gone out through Export — so all
       // this does is ask, and say so while the round trip happens.
@@ -4056,12 +4215,19 @@ html,body{margin:0!important;padding:0!important}
     // Backstop: a throw anywhere in the awaits below must not latch the
     // button shut for the rest of the lesson.
     setTimeout(() => { exporting = false; }, 120000);
-    const exportPages = state.pages.slice(0, end + 1);
+    const exportPages = state.pages.slice(0, end + 1).filter(p => !p.skipExport);
+    if(!exportPages.length){
+      exporting = false;
+      return toast("Every page in this range is marked skip — nothing to export");
+    }
     const blobURLs = [];   // ink overlays — revoked once the print frame is gone
     // Those URLs are revoked a minute after the dialog closes, so a second
     // export must mint its own rather than reuse a dead one.
     objUrlCache.clear();
-    toast("Building PDF — “Save as PDF”, Margins: None, Scale: Default, and leave the paper size as offered");
+    const skippedN = (end + 1) - exportPages.length;
+    toast(skippedN
+      ? `Building PDF — ${skippedN} skipped page${skippedN>1?"s":""} left out. “Save as PDF”, Margins: None, Scale: Default`
+      : "Building PDF — “Save as PDF”, Margins: None, Scale: Default, and leave the paper size as offered");
 
     const r = board.getBoundingClientRect();
     const W = Math.max(2, Math.round(r.width)) || 1280;
@@ -4440,9 +4606,12 @@ ${bgRules}
       const url = await renderThumb(page, tw, th);
       const embed = frozenThumbEmbed(page, W, H, tw, th);
       const label = page.deckId != null ? "Slide" : (page.snap ? "Frozen" : "Blank");
-      return `<button class="page-tile ${i === state.current ? "cur" : ""}" data-goto="${i}" title="Go to page ${i+1}">
+      const skip = !!page.skipExport;
+      return `<button class="page-tile ${i === state.current ? "cur" : ""} ${skip ? "skip" : ""}" data-goto="${i}" title="Go to page ${i+1}">
         ${embed}<img src="${url}" alt="Page ${i+1}">
-        <span class="pt-num">${i+1}</span><span class="pt-label">${label}</span>
+        <span class="pt-num">${i+1}</span>
+        <span class="pt-skip" data-skip="${i}" title="${skip ? "Include this page in the PDF" : "Skip this page in the PDF"}">${skip ? "Skipped" : "Skip"}</span>
+        <span class="pt-label">${label}</span>
       </button>`;
     }));
     pageSheetInner.innerHTML = tiles.join("");
@@ -4472,6 +4641,21 @@ ${bgRules}
 
   pageCounterBtn.addEventListener("click", () => togglePageSheet());
   pageSheetInner.addEventListener("click", e => {
+    const skipEl = e.target.closest("[data-skip]");
+    if(skipEl){
+      e.preventDefault();
+      e.stopPropagation();
+      const i = +skipEl.dataset.skip;
+      toggleSkipExport(i);
+      const tile = skipEl.closest(".page-tile");
+      const page = state.pages[i];
+      if(tile && page){
+        tile.classList.toggle("skip", !!page.skipExport);
+        skipEl.textContent = page.skipExport ? "Skipped" : "Skip";
+        skipEl.title = page.skipExport ? "Include this page in the PDF" : "Skip this page in the PDF";
+      }
+      return;
+    }
     const tile = e.target.closest("button[data-goto]");
     if(!tile) return;
     goTo(+tile.dataset.goto);
@@ -4538,9 +4722,66 @@ ${bgRules}
 
   document.getElementById("loadDeckEmpty").addEventListener("click", openLibrary);
 
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const addPageKbd = document.getElementById("addPageKbd");
+  const addPageBind = document.getElementById("addPageBind");
+  const addPageHint = document.getElementById("addPageHint");
+  let capturingAddPage = false;
+
+  function refreshShortcutUI(){
+    addPageKbd.textContent = shortcutLabel(addPageShortcut);
+    addPageHint.textContent = capturingAddPage
+      ? "Press the key you want — Esc to cancel."
+      : "Press this key during the lesson to insert a blank page after the current one. Default is N.";
+    addPageBind.classList.toggle("listening", capturingAddPage);
+    document.getElementById("captureAddPage").textContent =
+      capturingAddPage ? "Listening…" : "Change shortcut";
+  }
+  function openSettings(){
+    capturingAddPage = false;
+    refreshShortcutUI();
+    settingsOverlay.classList.add("show");
+  }
+  function closeSettings(){
+    capturingAddPage = false;
+    settingsOverlay.classList.remove("show");
+    renderRails();
+  }
+  function applyCapturedShortcut(e){
+    const name = eventKeyName(e);
+    if(BLOCKED_BIND_KEYS.has(name) || name === "control" || name === "shift" || name === "alt" || name === "meta"){
+      toast("That key is reserved — pick a letter or digit");
+      return false;
+    }
+    if(name === "z" && (e.ctrlKey || e.metaKey)){
+      toast("Ctrl+Z is undo — pick another shortcut");
+      return false;
+    }
+    saveAddPageShortcut({
+      key: name,
+      ctrl: !!e.ctrlKey, shift: !!e.shiftKey, alt: !!e.altKey, meta: !!e.metaKey
+    });
+    capturingAddPage = false;
+    refreshShortcutUI();
+    toast("Add-page shortcut is now " + shortcutLabel(addPageShortcut));
+    return true;
+  }
+  document.getElementById("captureAddPage").addEventListener("click", () => {
+    capturingAddPage = !capturingAddPage;
+    refreshShortcutUI();
+  });
+  document.getElementById("resetAddPage").addEventListener("click", () => {
+    capturingAddPage = false;
+    saveAddPageShortcut(DEFAULT_ADD_PAGE);
+    refreshShortcutUI();
+    toast("Add-page shortcut reset to N");
+  });
+  document.getElementById("closeSettings").addEventListener("click", closeSettings);
+
   function handleNavKey(key){
     // A clicker press forwarded by the host must not flip pages behind a dialog.
     if(varsOverlay.classList.contains("show")) return true;
+    if(settingsOverlay.classList.contains("show")) return true;
     if(key === "ArrowLeft" || key === "PageUp" || key === "Backspace"){
       prevAction();
       return true;
@@ -4564,12 +4805,26 @@ ${bgRules}
       }
       return;
     }
+    if(settingsOverlay.classList.contains("show")){
+      if(e.key === "Escape"){
+        e.preventDefault();
+        if(capturingAddPage){ capturingAddPage = false; refreshShortcutUI(); }
+        else closeSettings();
+        return;
+      }
+      if(capturingAddPage){
+        e.preventDefault();
+        applyCapturedShortcut(e);
+        return;
+      }
+      return;
+    }
     if(e.target && typeof e.target.matches === "function" && e.target.matches("input,textarea")) return;
     // Arrows + PowerPoint-style clicker keys (PageUp/PageDown/Space)
     if(handleNavKey(e.key)){ e.preventDefault(); return; }
     // Shift+P before plain P, or the pen would swallow it.
     else if(e.shiftKey && e.key.toLowerCase() === "p"){ e.preventDefault(); toggleLite(); }
-    else if(e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey) addPage();
+    else if(matchesShortcut(e, addPageShortcut)){ e.preventDefault(); addPage(); }
     else if(e.key.toLowerCase() === "p") setTool("pen");
     else if(e.key.toLowerCase() === "e") setTool("eraser");
     else if(e.key.toLowerCase() === "l") setTool("laser");
@@ -4581,6 +4836,7 @@ ${bgRules}
       if(varsOverlay.classList.contains("show")){
         varsOverlay.classList.remove("show"); return;
       }
+      if(settingsOverlay.classList.contains("show")){ closeSettings(); return; }
       const rec = document.getElementById("recoverOverlay");
       if(rec.classList.contains("show")){ rec.classList.remove("show"); return; }
       if(sheetOpen){ togglePageSheet(false); return; }

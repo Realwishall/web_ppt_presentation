@@ -502,13 +502,43 @@ export default function PresenterView() {
     const NAV_KEYS = new Set([
       'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' ', 'Spacebar', 'Backspace',
     ])
+    const readAddPageShortcut = () => {
+      try {
+        const raw = localStorage.getItem('lf-shortcut-add-page')
+        if (!raw) return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
+        const o = JSON.parse(raw)
+        if (!o || typeof o.key !== 'string' || !o.key) {
+          return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
+        }
+        return {
+          key: String(o.key).toLowerCase(),
+          ctrl: !!o.ctrl, shift: !!o.shift, alt: !!o.alt, meta: !!o.meta,
+        }
+      } catch {
+        return { key: 'n', ctrl: false, shift: false, alt: false, meta: false }
+      }
+    }
     const onKey = (e) => {
       if (libOpen) return
       if (e.target?.matches?.('input,textarea,[contenteditable="true"]')) return
-      if (!NAV_KEYS.has(e.key)) return
+      const sc = readAddPageShortcut()
+      const name = e.key === ' ' || e.key === 'Spacebar' ? 'space' : String(e.key || '').toLowerCase()
+      const isAddPage = name === sc.key
+        && !!e.ctrlKey === !!sc.ctrl
+        && !!e.shiftKey === !!sc.shift
+        && !!e.altKey === !!sc.alt
+        && !!e.metaKey === !!sc.meta
+      if (!NAV_KEYS.has(e.key) && !isAddPage) return
       e.preventDefault()
       touchActivity()
-      post({ type: 'lf-key', key: e.key })
+      post({
+        type: 'lf-key',
+        key: e.key,
+        ctrlKey: e.ctrlKey,
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey,
+      })
     }
     // Captured now: by cleanup time the ref may already point elsewhere, and
     // this effect re-runs every time the Library opens or closes — a handler
