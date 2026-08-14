@@ -1260,22 +1260,11 @@
     const dirty = opt && opt.dirty;
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalCompositeOperation = "copy";
     if(dirty && dirty.w > 0 && dirty.h > 0){
-      /* "copy" composites against the WHOLE canvas, not just the pixels the
-         drawImage covers: a partial blit under it clears everything outside
-         the rect, which is every stroke on the page vanishing the moment the
-         eraser (or the laser) asked for its first overlay frame. Clip to the
-         dirty rect first — inside a clip, "copy" only replaces what is
-         clipped, which is the "replace, never clear-then-draw" property this
-         whole path exists for. The clip goes with the restore() below. */
-      ctx.beginPath();
-      ctx.rect(dirty.x, dirty.y, dirty.w, dirty.h);
-      ctx.clip();
-      ctx.globalCompositeOperation = "copy";
       ctx.drawImage(buf, dirty.x, dirty.y, dirty.w, dirty.h,
                          dirty.x, dirty.y, dirty.w, dirty.h);
     } else {
-      ctx.globalCompositeOperation = "copy";
       ctx.drawImage(buf, 0, 0);
       overlayDirty = null;
     }
@@ -3336,10 +3325,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
 
   /* MaxHub IR touch fires pointerrawupdate at 200+ Hz. Each event used to
      stroke() a multi-megapixel canvas of its own. Coalesce touch to one
-     path per frame; a real pen still takes the raw path for latency.
-     (This is the FALLBACK now — see the pointerrawupdate handler below, which
-     takes touch as well and only falls through to here on a browser or an
-     input that does not raw-update.) */
+     path per frame; a real pen still takes the raw path for latency. */
   let inkQ = [], inkQRaf = 0;
   function feedInk(e){
     const pts = eventPoints(e);
@@ -3550,53 +3536,15 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
      The flag is cleared on every pointerdown, so a pen that raw-updates and a
      finger that does not can take turns on the same board.
 
-     Touch used to be excluded here, and that was the wrong call on exactly
-     the hardware this presenter is for. A MaxHub's IR touch reports
-     pointerType "touch", never "pen" — so on the classroom panel the
-     low-latency path was switched off and the finger took the frame-aligned
-     one, which is the slower of the two by design. The flood is real (200+ Hz
-     against a canvas of several megapixels), but a flood is answered by
-     capping how often the canvas is asked to draw, not by handing a whole
-     frame back to the device with the least to spare.
-
-     So: touch takes this path too, buffered and flushed at most once every
-     RAW_MIN_MS. That is sub-frame latency at a submit rate the GPU can hold.
-     A pen is never buffered — it does not flood, and every millisecond of its
-     latency is visible in the nib.
-
-     Shift+R turns this off if a panel disagrees; the choice is remembered. */
-  const RAW_MIN_MS = 6;
-  let rawTouch = true;
-  try{ if(localStorage.getItem("lf-rawtouch") === "0") rawTouch = false; }catch(err){}
-  let rawBuf = [], rawLastAt = 0, rawTimer = 0;
-  function flushRaw(){
-    if(rawTimer){ clearTimeout(rawTimer); rawTimer = 0; }
-    if(!rawBuf.length) return;
-    const list = rawBuf; rawBuf = [];
-    rawLastAt = performance.now();
-    appendInkPoints(list);
-  }
-  function toggleRawTouch(){
-    rawTouch = !rawTouch;
-    try{ localStorage.setItem("lf-rawtouch", rawTouch ? "1" : "0"); }catch(err){}
-    toast(rawTouch
-      ? "Low-latency touch on — ink is drawn the moment the point arrives"
-      : "Low-latency touch off — ink is drawn once per frame");
-  }
-
+     Touch (MaxHub IR, finger) is excluded: those devices flood this event
+     faster than a frame, and feeding them here is how ink felt sticky. */
   if(window.PointerEvent && "onpointerrawupdate" in window){
     canvas.addEventListener("pointerrawupdate", e => {
       if(!activeStroke) return;
-      const pen = e.pointerType === "pen";
-      if(!pen && !rawTouch) return;
+      if(e.pointerType !== "pen") return;
       rawFed = true;
       hoverPt = posFromClient(e.clientX, e.clientY);
-      if(pen) return appendInkPoints(eventPoints(e));
-      const pts = eventPoints(e);
-      for(let i = 0; i < pts.length; i++) rawBuf.push(pts[i]);
-      const since = performance.now() - rawLastAt;
-      if(since >= RAW_MIN_MS) flushRaw();
-      else if(!rawTimer) rawTimer = setTimeout(flushRaw, RAW_MIN_MS - since);
+      appendInkPoints(eventPoints(e));
     });
   }
 
@@ -3604,7 +3552,6 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     canvas.addEventListener(ev, () => {
       if(inkQRaf){ cancelAnimationFrame(inkQRaf); inkQRaf = 0; }
       if(inkQ.length){ appendInkPoints(inkQ); inkQ = []; }
-      flushRaw();          // the tail of a fast flick lives in here
       endStroke();
       erasing = false;
       if(eraseRaf){ cancelAnimationFrame(eraseRaf); eraseRaf = 0; redraw(); }
@@ -5003,8 +4950,6 @@ ${bgRules}
     if(handleNavKey(e.key)){ e.preventDefault(); return; }
     // Shift+P before plain P, or the pen would swallow it.
     else if(e.shiftKey && e.key.toLowerCase() === "p"){ e.preventDefault(); toggleLite(); }
-    // Shift+R before plain R for the same reason.
-    else if(e.shiftKey && e.key.toLowerCase() === "r"){ e.preventDefault(); toggleRawTouch(); }
     else if(matchesShortcut(e, addPageShortcut)){ e.preventDefault(); addPage(); }
     else if(e.key.toLowerCase() === "p") setTool("pen");
     else if(e.key.toLowerCase() === "e") setTool("eraser");

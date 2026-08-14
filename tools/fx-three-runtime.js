@@ -36,6 +36,10 @@
           kind === 'recoil-momentum' || kind === 'collision-momentum'){
         startMech2D(frame, w, h, kind); return;
       }
+      if (kind === 'slinky-drop' || kind === 'lift-frame' ||
+          kind === 'friction-ramp'){
+        startFbd2D(frame, w, h, kind); return;
+      }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -2191,6 +2195,314 @@
         renderer.render(scene, camera);
       })();
       return live;
+    }
+
+    /* ======================================================== FBD scenes ====
+       Three scenes for the "FBD and forces in mechanics" board. Each exists
+       because the still figure on the source slide cannot show the one thing
+       the slide is about:
+
+         slinky-drop    the bottom of a released slinky does not move until the
+                        compression wave reaches it — spring force cannot change
+                        instantly. A photograph of a slinky proves nothing.
+         lift-frame     the same hanging mass in the ground frame and in the
+                        lift frame, side by side, with ma appearing only in the
+                        accelerating frame and the answer T = mg + ma agreeing.
+         friction-ramp  friction tracking an applied force exactly, up to the
+                        limiting value, then dropping to kinetic as the block
+                        breaks away — with the fr–F graph drawing itself as it
+                        happens. That graph IS the case study.
+
+       Same conventions as startMech2D: a flat x 0..8 / y 0..5 world, canvas
+       labels, cylinder+cone arrows, and a `.scene-fallback` in the markup that
+       carries the still version for print and for a room with no WebGL.       */
+    function startFbd2D(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
+          GREEN = 0x34d399, RED = 0xf87171, INK = 0xf4f7fb;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9.6);
+      camera.lookAt(0, 0, 0);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(2.9 / t2, 4.35 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var world = new T.Group();
+      world.position.set(-4, -2.5, 0);
+      scene.add(world);
+
+      function line(pts, color, opacity){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true, opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(a, b, color, opacity, dash){
+        var g = new T.Group(), d = dash || 0.2,
+            v = new T.Vector3().subVectors(b, a), len = v.length(), n = v.clone().normalize();
+        for (var s = 0; s < len; s += d * 2){
+          g.add(line([a.clone().addScaledVector(n, s),
+                      a.clone().addScaledVector(n, Math.min(s + d, len))], color, opacity));
+        }
+        return g;
+      }
+      function arrow(color, rad, opacity){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad, mat: mat };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 68px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * 2, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      function box(cx, cy, bw, bh, color, opacity){
+        var g = new T.Group();
+        g.add(new T.Mesh(new T.PlaneGeometry(bw, bh),
+          new T.MeshBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 0.34 : opacity })));
+        g.add(line([new T.Vector3(-bw/2, -bh/2, 0), new T.Vector3( bw/2, -bh/2, 0),
+                    new T.Vector3( bw/2,  bh/2, 0), new T.Vector3(-bw/2,  bh/2, 0),
+                    new T.Vector3(-bw/2, -bh/2, 0)], color, 0.95));
+        g.position.set(cx, cy, 0);
+        return g;
+      }
+
+      var tick = null;
+
+      /* ------------------------------------------------------ slinky-drop -- */
+      if (kind === 'slinky-drop'){
+        var NC = 22, TOPY = 4.55, XL = 2.35, XR = 5.65;
+        world.add(line([new T.Vector3(XL - 0.9, TOPY + 0.12, 0),
+                        new T.Vector3(XL + 0.9, TOPY + 0.12, 0)], INK, 0.75));
+        for (var hx = -0.9; hx < 0.9; hx += 0.3){
+          world.add(line([new T.Vector3(XL + hx, TOPY + 0.12, 0),
+                          new T.Vector3(XL + hx + 0.24, TOPY + 0.4, 0)], INDIGO, 0.5));
+        }
+        world.add(line([new T.Vector3(XR - 0.9, TOPY + 0.12, 0),
+                        new T.Vector3(XR + 0.9, TOPY + 0.12, 0)], INK, 0.3));
+
+        /* a coil is one line whose vertices we re-space every frame */
+        function coil(x0, color){
+          var pts = [];
+          for (var i = 0; i <= NC * 12; i++) pts.push(new T.Vector3(x0, 0, 0));
+          var g = new T.BufferGeometry().setFromPoints(pts);
+          var m = new T.Line(g, new T.LineBasicMaterial({ color: color, transparent: true, opacity: 0.9 }));
+          world.add(m);
+          return m;
+        }
+        var cA = coil(XL, INK), cB = coil(XR, GOLD);
+        var bA = box(XL, 0, 0.62, 0.34, INDIGO), bB = box(XR, 0, 0.62, 0.34, GOLD);
+        world.add(bA); world.add(bB);
+        var gLine = dashed(new T.Vector3(0.6, 0, 0), new T.Vector3(7.4, 0, 0), GREEN, 0.5, 0.16);
+        world.add(gLine);
+
+        var lA = label('held', '#9fb4ff', 0.42), lB = label('released', '#f5c542', 0.42);
+        lA.position.set(XL, TOPY - 0.42, 0); lB.position.set(XR, TOPY - 0.42, 0);
+        world.add(lA); world.add(lB);
+        var lNote = label('bottom has not moved', '#34d399', 0.42);
+        lNote.position.set(4.0, 0.42, 0); lNote.visible = false; world.add(lNote);
+
+        /* stretched at rest: coil spacing grows towards the top, because the
+           top coils carry the weight of everything below them */
+        function shape(topY, botY, squash){
+          var out = [], n = NC * 12, span = topY - botY;
+          for (var i = 0; i <= n; i++){
+            var u = i / n;                                  /* 0 top -> 1 bottom */
+            var s = u * u;                                  /* rest profile */
+            var f = squash <= 0 ? s : (u <= squash ? u * u * 0.06 / Math.max(squash, 0.001)
+                                                   : s - (squash * squash) * 0.94);
+            out.push(Math.max(0, Math.min(1, f)));
+          }
+          return out;
+        }
+        tick = function(t){
+          var T0 = 1.1, T1 = 3.0, CY = 1.3;            /* cycle: hang, fall, hold */
+          var u = (t % CY === 0 ? 0 : t) % (T1 + 1.0);
+          var topDrop = 0, front = 0;
+          if (u > T0){
+            var k = Math.min((u - T0) / (T1 - T0), 1);
+            front = k;                                  /* wave front, 0..1 down */
+            topDrop = k * k * 3.0;
+          }
+          [[cA, XL, 0], [cB, XR, front]].forEach(function(row){
+            var mesh = row[0], x0 = row[1], sq = row[2];
+            var top = TOPY - (mesh === cB ? topDrop : 0), bot = 0.55;
+            var prof = shape(top, bot, sq);
+            var pos = mesh.geometry.attributes.position, n = prof.length - 1;
+            for (var i = 0; i <= n; i++){
+              var y = top - prof[i] * (top - bot);
+              var ph = (i / n) * NC * Math.PI * 2;
+              pos.setXYZ(i, x0 + Math.sin(ph) * 0.30, y, 0);
+            }
+            pos.needsUpdate = true;
+            mesh.geometry.computeBoundingSphere();
+            if (mesh === cB) bB.position.set(x0, 0.42, 0);
+          });
+          bA.position.set(XL, 0.42, 0);
+          lB.position.set(XR, TOPY - topDrop - 0.42, 0);
+          lNote.visible = front > 0.12 && front < 0.92;
+        };
+      }
+
+      /* ------------------------------------------------------- lift-frame -- */
+      if (kind === 'lift-frame'){
+        var CX = [2.1, 5.9], CW = 2.5, CH = 3.5, CYm = 2.5;
+        var cages = [], bobs = [], arT = [], arG = [], arP = [];
+        [0, 1].forEach(function(i){
+          var cage = new T.Group();
+          cage.add(line([new T.Vector3(-CW/2, -CH/2, 0), new T.Vector3(-CW/2, CH/2, 0),
+                         new T.Vector3( CW/2,  CH/2, 0), new T.Vector3( CW/2, -CH/2, 0),
+                         new T.Vector3(-CW/2, -CH/2, 0)], INK, 0.8));
+          cage.add(line([new T.Vector3(0, CH/2, 0), new T.Vector3(0, 0.35, 0)], INDIGO, 0.9));
+          var bob = box(0, 0, 0.52, 0.5, INDIGO, 0.5);
+          bob.position.set(0, 0.1, 0); cage.add(bob);
+          cage.position.set(CX[i], CYm, 0);
+          world.add(cage); cages.push(cage); bobs.push(bob);
+          var aT = arrow(GOLD, 0.05), aG = arrow(CYAN, 0.05);
+          cage.add(aT); cage.add(aG); arT.push(aT); arG.push(aG);
+          aim(aT, new T.Vector3(0, 0.35, 0), new T.Vector3(0, 1.35, 0));
+          aim(aG, new T.Vector3(0, -0.15, 0), new T.Vector3(0, -1.15, 0));
+          var lT = label('T', '#f5c542', 0.4), lG = label('mg', '#56ccf2', 0.42);
+          lT.position.set(0.42, 1.05, 0); lG.position.set(0.5, -0.95, 0);
+          cage.add(lT); cage.add(lG);
+          if (i === 1){
+            var aP = arrow(RED, 0.05); cage.add(aP); arP.push(aP);
+            aim(aP, new T.Vector3(0.62, -0.15, 0), new T.Vector3(0.62, -1.05, 0));
+            var lP = label('ma', '#f87171', 0.42);
+            lP.position.set(1.15, -0.85, 0); cage.add(lP);
+          }
+          var head = label(i === 0 ? 'ground frame' : 'lift frame',
+                           i === 0 ? '#9fb4ff' : '#f5c542', 0.44);
+          head.position.set(CX[i], 4.72, 0); world.add(head);
+          var ans = label('T = mg + ma', '#34d399', 0.46);
+          ans.position.set(CX[i], 0.36, 0); world.add(ans);
+        });
+        var aArr = arrow(GREEN, 0.055); world.add(aArr);
+        aim(aArr, new T.Vector3(7.45, 2.0, 0), new T.Vector3(7.45, 3.2, 0));
+        var aLab = label('a', '#34d399', 0.42);
+        aLab.position.set(7.45, 3.6, 0); world.add(aLab);
+
+        tick = function(t){
+          /* the ground-frame cage rises; the lift-frame cage is drawn at rest,
+             which is exactly the point of moving into it */
+          var s = (Math.sin(t * 0.7) * 0.5 + 0.5);
+          cages[0].position.y = CYm + s * 0.55;
+          cages[1].position.y = CYm;
+          bobs[0].position.y = 0.1;
+        };
+      }
+
+      /* ----------------------------------------------------- friction-ramp -- */
+      if (kind === 'friction-ramp'){
+        var GY = 3.9, BX0 = 1.5, BW = 1.05, BH = 0.72;
+        world.add(line([new T.Vector3(0.5, GY, 0), new T.Vector3(4.3, GY, 0)], INK, 0.8));
+        for (var gx = 0.5; gx < 4.25; gx += 0.28){
+          world.add(line([new T.Vector3(gx, GY, 0),
+                          new T.Vector3(gx - 0.2, GY - 0.24, 0)], INDIGO, 0.45));
+        }
+        var blk = box(BX0, GY + BH/2, BW, BH, INDIGO, 0.42); world.add(blk);
+        var aF = arrow(GOLD, 0.05), aFr = arrow(RED, 0.05);
+        world.add(aF); world.add(aFr);
+        var lF = label('F', '#f5c542', 0.4), lFr = label('fr', '#f87171', 0.4);
+        world.add(lF); world.add(lFr);
+
+        /* the graph: axes are scaffolding, the trace draws itself */
+        var OX = 5.0, OY = 0.75, GW = 2.9, GH = 3.6, LIM = 0.62, KIN = 0.46;
+        world.add(line([new T.Vector3(OX, OY, 0), new T.Vector3(OX, OY + GH, 0)], INK, 0.8));
+        world.add(line([new T.Vector3(OX, OY, 0), new T.Vector3(OX + GW, OY, 0)], INK, 0.8));
+        world.add(dashed(new T.Vector3(OX, OY + GH * LIM, 0),
+                         new T.Vector3(OX + GW, OY + GH * LIM, 0), GOLD, 0.35, 0.15));
+        var lY = label('fr', '#f4f7fb', 0.38), lX = label('F', '#f4f7fb', 0.38);
+        lY.position.set(OX - 0.42, OY + GH, 0); lX.position.set(OX + GW + 0.3, OY - 0.05, 0);
+        world.add(lY); world.add(lX);
+        var lLim = label('limiting', '#f5c542', 0.42);
+        lLim.position.set(OX + GW * 0.42, OY + GH * LIM + 0.34, 0); world.add(lLim);
+        var lSt = label('static', '#9fb4ff', 0.4), lKi = label('kinetic', '#f87171', 0.4);
+        lSt.position.set(OX + GW * 0.3, OY - 0.44, 0);
+        lKi.position.set(OX + GW * 0.78, OY - 0.44, 0);
+        world.add(lSt); world.add(lKi);
+
+        var NPTS = 160, tpts = [];
+        for (var i = 0; i < NPTS; i++) tpts.push(new T.Vector3(OX, OY, 0));
+        var trace = new T.Line(new T.BufferGeometry().setFromPoints(tpts),
+          new T.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.95 }));
+        world.add(trace);
+
+        function frOf(u){ return u <= LIM ? u : KIN; }   /* the whole physics */
+
+        tick = function(t){
+          var CY2 = 5.2, u = (t % CY2) / CY2;            /* applied force 0..1 */
+          var fr = frOf(u), moving = u > LIM;
+
+          var bx = BX0 + (moving ? (u - LIM) / (1 - LIM) * 1.55 : 0);
+          blk.position.x = bx;
+          var tip = bx + BW/2;
+          aim(aF,  new T.Vector3(tip, GY + BH * 0.62, 0),
+                   new T.Vector3(tip + 0.35 + u * 1.15, GY + BH * 0.62, 0));
+          aim(aFr, new T.Vector3(bx - BW/2, GY + 0.1, 0),
+                   new T.Vector3(bx - BW/2 - 0.35 - fr * 1.5, GY + 0.1, 0));
+          lF.position.set(tip + 0.6 + u * 1.15, GY + BH * 1.05, 0);
+          lFr.position.set(bx - BW/2 - 0.7 - fr * 1.5, GY - 0.28, 0);
+
+          var pos = trace.geometry.attributes.position;
+          for (var k = 0; k < NPTS; k++){
+            var uk = Math.min(k / (NPTS - 1), u);
+            pos.setXYZ(k, OX + GW * uk, OY + GH * frOf(uk), 0);
+          }
+          pos.needsUpdate = true;
+          trace.geometry.computeBoundingSphere();
+        };
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+
+      var tf0 = Date.now();
+      (function loop(){
+        requestAnimationFrame(loop);
+        if (tick) tick((Date.now() - tf0) / 1000);
+        renderer.render(scene, camera);
+      })();
     }
 
   });
