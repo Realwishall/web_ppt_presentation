@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>07-retarded-potentials-em-wave-sim.html</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{background:#060913;color:#f1f5f9;
+       font-family:Calibri,Candara,'Segoe UI',system-ui,sans-serif}
+  .page{position:relative;z-index:1;height:100%;box-sizing:border-box;
+        background:radial-gradient(1100px 550px at 50% -10%,rgba(56,189,248,.10),transparent 60%),
+                   radial-gradient(900px 500px at 85% 110%,rgba(139,92,246,.08),transparent 60%),#060913}
+  .wrap{height:100%;box-sizing:border-box;display:flex;flex-direction:column;
+        gap:1.3vmin;padding:2vmin 2.4vmin}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;gap:2vmin;flex-wrap:wrap}
+  .kicker{font-size:clamp(13px,2.2vmin,24px);letter-spacing:.3em;text-transform:uppercase;
+          color:#38bdf8;font-weight:700}
+  .modes{display:flex;gap:1vmin;margin-left:auto;flex-wrap:wrap}
+  .mode{min-height:44px;box-sizing:border-box;padding:.9vmin 1.9vmin;border-radius:1.1vmin;
+        border:1px solid rgba(148,163,184,.28);background:rgba(148,163,184,.07);color:#cbd5e1;
+        font:inherit;font-size:clamp(13px,2vmin,23px);font-weight:600;cursor:pointer;
+        display:flex;align-items:center;gap:.8vmin;white-space:nowrap}
+  .mode .n{color:#64748b;font-weight:800}
+  .mode.on{background:linear-gradient(135deg,#0284c7,#7c3aed);border-color:transparent;color:#fff}
+  .mode.on .n{color:#e0e7ff}
+
+  /* ---------- stage ---------- */
+  .stage{position:relative;flex:1 1 auto;min-height:0;border-radius:1.4vmin;overflow:hidden;
+         background:#04060f;border:1px solid rgba(148,163,184,.18)}
+  #sim{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .hit{position:absolute;inset:0;display:grid;
+       grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(9,1fr)}
+  .hit.off{display:none}
+  .hit i{display:block;cursor:crosshair}
+  .tip{position:absolute;left:1.6vmin;bottom:1.3vmin;max-width:62%;
+       font-size:clamp(13px,2vmin,23px);color:#94a3b8;line-height:1.35;pointer-events:none}
+  .tip b{color:#fbbf24;font-weight:700}
+
+  /* ---------- idea strip (the reveals) ---------- */
+  .ideas{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2vmin}
+  .idea{background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.16);
+        border-left:.5vmin solid #0ea5e9;border-radius:1.1vmin;padding:1.1vmin 1.5vmin;
+        font-size:clamp(13px,2.05vmin,24px);line-height:1.35;color:#e2e8f0}
+  .idea u{display:block;text-decoration:none;color:#7dd3fc;font-weight:700;letter-spacing:.12em;
+          text-transform:uppercase;font-size:.72em;margin-bottom:.35vmin}
+  .idea s{text-decoration:none;font-family:'Cambria Math',Cambria,'STIX Two Math','Times New Roman',serif;
+          font-style:normal;color:#fbbf24;white-space:nowrap}
+  .step{opacity:1}                       /* the panel controls hidden -> shown */
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;align-items:center;gap:2.2vmin;flex-wrap:wrap}
+  .ctl{display:flex;align-items:center;gap:1.1vmin}
+  .ctl .name{font-size:clamp(13px,2vmin,23px);color:#94a3b8;white-space:nowrap}
+  .ctl .name em{font-family:'Cambria Math',Cambria,'STIX Two Math','Times New Roman',serif;
+                font-style:normal;color:#e2e8f0;font-weight:700;font-size:1.1em}
+  .track{display:flex;gap:.4vmin;align-items:flex-end}
+  .track i{display:block;width:clamp(20px,2.7vmin,34px);height:44px;border-radius:.5vmin;
+           background:rgba(148,163,184,.14);border:1px solid rgba(148,163,184,.22);cursor:pointer}
+  .track i.lit{background:linear-gradient(180deg,#38bdf8,#0369a1);border-color:transparent}
+  .val{font-size:clamp(13px,2vmin,23px);color:#7dd3fc;font-weight:700;min-width:7ch}
+  .btn{min-height:44px;box-sizing:border-box;padding:.9vmin 2vmin;border-radius:1.1vmin;
+       border:1px solid rgba(148,163,184,.28);background:rgba(148,163,184,.07);color:#e2e8f0;
+       font:inherit;font-size:clamp(13px,2vmin,23px);font-weight:600;cursor:pointer}
+  .btn.warm{border-color:rgba(251,191,36,.45);color:#fbbf24}
+  .legend{display:flex;gap:1.6vmin;margin-left:auto;font-size:clamp(12px,1.9vmin,22px);color:#94a3b8;
+          flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:.7vmin;white-space:nowrap}
+  .legend b{width:1.3vmin;height:1.3vmin;min-width:9px;min-height:9px;border-radius:50%;display:block}
+  .legend .e b{background:#38bdf8}
+  .legend .b b{background:#fb7185}
+  .legend .q b{background:#fbbf24}
+
+  /* ---------- print-only static summary (canvas is blank in PDF export) ---------- */
+  .printout{display:none}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    .stage,.controls,.modes,.no-print{display:none!important}
+    .printout{display:block}
+    .pr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6mm;margin-top:4mm}
+    .pr-card{border:1px solid #334155;border-radius:3mm;padding:4mm 5mm}
+    .pr-card h3{margin:0 0 2mm;font-size:13pt;color:#38bdf8}
+    .pr-card p{margin:0 0 2mm;font-size:11pt;line-height:1.4;color:#e2e8f0}
+    .pr-card em{font-family:'Cambria Math',Cambria,serif;font-style:normal;color:#fbbf24}
+    .pr-svg{width:100%;height:auto;display:block;margin-top:2mm}
+    body,.page,.wrap{background:#060913!important}
+  }
+</style>
+</head>
+<body>
+
+<section class="page">
+ <div class="wrap">
+
+  <div class="topbar">
+    <div class="kicker">EM waves &middot; how a field turns into a wave</div>
+    <div class="modes no-print">
+      <button class="mode clickable on" data-mode="1"><span class="n">1</span> Static field</button>
+      <button class="mode clickable" data-mode="2"><span class="n">2</span> Delay &middot; the kink</button>
+      <button class="mode clickable" data-mode="3"><span class="n">3</span> Radiation &middot; E &amp; B</button>
+      <button class="mode clickable" data-mode="4"><span class="n">4</span> Source geometry</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="sim"></canvas>
+    <div class="hit" id="hit">
+      <i class="clickable" data-x="0.0313" data-y="0.0556"></i><i class="clickable" data-x="0.0938" data-y="0.0556"></i><i class="clickable" data-x="0.1563" data-y="0.0556"></i><i class="clickable" data-x="0.2188" data-y="0.0556"></i><i class="clickable" data-x="0.2813" data-y="0.0556"></i><i class="clickable" data-x="0.3438" data-y="0.0556"></i><i class="clickable" data-x="0.4063" data-y="0.0556"></i><i class="clickable" data-x="0.4688" data-y="0.0556"></i><i class="clickable" data-x="0.5313" data-y="0.0556"></i><i class="clickable" data-x="0.5938" data-y="0.0556"></i><i class="clickable" data-x="0.6563" data-y="0.0556"></i><i class="clickable" data-x="0.7188" data-y="0.0556"></i><i class="clickable" data-x="0.7813" data-y="0.0556"></i><i class="clickable" data-x="0.8438" data-y="0.0556"></i><i class="clickable" data-x="0.9063" data-y="0.0556"></i><i class="clickable" data-x="0.9688" data-y="0.0556"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.1667"></i><i class="clickable" data-x="0.0938" data-y="0.1667"></i><i class="clickable" data-x="0.1563" data-y="0.1667"></i><i class="clickable" data-x="0.2188" data-y="0.1667"></i><i class="clickable" data-x="0.2813" data-y="0.1667"></i><i class="clickable" data-x="0.3438" data-y="0.1667"></i><i class="clickable" data-x="0.4063" data-y="0.1667"></i><i class="clickable" data-x="0.4688" data-y="0.1667"></i><i class="clickable" data-x="0.5313" data-y="0.1667"></i><i class="clickable" data-x="0.5938" data-y="0.1667"></i><i class="clickable" data-x="0.6563" data-y="0.1667"></i><i class="clickable" data-x="0.7188" data-y="0.1667"></i><i class="clickable" data-x="0.7813" data-y="0.1667"></i><i class="clickable" data-x="0.8438" data-y="0.1667"></i><i class="clickable" data-x="0.9063" data-y="0.1667"></i><i class="clickable" data-x="0.9688" data-y="0.1667"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.2778"></i><i class="clickable" data-x="0.0938" data-y="0.2778"></i><i class="clickable" data-x="0.1563" data-y="0.2778"></i><i class="clickable" data-x="0.2188" data-y="0.2778"></i><i class="clickable" data-x="0.2813" data-y="0.2778"></i><i class="clickable" data-x="0.3438" data-y="0.2778"></i><i class="clickable" data-x="0.4063" data-y="0.2778"></i><i class="clickable" data-x="0.4688" data-y="0.2778"></i><i class="clickable" data-x="0.5313" data-y="0.2778"></i><i class="clickable" data-x="0.5938" data-y="0.2778"></i><i class="clickable" data-x="0.6563" data-y="0.2778"></i><i class="clickable" data-x="0.7188" data-y="0.2778"></i><i class="clickable" data-x="0.7813" data-y="0.2778"></i><i class="clickable" data-x="0.8438" data-y="0.2778"></i><i class="clickable" data-x="0.9063" data-y="0.2778"></i><i class="clickable" data-x="0.9688" data-y="0.2778"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.3889"></i><i class="clickable" data-x="0.0938" data-y="0.3889"></i><i class="clickable" data-x="0.1563" data-y="0.3889"></i><i class="clickable" data-x="0.2188" data-y="0.3889"></i><i class="clickable" data-x="0.2813" data-y="0.3889"></i><i class="clickable" data-x="0.3438" data-y="0.3889"></i><i class="clickable" data-x="0.4063" data-y="0.3889"></i><i class="clickable" data-x="0.4688" data-y="0.3889"></i><i class="clickable" data-x="0.5313" data-y="0.3889"></i><i class="clickable" data-x="0.5938" data-y="0.3889"></i><i class="clickable" data-x="0.6563" data-y="0.3889"></i><i class="clickable" data-x="0.7188" data-y="0.3889"></i><i class="clickable" data-x="0.7813" data-y="0.3889"></i><i class="clickable" data-x="0.8438" data-y="0.3889"></i><i class="clickable" data-x="0.9063" data-y="0.3889"></i><i class="clickable" data-x="0.9688" data-y="0.3889"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.5000"></i><i class="clickable" data-x="0.0938" data-y="0.5000"></i><i class="clickable" data-x="0.1563" data-y="0.5000"></i><i class="clickable" data-x="0.2188" data-y="0.5000"></i><i class="clickable" data-x="0.2813" data-y="0.5000"></i><i class="clickable" data-x="0.3438" data-y="0.5000"></i><i class="clickable" data-x="0.4063" data-y="0.5000"></i><i class="clickable" data-x="0.4688" data-y="0.5000"></i><i class="clickable" data-x="0.5313" data-y="0.5000"></i><i class="clickable" data-x="0.5938" data-y="0.5000"></i><i class="clickable" data-x="0.6563" data-y="0.5000"></i><i class="clickable" data-x="0.7188" data-y="0.5000"></i><i class="clickable" data-x="0.7813" data-y="0.5000"></i><i class="clickable" data-x="0.8438" data-y="0.5000"></i><i class="clickable" data-x="0.9063" data-y="0.5000"></i><i class="clickable" data-x="0.9688" data-y="0.5000"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.6111"></i><i class="clickable" data-x="0.0938" data-y="0.6111"></i><i class="clickable" data-x="0.1563" data-y="0.6111"></i><i class="clickable" data-x="0.2188" data-y="0.6111"></i><i class="clickable" data-x="0.2813" data-y="0.6111"></i><i class="clickable" data-x="0.3438" data-y="0.6111"></i><i class="clickable" data-x="0.4063" data-y="0.6111"></i><i class="clickable" data-x="0.4688" data-y="0.6111"></i><i class="clickable" data-x="0.5313" data-y="0.6111"></i><i class="clickable" data-x="0.5938" data-y="0.6111"></i><i class="clickable" data-x="0.6563" data-y="0.6111"></i><i class="clickable" data-x="0.7188" data-y="0.6111"></i><i class="clickable" data-x="0.7813" data-y="0.6111"></i><i class="clickable" data-x="0.8438" data-y="0.6111"></i><i class="clickable" data-x="0.9063" data-y="0.6111"></i><i class="clickable" data-x="0.9688" data-y="0.6111"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.7222"></i><i class="clickable" data-x="0.0938" data-y="0.7222"></i><i class="clickable" data-x="0.1563" data-y="0.7222"></i><i class="clickable" data-x="0.2188" data-y="0.7222"></i><i class="clickable" data-x="0.2813" data-y="0.7222"></i><i class="clickable" data-x="0.3438" data-y="0.7222"></i><i class="clickable" data-x="0.4063" data-y="0.7222"></i><i class="clickable" data-x="0.4688" data-y="0.7222"></i><i class="clickable" data-x="0.5313" data-y="0.7222"></i><i class="clickable" data-x="0.5938" data-y="0.7222"></i><i class="clickable" data-x="0.6563" data-y="0.7222"></i><i class="clickable" data-x="0.7188" data-y="0.7222"></i><i class="clickable" data-x="0.7813" data-y="0.7222"></i><i class="clickable" data-x="0.8438" data-y="0.7222"></i><i class="clickable" data-x="0.9063" data-y="0.7222"></i><i class="clickable" data-x="0.9688" data-y="0.7222"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.8333"></i><i class="clickable" data-x="0.0938" data-y="0.8333"></i><i class="clickable" data-x="0.1563" data-y="0.8333"></i><i class="clickable" data-x="0.2188" data-y="0.8333"></i><i class="clickable" data-x="0.2813" data-y="0.8333"></i><i class="clickable" data-x="0.3438" data-y="0.8333"></i><i class="clickable" data-x="0.4063" data-y="0.8333"></i><i class="clickable" data-x="0.4688" data-y="0.8333"></i><i class="clickable" data-x="0.5313" data-y="0.8333"></i><i class="clickable" data-x="0.5938" data-y="0.8333"></i><i class="clickable" data-x="0.6563" data-y="0.8333"></i><i class="clickable" data-x="0.7188" data-y="0.8333"></i><i class="clickable" data-x="0.7813" data-y="0.8333"></i><i class="clickable" data-x="0.8438" data-y="0.8333"></i><i class="clickable" data-x="0.9063" data-y="0.8333"></i><i class="clickable" data-x="0.9688" data-y="0.8333"></i>
+      <i class="clickable" data-x="0.0313" data-y="0.9444"></i><i class="clickable" data-x="0.0938" data-y="0.9444"></i><i class="clickable" data-x="0.1563" data-y="0.9444"></i><i class="clickable" data-x="0.2188" data-y="0.9444"></i><i class="clickable" data-x="0.2813" data-y="0.9444"></i><i class="clickable" data-x="0.3438" data-y="0.9444"></i><i class="clickable" data-x="0.4063" data-y="0.9444"></i><i class="clickable" data-x="0.4688" data-y="0.9444"></i><i class="clickable" data-x="0.5313" data-y="0.9444"></i><i class="clickable" data-x="0.5938" data-y="0.9444"></i><i class="clickable" data-x="0.6563" data-y="0.9444"></i><i class="clickable" data-x="0.7188" data-y="0.9444"></i><i class="clickable" data-x="0.7813" data-y="0.9444"></i><i class="clickable" data-x="0.8438" data-y="0.9444"></i><i class="clickable" data-x="0.9063" data-y="0.9444"></i><i class="clickable" data-x="0.9688" data-y="0.9444"></i>
+    </div>
+    <div class="tip" id="tip"></div>
+  </div>
+
+  <div class="ideas">
+    <div class="idea step">
+      <u>1 &middot; the source</u>
+      A charge carries its own field: arrows point away from it, shrinking as <s>1/r&sup2;</s>. Move it, and everything moves with it.
+    </div>
+    <div class="idea step">
+      <u>2 &middot; the delay</u>
+      Nothing knows instantly. The news travels at <s>c</s>, so far arrows still aim at where the charge <b>was</b> &mdash; the break between old and new is a <b>kink</b>.
+    </div>
+    <div class="idea step">
+      <u>3 &middot; the wave</u>
+      Shake the charge and the kinks never stop. The transverse part is <s>E &prop; a&#8869;/c&sup2;r</s>, and it drags a magnetic field with it: <s>B = E/c</s>, in phase, <s>E &#8869; B &#8869; c</s>.
+    </div>
+    <div class="idea step">
+      <u>4 &middot; geometry</u>
+      How fast it fades is set by the shape of the source: point <s>1/r</s>, line <s>1/&radic;r</s>, plane <s>constant</s>. Energy spreads over a sphere, a cylinder, or nothing at all.
+    </div>
+  </div>
+
+  <div class="controls no-print">
+    <div class="ctl">
+      <span class="name">wave speed <em>c</em></span>
+      <span class="track" id="trackC"></span>
+      <span class="val" id="valC">&nbsp;</span>
+    </div>
+    <div class="ctl">
+      <span class="name">frequency <em>f</em></span>
+      <span class="track" id="trackF"></span>
+      <span class="val" id="valF">&nbsp;</span>
+    </div>
+    <button class="btn clickable" id="playBtn">Pause</button>
+    <button class="btn warm clickable" id="resetBtn">Reset</button>
+    <div class="legend">
+      <span class="e"><b></b>electric field E</span>
+      <span class="b"><b></b>magnetic field B</span>
+      <span class="q"><b></b>charge</span>
+    </div>
+  </div>
+
+  <!-- Static twin of the simulation: this is what survives the PDF export,
+       where every script is stripped and the canvas comes out blank. -->
+  <div class="printout">
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>1 &middot; Static Coulomb field</h3>
+        <p>Arrows point radially away from a positive charge; length <em>&prop; 1/r&sup2;</em>. Move the charge and the whole pattern moves with it &mdash; instantly, which is the wrong physics.</p>
+        <svg class="pr-svg" viewBox="0 0 320 120" role="img" aria-label="radial field around a charge">
+          <g stroke="#38bdf8" stroke-width="2" fill="none">
+            <path d="M170 60 L215 60 M170 60 L205 32 M170 60 L205 88 M170 60 L125 60 M170 60 L135 32 M170 60 L135 88 M170 60 L170 25 M170 60 L170 95"/>
+          </g>
+          <circle cx="170" cy="60" r="7" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div class="pr-card">
+        <h3>2 &middot; Retarded potentials</h3>
+        <p>The field at distance <em>r</em> is set by where the charge was a time <em>r/c</em> ago. After a sudden move, arrows inside the sphere of radius <em>ct</em> point at the new position, arrows outside still point at the old one, and the two are joined by a travelling <b>kink</b>.</p>
+        <svg class="pr-svg" viewBox="0 0 320 120" role="img" aria-label="kinked field line">
+          <circle cx="150" cy="60" r="46" stroke="#64748b" stroke-dasharray="4 4" fill="none"/>
+          <path d="M150 60 L186 44 L232 12" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+          <path d="M150 60 L188 60 L236 60" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+          <path d="M150 60 L186 76 L232 108" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+          <circle cx="150" cy="60" r="6" fill="#fbbf24"/>
+          <circle cx="118" cy="60" r="5" fill="none" stroke="#fbbf24" stroke-dasharray="3 3"/>
+        </svg>
+      </div>
+      <div class="pr-card">
+        <h3>3 &middot; Dipole radiation</h3>
+        <p>An oscillating charge sends out kinks without stopping. The radiated field is <em>E = &minus;q a&#8869; / 4&pi;&epsilon;&#8320;c&sup2;r</em> &mdash; transverse, falling as <em>1/r</em>, zero along the axis of the oscillation. Its magnetic partner is <em>B = E/c</em>, perpendicular to both <em>E</em> and the direction of travel, and exactly in phase with it.</p>
+      </div>
+      <div class="pr-card">
+        <h3>4 &middot; Amplitude vs source geometry</h3>
+        <p>Point source: energy spreads over a sphere <em>4&pi;r&sup2;</em>, so <em>I &prop; 1/r&sup2;</em> and <em>E &prop; 1/r</em>.</p>
+        <p>Line source: energy spreads over a cylinder <em>2&pi;rL</em>, so <em>I &prop; 1/r</em> and <em>E &prop; 1/&radic;r</em>.</p>
+        <p>Plane source: the area never grows, so <em>I</em> and <em>E</em> stay constant &mdash; an ideal plane wave.</p>
+      </div>
+    </div>
+  </div>
+
+ </div>
+</section>
+
+<script>
+/* ============================================================================
+   Retarded potentials -> electromagnetic waves.
+   Everything is drawn on one canvas; the teacher drives it with .clickable
+   buttons (no drag, no hover, no keyboard - none of those reach the deck).
+   ========================================================================== */
+(function () {
+  var cv = document.getElementById('sim');
+  if (!cv || !cv.getContext) return;
+  var ctx;
+  try { ctx = cv.getContext('2d'); } catch (e) { return; }
+  if (!ctx) return;
+
+  var stage  = cv.parentNode;
+  var hit    = document.getElementById('hit');
+  var tipEl  = document.getElementById('tip');
+  var trackC = document.getElementById('trackC');
+  var trackF = document.getElementById('trackF');
+  var valC   = document.getElementById('valC');
+  var valF   = document.getElementById('valF');
+  var playBtn  = document.getElementById('playBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var modeBtns = [].slice.call(document.querySelectorAll('.mode'));
+  var ideaEls  = [].slice.call(document.querySelectorAll('.idea'));
+
+  /* ---------------------------------------------------------------- state */
+  var W = 0, H = 0, dpr = 1;
+  var mode = 1, paused = false, t = 0, last = 0;
+
+  var C_FRAC = [0.13, 0.18, 0.25, 0.34, 0.46, 0.62, 0.82]; // wave speed, screen-widths / second
+  var F_HZ   = [0.30, 0.50, 0.80, 1.10, 1.50, 2.00, 2.60]; // oscillation frequency, Hz
+  var ci = 2, fi = 3;   // slow enough that a kink stays on the board for a few seconds
+  function c()  { return C_FRAC[ci] * (W || 1000); }
+  function f()  { return F_HZ[fi]; }
+  function om() { return 2 * Math.PI * f(); }
+  function amp(){ return 0.045 * Math.min(W, H); }
+
+  var COL_E = '56,189,248', COL_B = '251,113,133', COL_Q = '251,191,36';
+
+  /* charge: fractional home, current pixel position, an easing move, history */
+  var qf = { x: 0.42, y: 0.50 };
+  var move = null;                 // {x0,y0,x1,y1,t0,T}
+  var events = [];                 // wavefront shells from each move
+  var q = { x: 0, y: 0, ax: 0, ay: 0 };
+
+  var HIST_SEC = 13;
+  var hist = [];                   // {t,x,y,ax,ay}, oldest first
+
+  var scope = [];                  // {t,e,b} at the focus point (mode 3)
+
+  /* ------------------------------------------------------------- geometry */
+  function fit() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return false;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (w !== W || h !== H) {
+      W = w; H = h;
+      cv.width  = Math.round(W * dpr);
+      cv.height = Math.round(H * dpr);
+      seed();
+    }
+    return true;
+  }
+
+  /* Fill the history with "the charge has always been here", so the retarded
+     lookup has something to find the moment a mode starts. */
+  function seed() {
+    var p = chargeAt(t);
+    q.x = p.x; q.y = p.y; q.ax = 0; q.ay = 0;
+    hist.length = 0;
+    var n = 240, dt = HIST_SEC / n;
+    for (var i = n; i >= 0; i--) hist.push({ t: t - i * dt, x: p.x, y: p.y, ax: 0, ay: 0 });
+    scope.length = 0;
+  }
+
+  /* Where the charge is at time tt, and what its acceleration is there.
+     Both are analytic, so the acceleration that makes the kink is exact. */
+  function chargeAt(tt) {
+    if (mode === 3) {
+      var A = amp(), w = om(), s = Math.sin(w * tt);
+      return { x: 0.40 * W, y: 0.50 * H + A * s, ax: 0, ay: -A * w * w * s };
+    }
+    var x = qf.x * W, y = qf.y * H, ax = 0, ay = 0;
+    if (move) {
+      var e = (tt - move.t0) / move.T;
+      if (e <= 0) { x = move.x0; y = move.y0; }
+      else if (e < 1) {
+        var s2 = e * e * (3 - 2 * e), a2 = (6 - 12 * e) / (move.T * move.T);
+        x = move.x0 + (move.x1 - move.x0) * s2;
+        y = move.y0 + (move.y1 - move.y0) * s2;
+        ax = (move.x1 - move.x0) * a2;
+        ay = (move.y1 - move.y0) * a2;
+      } else { x = move.x1; y = move.y1; }
+    }
+    return { x: x, y: y, ax: ax, ay: ay };
+  }
+
+  function pushHistory() {
+    var p = chargeAt(t);
+    q.x = p.x; q.y = p.y; q.ax = p.ax; q.ay = p.ay;
+    hist.push({ t: t, x: p.x, y: p.y, ax: p.ax, ay: p.ay });
+    while (hist.length > 2 && hist[0].t < t - HIST_SEC) hist.shift();
+  }
+
+  /* Retarded sample: the entry whose light cone reaches (px,py) right now. */
+  function retarded(px, py, tt) {
+    var cc = c(), n = hist.length;
+    function gap(i) {
+      var h = hist[i], dx = px - h.x, dy = py - h.y;
+      return cc * (tt - h.t) - Math.sqrt(dx * dx + dy * dy);
+    }
+    if (n < 2) return hist[0] || chargeAt(tt);
+    if (gap(0) < 0) return hist[0];               // news this far out has not been sent yet
+    var lo = 0, hi = n - 1;
+    if (gap(hi) >= 0) return hist[hi];
+    while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (gap(mid) >= 0) lo = mid; else hi = mid; }
+    var a = hist[lo], b = hist[hi], ga = gap(lo), gb = gap(hi);
+    var u = ga / (ga - gb); if (!isFinite(u)) u = 0;
+    return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u,
+             ax: a.ax + (b.ax - a.ax) * u, ay: a.ay + (b.ay - a.ay) * u };
+  }
+
+  /* E at a point. kq = 1; the display normalises afterwards.
+     E = n/R^2  (Coulomb, from the retarded position)
+       - a_perp/(c^2 R)   (radiation: the transverse kick that becomes the wave) */
+  function fieldAt(px, py, useRetard) {
+    var s = useRetard ? retarded(px, py, t) : q;
+    var dx = px - s.x, dy = py - s.y;
+    var R = Math.sqrt(dx * dx + dy * dy);
+    if (R < 10) R = 10;
+    var nx = dx / R, ny = dy / R;
+    var ex = nx / (R * R), ey = ny / (R * R);
+    if (useRetard) {
+      var na = nx * s.ax + ny * s.ay, cc = c();
+      ex -= (s.ax - nx * na) / (cc * cc * R);
+      ey -= (s.ay - ny * na) / (cc * cc * R);
+    }
+    return { x: ex, y: ey, R: R, nx: nx, ny: ny };
+  }
+
+  /* -------------------------------------------------------------- drawing */
+  function clear() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#04060f';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function arrow(x, y, ux, uy, len, rgb, alpha, w) {
+    if (len < 1.6) return;
+    var ex = x + ux * len, ey = y + uy * len;
+    var head = Math.min(len * 0.42, 7 + len * 0.12);
+    ctx.strokeStyle = 'rgba(' + rgb + ',' + alpha + ')';
+    ctx.fillStyle   = 'rgba(' + rgb + ',' + alpha + ')';
+    ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex - ux * head * 0.6, ey - uy * head * 0.6); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - ux * head + uy * head * 0.45, ey - uy * head - ux * head * 0.45);
+    ctx.lineTo(ex - ux * head - uy * head * 0.45, ey - uy * head + ux * head * 0.45);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function charge(x, y, r, glow) {
+    if (glow) {
+      var g = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+      g.addColorStop(0, 'rgba(' + COL_Q + ',.45)');
+      g.addColorStop(1, 'rgba(' + COL_Q + ',0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r * 5, 0, 6.2832); ctx.fill();
+    }
+    ctx.fillStyle = 'rgb(' + COL_Q + ')';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.85)';
+    ctx.lineWidth = Math.max(1.4, r * 0.28);
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.55, y); ctx.lineTo(x + r * 0.55, y);
+    ctx.moveTo(x, y - r * 0.55); ctx.lineTo(x, y + r * 0.55);
+    ctx.stroke();
+  }
+
+  function label(txt, x, y, col, size, align, weight) {
+    ctx.fillStyle = col;
+    ctx.textAlign = align || 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = (weight || '600') + ' ' + size + "px Calibri, Candara, 'Segoe UI', system-ui, sans-serif";
+    ctx.fillText(txt, x, y);
+  }
+  function fs(k) { return Math.max(11, Math.min(W, H) * k); }
+
+  /* ---- modes 1 & 2: a grid of arrows plus traced field lines ------------- */
+  function drawNearField(useRetard) {
+    var sp = Math.max(42, Math.min(W, H) / 15);
+    var Lmax = sp * 0.86;
+    var ref = sp * 1.15, mref = 1 / (ref * ref);
+
+    /* field lines first, faintly, under the arrows */
+    var nL = 14;
+    ctx.lineWidth = Math.max(1.4, Math.min(W, H) * 0.0030);
+    ctx.strokeStyle = 'rgba(' + COL_E + ',.38)';
+    for (var k = 0; k < nL; k++) {
+      var a0 = (k + 0.5) * 2 * Math.PI / nL;
+      var x = q.x + 13 * Math.cos(a0), y = q.y + 13 * Math.sin(a0);
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (var i = 0; i < 340; i++) {
+        var E = fieldAt(x, y, useRetard);
+        var m = Math.sqrt(E.x * E.x + E.y * E.y);
+        if (!m || !isFinite(m)) break;
+        x += 12 * E.x / m; y += 12 * E.y / m;
+        if (x < -20 || x > W + 20 || y < -20 || y > H + 20) break;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    /* wavefront shells: the annulus where the news is still arriving */
+    if (useRetard) {
+      var cc = c();
+      for (var e = 0; e < events.length; e++) {
+        var ev = events[e];
+        var rOut = cc * (t - ev.t0), rIn = cc * (t - ev.t0 - ev.T);
+        if (rOut <= 0 || rIn > Math.hypot(W, H)) continue;
+        if (rIn > 0) {
+          ctx.fillStyle = 'rgba(' + COL_E + ',.05)';
+          ctx.beginPath();
+          ctx.arc(ev.x0, ev.y0, rOut, 0, 6.2832);
+          ctx.arc(ev.x0, ev.y0, rIn, 0, 6.2832, true);
+          ctx.fill();
+        }
+        ctx.setLineDash([7, 8]);
+        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = 'rgba(226,232,240,.35)';
+        ctx.beginPath(); ctx.arc(ev.x0, ev.y0, rOut, 0, 6.2832); ctx.stroke();
+        ctx.setLineDash([]);
+        if (rOut < Math.hypot(W, H) * 1.1) {
+          ctx.strokeStyle = 'rgba(' + COL_Q + ',.55)';
+          ctx.setLineDash([4, 5]);
+          ctx.beginPath(); ctx.arc(ev.x0, ev.y0, 9, 0, 6.2832); ctx.stroke();
+          ctx.setLineDash([]);
+          label('was here', ev.x0 + 13, ev.y0 - 11, 'rgba(' + COL_Q + ',.75)', fs(0.021));
+        }
+      }
+    }
+
+    /* the arrow grid */
+    for (var gx = sp * 0.6; gx < W; gx += sp) {
+      for (var gy = sp * 0.6; gy < H; gy += sp) {
+        var F = fieldAt(gx, gy, useRetard);
+        var mag = Math.sqrt(F.x * F.x + F.y * F.y);
+        if (!mag || !isFinite(mag)) continue;
+        /* length is |E|, compressed so a 1/r^2 field is still legible far out */
+        var u = mag / (mag + mref);
+        var len = Lmax * Math.pow(u, 0.35);
+        var al = 0.28 + 0.72 * Math.pow(u, 0.30);
+        arrow(gx - F.x / mag * len * 0.5, gy - F.y / mag * len * 0.5,
+              F.x / mag, F.y / mag, len, COL_E, al, Math.max(1.3, len * 0.075));
+      }
+    }
+
+    charge(q.x, q.y, Math.max(7, Math.min(W, H) * 0.013), true);
+    label('arrow length ∝ |E| · compressed and clamped',
+          W - 12, H - 12, 'rgba(100,116,139,.85)', fs(0.019), 'right');
+  }
+
+  /* ---- mode 3: dipole radiation, E and B ------------------------------- */
+  function drawRadiation() {
+    var sp = Math.max(40, Math.min(W, H) / 14);
+    var Lmax = sp * 0.92;
+    var cc = c(), A = amp(), w = om();
+    var peak = A * w * w / (cc * cc);           // |E| x R at the strongest point
+    var Rref = 0.28 * W;
+
+    /* E arrows, scaled by r so the far field stays legible */
+    for (var gx = sp * 0.6; gx < W; gx += sp) {
+      for (var gy = sp * 0.6; gy < H; gy += sp) {
+        var F = fieldAt(gx, gy, true);
+        var mag = Math.sqrt(F.x * F.x + F.y * F.y);
+        if (!mag || !isFinite(mag)) continue;
+        var scaled = mag * Math.min(F.R, Rref * 2.2);
+        var u = Math.min(1, Math.pow(scaled / (peak * 2.4 + 1e-9), 0.62));
+        var len = Lmax * u;
+        var al = 0.18 + 0.82 * u;
+        arrow(gx - F.x / mag * len * 0.5, gy - F.y / mag * len * 0.5,
+              F.x / mag, F.y / mag, len, COL_E, al, Math.max(1.3, len * 0.08));
+      }
+    }
+
+    /* B is along z: out of the board where B > 0, into it where B < 0.
+       B = (n x E)/c  ->  in this plane only the z component survives. */
+    var sb = sp * 2;
+    for (var bx = sb * 0.85; bx < W; bx += sb) {
+      for (var by = sb * 0.6; by < H; by += sb) {
+        var G = fieldAt(bx, by, true);
+        var bz = (G.nx * G.y - G.ny * G.x) / cc;
+        var mb = Math.abs(bz) * Math.min(G.R, Rref * 2.2) * cc;
+        var ub = Math.min(1, Math.pow(mb / (peak * 2.4 + 1e-9), 0.62));
+        var r = sp * 0.38 * ub;
+        if (r < 2) continue;
+        ctx.strokeStyle = 'rgba(' + COL_B + ',' + (0.28 + 0.62 * ub) + ')';
+        ctx.lineWidth = Math.max(1.2, r * 0.20);
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, 6.2832); ctx.stroke();
+        ctx.beginPath();
+        if (bz > 0) { ctx.fillStyle = 'rgba(' + COL_B + ',' + (0.3 + 0.6 * ub) + ')';
+                      ctx.arc(bx, by, Math.max(1.2, r * 0.30), 0, 6.2832); ctx.fill(); }
+        else { var d = r * 0.62;
+               ctx.moveTo(bx - d, by - d); ctx.lineTo(bx + d, by + d);
+               ctx.moveTo(bx + d, by - d); ctx.lineTo(bx - d, by + d); ctx.stroke(); }
+      }
+    }
+
+    /* the oscillation guide and the charge itself */
+    ctx.strokeStyle = 'rgba(' + COL_Q + ',.30)';
+    ctx.setLineDash([3, 6]); ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0.40 * W, 0.50 * H - A * 1.5); ctx.lineTo(0.40 * W, 0.50 * H + A * 1.5);
+    ctx.stroke(); ctx.setLineDash([]);
+    charge(q.x, q.y, Math.max(7, Math.min(W, H) * 0.013), true);
+
+    /* one point in space, watched over time */
+    var px = 0.78 * W, py = 0.50 * H;
+    var P = fieldAt(px, py, true);
+    var pz = (P.nx * P.y - P.ny * P.x) / cc;
+    scope.push({ t: t, e: P.y, b: pz * cc });
+    while (scope.length && scope[0].t < t - 3.2) scope.shift();
+
+    ctx.strokeStyle = 'rgba(255,255,255,.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, sp * 0.42, 0, 6.2832); ctx.stroke();
+    label('watch this point', px + sp * 0.55, py - sp * 0.30, 'rgba(226,232,240,.8)', fs(0.022));
+
+    drawScope(0.615 * W, 0.025 * H, 0.365 * W, 0.235 * H);
+
+    label('E ⊥ B ⊥ direction of travel · both in phase · B = E/c',
+          0.985 * W, 0.975 * H, 'rgba(226,232,240,.72)', fs(0.024), 'right');
+  }
+
+  function drawScope(x, y, w, h) {
+    ctx.fillStyle = 'rgba(2,6,23,.95)';
+    ctx.strokeStyle = 'rgba(148,163,184,.28)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(148,163,184,.22)';
+    ctx.beginPath(); ctx.moveTo(x + 6, y + h / 2); ctx.lineTo(x + w - 6, y + h / 2); ctx.stroke();
+    if (scope.length < 3) return;
+    var eMax = 1e-12, bMax = 1e-12, i;
+    for (i = 0; i < scope.length; i++) {
+      eMax = Math.max(eMax, Math.abs(scope[i].e));
+      bMax = Math.max(bMax, Math.abs(scope[i].b));
+    }
+    var t0 = t - 3.2;
+    function trace(key, mx, rgb, wid, al) {
+      ctx.strokeStyle = 'rgba(' + rgb + ',' + al + ')';
+      ctx.lineWidth = wid;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (var j = 0; j < scope.length; j++) {
+        var sx = x + 6 + (scope[j].t - t0) / 3.2 * (w - 12);
+        var sy = y + h / 2 - scope[j][key] / mx * (h * 0.36);
+        if (j === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+    }
+    trace('b', bMax, COL_B, Math.max(5, h * 0.055), 0.85);
+    trace('e', eMax, COL_E, Math.max(2, h * 0.022), 1);
+    label('B', x + 10, y + fs(0.030), 'rgb(' + COL_B + ')', fs(0.026), 'left', '700');
+    label('E', x + 10 + fs(0.032), y + fs(0.030), 'rgb(' + COL_E + ')', fs(0.026), 'left', '700');
+    label('same point in space, over time — one curve hides inside the other',
+          x + 8, y + h - 7, 'rgba(148,163,184,.85)', fs(0.019));
+    label('time →', x + w - 8, y + h - 7, 'rgba(148,163,184,.6)', fs(0.019), 'right');
+  }
+
+  /* ---- mode 4: three source geometries side by side --------------------- */
+  function drawGeometry() {
+    var pw = W / 3, cc = c(), w = om();
+    var sp = Math.max(30, Math.min(pw, H) / 11);
+    var Lmax = sp * 1.02;
+    var r0 = pw * 0.20;                      // distance where all three are equal
+    function env(p, r) { return p === 0 ? r0 / r : (p === 1 ? Math.sqrt(r0 / r) : 1); }
+    var names = ['point source', 'line source', 'plane source (edge on)'];
+    var laws  = ['E ∝ 1/r', 'E ∝ 1/√r', 'E = constant'];
+    var why   = ['energy spreads over a sphere', 'energy spreads over a cylinder', 'the area never grows'];
+
+    for (var p = 0; p < 3; p++) {
+      var x0 = p * pw, sx = x0 + pw * 0.14, sy = H * 0.5;
+
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x0, 0, pw, H); ctx.clip();
+
+      if (p > 0) {
+        ctx.strokeStyle = 'rgba(148,163,184,.22)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, H); ctx.stroke();
+      }
+
+      for (var gx = x0 + sp * 0.5; gx < x0 + pw; gx += sp) {
+        for (var gy = sp * 0.5; gy < H; gy += sp) {
+          var r, en, ph, ux, uy;
+          if (p === 0) {
+            var dx = gx - sx, dy = gy - sy;
+            r = Math.sqrt(dx * dx + dy * dy); if (r < r0 * 0.55) continue;
+            var nx = dx / r, ny = dy / r;
+            en = env(0, r);
+            ph = Math.sin(w * (t - r / cc));
+            /* transverse part of a vertical acceleration: the sin(theta) lobe */
+            ux = nx * ny; uy = -nx * nx;
+            var um = Math.sqrt(ux * ux + uy * uy);
+            if (um < 1e-6) continue;
+            ux /= um; uy /= um;
+            en *= Math.abs(nx);
+          } else {
+            r = Math.abs(gx - sx); if (r < r0 * 0.55) continue;
+            en = env(p, r);
+            ph = Math.sin(w * (t - r / cc));
+            ux = 0; uy = -1;
+          }
+          var v = en * ph;
+          var len = Lmax * Math.min(1, Math.abs(v));
+          var al = 0.26 + 0.74 * Math.min(1, Math.abs(v));
+          var s = v < 0 ? -1 : 1;
+          arrow(gx - ux * s * len * 0.5, gy - uy * s * len * 0.5, ux * s, uy * s,
+                len, COL_E, al, Math.max(1.2, len * 0.085));
+        }
+      }
+
+      /* the envelope: how tall the arrows can ever get, as a curve */
+      ctx.strokeStyle = 'rgba(' + COL_Q + ',.65)';
+      ctx.setLineDash([6, 6]); ctx.lineWidth = 2;
+      for (var sgn = -1; sgn <= 1; sgn += 2) {
+        ctx.beginPath();
+        var started = false;
+        for (var xx = sx + r0 * 0.55; xx < x0 + pw; xx += 4) {
+          var yy = sy + sgn * Math.min(1, env(p, xx - sx)) * Lmax;
+          if (!started) { ctx.moveTo(xx, yy); started = true; } else ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      /* the measuring stick: what is left of the amplitude at r0, 2r0, 4r0 */
+      var ty = H * 0.82;
+      for (var mk = 0; mk < 3; mk++) {
+        var mr = [1, 2, 4][mk] * r0, mx = sx + mr;
+        if (mx > x0 + pw - 8) continue;
+        ctx.strokeStyle = 'rgba(226,232,240,.28)';
+        ctx.setLineDash([3, 5]); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(mx, sy); ctx.lineTo(mx, ty - fs(0.034)); ctx.stroke();
+        ctx.setLineDash([]);
+        label([1, 2, 4][mk] + 'r₀', mx, ty - fs(0.014), 'rgba(148,163,184,.9)', fs(0.021), 'center');
+        label(Math.round(env(p, mr) * 100) + '%', mx, ty + fs(0.020),
+              'rgb(' + COL_Q + ')', fs(0.026), 'center', '700');
+      }
+
+      /* the source itself */
+      var rq = Math.max(5, Math.min(W, H) * 0.010);
+      var wob = amp() * 0.5 * Math.sin(w * t);
+      if (p === 0) charge(sx, sy + wob, rq, true);
+      else {
+        var n = p === 1 ? 11 : 15;
+        if (p === 2) {
+          ctx.fillStyle = 'rgba(' + COL_Q + ',.13)';
+          ctx.fillRect(sx - rq * 1.9, 0, rq * 3.8, H);
+        }
+        for (var k = 0; k < n; k++) {
+          var yy2 = (k + 0.5) * H / n + wob;
+          charge(sx, yy2, rq * 0.78, false);
+        }
+        ctx.strokeStyle = 'rgba(' + COL_Q + ',.45)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+      }
+
+      label(names[p], x0 + pw * 0.5, fs(0.040), 'rgba(226,232,240,.92)', fs(0.030), 'center', '700');
+      label(laws[p],  x0 + pw * 0.5, fs(0.080), 'rgb(' + COL_Q + ')',    fs(0.036), 'center', '700');
+      label(why[p],   x0 + pw * 0.5, fs(0.112), 'rgba(148,163,184,.85)', fs(0.023), 'center');
+
+      ctx.restore();
+    }
+  }
+
+  /* ------------------------------------------------------------ the frame */
+  var TIPS = [
+    '',
+    'Tap anywhere on the field: the charge jumps there and <b>every</b> arrow updates at once. Convenient — and wrong.',
+    'Tap again. Now the news crawls out at <b>c</b>: inside the ring the arrows have heard, outside they still aim at where the charge <b>was</b>. The joint is the <b>kink</b>.',
+    'The charge just oscillates. Every wobble sends out another kink — that train of kinks <b>is</b> the wave.',
+    'Same charge, same frequency, three shapes of source. Watch how far the wave gets before it fades.'
+  ];
+
+  function setTip() { tipEl.innerHTML = TIPS[mode]; }
+
+  function setMode(m) {
+    if (m === mode) return;
+    mode = m;
+    for (var i = 0; i < modeBtns.length; i++)
+      modeBtns[i].classList.toggle('on', +modeBtns[i].getAttribute('data-mode') === mode);
+    hit.classList.toggle('off', mode > 2);
+    move = null; events.length = 0;
+    if (mode <= 2) { qf.x = 0.42; qf.y = 0.50; }
+    seed();
+    setTip();
+  }
+
+  function place(fx, fy) {
+    if (mode > 2) return;
+    var p = chargeAt(t);
+    move = { x0: p.x, y0: p.y, x1: fx * W, y1: fy * H, t0: t, T: mode === 1 ? 0.16 : 0.34 };
+    qf.x = fx; qf.y = fy;
+    if (mode === 2) {
+      events.push({ t0: t, T: move.T, x0: p.x, y0: p.y });
+      if (events.length > 3) events.shift();
+    }
+  }
+
+  function draw() {
+    clear();
+    if (mode === 1) drawNearField(false);
+    else if (mode === 2) drawNearField(true);
+    else if (mode === 3) drawRadiation();
+    else drawGeometry();
+  }
+
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    var now = ts / 1000;
+    var dt = last ? Math.min(0.05, now - last) : 0.016;
+    last = now;
+    if (!paused) t += dt;
+    if (!fit()) return;
+    if (mode !== 4) pushHistory();
+    try { draw(); } catch (e) { /* a bad frame must never blank the slide */ }
+    syncSteps();
+  }
+
+  /* ------------------------------------------------------------- controls */
+  function buildTrack(el, n, get, set) {
+    for (var i = 0; i < n; i++) {
+      var cell = document.createElement('i');
+      cell.className = 'clickable';
+      cell.setAttribute('data-i', i);
+      el.appendChild(cell);
+    }
+    el.addEventListener('click', function (ev) {
+      var c2 = ev.target.closest ? ev.target.closest('i') : null;
+      if (!c2) return;
+      set(+c2.getAttribute('data-i'));
+      paint();
+    });
+    function paint() {
+      var cells = el.children, v = get();
+      for (var i = 0; i < cells.length; i++) cells[i].classList.toggle('lit', i <= v);
+    }
+    return paint;
+  }
+
+  var paintC = buildTrack(trackC, C_FRAC.length, function () { return ci; },
+    function (v) { ci = v; valC.textContent = (C_FRAC[ci] / C_FRAC[2]).toFixed(2) + '×'; });
+  var paintF = buildTrack(trackF, F_HZ.length, function () { return fi; },
+    function (v) { fi = v; valF.textContent = F_HZ[fi].toFixed(2) + ' Hz'; });
+  valC.textContent = (C_FRAC[ci] / C_FRAC[2]).toFixed(2) + '×';
+  valF.textContent = F_HZ[fi].toFixed(2) + ' Hz';
+  paintC(); paintF();
+
+  hit.addEventListener('click', function (ev) {
+    var cell = ev.target.closest ? ev.target.closest('i') : null;
+    if (!cell) return;
+    place(+cell.getAttribute('data-x'), +cell.getAttribute('data-y'));
+  });
+
+  for (var i = 0; i < modeBtns.length; i++) {
+    modeBtns[i].addEventListener('click', function () {
+      setMode(+this.getAttribute('data-mode'));
+    });
+  }
+  playBtn.addEventListener('click', function () {
+    paused = !paused;
+    playBtn.textContent = paused ? 'Play' : 'Pause';
+  });
+  resetBtn.addEventListener('click', function () {
+    move = null; events.length = 0;
+    qf.x = 0.42; qf.y = 0.50;
+    seed();
+  });
+
+  /* The presenter's "Next step" reveals one .idea at a time; follow it, so a
+     press advances the story and the simulation together. Works in the host
+     and in a plain browser, because both do it by changing opacity. */
+  var lastRevealed = -1, lastPoll = 0;
+  function syncSteps() {
+    if (t - lastPoll < 0.25) return;
+    lastPoll = t;
+    var n = 0;
+    for (var i = 0; i < ideaEls.length; i++) {
+      var o = parseFloat(getComputedStyle(ideaEls[i]).opacity);
+      if (!isFinite(o) || o > 0.55) n++;
+    }
+    if (lastRevealed < 0) { lastRevealed = n; return; }
+    if (n !== lastRevealed) {
+      lastRevealed = n;
+      if (n >= 1 && n <= 4) setMode(n);
+    }
+  }
+
+  window.addEventListener('resize', fit);
+  setTip();
+  seed();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<!-- ============ Standalone fallback controller (host stands it down) ============ -->
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

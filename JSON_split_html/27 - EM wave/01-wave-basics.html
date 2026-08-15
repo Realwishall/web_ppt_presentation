@@ -221,4 +221,13 @@
       function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
       document.addEventListener('keydown', function(e){
         if (e.key === 'ArrowRight' || e.key === ' ') next();
-        else if (e.key === 'A
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

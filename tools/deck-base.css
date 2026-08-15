@@ -300,6 +300,8 @@ ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
     background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
     box-shadow:var(--lip)}
 .q{color:var(--gold);font-weight:700;font-size:clamp(20px,3.4vmin,40px);line-height:1.35}
+/* one notch up (+10%) for a question the teacher wants read from the back row */
+.q.lg{font-size:clamp(22px,3.74vmin,44px)}
 /* the Question/Solution heads are used on their own too — a two-up question
    page has no .qa panel to hang them on (rule 17: both are labels). */
 .a{margin-top:.8vmin;color:var(--sub);
@@ -480,6 +482,10 @@ math{math-style:normal}
 .derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
                        font-size:var(--fs-note)}
 .stack>.result,.graph-cell>.result{align-self:flex-start}
+/* A result that closes a derivation belongs at the foot of THAT column — in a
+   two-column working the answer box otherwise lands under the left column
+   while the last line was written on the right. */
+.derivation>.result{align-self:flex-start;margin-top:.8vmin}
 .result{display:inline-block;border:.14vmin solid rgba(245,197,66,.7);border-radius:1.1vmin;
         padding:1vmin 2vmin;color:var(--gold-soft);font-family:var(--font-math);
         font-size:var(--fs-eq);font-weight:700;
@@ -1002,6 +1008,13 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 .op-node.is-focus{color:var(--gold-soft);border-color:rgba(245,197,66,.55);
   background:linear-gradient(180deg,rgba(245,197,66,.15),rgba(245,197,66,.035))}
 .op-node math{font-size:inherit}
+/* An answer box that is BUILT, not delivered. `.op-node.parts` keeps the box
+   and its "v =" together as one press (the node is the .step), then hands each
+   term of the answer its own press as a `.step.part` child. The children are
+   flex items, so the host's reveal transform applies to them unchanged and the
+   box grows to the right as the answer is spoken. Print shows every part. */
+.op-node.parts{gap:.18em}
+.part{display:inline-block}
 .op-arrow{position:relative;flex:0 0 auto;display:inline-block;align-self:center;
   min-width:12vmin;height:.24vmin;border-radius:99px;margin:0 .7vmin;
   color:var(--gold);background:currentColor;
@@ -1058,6 +1071,9 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 /* the operator label floats above the shaft — reserve room for it so it never
    sits on the line above (e.g. the "Solution" head of a .qa) */
 .op-chain{margin:2.8vmin 0 .8vmin}
+/* two chains stacked: the second one's floating operator label would sit on
+   the first one's boxes without this extra clearance */
+.op-chain + .op-chain{margin-top:4.6vmin}
 .op-chain.mini{margin:2.4vmin 0 1.4vmin}
 
 /* ============================================================================

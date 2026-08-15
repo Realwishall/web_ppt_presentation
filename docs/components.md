@@ -265,7 +265,12 @@ One line per `.step`; optional reason on the right.
 <div class="result step">v = (&radic;3/2) c</div>
 ```
 
-Long derivations: wrap in `.two-col` and continue in the second column.
+Long derivations: wrap in `.two-col` and continue in the second column — and
+when you do, put the `.result` **inside the column the working ends in**, not
+after the `.two-col`. A `.result` that is a sibling of the grid lands under the
+*left* column while the last line was written on the right, which reads as an
+answer to the wrong half of the board. `.derivation > .result` is styled for
+this: it hugs the left edge of its own column with a little clearance above.
 
 ### `worked-example`
 
@@ -416,6 +421,7 @@ that element becomes visible.
 | `data-three="restitution-e"` | `<div class="scene-frame">` | the **same head-on collision run three times over**, at `e = 1`, `e = 0.5`, `e = 0`. Under the track, the approach speed (fixed, cyan) and the separation speed (green, shrinking) stand as two bars, so `e` is read off as one bar over the other — and the lower bar vanishes exactly when the two bodies leave together. `e` is a ratio of two speeds that exist at different times, which is precisely what one still figure cannot hold |
 | `data-three="newton-cradle"` | `<div class="scene-frame">` | five balls on cords: lift one and exactly one leaves, lift two and exactly two leave. The "warning for the pendulum case" board is an argument about **what happens**, not about what the apparatus looks like — momentum alone permits two at `u/2`, and the cradle is the counter-example |
 | `data-three="bounce-decay"` | `<div class="scene-frame">` | a ball dropped from `h` bouncing with `e`, leaving a faint marker at every apex so `h`, `e²h`, `e⁴h` … accumulate on the board as a visible geometric progression. The G.P. *is* the slide, and a G.P. is made of successive bounces |
+| `data-three="max-ke-loss"` | `<div class="scene-frame">` | the instant the max-loss formula is about: `m` and `2m` meet through a spring, the two velocities close on each other, and at **maximum compression** they are equal. Under the track the total KE stands as one bar in two parts — an indigo part that is the KE of the centre of mass, which no interaction can touch, and a gold part, exactly `½μ(u₂−u₁)²`, that drains into the green spring bar and comes back. The maximum possible loss is the whole of the gold part **and nothing more** — a still figure can assert that, it cannot show it |
 | `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle, turning, with `ω` drawn **along the axle** in the right-hand sense — the one thing a still figure cannot show, that `ω` stands on the axis rather than lying in the plane. `data-sense="ccw"` (default) turns anticlockwise seen from above and points `ω` up / out of the plane; `data-sense="cw"` reverses both |
 
 ```html
@@ -620,22 +626,57 @@ it turns into — the figure a mechanics deck draws by hand when it explains
 r &rarr; v &rarr; a. Gold arrow = differentiate; `.op-arrow.int` (cyan) =
 integrate. Pure CSS, so it prints.
 
-The **chain** is the `.step`; the nodes and arrows inside it never are. Put
-`.is-focus` on the node the chain is producing so the eye lands on the answer.
+A chain has two stepping modes, and the choice is about who is doing the work.
+
+**Route map — the whole chain on one press.** Use it for `.op-chain.mini`
+above a derivation ("this question travels a &rarr; v"). The chain carries the
+`.step`; the nodes and arrows inside it do not.
 
 ```html
-<div class="op-chain step">
-  <span class="op-node"><span data-tex="x = 3t^2 - 18"></span></span>
+<div class="op-chain mini step">
+  <span class="op-node"><span data-tex="v(x)"></span></span>
   <span class="op-arrow"><span class="op-label">
     <span class="frac"><span class="num">d</span><span class="den">dt</span></span>
   </span></span>
-  <span class="op-node is-focus"><span data-tex="\vec v = 6t"></span></span>
+  <span class="op-node is-focus"><span data-tex="a"></span></span>
 </div>
 ```
 
+**Carrier of the answer — a link per press.** When the chain IS the working,
+the chain is *not* the reveal: every `.op-node` and every `.op-arrow` is its
+own `.step`, so the road is drawn a link at a time (`r`, then `d/dt`, then
+`v`). Hidden links still hold their space, so nothing reflows as it fills in.
+Put `.is-focus` on the node the chain is producing so the eye lands on the
+answer.
+
+```html
+<div class="op-chain">
+  <span class="op-node step"><span data-tex="x = 3t^2 - 18t"></span></span>
+  <span class="op-arrow step"><span class="op-label">
+    <span class="frac"><span class="num">d</span><span class="den">dt</span></span>
+  </span></span>
+  <span class="op-node is-focus parts step"><span data-tex="\vec v ="></span>
+    <span class="step part" data-tex="6t"></span>
+    <span class="step part" data-tex="{}-18"></span></span>
+</div>
+```
+
+`.op-node.parts` is the answer box that is **built, not delivered**: the node
+is the `.step` that brings the box in with its `v =` already inside, and each
+`.step.part` child is one further press, so a two-term answer takes two beats.
+Write the parts with TeX binary spacing (`{}-18`, `{}+4\,\hat\jmath`) so they
+read as one equation once they are all up. `.part` also works inside a
+`.derivation .line` when a line grows mid-thought (`dv/dt = 4x`, then
+`× dx/dt`).
+
+This is the one place a `.step` may sit inside a `.step`. It is safe because
+the host reveals `.step`s by document-order index — the parent gets its press,
+the children get theirs — but it is deliberate, not a licence: everywhere else
+rule 19 still stands.
+
 `.op-chain.mini` is the same thing at note size — use it above a derivation as a
-one-line route map ("this question travels a &rarr; v"), never as the carrier of
-the answer. Inline math inside `.op-node` / `.op-label` sits at the surrounding
+one-line route map, never as the carrier of the answer. Inline math inside
+`.op-node` / `.op-label` sits at the surrounding
 size, so write `<span data-tex="…">` there, not `<span class="eq" data-tex="…">`.
 
 ### Q&A heads and the "tough" flag
@@ -656,6 +697,10 @@ as worth extra attention.
   </div>
 </div>
 ```
+
+`.q.lg` sets the question one notch larger (+10%) — for a board the teacher
+wants read from the back row. It is a per-question exception, not a default;
+a page where every `.q` is `.lg` means the base size is wrong, not the page.
 
 ## Graphs — `svg.gph`, `.graph-grid`, `.graph-stack`, `.options.graphs`
 

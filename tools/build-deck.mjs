@@ -26,7 +26,7 @@ import { pathToFileURL } from 'node:url';
 /* ------------------------------------------------------------------ args -- */
 const argv = process.argv.slice(2);
 if (!argv.length || argv.includes('--help')) {
-  console.log('usage: node tools/build-deck.mjs <build/deck-slug> [--out f.html] [--title T] [--kicker K]');
+  console.log('usage: node tools/build-deck.mjs <build/deck-slug> [--out f.html] [--title T] [--kicker K | --no-kicker]');
   process.exit(argv.length ? 0 : 1);
 }
 const deckDir = path.resolve(argv[0]);
@@ -192,6 +192,10 @@ if (/\.page\s*\{[^}]*(display\s*:\s*none|opacity\s*:\s*0|visibility\s*:\s*hidden
 const prettyFromSlug = (manifest.slug || path.basename(deckDir))
   .replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 const title = flag('--title') || manifest.source_name?.replace(/\.pptx$/i, '') || prettyFromSlug;
+/* `--no-kicker`, or `"kicker": false` in the manifest, ships a deck with no
+   corner tag at all — a chapter the teacher runs back to back does not want
+   the same chapter name burned into the top-left of every board. */
+const noKicker = argv.includes('--no-kicker') || manifest.kicker === false;
 const kicker = flag('--kicker')
   || (manifest.chapter && manifest.chapter !== '?'
       ? manifest.chapter.replace(/^\d+\s*-\s*/, '').trim()
@@ -435,8 +439,8 @@ if (!motifSvg) {
 
 const persistentLayers = `<div id="bg" aria-hidden="true">
   ${motifSvg}
-</div>
-<div class="kicker-tag">${esc(kicker)}</div>`;
+</div>${noKicker ? '' : `
+<div class="kicker-tag">${esc(kicker)}</div>`}`;
 
 /* ------------------------------------------- standalone fallback (rule 6) -- */
 const fallback = `<script>

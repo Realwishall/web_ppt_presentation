@@ -746,6 +746,13 @@ math[display="block"]{display:block;margin:.8vmin 0}
    sits on the line above (e.g. the "Solution" head of a .qa) */
 .op-chain{margin:2.8vmin 0 .8vmin}
 .op-chain.mini{margin:2.4vmin 0 1.4vmin}
+
+/* ---- added for the reworked reveals (see docs/components.md) ------------ */
+.op-node.parts{gap:.18em}
+.part{display:inline-block}
+.derivation>.result{align-self:flex-start;margin-top:.8vmin}
+.op-chain + .op-chain{margin-top:4.6vmin}
+.q.lg{font-size:clamp(28.6px, 6.16vmin, 66px)}
 </style>
 </head>
 <body>
@@ -766,30 +773,33 @@ math[display="block"]{display:block;margin:.8vmin 0}
 <!-- Slide 1 — the map of the whole topic. Differentiate forward along the road
      r -> v -> a; integrate to come back. The two braces of the source slide
      become the two labels: the chain is the shortcut, the three formulas are
-     the general tool. -->
+     the general tool.
+
+     Stepping: the chain is NOT the reveal — every node and every arrow is its
+     own press, so the road is drawn a link at a time (r, then d/dt, then v…). -->
 <section class="page">
   <div class="wrap">
     <div class="g-row wide">
       <span class="label">For easy numerical&nbsp;:</span>
       <div class="stack">
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
         </div>
 
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span></span>
-          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\Delta r</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span></span>
+          <span class="op-arrow int step"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\Delta r</annotation></semantics></math></span></span>
         </div>
 
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
-          <span class="op-arrow int"><span class="op-label">&int;dt</span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">\Delta v</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
+          <span class="op-arrow int step"><span class="op-label">&int;dt</span></span>
+          <span class="op-node is-focus step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>v</mi></mrow><annotation encoding="application/x-tex">\Delta v</annotation></semantics></math></span></span>
         </div>
 
         <p class="note step">Going forward you differentiate; coming back you integrate, and integration hands you a <i>change</i> &mdash; &Delta;r, &Delta;v &mdash; not the quantity itself.</p>
@@ -808,7 +818,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
 </section>
 
 <!-- Slide 2 — first two differentiation questions. Question always visible,
-     every line of the solution its own press. -->
+     and the answer arrives in pieces: the given expression, the d/dt arrow,
+     then the box carrying "v =", then each term of the answer on its own
+     press (.op-node.parts). -->
 <section class="page">
   <div class="wrap">
     <div class="qa">
@@ -816,10 +828,10 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18</annotation></semantics></math></span>, find velocity</div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">\vec v = 6t</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">6t</annotation></semantics></math></span></span>
         </div>
         <p class="note step">The constant &minus;18 differentiates to zero &mdash; it shifts the position, it never shows up in the velocity.</p>
       </div>
@@ -830,10 +842,10 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18t</annotation></semantics></math></span>, find the time at which velocity is zero</div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18t</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><mi>t</mi><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">\vec v = 6t - 18</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>18</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 3t^2 - 18t</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">6t</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>−</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">{}-18</annotation></semantics></math></span></span>
         </div>
         <div class="derivation">
           <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>t</mi><mo>−</mo><mn>18</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">6t - 18 = 0</annotation></semantics></math></span></div>
@@ -846,7 +858,8 @@ math[display="block"]{display:block;margin:.8vmin 0}
 </section>
 
 <!-- Slide 3 — the same operation on vectors: differentiate each component
-     on its own. Three questions, one reveal each. -->
+     on its own. Nothing lands whole: the i-component and the j-component are
+     separate presses, which is exactly the point being taught. -->
 <section class="page">
   <div class="wrap dense">
     <div class="qa">
@@ -854,10 +867,10 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If&nbsp; <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 3t^2\hat\imath + 4\hat\jmath</annotation></semantics></math></span>, find velocity</div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 3t^2\hat\imath + 4\hat\jmath</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>0</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec v = 6t\,\hat\imath + 0\,\hat\jmath</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 3t^2\hat\imath + 4\hat\jmath</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">6t\,\hat\imath</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>+</mo><mn>0</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">{}+0\,\hat\jmath</annotation></semantics></math></span></span>
         </div>
       </div>
     </div>
@@ -867,10 +880,10 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If&nbsp; <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mi>t</mi><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec v = 2t^2\hat\imath + 4t\hat\jmath</annotation></semantics></math></span>, find acceleration</div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mi>t</mi><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec v = 2t^2\hat\imath + 4t\hat\jmath</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo><mn>4</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec a = 4t\,\hat\imath + 4\,\hat\jmath</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>4</mn><mi>t</mi><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec v = 2t^2\hat\imath + 4t\hat\jmath</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">4t\,\hat\imath</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>+</mo><mn>4</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">{}+4\,\hat\jmath</annotation></semantics></math></span></span>
         </div>
       </div>
     </div>
@@ -880,12 +893,12 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If&nbsp; <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 6t^2\hat\imath</annotation></semantics></math></span>, find acceleration</div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 6t^2\hat\imath</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>12</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec v = 12t\,\hat\imath</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo><mn>12</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec a = 12\,\hat\imath</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = 6t^2\hat\imath</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">12t\,\hat\imath</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">12\,\hat\imath</annotation></semantics></math></span></span>
         </div>
         <p class="note step">Two presses of <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi mathvariant="normal">/</mi><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">d/dt</annotation></semantics></math></span> and nothing else &mdash; each component is differentiated separately.</p>
       </div>
@@ -893,8 +906,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
   </div>
 </section>
 
-<!-- Slide 4 — velocity given as a function of x, not of t. This is the slide
-     where the third formula of slide 1 earns its keep. -->
+<!-- Slide 4 — velocity given as a function of x, not of t. Taught as d/dt
+     throughout: differentiate, notice the chain rule has left a dx/dt behind,
+     and only then recognise that dx/dt is the velocity. -->
 <section class="page">
   <div class="wrap">
     <div class="qa">
@@ -905,14 +919,19 @@ math[display="block"]{display:block;margin:.8vmin 0}
 
         <div class="op-chain mini step">
           <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">v(x)</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dx</span></span></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
           <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
         </div>
 
         <div class="derivation">
           <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">v = 2x^2</annotation></semantics></math></span></div>
-          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mi>v</mi><mo>∗</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo>=</mo><mo stretchy="false">(</mo><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo stretchy="false">(</mo><mn>4</mn><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">a = v * \dfrac{dv}{dx} = (2x^2)(4x)</annotation></semantics></math></span>
-            <span class="why">t never appears, so use a = v dv/dx</span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">a = \dfrac{dv}{dt}</annotation></semantics></math></span>
+            <span class="why">acceleration is always dv/dt</span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mstyle><mo>=</mo><mn>4</mn><mi>x</mi></mrow><annotation encoding="application/x-tex">\dfrac{dv}{dt} = 4x</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>×</mo><mtext> </mtext><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>x</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\times\,\dfrac{dx}{dt}</annotation></semantics></math></span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>4</mn><mi>x</mi><mo>×</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">a = 4x \times v</annotation></semantics></math></span>
+            <span class="why">dx/dt is the velocity</span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>4</mn><mi>x</mi><mo>×</mo><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a = 4x \times 2x^2</annotation></semantics></math></span>
+            <span class="why">and v is 2x&sup2;</span></div>
         </div>
         <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>8</mn><msup><mi>x</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">a = 8x^3</annotation></semantics></math></span></div>
       </div>
@@ -920,7 +939,8 @@ math[display="block"]{display:block;margin:.8vmin 0}
   </div>
 </section>
 
-<!-- Slide 5 — one chain, two links: position to velocity to acceleration. -->
+<!-- Slide 5 — one chain, two links: position to velocity to acceleration.
+     Each answer is assembled term by term inside its box. -->
 <section class="page">
   <div class="wrap">
     <div class="qa">
@@ -928,15 +948,15 @@ math[display="block"]{display:block;margin:.8vmin 0}
       <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>4</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 4t^2 - 5t</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span> and <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></div>
       <div class="a">
         <span class="a-head">Solution</span>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>4</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 4t^2 - 5t</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>8</mn><mi>t</mi><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\vec v = 8t - 5</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>4</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = 4t^2 - 5t</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">8t</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">{}-5</annotation></semantics></math></span></span>
         </div>
-        <div class="op-chain step">
-          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>8</mn><mi>t</mi><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\vec v = 8t - 5</annotation></semantics></math></span></span>
-          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
-          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">\vec a = 8</annotation></semantics></math></span></span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo><mn>8</mn><mi>t</mi><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\vec v = 8t - 5</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn></mrow><annotation encoding="application/x-tex">8</annotation></semantics></math></span></span>
         </div>
         <p class="note step">Acceleration came out a plain number &mdash; the motion is uniformly accelerated.</p>
       </div>
@@ -945,7 +965,8 @@ math[display="block"]{display:block;margin:.8vmin 0}
 </section>
 
 <!-- Slide 6 — the question is handed to you upside down: t as a function of x.
-     Differentiate what you were given, then invert. -->
+     Differentiate what you were given, then invert. dt/dx is built up on the
+     board a term at a time rather than landing finished. -->
 <section class="page">
   <div class="wrap">
     <div class="qa">
@@ -965,7 +986,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
 
         <div class="derivation">
           <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>4</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>5</mn><mi>x</mi></mrow><annotation encoding="application/x-tex">t = 4x^2 - 5x</annotation></semantics></math></span></div>
-          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>t</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo>=</mo><mn>8</mn><mi>x</mi><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\dfrac{dt}{dx} = 8x - 5</annotation></semantics></math></span>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>t</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo>=</mo></mrow><annotation encoding="application/x-tex">\dfrac{dt}{dx} =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mi>x</mi></mrow><annotation encoding="application/x-tex">8x</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>−</mo></mrow><annotation encoding="application/x-tex">{}-</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn></mrow><annotation encoding="application/x-tex">5</annotation></semantics></math></span>
             <span class="why">differentiate what you were given</span></div>
           <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>x</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mstyle><mo>=</mo><msup><mrow><mo fence="true">(</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>t</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo fence="true">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">v = \dfrac{dx}{dt} = \left(\dfrac{dt}{dx}\right)^{-1}</annotation></semantics></math></span>
             <span class="why">velocity is the reciprocal</span></div>
@@ -977,7 +998,8 @@ math[display="block"]{display:block;margin:.8vmin 0}
 </section>
 
 <!-- Slide 7 — the same trick, one step further: differentiate v with respect
-     to t, which needs the chain rule and dx/dt = v again. -->
+     to t, which needs the chain rule and dx/dt = v again. The answer box sits
+     at the foot of the RIGHT column, where the working actually ends. -->
 <section class="page">
   <div class="wrap dense">
     <div class="qa">
@@ -1008,9 +1030,121 @@ math[display="block"]{display:block;margin:.8vmin 0}
             <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mo>−</mo><mn>1</mn><mtext> </mtext><mo stretchy="false">(</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mn>2</mn></mrow></msup><mo>×</mo><mn>2</mn><mtext> </mtext><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>x</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">a = -1\,(2x-1)^{-2} \times 2\,\dfrac{dx}{dt}</annotation></semantics></math></span></div>
             <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mo>−</mo><mn>2</mn><mo>∗</mo><msup><mi>v</mi><mn>2</mn></msup><mo>∗</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">= -2 * v^2 * v</annotation></semantics></math></span>
               <span class="why">(2x&minus;1)<sup>&minus;1</sup> is v, and dx/dt is v</span></div>
+            <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mo>−</mo><mn>2</mn><msup><mi>v</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">a = -2v^3</annotation></semantics></math></span></div>
           </div>
         </div>
-        <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mo>−</mo><mn>2</mn><msup><mi>v</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">a = -2v^3</annotation></semantics></math></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Added page A (teacher request) — harder differentiation: a cubic whose
+     velocity vanishes twice. Two differentiations and a factorisation on one
+     board, so the class sees "at rest" turned into an equation. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><msup><mi>t</mi><mn>3</mn></msup><mo>−</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mo>+</mo><mn>9</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = t^3 - 6t^2 + 9t</annotation></semantics></math></span>, find the times at which the particle is at rest, and its acceleration then
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain mini step">
+          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">x(t)</annotation></semantics></math></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span></span>
+          <span class="op-arrow"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span></span>
+        </div>
+
+        <div class="two-col">
+          <div class="derivation">
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><msup><mi>t</mi><mn>3</mn></msup><mo>−</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mo>+</mo><mn>9</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">x = t^3 - 6t^2 + 9t</annotation></semantics></math></span></div>
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo></mrow><annotation encoding="application/x-tex">v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">3t^2</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>−</mo><mn>12</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">{}-12t</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>+</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">{}+9</annotation></semantics></math></span></div>
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>12</mn><mi>t</mi><mo>+</mo><mn>9</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">3t^2 - 12t + 9 = 0</annotation></semantics></math></span>
+              <span class="why">at rest: v = 0</span></div>
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mn>3</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">(t - 1)(t - 3) = 0</annotation></semantics></math></span></div>
+          </div>
+          <div class="derivation">
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo></mrow><annotation encoding="application/x-tex">a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>t</mi></mrow><annotation encoding="application/x-tex">6t</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>−</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">{}-12</annotation></semantics></math></span>
+              <span class="why">differentiate again</span></div>
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mo>−</mo><mn>6</mn><mtext> </mtext><msup><mtext>m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a(1) = -6\ \text{m/s}^2</annotation></semantics></math></span></div>
+            <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo stretchy="false">(</mo><mn>3</mn><mo stretchy="false">)</mo><mo>=</mo><mo>+</mo><mn>6</mn><mtext> </mtext><msup><mtext>m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a(3) = +6\ \text{m/s}^2</annotation></semantics></math></span>
+              <span class="why">then speeding up</span></div>
+            <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn><mtext> </mtext><mtext>s</mtext><mo separator="true">,</mo><mtext> </mtext><mn>3</mn><mtext> </mtext><mtext>s</mtext></mrow><annotation encoding="application/x-tex">t = 1\,\text{s},\ 3\,\text{s}</annotation></semantics></math></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Added page B (teacher request) — differentiating a sine. Two presses of
+     d/dt turn the displacement into an acceleration that points back at the
+     displacement itself: the SHM result, arrived at by pure differentiation. -->
+<section class="page">
+  <div class="wrap">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>A</mi><mi>sin</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>ω</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">x = A\sin(\omega t)</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span> and write it in terms of <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span>
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>A</mi><mi>sin</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>ω</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">x = A\sin(\omega t)</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo></mrow><annotation encoding="application/x-tex">v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>ω</mi></mrow><annotation encoding="application/x-tex">A\omega</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>cos</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>ω</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\cos(\omega t)</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo></mrow><annotation encoding="application/x-tex">a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>A</mi><msup><mi>ω</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">-A\omega^2</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>sin</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>ω</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\sin(\omega t)</annotation></semantics></math></span></span>
+        </div>
+
+        <div class="derivation">
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mo>−</mo><msup><mi>ω</mi><mn>2</mn></msup><mtext> </mtext><mo fence="true" stretchy="true" minsize="1.2em" maxsize="1.2em">(</mo><mi>A</mi><mi>sin</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>ω</mi><mi>t</mi><mo stretchy="false">)</mo><mo fence="true" stretchy="true" minsize="1.2em" maxsize="1.2em">)</mo></mrow><annotation encoding="application/x-tex">a = -\omega^2\,\bigl(A\sin(\omega t)\bigr)</annotation></semantics></math></span>
+            <span class="why">the bracket is x again</span></div>
+        </div>
+        <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mo>−</mo><msup><mi>ω</mi><mn>2</mn></msup><mi>x</mi></mrow><annotation encoding="application/x-tex">a = -\omega^2 x</annotation></semantics></math></span></div>
+        <p class="note step">Each <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi mathvariant="normal">/</mi><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">d/dt</annotation></semantics></math></span> brings an <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi></mrow><annotation encoding="application/x-tex">\omega</annotation></semantics></math></span> down from the angle &mdash; that is the chain rule at work. The minus sign is the whole of simple harmonic motion: the acceleration always points back to the centre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Added page C (teacher request) — two more. The left one has no t anywhere,
+     so it is a job for a = v dv/dx; the right one is a vector evaluated at an
+     instant. Both need two differentiations, not one. -->
+<section class="page">
+  <div class="wrap dense">
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>4</mn><msqrt><mi>x</mi></msqrt></mrow><annotation encoding="application/x-tex">v = 4\sqrt{x}</annotation></semantics></math></span>, find acceleration
+        <span class="tag-hot">Tough</span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="derivation">
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">v = 4x^{1/2}</annotation></semantics></math></span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo>=</mo></mrow><annotation encoding="application/x-tex">\dfrac{dv}{dx} =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><mfrac><mn>2</mn><msqrt><mi>x</mi></msqrt></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\dfrac{2}{\sqrt{x}}</annotation></semantics></math></span></div>
+          <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mi>v</mi><mtext> </mtext><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi>d</mi><mi>v</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></mstyle><mo>=</mo><mn>4</mn><msqrt><mi>x</mi></msqrt><mo>×</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mn>2</mn><msqrt><mi>x</mi></msqrt></mfrac></mstyle></mrow><annotation encoding="application/x-tex">a = v\,\dfrac{dv}{dx} = 4\sqrt{x}\times\dfrac{2}{\sqrt{x}}</annotation></semantics></math></span>
+            <span class="why">t never appears, so use a = v dv/dx</span></div>
+          <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>8</mn><mtext> </mtext><msup><mtext>m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a = 8\ \text{m/s}^2</annotation></semantics></math></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa">
+      <span class="q-head">Question</span>
+      <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover><mo>=</mo><mo stretchy="false">(</mo><mn>2</mn><msup><mi>t</mi><mn>3</mn></msup><mo>−</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mo>+</mo><mn>5</mn><mi>t</mi><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec r = (2t^3 - 3t^2)\hat\imath + 5t\,\hat\jmath</annotation></semantics></math></span>, find <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover></mrow><annotation encoding="application/x-tex">\vec a</annotation></semantics></math></span> at <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>2</mn><mtext> s</mtext></mrow><annotation encoding="application/x-tex">t = 2\ \text{s}</annotation></semantics></math></span></div>
+      <div class="a">
+        <span class="a-head">Solution</span>
+        <div class="op-chain">
+          <span class="op-node step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>r</mi><mo>⃗</mo></mover></mrow><annotation encoding="application/x-tex">\vec r</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>v</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec v =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>6</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>6</mn><mi>t</mi><mo stretchy="false">)</mo><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">(6t^2 - 6t)\,\hat\imath</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow></mrow><mo>+</mo><mn>5</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ȷ</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">{}+5\,\hat\jmath</annotation></semantics></math></span></span>
+          <span class="op-arrow step"><span class="op-label"><span class="frac"><span class="num">d</span><span class="den">dt</span></span></span></span>
+          <span class="op-node is-focus parts step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo></mrow><annotation encoding="application/x-tex">\vec a =</annotation></semantics></math></span><span class="step part"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>12</mn><mi>t</mi><mo>−</mo><mn>6</mn><mo stretchy="false">)</mo><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">(12t - 6)\,\hat\imath</annotation></semantics></math></span></span>
+        </div>
+        <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>a</mi><mo>⃗</mo></mover><mo>=</mo><mn>18</mn><mtext> </mtext><mover accent="true"><mi mathvariant="normal">ı</mi><mo>^</mo></mover><mtext> </mtext><msup><mtext>m/s</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\vec a = 18\,\hat\imath\ \text{m/s}^2</annotation></semantics></math></span></div>
       </div>
     </div>
   </div>
@@ -1054,12 +1188,13 @@ math[display="block"]{display:block;margin:.8vmin 0}
 </section>
 
 <!-- Slide 10 — the same route with two terms; each term is integrated on its
-     own and there is still exactly one constant. -->
+     own and there is still exactly one constant. Question text one notch
+     larger here (.q.lg) at the teacher's request. -->
 <section class="page">
   <div class="wrap">
     <div class="qa">
       <span class="q-head">Question</span>
-      <div class="q">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>12</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">a = 12t^2 - 6</annotation></semantics></math></span>, find velocity as <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(t)</annotation></semantics></math></span></div>
+      <div class="q lg">If <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>12</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">a = 12t^2 - 6</annotation></semantics></math></span>, find velocity as <span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(t)</annotation></semantics></math></span></div>
       <div class="a">
         <span class="a-head">Solution</span>
 
@@ -1120,9 +1255,9 @@ math[display="block"]{display:block;margin:.8vmin 0}
             <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mn>3</mn><mo>−</mo><mi>v</mi></mrow><mn>3</mn></mfrac></mstyle><mo>=</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\Rightarrow \dfrac{3 - v}{3} = e^{-t}</annotation></semantics></math></span>
               <span class="why">undo the logarithm</span></div>
             <div class="line step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>⇒</mo><mn>3</mn><mo>−</mo><mi>v</mi><mo>=</mo><mn>3</mn><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\Rightarrow 3 - v = 3e^{-t}</annotation></semantics></math></span></div>
+            <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>3</mn><mo>−</mo><mn>3</mn><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">v = 3 - 3e^{-t}</annotation></semantics></math></span></div>
           </div>
         </div>
-        <div class="result step"><span ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><mn>3</mn><mo>−</mo><mn>3</mn><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">v = 3 - 3e^{-t}</annotation></semantics></math></span></div>
         <p class="note step">At t = 0 the body is at rest and as t grows the exponential dies away, so v creeps up towards 3 &mdash; the speed at which a = 3 &minus; v becomes zero.</p>
       </div>
     </div>

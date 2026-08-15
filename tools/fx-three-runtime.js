@@ -36,7 +36,7 @@
       if (kind === 'impulse-wall' || kind === 'explosion-momentum' ||
           kind === 'recoil-momentum' || kind === 'collision-momentum' ||
           kind === 'restitution-e' || kind === 'newton-cradle' ||
-          kind === 'bounce-decay'){
+          kind === 'bounce-decay' || kind === 'max-ke-loss'){
         startMech2D(frame, w, h, kind); return;
       }
       if (kind === 'slinky-drop' || kind === 'lift-frame' ||
@@ -2609,6 +2609,159 @@
             }
           }
           bd.position.set(x, Math.max(GY, y), 0);
+        };
+      }
+
+      /* ------------------------------------------------------ max-ke-loss --
+         The instant the formula is about.  m and 2m meet through a spring:
+         the spring compresses, the two velocities close on each other, and at
+         MAXIMUM COMPRESSION they are equal - that is the moment the whole of
+         the convertible kinetic energy is sitting in the spring.  Under the
+         track the total KE stands as one bar in two parts: an indigo part that
+         is the kinetic energy of the centre of mass, which no interaction can
+         ever touch, and a gold part, exactly 1/2 mu (u2 - u1)^2, which drains
+         into the green spring bar and comes back.  The maximum possible loss
+         is the whole of the gold part and nothing more, and a still figure can
+         assert that but cannot show it.                                      */
+      if (kind === 'max-ke-loss'){
+        var M1 = 1, M2 = 2, MT = M1 + M2, MU = M1 * M2 / MT;
+        var UREL = 2.2, VCM = M1 * UREL / MT;
+        var KS = 0.5;                                 /* display speed scale  */
+        var W1 = 0.78, H1 = 0.60, W2 = 1.05, H2 = 0.78;
+        var KGY = 3.35, L0 = 1.5;
+        var D0 = L0 + W1 / 2 + W2 / 2;                /* centre gap at touch  */
+        var TA = 0.9, TB = 2.6, TC = 2.8, TH = 1.3;   /* approach / squeeze / leave / hold */
+        var OM = Math.PI / TB, CYC = TA + TB + TC + TH;
+        var XCM0 = 3.4;                               /* centre of mass at touch */
+
+        function slab(bw, bh, color){
+          var g = new T.Group();
+          g.add(new T.Mesh(new T.PlaneGeometry(bw, bh),
+            new T.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.3 })));
+          g.add(line([new T.Vector3(-bw / 2, -bh / 2, 0), new T.Vector3(bw / 2, -bh / 2, 0),
+                      new T.Vector3(bw / 2, bh / 2, 0), new T.Vector3(-bw / 2, bh / 2, 0),
+                      new T.Vector3(-bw / 2, -bh / 2, 0)], color, 0.95));
+          return g;
+        }
+        function bar(color, op){
+          var m = new T.Mesh(new T.PlaneGeometry(1, 0.3),
+            new T.MeshBasicMaterial({ color: color, transparent: true,
+              opacity: op === undefined ? 0.8 : op }));
+          m.userData.put = function(x0, wid, y){
+            m.visible = wid > 0.012;
+            m.scale.x = Math.max(wid, 0.001);
+            m.position.set(x0 + Math.max(wid, 0.001) / 2, y, 0);
+          };
+          return m;
+        }
+
+        /* the shared stage is sized for a 16:9 board; this figure is short and
+           wide, so lift it to fill the frame it is given */
+        var KSC = 1.16;
+        world.scale.set(KSC, KSC, KSC);
+        world.position.set(-4 * KSC, -2.5 * KSC, 0);
+
+        world.add(line([new T.Vector3(0.55, KGY, 0), new T.Vector3(7.7, KGY, 0)], INK, 0.55));
+
+        var kb1 = slab(W1, H1, GOLD), kb2 = slab(W2, H2, INDIGO);
+        world.add(kb1); world.add(kb2);
+        var kl1 = label('m', '#f5c542', 0.46), kl2 = label('2m', '#9fb4ff', 0.52);
+        world.add(kl1); world.add(kl2);
+        var kv1 = arrow(GOLD, 0.048), kv2 = arrow(INDIGO, 0.048);
+        world.add(kv1); world.add(kv2);
+
+        /* the spring - a zig-zag whose points are rewritten every frame */
+        var ZN = 26, zpts = [];
+        for (var zi = 0; zi <= ZN; zi++) zpts.push(new T.Vector3(0, KGY + 0.3, 0));
+        var zgeo = new T.BufferGeometry().setFromPoints(zpts);
+        world.add(new T.Line(zgeo, new T.LineBasicMaterial({
+          color: INK, transparent: true, opacity: 0.9 })));
+
+        /* the energy bars */
+        var BX = 1.0, BSC = 2.35, BYK = 1.62, BYP = 0.72;
+        var barCM = bar(INDIGO, 0.72), barMU = bar(GOLD, 0.9), barPE = bar(GREEN, 0.9);
+        world.add(barCM); world.add(barMU); world.add(barPE);
+        var KECM = 0.5 * MT * VCM * VCM, KEMU = 0.5 * MU * UREL * UREL;
+        var lCM = label('C.M.', '#9fb4ff', 0.6), lMU = label('lost', '#f5c542', 0.56),
+            lPE = label('P.E.', '#34d399', 0.58);
+        world.add(lCM); world.add(lMU); world.add(lPE);
+        lCM.position.set(BX + KECM * BSC * 0.5, BYK + 0.46, 0);
+        world.add(dashed(new T.Vector3(BX, BYK - 0.32, 0),
+                         new T.Vector3(BX + (KECM + KEMU) * BSC, BYK - 0.32, 0), INK, 0.2, 0.14));
+
+        /* the marker that fires at maximum compression */
+        var kMark = dashed(new T.Vector3(0, 0, 0), new T.Vector3(0, 1, 0), GOLD, 0.55, 0.16);
+        world.add(kMark);
+
+        tick = function(t){
+          var u = t % CYC, d, xcm, vrel;
+          if (u < TA){                                   /* approach          */
+            vrel = UREL;
+            d = D0 + KS * UREL * (TA - u);
+            xcm = XCM0 - KS * VCM * (TA - u);
+          } else if (u < TA + TB){                       /* in contact        */
+            var tau = u - TA;
+            vrel = UREL * Math.cos(OM * tau);
+            d = D0 - KS * (UREL / OM) * Math.sin(OM * tau);
+            xcm = XCM0 + KS * VCM * tau;
+          } else if (u < TA + TB + TC){                  /* leaving           */
+            var tc = u - TA - TB;
+            vrel = -UREL;
+            d = D0 + KS * UREL * tc;
+            xcm = XCM0 + KS * VCM * (TB + tc);
+          } else {                                       /* hold, then reset  */
+            vrel = -UREL;
+            d = D0 + KS * UREL * TC;
+            xcm = XCM0 + KS * VCM * (TB + TC);
+          }
+
+          var x1 = xcm - (M2 / MT) * d, x2 = xcm + (M1 / MT) * d;
+          kb1.position.set(x1, KGY + H1 / 2, 0);
+          kb2.position.set(x2, KGY + H2 / 2, 0);
+          kl1.position.set(x1, KGY + H1 / 2, 0.01);
+          kl2.position.set(x2, KGY + H2 / 2, 0.01);
+
+          /* the spring: attached to 2m, free end never past the face of m */
+          var anchor = x2 - W2 / 2, face = x1 + W1 / 2;
+          var len = Math.min(L0, Math.max(anchor - face, 0.18));
+          var free = anchor - len, zy = KGY + 0.3, amp = 0.17 + 0.14 * (L0 - len);
+          var zp = zgeo.getAttribute('position');
+          for (var zj = 0; zj <= ZN; zj++){
+            var f = zj / ZN;
+            zp.array[zj * 3] = free + len * f;
+            zp.array[zj * 3 + 1] = zy + ((zj === 0 || zj === ZN) ? 0
+                                    : (zj % 2 ? amp : -amp));
+            zp.array[zj * 3 + 2] = 0;
+          }
+          zp.needsUpdate = true;
+          zgeo.computeBoundingSphere();
+
+          /* velocities, drawn above each body */
+          var v1 = VCM + (M2 / MT) * vrel, v2 = VCM - (M1 / MT) * vrel;
+          var ay = KGY + 1.24;
+          aim(kv1, new T.Vector3(x1, ay, 0), new T.Vector3(x1 + v1 * 0.5, ay, 0));
+          aim(kv2, new T.Vector3(x2, ay, 0), new T.Vector3(x2 + v2 * 0.5, ay, 0));
+
+          /* the bars: the indigo part never moves, the gold part is the loss */
+          var conv = 0.5 * MU * vrel * vrel, pe = KEMU - conv;
+          barCM.userData.put(BX, KECM * BSC, BYK);
+          barMU.userData.put(BX + KECM * BSC, conv * BSC, BYK);
+          barPE.userData.put(BX, pe * BSC, BYP);
+          lMU.position.set(BX + KECM * BSC + Math.max(conv * BSC, 0.3) / 2, BYK + 0.46, 0);
+          lMU.visible = conv * BSC > 0.5;
+          lPE.position.set(BX + pe * BSC + 0.62, BYP, 0);
+          lPE.visible = pe * BSC > 0.4;
+
+          /* at maximum compression the two arrows are the same length: say so */
+          var atMax = Math.abs(vrel) < 0.1 * UREL;
+          kMark.visible = atMax;
+          if (atMax) kMark.position.set(0, 0, 0);
+          kMark.children.forEach(function(seg){ seg.visible = atMax; });
+          if (atMax){
+            var mx = (x1 + x2) / 2;
+            kMark.position.set(mx - 0.0, KGY + 1.42, 0);
+            kMark.scale.set(1, 1, 1);
+          }
         };
       }
 

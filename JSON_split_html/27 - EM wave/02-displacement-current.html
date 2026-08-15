@@ -336,4 +336,11 @@
         if (e.key === 'ArrowRight' || e.key === ' ') next();
         else if (e.key === 'ArrowLeft') prev();
       });
-      document.addEventListener('click', function(e){ if (!
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>

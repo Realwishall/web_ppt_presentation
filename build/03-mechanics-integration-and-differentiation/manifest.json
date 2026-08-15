@@ -4,6 +4,9 @@
   "chapter": "03 - Mechanics Part 1",
   "slide_count": 12,
   "count_ok": true,
+  "kicker": false,
   "renderer": "libreoffice",
-  "note": "converted directly from the .pptx (rendered to PDF then PNG, read slide by slide); every equation retyped as MathML via data-tex"
+  "split_slides": [{ "slide": 7, "into": 4 }],
+  "split_reason": "teacher asked for more complex differentiation practice before the integration divider: three extra boards were authored after source slide 7 (cubic at rest, x = A sin wt, and a pair covering a = v dv/dx and a vector evaluated at an instant). Not in the source .pptx.",
+  "note": "converted directly from the .pptx (rendered to PDF then PNG, read slide by slide); every equation retyped as MathML via data-tex. Kicker suppressed on request."
 }
