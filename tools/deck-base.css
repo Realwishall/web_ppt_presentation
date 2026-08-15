@@ -124,6 +124,12 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
    centre / upper-left, which is where the teacher writes. Texture, never
    information (rule 11).                                                     */
 #bg svg.motif-rail{opacity:.7}
+/* Chapter motif "well" (manifest "motif":"well"): the equilibrium chapter's own
+   signature — a potential landscape running low across the board with the bead
+   resting in the minimum and an empty crest further along. It sits below and to
+   the right of the writing area, and it is texture: the class never reads a
+   value off it (rule 11).                                                    */
+#bg svg.motif-well{opacity:.44}
 
 .kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
     font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
@@ -260,7 +266,9 @@ ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
 .qa{margin-bottom:1.6vmin;padding:1.6vmin 2vmin;border-radius:var(--radius);
     background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
     box-shadow:var(--lip)}
-.qa .q{color:var(--gold);font-weight:700;font-size:clamp(18px,2.9vmin,32px);line-height:1.35}
+.q{color:var(--gold);font-weight:700;font-size:clamp(20px,3.4vmin,40px);line-height:1.35}
+/* the Question/Solution heads are used on their own too — a two-up question
+   page has no .qa panel to hang them on (rule 17: both are labels). */
 .a{margin-top:.8vmin;color:var(--sub);
    font-size:clamp(17px,2.7vmin,30px);line-height:1.45}
 .qa .a{padding-left:2.4vmin}
@@ -496,6 +504,11 @@ svg.gph .guide  {fill:none;stroke:rgba(159,180,255,.62);stroke-width:1.7;
                  stroke-dasharray:7 7;stroke-linecap:round}
 svg.gph .area   {fill:rgba(124,140,255,.30);stroke:none}
 svg.gph .area.gold{fill:rgba(245,197,66,.24)}
+/* the physical surface a body rests on, drawn above the graph it explains —
+   a bowl, a dome, a level table. Scaffolding like .axis: never a .step.    */
+svg.gph .surface{fill:none;stroke:rgba(255,255,255,.72);stroke-width:3;
+  stroke-linecap:round}
+svg.gph .bead   {fill:var(--accent);stroke:none}
 svg.gph .tangent{fill:none;stroke:rgba(255,255,255,.55);stroke-width:2;
                  stroke-dasharray:9 7;stroke-linecap:round}
 svg.gph .dot    {fill:var(--gold);stroke:none}
@@ -903,6 +916,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
   /* the motif is texture, not information — drop it out of the PDF entirely */
   #bg svg.motif-graph{opacity:.28!important}
   #bg svg.motif-rail {opacity:.24!important}
+  #bg svg.motif-well {opacity:.26!important}
   .kicker-tag,.no-print{display:none!important}
   html,body,.page{background:#080a14!important}
   .page:before{background:none!important;height:0!important}
@@ -980,7 +994,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
   text-transform:uppercase;font-size:clamp(12px,1.9vmin,21px)}
 .q-head{color:var(--gold-deep)}
 .a-head{color:var(--muted)}
-.qa .q math,.qa .a math{font-size:inherit}
+.q math,.a math{font-size:inherit}
 
 /* a question the source deck flags as worth extra attention */
 .tag-hot{display:inline-flex;align-items:center;margin-left:1.2vmin;
@@ -1003,6 +1017,7 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
    the kicker tag in the top-left corner.                                     */
 .wrap:not(:has(> h1)):not(:has(> h2)){padding-top:10vmin}
 .wrap.dense:not(:has(> h1)):not(:has(> h2)){padding-top:8.5vmin}
+.wrap.fit:not(:has(> h1)):not(:has(> h2)){padding-top:8.5vmin}
 /* the operator label floats above the shaft — reserve room for it so it never
    sits on the line above (e.g. the "Solution" head of a .qa) */
 .op-chain{margin:2.8vmin 0 .8vmin}

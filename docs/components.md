@@ -404,6 +404,7 @@ that element becomes visible.
 | `data-three="slinky-drop"` | `<div class="scene-frame">` | two hanging slinkies side by side — one held, one released. The released one's **bottom does not move** until the compression wave travelling down it arrives. The whole of "spring force cannot change instantly" is in that delay, and a photograph of a slinky cannot show it |
 | `data-three="lift-frame"` | `<div class="scene-frame">` | the same hanging mass drawn twice: in the **ground frame** (the cage rises, `T` and `mg` only) and in the **lift frame** (the cage is at rest, and a red `ma` has appeared) — with `T = mg + ma` under both. The point of a pseudo force is that two frames disagree about the forces and agree about the answer, which needs both frames on screen at once |
 | `data-three="friction-ramp"` | `<div class="scene-frame">` | a block with a growing applied `F`, friction `fr` matching it arrow-for-arrow up to the **limiting value**, then dropping to kinetic as the block breaks away — while the `fr`–`F` graph draws itself alongside. The Case Study slide's graph is a record of an event, so it needs the event |
+| `data-three="equilibrium-types"` | `<div class="scene-frame">` | a bowl, a dome and a plane side by side, each with a bead sitting exactly at its equilibrium. Every cycle all three get the **same** small nudge and are let go: the bowl's bead swings back and damps to rest, the dome's creeps away and leaves the crest, the plane's simply stops where it was put. The definitions on that slide are all about what happens *after* the displacement, which is precisely what a still picture of three surfaces cannot show |
 | `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle, turning, with `ω` drawn **along the axle** in the right-hand sense — the one thing a still figure cannot show, that `ω` stands on the axis rather than lying in the plane. `data-sense="ccw"` (default) turns anticlockwise seen from above and points `ω` up / out of the plane; `data-sense="cw"` reverses both |
 
 ```html
@@ -660,6 +661,8 @@ across the deck, and because it is pure SVG + CSS it survives PDF export.
 | `.guide` | dashed projection lines to an axis, or a reference level |
 | `.area` / `.area.gold` | the shaded region under a curve (integration slides) |
 | `.tangent` | the slope line at a point |
+| `.surface` | the physical surface the body rests on, drawn above the graph that explains it — a bowl, a dome, a level table. Scaffolding like `.axis`: **never** a `.step` |
+| `.bead` | the body sitting on that surface |
 | `.dot` / `.dot.open` | a marked point / a ringed answer point |
 | `text.lab` / `text.num` | axis names / tick numbers |
 
@@ -797,6 +800,7 @@ run short enough for its column.
 | `hex` (default) | the PW hexagon weave — unchanged, what every existing deck uses |
 | `graph` | squared paper, one pale axis pair low-left and a rising curve |
 | `rail` | long-exposure speed streaks down the right, a track with sleepers low across the board — for the constant-velocity / relative-motion chapters |
+| `well` | a potential landscape low across the board: a well with the bead resting in its minimum, an empty crest further along, and the two levels dashed back to a pale axis — for the equilibrium / potential-energy boards |
 
 It is texture, never information (rule 11): it sits behind the writing area at
 a fraction of an opacity, and `@media print` drops it further. Authors do not

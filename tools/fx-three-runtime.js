@@ -40,6 +40,7 @@
           kind === 'friction-ramp'){
         startFbd2D(frame, w, h, kind); return;
       }
+      if (kind === 'equilibrium-types'){ startEquilibrium(frame, w, h); return; }
 
       var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -2501,6 +2502,193 @@
       (function loop(){
         requestAnimationFrame(loop);
         if (tick) tick((Date.now() - tf0) / 1000);
+        renderer.render(scene, camera);
+      })();
+    }
+
+
+    /* ================================================ equilibrium-types ====
+       Three surfaces side by side — a bowl, a dome, a horizontal plane — each
+       with a bead sitting exactly at its equilibrium point. Every cycle the
+       bead is nudged the SAME small distance off each one and let go:
+
+         bowl   it swings back through the minimum and damps down to rest
+         dome   it creeps away, faster and faster, and leaves the crest
+         plane  it slides across and simply stops where it was put
+
+       The source slide draws the three surfaces as still pictures, and a still
+       picture cannot show the one thing the definitions are about: what the
+       body does AFTER it is displaced. Same nudge, three different endings —
+       that is the whole slide, and it needs the event.
+
+       Conventions follow startFbd2D: flat x 0..8 / y 0..5 world, canvas
+       labels, no lesson text inside the canvas beyond the three names the
+       source itself prints. The markup carries a .scene-fallback with the
+       still version for print and for a room with no WebGL (rule 20).        */
+    function startEquilibrium(frame, w, h){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, INK = 0xf4f7fb, GREEN = 0x34d399,
+          RED = 0xf87171;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9.6);
+      camera.lookAt(0, 0, 0);
+
+      /* The figure is three panels in a row, so a short wide box should spread
+         them out rather than shrink the whole thing into the middle third.
+         fit() sets the distance from the CONTENT height (about 3.4 units), and
+         layout() then pushes the outer two panels to whatever width that
+         distance actually gives us. */
+      var HALF_H = 1.78, t2 = Math.tan((40 * Math.PI / 180) / 2);
+      function fit(aspect){
+        camera.position.z = Math.max(HALF_H / t2, 1.35 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var world = new T.Group();
+      scene.add(world);
+
+      function line(pts, color, opacity, width){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true, linewidth: width || 1,
+          opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashedV(x, y0, y1, color, opacity){
+        var g = new T.Group();
+        for (var s = y0; s < y1; s += 0.26){
+          g.add(line([new T.Vector3(x, s, 0),
+                      new T.Vector3(x, Math.min(s + 0.13, y1), 0)], color, opacity));
+        }
+        return g;
+      }
+      function label(text, css, size, px){
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold ' + (px || 62) + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * 2, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+
+      /* one panel = a surface y(d) measured from its own centre, plus the bead
+         that rides it. d is the bead's displacement from the equilibrium.
+         Every panel is its own group, so layout() only moves the group. */
+      var HALF = 1.02, NUDGE = 0.5, DEPTH = 0.86;
+      var panels = [
+        { name: 'Stable',   tint: GREEN,
+          y: function(d){ return -0.35 + DEPTH * (d * d) / (HALF * HALF); } },
+        { name: 'Unstable', tint: RED,
+          y: function(d){ return  0.51 - DEPTH * (d * d) / (HALF * HALF); } },
+        { name: 'Neutral',  tint: INDIGO,
+          y: function(){ return 0.05; } }
+      ];
+
+      panels.forEach(function(p){
+        p.group = new T.Group();
+        world.add(p.group);
+
+        var pts = [];
+        for (var i = 0; i <= 48; i++){
+          var d = -HALF + (2 * HALF) * i / 48;
+          pts.push(new T.Vector3(d, p.y(d), 0));
+        }
+        p.group.add(line(pts, INK, 0.8));
+
+        /* the equilibrium point itself, marked once and never moved */
+        p.group.add(dashedV(0, p.y(0) - 0.9, p.y(0) - 0.18, INDIGO, 0.32));
+
+        p.bead = new T.Mesh(new T.CircleGeometry(0.145, 24),
+          new T.MeshBasicMaterial({ color: p.tint, transparent: true, opacity: 0.95 }));
+        p.group.add(p.bead);
+        p.halo = new T.Mesh(new T.CircleGeometry(0.28, 24),
+          new T.MeshBasicMaterial({ color: p.tint, transparent: true, opacity: 0.15 }));
+        p.group.add(p.halo);
+
+        var lab = label(p.name, '#f4f7fb', 0.6, 56);
+        lab.position.set(0, 1.5, 0);
+        p.group.add(lab);
+
+        /* the same nudge on all three, so the class sees the input is
+           identical and only the response differs */
+        p.nudge = new T.Group();
+        p.nudge.add(line([new T.Vector3(0, 0, 0), new T.Vector3(NUDGE, 0, 0)], GOLD, 0.9));
+        var head = new T.Mesh(new T.CircleGeometry(0.09, 3),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.9 }));
+        head.rotation.z = -Math.PI / 2;
+        head.position.set(NUDGE, 0, 0);
+        p.nudge.add(head);
+        p.nudge.position.y = p.y(0) + 0.44;
+        p.group.add(p.nudge);
+      });
+
+      /* spread the three panels across whatever width the box actually gives,
+         but never so far apart that they stop reading as one figure */
+      function layout(aspect){
+        var halfW = camera.position.z * t2 * aspect;
+        var gap = Math.min(Math.max(halfW * 0.66, 1.35), 4.6);
+        panels[0].group.position.x = -gap;
+        panels[1].group.position.x = 0;
+        panels[2].group.position.x = gap;
+      }
+      layout(w / h);
+
+      var CYCLE = 5.4, T_HOLD = 0.8, T_PUSH = 1.4;
+
+      function displacement(kind, t){
+        /* t seconds since release */
+        if (kind === 0){                    /* stable — damped return */
+          return NUDGE * Math.cos(3.1 * t) * Math.exp(-0.62 * t);
+        }
+        if (kind === 1){                    /* unstable — runs away */
+          return Math.min(NUDGE * Math.exp(0.85 * t), HALF + 1.4);
+        }
+        return NUDGE;                       /* neutral — stays put */
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        layout(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', resize);
+
+      var t0 = Date.now();
+      (function loop(){
+        requestAnimationFrame(loop);
+        var t = ((Date.now() - t0) / 1000) % CYCLE;
+
+        /* phase 1: at rest.  phase 2: pushed aside.  phase 3: released. */
+        var d0, showNudge;
+        if (t < T_HOLD){ d0 = 0; showNudge = false; }
+        else if (t < T_PUSH){ d0 = NUDGE * (t - T_HOLD) / (T_PUSH - T_HOLD); showNudge = true; }
+        else { d0 = null; showNudge = false; }
+
+        panels.forEach(function(p, i){
+          p.nudge.visible = showNudge;
+          var d = d0 === null ? displacement(i, t - T_PUSH) : d0;
+          var off = Math.abs(d) > HALF;                 /* left the surface */
+          var y = off ? p.y(HALF) - (Math.abs(d) - HALF) * 1.35 : p.y(d);
+          var fade = off ? Math.max(0, 1 - (Math.abs(d) - HALF) * 0.8) : 1;
+          p.bead.position.set(d, y + 0.145, 0);
+          p.halo.position.copy(p.bead.position);
+          p.halo.material.opacity = 0.15 * fade;
+          p.bead.material.opacity = 0.95 * fade;
+        });
+
         renderer.render(scene, camera);
       })();
     }

@@ -263,10 +263,44 @@ const motifSvg = {
     <path d="M0 790 H1600" stroke="#f5c542" stroke-opacity="0.055" stroke-width="1.6" stroke-dasharray="34 46"/>
   </svg>`,
 
+  well: `<svg class="motif-well" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="lf-well-ink" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.05"/>
+        <stop offset="0.45" stop-color="#f5c542" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.14"/>
+      </linearGradient>
+      <linearGradient id="lf-well-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.055"/>
+      </linearGradient>
+      <radialGradient id="lf-well-bead">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.34"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- the potential landscape, kept to the low-right quadrant: the centre and
+         upper-left are where the teacher writes, so nothing goes there -->
+    <path d="M560 690 C 700 690 760 832 880 832 C 1020 832 1080 588 1240 588 C 1370 588 1440 690 1590 726 L 1590 900 L 560 900 Z"
+          fill="url(#lf-well-fill)"/>
+    <path d="M560 690 C 700 690 760 832 880 832 C 1020 832 1080 588 1240 588 C 1370 588 1440 690 1590 726"
+          fill="none" stroke="url(#lf-well-ink)" stroke-width="3.4" stroke-linecap="round"/>
+    <!-- the bead sitting in the minimum, and the crest it is not on -->
+    <circle cx="880" cy="832" r="44" fill="url(#lf-well-bead)"/>
+    <circle cx="880" cy="832" r="11" fill="#f5c542" fill-opacity="0.24"/>
+    <circle cx="1240" cy="588" r="9" fill="none" stroke="#7c8cff" stroke-opacity="0.22" stroke-width="2.4"/>
+    <!-- the level each one sits at, dashed back to a pale axis -->
+    <g stroke="#9fb4ff" stroke-opacity="0.08" stroke-width="1.6" stroke-dasharray="12 18">
+      <path d="M566 832 H880"/>
+      <path d="M566 588 H1240"/>
+    </g>
+    <path d="M566 548 V872" stroke="#f5c542" stroke-opacity="0.075" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well`);
   process.exit(1);
 }
 
