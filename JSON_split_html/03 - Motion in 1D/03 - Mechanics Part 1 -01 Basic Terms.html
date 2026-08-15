@@ -331,6 +331,197 @@ body[data-lvl="7"] .title h1{font-size:77px}
 body[data-lvl="7"] .section h1{font-size:59px}
 body[data-lvl="7"] figure svg{max-height:158px}
 body[data-lvl="7"] figcaption{font-size:18px}
+
+/* ---------- Velocity Formula Hub & Solved Examples Modal ---------- */
+.v-hub-banner{
+  background:linear-gradient(135deg,rgba(91,140,255,.15),rgba(46,204,154,.12));
+  border:1px solid rgba(91,140,255,.35);
+  border-radius:14px;
+  padding:14px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.v-hub-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  margin-top:6px;
+}
+.v-hub-card{
+  position:relative;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  padding:16px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:10px;
+  transition:all .25s ease;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.v-hub-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 34px rgba(0,0,0,.45);
+}
+.v-hub-card.c-amber{border-left:5px solid var(--amber)}
+.v-hub-card.c-amber:hover{border-color:rgba(247,185,85,.5);background:rgba(247,185,85,.08)}
+.v-hub-card.c-blue{border-left:5px solid var(--blue)}
+.v-hub-card.c-blue:hover{border-color:rgba(91,140,255,.5);background:rgba(91,140,255,.08)}
+.v-hub-card.c-green{border-left:5px solid var(--green)}
+.v-hub-card.c-green:hover{border-color:rgba(46,204,154,.5);background:rgba(46,204,154,.08)}
+.v-hub-card.c-violet{border-left:5px solid var(--violet)}
+.v-hub-card.c-violet:hover{border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.08)}
+
+.v-hub-card-btn{
+  align-self:flex-start;
+  margin-top:4px;
+  padding:6px 14px;
+  border-radius:8px;
+  font-size:16px;
+  font-weight:700;
+  color:#fff;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  cursor:pointer;
+  transition:all .2s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.v-hub-card:hover .v-hub-card-btn{
+  background:var(--blue);
+  border-color:var(--blue);
+  box-shadow:0 0 14px rgba(91,140,255,.5);
+}
+
+/* Modal */
+.ex-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  background:rgba(8,10,14,.92);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+}
+.ex-modal-backdrop.active{
+  display:flex;
+}
+.ex-modal-dialog{
+  background:#12161f;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 24px 60px rgba(0,0,0,.92);
+  border-radius:16px;
+  width:98vw;
+  height:95vh;
+  max-width:1560px;
+  max-height:96vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+.ex-modal-header{
+  padding:14px 24px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(255,255,255,.025);
+  flex-shrink:0;
+}
+.ex-modal-tabs{
+  display:flex;
+  gap:8px;
+  padding:10px 24px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.25);
+  overflow-x:auto;
+  flex-shrink:0;
+}
+.ex-modal-tab{
+  padding:6px 18px;
+  border-radius:999px;
+  font-size:16px;
+  font-weight:700;
+  color:var(--muted);
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  cursor:pointer;
+  transition:all .2s ease;
+  white-space:nowrap;
+}
+.ex-modal-tab:hover{
+  color:var(--ink);
+  background:rgba(255,255,255,.14);
+}
+.ex-modal-tab.active{
+  color:#0d0f12;
+  background:var(--amber);
+  font-weight:800;
+  box-shadow:0 0 14px rgba(247,185,85,.5);
+  border-color:transparent;
+}
+.ex-modal-body{
+  padding:20px 28px;
+  overflow-y:auto;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.ex-modal-footer{
+  padding:12px 24px;
+  border-top:1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(255,255,255,.02);
+  flex-shrink:0;
+}
+.modal-close-btn{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+  border-radius:10px;
+  padding:6px 14px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+.modal-close-btn:hover{
+  background:rgba(255,122,144,.2);
+  border-color:var(--rose);
+  color:var(--rose);
+}
+.nav-btn{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+  border-radius:10px;
+  padding:8px 18px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+.nav-btn:hover{
+  background:var(--blue);
+  border-color:var(--blue);
+}
+.nav-btn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
 </style>
 
 <script>
@@ -963,17 +1154,17 @@ document.addEventListener("DOMContentLoaded", function(){
 <!-- ==================== 13 · rolling wheel — bottom point ==================== -->
 <section class="page"><div class="wrap">
 <div class="body">
-<div style="display: grid; grid-template-columns: 0.78fr 1fr; gap: 26px;">
+<div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 26px;">
 <div style="grid-column: 1; grid-row: 1;">
 <div class="card question">
 <span class="tag">Question</span>
-<p style="font-size: 1.15em;">Find the displacement of the indicated point when the wheel turns by <span class="hl">half a rotation</span> while rolling forward.</p>
+<p style="font-size: 1.15em; text-align: justify; text-justify: inter-word;">Find the displacement of the indicated point when the wheel turns by <span class="hl">half a rotation</span> while rolling forward.</p>
 </div>
 </div>
 <div style="grid-column: 2; grid-row: 1 / span 2;">
 <figure class="fig-l">
 <svg viewbox="0 0 541 250">
-<g transform="translate(35,0)">
+<g transform="translate(68,0)">
 <path class="st sm" d="M-15 200 L490 200"></path>
 <circle class="st" cx="110" cy="130" r="70"></circle>
 <circle class="fa" cx="110" cy="200" r="7"></circle>
@@ -1005,17 +1196,17 @@ document.addEventListener("DOMContentLoaded", function(){
 <!-- ==================== 14 · rolling wheel — front point ==================== -->
 <section class="page"><div class="wrap">
 <div class="body">
-<div style="display: grid; grid-template-columns: 0.78fr 1fr; gap: 26px;">
+<div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 26px;">
 <div style="grid-column: 1; grid-row: 1;">
 <div class="card question">
 <span class="tag">Question</span>
-<p style="font-size: 1.15em;">Same wheel, same half rotation — but now the marked point starts at the <span class="hl">front</span> of the wheel (level with the centre).</p>
+<p style="font-size: 1.15em; text-align: justify; text-justify: inter-word;">Same wheel, same half rotation — but now the marked point starts at the <span class="hl">front</span> of the wheel (level with the centre).</p>
 </div>
 </div>
 <div style="grid-column: 2; grid-row: 1 / span 2;">
 <figure class="fig-l">
 <svg viewbox="0 0 541 250">
-<g transform="translate(35,0)">
+<g transform="translate(68,0)">
 <path class="st sm" d="M-15 200 L490 200"></path>
 <circle class="st" cx="110" cy="130" r="70"></circle>
 <circle class="fa" cx="180" cy="130" r="7"></circle>
@@ -1044,17 +1235,17 @@ document.addEventListener("DOMContentLoaded", function(){
 <!-- ==================== 15 · rolling wheel — back point ==================== -->
 <section class="page"><div class="wrap">
 <div class="body">
-<div style="display: grid; grid-template-columns: 0.78fr 1fr; gap: 26px;">
+<div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 26px;">
 <div style="grid-column: 1; grid-row: 1;">
 <div class="card question">
 <span class="tag">Question</span>
-<p style="font-size: 1.15em;">And once more — the marked point now starts at the <span class="hl">back</span> of the wheel, level with the centre.</p>
+<p style="font-size: 1.15em; text-align: justify; text-justify: inter-word;">And once more — the marked point now starts at the <span class="hl">back</span> of the wheel, level with the centre.</p>
 </div>
 </div>
 <div style="grid-column: 2; grid-row: 1 / span 2;">
 <figure class="fig-l">
 <svg viewbox="0 0 541 250">
-<g transform="translate(35,0)">
+<g transform="translate(68,0)">
 <path class="st sm" d="M-15 200 L490 200"></path>
 <circle class="st" cx="110" cy="130" r="70"></circle>
 <circle class="fa" cx="40" cy="130" r="7"></circle>
@@ -1084,54 +1275,59 @@ document.addEventListener("DOMContentLoaded", function(){
 </div>
 </div>
 </div></section>
-<!-- ==================== 16 · direction convention ==================== -->
+<!-- ==================== 16 · fixing directions ==================== -->
 <section class="page"><div class="wrap">
 <h1 class="head">Fixing directions</h1><div class="rule"></div>
 <div class="body">
 <p class="mut sm step">Before solving any direction question, pin the compass to the unit vectors.</p>
 <div class="cols">
-<figure class="step">
-<svg viewbox="0 0 340 250">
-<path class="st sm" d="M170 225 L170 30"></path><path d="M170 25 l-6 13 h12 z" fill="#9aa4b2"></path>
-<path class="st sm" d="M40 128 L300 128"></path><path d="M305 128 l-13 -6 v12 z" fill="#9aa4b2"></path>
-<path d="M40 128 l13 -6 v12 z" fill="#9aa4b2"></path><path d="M170 230 l-6 -13 h12 z" fill="#9aa4b2"></path>
-<text x="120" y="22">North</text><text class="a" x="182" y="36">ĵ</text>
-<text x="252" y="118">East</text><text class="a" x="284" y="152">î</text>
-<text x="0" y="118">West</text><text x="122" y="248">South</text>
+<figure class="step" style="width:100%;align-items:stretch">
+<svg viewbox="0 0 380 340" style="max-height:none;width:100%;height:380px;border-radius:14px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.1)">
+<!-- Subtle grid & compass background circles -->
+<circle cx="190" cy="165" r="115" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="4 6"></circle>
+<circle cx="190" cy="165" r="60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"></circle>
+<!-- Diagonals -->
+<path d="M108 83 L272 247 M108 247 L272 83" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3 5"></path>
+<!-- North-South Axis (Blue ĵ) -->
+<path class="st sb" d="M190 285 L190 45" stroke-width="3"></path>
+<path d="M190 35 l-8 16 h16 z" fill="#5b8cff"></path>
+<path d="M190 295 l-8 -16 h16 z" fill="#5b8cff"></path>
+<!-- East-West Axis (Amber î) -->
+<path class="st sa" d="M50 165 L330 165" stroke-width="3"></path>
+<path d="M340 165 l-16 -8 v16 z" fill="#f7b955"></path>
+<path d="M40 165 l16 -8 v16 z" fill="#f7b955"></path>
+<!-- Labels -->
+<text x="136" y="28" fill="#e8ecf4" font-weight="700" font-size="20">North</text>
+<text class="b" x="202" y="32" font-weight="800" font-size="24">+ĵ</text>
+<text x="136" y="325" fill="#e8ecf4" font-weight="700" font-size="20">South</text>
+<text class="b" x="202" y="325" font-weight="800" font-size="24">−ĵ</text>
+<text x="290" y="150" fill="#e8ecf4" font-weight="700" font-size="20">East</text>
+<text class="a" x="290" y="196" font-weight="800" font-size="24">+î</text>
+<text x="18" y="150" fill="#e8ecf4" font-weight="700" font-size="20">West</text>
+<text class="a" x="18" y="196" font-weight="800" font-size="24">−î</text>
 </svg>
-<figcaption>Plane (2-D) convention</figcaption>
+<figcaption style="font-size:22px;margin-top:8px">Plane (2-D) convention</figcaption>
 </figure>
-<div>
+<div class="step">
 <figure class="fig-m" style="width:100%;align-items:stretch">
-<div class="scene3d" id="scene-compass" style="height:268px">
+<div class="scene3d" id="scene-compass" style="height:380px">
 <div class="scene-fallback"><b>î East &nbsp;·&nbsp; ĵ North &nbsp;·&nbsp; k̂ Up</b><span>The opposites carry the minus sign: −î West, −ĵ South, −k̂ Down.</span></div>
 </div>
 <div id="scene-compass-bar"></div>
-<figcaption>Space (3-D) convention</figcaption>
+<figcaption style="font-size:22px;margin-top:8px">Space (3-D) convention</figcaption>
 </figure>
-<div class="card">
-<span class="tag">All six directions</span>
-<div class="legend">
-<div class="row"><span class="sw" style="background:#f7b955"></span><b style="color:#f7b955">+î</b> East<span class="mut">&nbsp;&nbsp;|&nbsp;&nbsp;</span><b style="color:#f7b955">−î</b> West</div>
-<div class="row"><span class="sw" style="background:#5b8cff"></span><b style="color:#5b8cff">+ĵ</b> North<span class="mut">&nbsp;&nbsp;|&nbsp;&nbsp;</span><b style="color:#5b8cff">−ĵ</b> South</div>
-<div class="row"><span class="sw" style="background:#2ecc9a"></span><b style="color:#2ecc9a">+k̂</b> Up<span class="mut">&nbsp;&nbsp;|&nbsp;&nbsp;</span><b style="color:#2ecc9a">−k̂</b> Down</div>
-</div>
-<p class="sm mut" style="margin-top:10px">Right-handed, so <span class="m">î × ĵ = k̂</span> — East turned into North points Up.</p>
-</div>
 </div>
 </div>
 <script>
 /* The 3-D direction convention. The names used to be HTML divs projected
    through a rotating scene matrix, which is why they slid off their arrows;
-   they are sprites parented to the scene now, and the camera is what moves.
-   The legend card beside the box states all six in fixed text, so nothing
-   depends on catching a label mid-swing. */
+   they are sprites parented to the scene now, and the camera is what moves. */
 document.addEventListener("DOMContentLoaded", function(){
   if(!window.LFScene3D) return;
   var AMBER = 0xf7b955, BLUE = 0x5b8cff, GREEN = 0x2ecc9a;
   LFScene3D({
     host: "scene-compass",
-    spin: false,          /* nothing loops in the area the teacher writes on */
+    spin: false,
     bar: document.getElementById("scene-compass-bar"),
     start: { r: 16, theta: 0.8, phi: 1.06 },
     views: { Map:   { theta: 0, phi: 0.17 },
@@ -1144,9 +1340,6 @@ document.addEventListener("DOMContentLoaded", function(){
       grid.material.transparent = true; grid.material.opacity = .45;
       scene.add(grid);
 
-      /* î = +x East, ĵ = −z North, k̂ = +y Up — the same convention the
-         2-D compass on the left uses, and the one every question in this
-         deck answers in (3 m east → 3î, 4 m north → 4ĵ). */
       var axes = [
         { d: V( 1, 0, 0), c: AMBER, t: "East  +î",  col: "#f7b955" },
         { d: V(-1, 0, 0), c: AMBER, t: "West  −î",  col: "#f7b955" },
@@ -1169,7 +1362,39 @@ document.addEventListener("DOMContentLoaded", function(){
 <section class="page"><div class="wrap">
 <div class="body">
 <div class="cols">
-<div>
+<div style="order:2">
+<figure class="fig-s step" style="width:100%">
+<svg viewbox="0 0 340 250" style="max-height:none;width:100%;height:250px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.06)">
+<!-- North South reference -->
+<path class="st sm thin" d="M170 215 L170 35"></path>
+<path d="M170 30 l-5 10 h10 z" fill="#9aa4b2"></path>
+<path d="M170 220 l-5 -10 h10 z" fill="#9aa4b2"></path>
+<text x="126" y="26" font-size="18">North</text><text class="a" x="180" y="28" font-size="19">ĵ</text>
+<text x="126" y="238" font-size="18">South</text><text class="a" x="180" y="240" font-size="19">−ĵ</text>
+<!-- East West axis -->
+<path class="st sm thin" d="M40 125 L300 125"></path>
+<path d="M305 125 l-10 -5 v10 z" fill="#9aa4b2"></path>
+<path d="M35 125 l10 -5 v10 z" fill="#9aa4b2"></path>
+<text x="262" y="112" font-size="18">East</text><text class="a" x="268" y="148" font-size="20">î</text>
+<text x="10" y="112" font-size="18">West</text><text class="a" x="10" y="148" font-size="20">−î</text>
+<!-- Step 1: 3m East (+3î) -->
+<path class="st sa" d="M170 110 L255 110" stroke-width="2.6"></path>
+<path d="M260 110 l-8 -4 v8 z" fill="#f7b955"></path>
+<text class="a" x="195" y="100" font-size="17">+3m (3î)</text>
+<!-- Step 2: 4m West (-4î) -->
+<path class="st sb" d="M255 142 L140 142" stroke-width="2.6"></path>
+<path d="M135 142 l8 -4 v8 z" fill="#5b8cff"></path>
+<text class="b" x="160" y="162" font-size="17">−4m (−4î)</text>
+<!-- Result: Net -1î -->
+<circle cx="170" cy="125" r="4" fill="#e8ecf4"></circle>
+<circle cx="135" cy="125" r="5" fill="#2ecc9a"></circle>
+<path class="st sg" d="M170 125 L138 125" stroke-width="3.5"></path>
+<text class="g" x="110" y="105" font-size="18" font-weight="700">−1î</text>
+</svg>
+<figcaption style="font-size:18px">E–W–S–N Axis Reference &amp; Path</figcaption>
+</figure>
+</div>
+<div style="order:1">
 <div class="card question">
 <span class="tag">Question</span>
 <p>A particle first goes <span class="hl">3 m east</span>, then <span class="hl">4 m west</span>. Find the displacement.</p>
@@ -1186,18 +1411,6 @@ document.addEventListener("DOMContentLoaded", function(){
 <p class="sm">Distance here is <span class="hl">7 m</span>, displacement is only <span class="hl">1 m</span>. Opposite directions cancel in one, never in the other.</p>
 </div>
 </div>
-<div>
-<figure class="fig-s step">
-<svg viewbox="0 0 320 220">
-<path class="st sm" d="M160 200 L160 30"></path><path class="st sm" d="M40 115 L285 115"></path>
-<path d="M290 115 l-13 -6 v12 z" fill="#9aa4b2"></path><path d="M40 115 l13 -6 v12 z" fill="#9aa4b2"></path>
-<path d="M160 25 l-6 13 h12 z" fill="#9aa4b2"></path><path d="M160 205 l-6 -13 h12 z" fill="#9aa4b2"></path>
-<text x="112" y="22">North</text><text class="a" x="172" y="36">ĵ</text>
-<text x="240" y="105">East</text><text class="a" x="270" y="140">î</text>
-<text x="2" y="105">West</text><text x="112" y="222">South</text>
-</svg>
-</figure>
-</div>
 </div>
 </div>
 </div></section>
@@ -1205,7 +1418,19 @@ document.addEventListener("DOMContentLoaded", function(){
 <section class="page"><div class="wrap">
 <div class="body">
 <div class="cols">
-<div>
+<div style="order:2">
+<figure class="fig-s step" style="width:100%">
+<svg viewbox="0 0 300 210" style="max-height:none;width:100%;height:230px">
+<path class="st sm thin" d="M60 175 L260 175"></path><path class="st sm thin" d="M60 175 L60 40"></path>
+<path class="st sb" d="M60 175 L175 175"></path><path d="M180 175 l-13 -6 v12 z" fill="#5b8cff"></path>
+<path class="st sb" d="M175 175 L175 60"></path><path d="M175 55 l-6 13 h12 z" fill="#5b8cff"></path>
+<path class="st sg dash" d="M60 175 L172 62"></path><path d="M177 58 l-14 0 l3 11 z" fill="#2ecc9a"></path>
+<text x="106" y="200">3m</text><text x="188" y="122">4m</text><text class="g" x="76" y="106">5m</text>
+</svg>
+<figcaption style="font-size:18px">Displacement Vector Triangle</figcaption>
+</figure>
+</div>
+<div style="order:1">
 <div class="card question">
 <span class="tag">Question</span>
 <p>A particle first goes <span class="hl">3 m east</span>, then <span class="hl">4 m north</span>. Find the displacement.</p>
@@ -1217,17 +1442,6 @@ document.addEventListener("DOMContentLoaded", function(){
 <div class="step">| <span class="vec">s</span> | = <span class="sqrt"><span>3² + 4²</span></span> = <span class="ans">5 m</span></div>
 </div>
 </div>
-</div>
-<div>
-<figure class="fig-s step">
-<svg viewbox="0 0 300 210">
-<path class="st sm thin" d="M60 175 L260 175"></path><path class="st sm thin" d="M60 175 L60 40"></path>
-<path class="st sb" d="M60 175 L175 175"></path><path d="M180 175 l-13 -6 v12 z" fill="#5b8cff"></path>
-<path class="st sb" d="M175 175 L175 60"></path><path d="M175 55 l-6 13 h12 z" fill="#5b8cff"></path>
-<path class="st sg dash" d="M60 175 L172 62"></path><path d="M177 58 l-14 0 l3 11 z" fill="#2ecc9a"></path>
-<text x="106" y="200">3m</text><text x="188" y="122">4m</text><text class="g" x="76" y="106">5m</text>
-</svg>
-</figure>
 </div>
 </div>
 </div>
@@ -1381,6 +1595,96 @@ document.addEventListener("DOMContentLoaded", function(){
 </div>
 </div>
 </div></section>
+
+<!-- ==================== 22B · Velocity Formula Hub (4 Key Results) ==================== -->
+<section class="page"><div class="wrap">
+<div class="body">
+<div class="v-hub-banner step">
+  <div style="display:flex;align-items:center;gap:18px">
+    <div style="font-size:32px;font-weight:800;color:var(--amber);background:rgba(247,185,85,0.12);border:1px solid rgba(247,185,85,0.35);padding:6px 18px;border-radius:12px">
+      <span class="m"><span class="vec">v</span> = <span class="frac"><span>d<span class="vec">r</span></span><span>dt</span></span></span>
+    </div>
+    <div>
+      <div style="font-size:22px;font-weight:700;color:#fff">The Master Definition</div>
+      <div class="sm mut" style="margin-top:2px">Once you know <span class="m">v = <span class="frac"><span>dr</span><span>dt</span></span></span>, all four foundational formulas follow directly!</div>
+    </div>
+  </div>
+  <div class="chip a" style="font-size:16px">Click any box to explore 5 solved examples</div>
+</div>
+
+<div class="v-hub-grid">
+  <!-- Card 1: Slope of r-t curve -->
+  <div class="v-hub-card c-amber step clickable" onclick="openFormulaModal(1)">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tag" style="color:var(--amber);font-size:16px;letter-spacing:1px;font-weight:800">1. DERIVATIVE / SLOPE</span>
+        <span class="chip a" style="font-size:14px;padding:2px 8px">r–t Graph</span>
+      </div>
+      <p class="big m" style="margin:8px 0 4px;color:var(--ink)">
+        Slope of <span class="hl">r–t</span> curve = <span class="ans hl">v</span>
+      </p>
+      <p class="sm mut">Instantaneous rate of change: <span class="m">v = <span class="frac"><span>dr</span><span>dt</span></span> = tan θ</span>.</p>
+    </div>
+    <div class="v-hub-card-btn clickable">
+      <span>▶ 5 Solved Examples</span>
+    </div>
+  </div>
+
+  <!-- Card 2: Average velocity -->
+  <div class="v-hub-card c-blue step clickable" onclick="openFormulaModal(2)">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tag" style="color:var(--blue);font-size:16px;letter-spacing:1px;font-weight:800">2. FINITE INTERVAL / AVERAGE</span>
+        <span class="chip" style="font-size:14px;padding:2px 8px">Average</span>
+      </div>
+      <p class="big m" style="margin:8px 0 4px;color:var(--ink)">
+        <span class="vec">v</span><sub>avg</sub> = <span class="frac"><span>Δ<span class="vec">r</span></span><span>Δt</span></span>
+      </p>
+      <p class="sm mut">Macroscopic ratio: total displacement divided by total time.</p>
+    </div>
+    <div class="v-hub-card-btn clickable">
+      <span>▶ 5 Solved Examples</span>
+    </div>
+  </div>
+
+  <!-- Card 3: Integration of v dt -->
+  <div class="v-hub-card c-green step clickable" onclick="openFormulaModal(3)">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tag" style="color:var(--green);font-size:16px;letter-spacing:1px;font-weight:800">3. INTEGRATION / CALCULUS</span>
+        <span class="chip g" style="font-size:14px;padding:2px 8px">Calculus</span>
+      </div>
+      <p class="big m" style="margin:8px 0 4px;color:var(--ink)">
+        Δ<span class="vec">r</span> = <span style="font-size:1.15em">∫</span> <span class="vec">v</span> dt
+      </p>
+      <p class="sm mut">Inverting differentiation: integrating velocity recovers displacement.</p>
+    </div>
+    <div class="v-hub-card-btn clickable">
+      <span>▶ 5 Solved Examples</span>
+    </div>
+  </div>
+
+  <!-- Card 4: Area under v-t curve -->
+  <div class="v-hub-card c-violet step clickable" onclick="openFormulaModal(4)">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tag" style="color:var(--violet);font-size:16px;letter-spacing:1px;font-weight:800">4. GEOMETRIC INTEGRAL</span>
+        <span class="chip" style="background:rgba(167,139,250,.16);color:var(--violet);border-color:rgba(167,139,250,.3);font-size:14px;padding:2px 8px">v–t Graph</span>
+      </div>
+      <p class="big m" style="margin:8px 0 4px;color:var(--ink)">
+        Area under <span class="hv">v–t</span> curve = <span class="ans hv">Δr</span>
+      </p>
+      <p class="sm mut">Definite integral geometrically: area above is +, below is −.</p>
+    </div>
+    <div class="v-hub-card-btn clickable">
+      <span>▶ 5 Solved Examples</span>
+    </div>
+  </div>
+</div>
+
+</div>
+</div></section>
+
 <!-- ==================== 23 · speed ==================== -->
 <section class="page"><div class="wrap">
 <h1 class="head">Speed</h1><div class="rule"></div>
@@ -2559,5 +2863,388 @@ setTimeout(function(){ hint.classList.add("out"); }, 4000);
   });
 })();
 </script>
+
+<!-- ==================== Interactive Solved Examples Modal ==================== -->
+<div id="formula-modal" class="ex-modal-backdrop" onclick="if(event.target===this)closeFormulaModal()">
+  <div class="ex-modal-dialog">
+    <div class="ex-modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="modal-badge" class="chip a">Formula</span>
+        <h2 id="modal-title" style="font-size:24px;font-weight:800;color:var(--ink)">Solved Examples</h2>
+      </div>
+      <button class="modal-close-btn clickable" onclick="closeFormulaModal()">✕ Close (Esc)</button>
+    </div>
+    <div class="ex-modal-tabs" id="modal-tabs">
+      <!-- Tabs rendered via JS -->
+    </div>
+    <div class="ex-modal-body" id="modal-content">
+      <!-- Example problem & steps rendered via JS -->
+    </div>
+    <div class="ex-modal-footer">
+      <button id="modal-prev-btn" class="nav-btn clickable" onclick="prevExample()">← Previous Example</button>
+      <div id="modal-indicator" class="sm mut">Example 1 of 5</div>
+      <button id="modal-next-btn" class="nav-btn clickable" onclick="nextExample()">Next Example →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== 20 Solved Examples Data & Engine ==================== */
+
+var FORMULA_DATA = {
+  1: {
+    title: "Formula 1: Slope of r–t Curve = Velocity",
+    formula: "v = <span class='frac'><span>dr</span><span>dt</span></span> = tan θ",
+    color: "amber",
+    tag: "Slope of Position–Time Graph",
+    examples: [
+      {
+        q: "The position of a particle moving along the x-axis is given by <span class='m'>x(t) = 2t³ − 6t + 5</span> (where x is in meters, t in seconds). Find: (a) velocity at <span class='m'>t = 2 s</span>, and (b) the instant when the particle is momentarily at rest.",
+        steps: [
+          "<b>Step 1: Differentiate position with respect to time to get velocity:</b><br><span class='m big'>v(t) = <span class='frac'><span>dx</span><span>dt</span></span> = <span class='frac'><span>d</span><span>dt</span></span>(2t³ − 6t + 5) = 6t² − 6</span>",
+          "<b>Step 2: Find velocity at t = 2 s:</b><br><span class='m big'>v(2) = 6(2)² − 6 = 6(4) − 6 = 24 − 6 = <span class='ans'>18 m/s</span></span>",
+          "<b>Step 3: Find the time when the particle is at rest (v = 0):</b><br><span class='m big'>6t² − 6 = 0 &nbsp;⇒&nbsp; t² = 1 &nbsp;⇒&nbsp; <span class='ans'>t = 1 s</span></span> (since t ≥ 0)"
+        ],
+        tip: "Velocity is the first time-derivative (instantaneous slope) of the position function."
+      },
+      {
+        q: "The displacement-time graphs of two particles A and B are straight lines making angles of <span class='m'>60°</span> and <span class='m'>30°</span> with the time axis respectively. Find the ratio of their velocities <span class='m'>v<sub>A</sub> : v<sub>B</sub></span>.",
+        steps: [
+          "<b>Step 1: Relate graph slope to velocity:</b><br>For a straight line x–t graph, velocity equals the slope of the line: <span class='m big'>v = tan θ</span>",
+          "<b>Step 2: Calculate velocities for both particles:</b><br><span class='m big'>v<sub>A</sub> = tan 60° = <span class='sqrt'><span>3</span></span></span><br><span class='m big'>v<sub>B</sub> = tan 30° = <span class='frac'><span>1</span><span><span class='sqrt'><span>3</span></span></span></span></span>",
+          "<b>Step 3: Compute the ratio:</b><br><span class='m big'><span class='frac'><span>v<sub>A</sub></span><span>v<sub>B</sub></span></span> = <span class='frac'><span><span class='sqrt'><span>3</span></span></span><span>1/<span class='sqrt'><span>3</span></span></span></span> = <span class='frac'><span>3</span><span>1</span></span> &nbsp;⇒&nbsp; <span class='ans'>v<sub>A</sub> : v<sub>B</sub> = 3 : 1</span></span>"
+        ],
+        tip: "A steeper slope on an x–t graph directly signifies a higher velocity."
+      },
+      {
+        q: "The position of a particle is given by <span class='m'>x = 4t − t²</span>. (a) What is the initial velocity? (b) At what time is the slope (velocity) zero? (c) When does the particle reverse its direction of motion?",
+        steps: [
+          "<b>Step 1: Find the velocity function:</b><br><span class='m big'>v(t) = <span class='frac'><span>dx</span><span>dt</span></span> = 4 − 2t</span>",
+          "<b>Step 2: (a) Initial velocity (at t = 0):</b><br><span class='m big'>v(0) = 4 − 2(0) = <span class='ans'>4 m/s</span></span>",
+          "<b>Step 3: (b) Instant where slope = 0:</b><br><span class='m big'>4 − 2t = 0 &nbsp;⇒&nbsp; 2t = 4 &nbsp;⇒&nbsp; <span class='ans'>t = 2 s</span></span>",
+          "<b>Step 4: (c) Direction reversal:</b><br>For t &lt; 2 s, v &gt; 0 (moving forward). For t &gt; 2 s, v &lt; 0 (moving backward). Thus, the particle reverses direction at <span class='ans m'>t = 2 s</span> at position <span class='m'>x = 4(2) − 2² = 4 m</span>."
+        ],
+        tip: "A particle changes its direction of motion in 1D when velocity passes through zero and changes sign."
+      },
+      {
+        q: "The displacement x of a particle is related to time t by the equation <span class='m'>t = <span class='sqrt'><span>x</span></span> + 3</span> (x in meters, t in seconds). Find the displacement of the particle when its velocity is zero.",
+        steps: [
+          "<b>Step 1: Express position x as an explicit function of time t:</b><br><span class='m big'><span class='sqrt'><span>x</span></span> = t − 3 &nbsp;⇒&nbsp; x(t) = (t − 3)² = t² − 6t + 9</span>",
+          "<b>Step 2: Obtain the velocity expression:</b><br><span class='m big'>v(t) = <span class='frac'><span>dx</span><span>dt</span></span> = 2t − 6</span>",
+          "<b>Step 3: Find time when velocity is zero:</b><br><span class='m big'>2t − 6 = 0 &nbsp;⇒&nbsp; t = 3 s</span>",
+          "<b>Step 4: Calculate displacement at t = 3 s:</b><br><span class='m big'>x(3) = (3 − 3)² = <span class='ans'>0 m</span></span>"
+        ],
+        tip: "Always express x as a function of t before taking the time derivative."
+      },
+      {
+        q: "An x–t curve shows slope increasing from <span class='m'>t = 0</span> to <span class='m'>t₁</span>, constant from <span class='m'>t₁</span> to <span class='m'>t₂</span>, and decreasing to 0 at <span class='m'>t₃</span>. Describe the nature of velocity and acceleration in each interval.",
+        steps: [
+          "<b>Interval 1 (0 to t₁):</b> Tangent slope <span class='m'><span class='frac'><span>dx</span><span>dt</span></span></span> is increasing &nbsp;⇒&nbsp; <span class='hl'>Velocity is increasing</span>, so acceleration <span class='m'>a &gt; 0</span>.",
+          "<b>Interval 2 (t₁ to t₂):</b> Tangent slope is constant &nbsp;⇒&nbsp; <span class='hl'>Uniform / constant velocity</span>, so acceleration <span class='m'>a = 0</span>.",
+          "<b>Interval 3 (t₂ to t₃):</b> Tangent slope is decreasing &nbsp;⇒&nbsp; <span class='hl'>Velocity is decreasing</span> (retardation), and reaches <span class='ans m'>v = 0</span> at <span class='m'>t₃</span>."
+        ],
+        tip: "Curvature of the x–t graph reveals acceleration: concave up means a > 0, concave down means a < 0."
+      }
+    ]
+  },
+  2: {
+    title: "Formula 2: Average Velocity = Δr / Δt",
+    formula: "v<sub>avg</sub> = <span class='frac'><span>Δr</span><span>Δt</span></span> = <span class='frac'><span>r(t₂) − r(t₁)</span><span>t₂ − t₁</span></span>",
+    color: "blue",
+    tag: "Average Rate over Finite Interval",
+    examples: [
+      {
+        q: "A particle moves along a line according to <span class='m'>x(t) = t² + 4t + 2</span> (x in m, t in s). Find: (a) the average velocity between <span class='m'>t = 1 s</span> and <span class='m'>t = 3 s</span>, and (b) compare it with instantaneous velocity at midpoint <span class='m'>t = 2 s</span>.",
+        steps: [
+          "<b>Step 1: Calculate initial and final positions:</b><br><span class='m big'>x(1) = 1² + 4(1) + 2 = 7 m</span><br><span class='m big'>x(3) = 3² + 4(3) + 2 = 9 + 12 + 2 = 23 m</span>",
+          "<b>Step 2: Calculate displacement and time interval:</b><br><span class='m big'>Δx = x(3) − x(1) = 23 − 7 = 16 m</span><br><span class='m big'>Δt = 3 − 1 = 2 s</span>",
+          "<b>Step 3: Compute average velocity:</b><br><span class='m big'>v<sub>avg</sub> = <span class='frac'><span>Δx</span><span>Δt</span></span> = <span class='frac'><span>16</span><span>2</span></span> = <span class='ans'>8 m/s</span></span>",
+          "<b>Step 4: Check instantaneous velocity at t = 2 s:</b><br><span class='m big'>v(t) = <span class='frac'><span>dx</span><span>dt</span></span> = 2t + 4 &nbsp;⇒&nbsp; v(2) = 2(2) + 4 = <span class='ans'>8 m/s</span></span> (matches exactly for constant acceleration!)"
+        ],
+        tip: "For uniformly accelerated motion, average velocity over any interval equals instantaneous velocity at the time midpoint."
+      },
+      {
+        q: "A particle travels from point <span class='m'>A(2, 3, 1) m</span> to point <span class='m'>B(8, 11, 1) m</span> in <span class='m'>2 seconds</span>. Find the average velocity vector <span class='vec'>v</span><sub>avg</sub> and its magnitude.",
+        steps: [
+          "<b>Step 1: Write initial and final position vectors:</b><br><span class='m big'><span class='vec'>r</span>₁ = 2î + 3ĵ + <span class='hat'>k</span></span><br><span class='m big'><span class='vec'>r</span>₂ = 8î + 11ĵ + <span class='hat'>k</span></span>",
+          "<b>Step 2: Find total displacement vector Δr:</b><br><span class='m big'>Δ<span class='vec'>r</span> = <span class='vec'>r</span>₂ − <span class='vec'>r</span>₁ = (8 − 2)î + (11 − 3)ĵ + (1 − 1)<span class='hat'>k</span> = 6î + 8ĵ</span>",
+          "<b>Step 3: Calculate average velocity vector:</b><br><span class='m big'><span class='vec'>v</span><sub>avg</sub> = <span class='frac'><span>Δ<span class='vec'>r</span></span><span>Δt</span></span> = <span class='frac'><span>6î + 8ĵ</span><span>2</span></span> = <span class='ans'>3î + 4ĵ m/s</span></span>",
+          "<b>Step 4: Magnitude of average velocity:</b><br><span class='m big'>|<span class='vec'>v</span><sub>avg</sub>| = <span class='sqrt'><span>3² + 4²</span></span> = <span class='ans'>5 m/s</span></span>"
+        ],
+        tip: "Average velocity is a true vector pointing in the exact direction of the net displacement vector."
+      },
+      {
+        q: "A vehicle covers the first half of the total distance at speed <span class='m'>v₁ = 40 km/h</span> and the second half at <span class='m'>v₂ = 60 km/h</span> along a straight road. Calculate the average velocity for the entire journey.",
+        steps: [
+          "<b>Step 1: Let total distance be 2d:</b><br>Time for first half: <span class='m big'>t₁ = <span class='frac'><span>d</span><span>v₁</span></span> = <span class='frac'><span>d</span><span>40</span></span></span><br>Time for second half: <span class='m big'>t₂ = <span class='frac'><span>d</span><span>v₂</span></span> = <span class='frac'><span>d</span><span>60</span></span></span>",
+          "<b>Step 2: Total time:</b><br><span class='m big'>t<sub>total</sub> = t₁ + t₂ = d (<span class='frac'><span>1</span><span>40</span></span> + <span class='frac'><span>1</span><span>60</span></span>) = d (<span class='frac'><span>5</span><span>120</span></span>) = <span class='frac'><span>d</span><span>24</span></span></span>",
+          "<b>Step 3: Average velocity:</b><br><span class='m big'>v<sub>avg</sub> = <span class='frac'><span>Total Displacement</span><span>Total Time</span></span> = <span class='frac'><span>2d</span><span>d/24</span></span> = 2 × 24 = <span class='ans'>48 km/h</span></span>",
+          "<b>General Formula (Harmonic Mean):</b><br><span class='m big'>v<sub>avg</sub> = <span class='frac'><span>2v₁ v₂</span><span>v₁ + v₂</span></span> = <span class='frac'><span>2(40)(60)</span><span>100</span></span> = <span class='ans'>48 km/h</span></span>"
+        ],
+        tip: "When distances are equal, average velocity is the harmonic mean of speeds, NOT the simple arithmetic average."
+      },
+      {
+        q: "A body moves along a semi-circular path of radius <span class='m'>R = 7 m</span> from point A to point B in <span class='m'>t = 2 s</span> with constant speed. Find (a) average speed, and (b) magnitude of average velocity.",
+        steps: [
+          "<b>Step 1: Calculate total distance (path length):</b><br><span class='m big'>Distance = π R = <span class='frac'><span>22</span><span>7</span></span> × 7 = 22 m</span>",
+          "<b>Step 2: Calculate displacement magnitude:</b><br>Displacement is the straight line diameter between A and B:<br><span class='m big'>|Δ<span class='vec'>r</span>| = 2R = 2(7) = 14 m</span>",
+          "<b>Step 3: (a) Average speed:</b><br><span class='m big'>Avg Speed = <span class='frac'><span>Distance</span><span>Δt</span></span> = <span class='frac'><span>22</span><span>2</span></span> = <span class='ans'>11 m/s</span></span>",
+          "<b>Step 4: (b) Magnitude of average velocity:</b><br><span class='m big'>|v<sub>avg</sub>| = <span class='frac'><span>|Δ<span class='vec'>r</span>|</span><span>Δt</span></span> = <span class='frac'><span>14</span><span>2</span></span> = <span class='ans'>7 m/s</span></span>"
+        ],
+        tip: "Average velocity depends only on initial and final positions; average speed depends on actual path length."
+      },
+      {
+        q: "The position of a particle is given by <span class='m'>x(t) = t³ − 6t² + 9t</span> (in meters). Find the average velocity from <span class='m'>t = 0</span> to <span class='m'>t = 4 s</span>.",
+        steps: [
+          "<b>Step 1: Find position at t = 0:</b><br><span class='m big'>x(0) = 0³ − 6(0)² + 9(0) = 0 m</span>",
+          "<b>Step 2: Find position at t = 4 s:</b><br><span class='m big'>x(4) = 4³ − 6(4)² + 9(4) = 64 − 96 + 36 = 4 m</span>",
+          "<b>Step 3: Compute displacement and average velocity:</b><br><span class='m big'>Δx = x(4) − x(0) = 4 − 0 = 4 m</span><br><span class='m big'>v<sub>avg</sub> = <span class='frac'><span>Δx</span><span>Δt</span></span> = <span class='frac'><span>4 m</span><span>4 s</span></span> = <span class='ans'>1 m/s</span></span>",
+          "<b>Insight:</b> The particle reverses at t = 1 s and t = 3 s, but average velocity ignores turns and only cares about start and end positions."
+        ],
+        tip: "Do not confuse path turns with endpoint displacement when evaluating average velocity."
+      }
+    ]
+  },
+  3: {
+    title: "Formula 3: Integration: Δr = ∫ v dt",
+    formula: "<span class='vec'>r</span><sub>f</sub> − <span class='vec'>r</span><sub>i</sub> = ∫<sub>t₁</sub><sup>t₂</sup> <span class='vec'>v</span>(t) dt",
+    color: "green",
+    tag: "Integration of Velocity Function",
+    examples: [
+      {
+        q: "The velocity of a particle is given by <span class='m'>v(t) = 3t² + 2t − 1 m/s</span>. If at <span class='m'>t = 0</span> the particle is at <span class='m'>x = 2 m</span>, find its position at <span class='m'>t = 2 s</span>.",
+        steps: [
+          "<b>Step 1: Set up the definite integral for displacement:</b><br><span class='m big'>x(2) − x(0) = ∫<sub>0</sub><sup>2</sup> v(t) dt = ∫<sub>0</sub><sup>2</sup> (3t² + 2t − 1) dt</span>",
+          "<b>Step 2: Integrate term by term:</b><br><span class='m big'>∫ (3t² + 2t − 1) dt = [ t³ + t² − t ]<sub>0</sub><sup>2</sup></span>",
+          "<b>Step 3: Apply the limits:</b><br><span class='m big'>Δx = (2³ + 2² − 2) − 0 = 8 + 4 − 2 = 10 m</span>",
+          "<b>Step 4: Compute final position:</b><br><span class='m big'>x(2) = x(0) + Δx = 2 + 10 = <span class='ans'>12 m</span></span>"
+        ],
+        tip: "Remember that integrating velocity gives DISPLACEMENT (Δx = x_f - x_i), not the absolute position itself."
+      },
+      {
+        q: "A particle starts from the origin at <span class='m'>t = 0</span> with velocity <span class='vec'>v</span><span class='m'>(t) = 6t î + 4 ĵ m/s</span>. Find its position vector <span class='vec'>r</span><span class='m'>(t)</span> at <span class='m'>t = 3 s</span> and its distance from origin.",
+        steps: [
+          "<b>Step 1: Integrate the 2D velocity vector:</b><br><span class='m big'><span class='vec'>r</span>(3) − <span class='vec'>r</span>(0) = ∫<sub>0</sub><sup>3</sup> (6t î + 4 ĵ) dt</span>",
+          "<b>Step 2: Perform component-wise integration:</b><br><span class='m big'><span class='vec'>r</span>(3) = [ 3t² î + 4t ĵ ]<sub>0</sub><sup>3</sup> = 3(3)² î + 4(3) ĵ = <span class='ans'>27î + 12ĵ m</span></span>",
+          "<b>Step 3: Distance from origin (magnitude of position vector):</b><br><span class='m big'>r = <span class='sqrt'><span>27² + 12²</span></span> = <span class='sqrt'><span>729 + 144</span></span> = <span class='sqrt'><span>873</span></span> ≈ <span class='ans'>29.55 m</span></span>"
+        ],
+        tip: "Integrate each coordinate independently; î, ĵ, k̂ unit vectors remain untouched throughout the integral."
+      },
+      {
+        q: "The velocity of a particle decreases exponentially as <span class='m'>v(t) = v₀ e<sup>−kt</sup></span> (where v₀ and k are positive constants). Find the total distance covered by the particle before coming to a stop (<span class='m'>t → ∞</span>).",
+        steps: [
+          "<b>Step 1: Set up improper integral from t = 0 to t → ∞:</b><br><span class='m big'>Δx = ∫<sub>0</sub><sup>∞</sup> v₀ e<sup>−kt</sup> dt</span>",
+          "<b>Step 2: Evaluate the integral:</b><br><span class='m big'>Δx = v₀ [ <span class='frac'><span>e<sup>−kt</sup></span><span>−k</span></span> ]<sub>0</sub><sup>∞</sup> = −<span class='frac'><span>v₀</span><span>k</span></span> [ e<sup>−∞</sup> − e⁰ ]</span>",
+          "<b>Step 3: Simplify using e<sup>−∞</sup> = 0 and e⁰ = 1:</b><br><span class='m big'>Δx = −<span class='frac'><span>v₀</span><span>k</span></span> (0 − 1) = <span class='ans'><span class='frac'><span>v₀</span><span>k</span></span></span></span>"
+        ],
+        tip: "Even though motion continues indefinitely in time, the total distance covered can be completely finite."
+      },
+      {
+        q: "A body moves along the x-axis with velocity <span class='m'>v = 6 − 2t m/s</span>. Find (a) the displacement, and (b) the total distance covered between <span class='m'>t = 0</span> and <span class='m'>t = 4 s</span>.",
+        steps: [
+          "<b>Step 1: (a) Displacement via direct integration:</b><br><span class='m big'>Δx = ∫<sub>0</sub><sup>4</sup> (6 − 2t) dt = [ 6t − t² ]<sub>0</sub><sup>4</sup> = 6(4) − (4)² = 24 − 16 = <span class='ans'>8 m</span></span>",
+          "<b>Step 2: (b) Distance requires checking for velocity zero-crossing:</b><br><span class='m big'>v = 0 &nbsp;⇒&nbsp; 6 − 2t = 0 &nbsp;⇒&nbsp; t = 3 s</span> (within the 0 to 4 s interval!)",
+          "<b>Step 3: Split into forward and backward journeys:</b><br>From 0 to 3 s: <span class='m'>Δx₁ = [6t − t²]<sub>0</sub><sup>3</sup> = 18 − 9 = +9 m</span><br>From 3 to 4 s: <span class='m'>Δx₂ = [6t − t²]<sub>3</sub><sup>4</sup> = (24 − 16) − (18 − 9) = 8 − 9 = −1 m</span>",
+          "<b>Step 4: Total distance:</b><br><span class='m big'>Distance = |Δx₁| + |Δx₂| = |9| + |−1| = <span class='ans'>10 m</span></span>"
+        ],
+        tip: "Displacement is the integral of velocity: ∫ v dt. Distance is the integral of speed: ∫ |v| dt."
+      },
+      {
+        q: "A particle moves such that its velocity is related to position as <span class='m'>v = α <span class='sqrt'><span>x</span></span></span> (where α is constant). If at <span class='m'>t = 0</span>, <span class='m'>x = 0</span>, find x as a function of time t.",
+        steps: [
+          "<b>Step 1: Express v as dx/dt and separate variables:</b><br><span class='m big'><span class='frac'><span>dx</span><span>dt</span></span> = α <span class='sqrt'><span>x</span></span> &nbsp;⇒&nbsp; <span class='frac'><span>dx</span><span><span class='sqrt'><span>x</span></span></span></span> = α dt</span>",
+          "<b>Step 2: Integrate both sides:</b><br><span class='m big'>∫<sub>0</sub><sup>x</sup> x<sup>−1/2</sup> dx = α ∫<sub>0</sub><sup>t</sup> dt</span>",
+          "<b>Step 3: Evaluate integrals:</b><br><span class='m big'>[ 2<span class='sqrt'><span>x</span></span> ]<sub>0</sub><sup>x</sup> = α t &nbsp;⇒&nbsp; 2<span class='sqrt'><span>x</span></span> = α t</span>",
+          "<b>Step 4: Solve for x(t):</b><br><span class='m big'><span class='sqrt'><span>x</span></span> = <span class='frac'><span>α t</span><span>2</span></span> &nbsp;⇒&nbsp; <span class='ans'>x(t) = <span class='frac'><span>α² t²</span><span>4</span></span></span></span>"
+        ],
+        tip: "Separation of variables transforms velocity-position relations into explicit position-time equations."
+      }
+    ]
+  },
+  4: {
+    title: "Formula 4: Area under v–t Curve = Displacement (Δr)",
+    formula: "Δr = ∫ v dt = Area under v–t curve",
+    color: "violet",
+    tag: "Geometric Interpretation of Integral",
+    examples: [
+      {
+        q: "A v–t graph consists of a triangle from <span class='m'>t = 0</span> to <span class='m'>t = 4 s</span> reaching peak velocity <span class='m'>10 m/s</span>, followed by a rectangular stage from <span class='m'>t = 4 s</span> to <span class='m'>t = 7 s</span> at constant velocity <span class='m'>10 m/s</span>. Find total displacement.",
+        steps: [
+          "<b>Step 1: Calculate area of the triangular region (0 to 4 s):</b><br><span class='m big'>A₁ = <span class='frac'><span>1</span><span>2</span></span> × base × height = <span class='frac'><span>1</span><span>2</span></span> × 4 × 10 = 20 m</span>",
+          "<b>Step 2: Calculate area of the rectangular region (4 to 7 s):</b><br><span class='m big'>A₂ = base × height = (7 − 4) × 10 = 3 × 10 = 30 m</span>",
+          "<b>Step 3: Total displacement is the total area:</b><br><span class='m big'>Δx = A₁ + A₂ = 20 + 30 = <span class='ans'>50 m</span></span>"
+        ],
+        tip: "Divide complex v–t graphs into simple geometric shapes (rectangles, triangles, trapezoids) and sum their areas."
+      },
+      {
+        q: "In a v–t graph: from <span class='m'>t = 0 to 4 s</span>, velocity is positive forming a triangle with peak <span class='m'>+8 m/s</span> at <span class='m'>t = 2 s</span>; from <span class='m'>t = 4 to 6 s</span>, velocity is negative forming a triangle with peak <span class='m'>−4 m/s</span>. Find (a) net displacement and (b) total distance.",
+        steps: [
+          "<b>Step 1: Area above the time axis (positive displacement):</b><br><span class='m big'>A<sub>+</sub> = <span class='frac'><span>1</span><span>2</span></span> × 4 × (+8) = +16 m</span>",
+          "<b>Step 2: Area below the time axis (negative displacement):</b><br><span class='m big'>A<sub>−</sub> = <span class='frac'><span>1</span><span>2</span></span> × (6 − 4) × (−4) = <span class='frac'><span>1</span><span>2</span></span> × 2 × (−4) = −4 m</span>",
+          "<b>Step 3: (a) Net Displacement (algebraic sum with signs):</b><br><span class='m big'>Δx = A<sub>+</sub> + A<sub>−</sub> = 16 + (−4) = <span class='ans'>12 m</span></span>",
+          "<b>Step 4: (b) Total Distance (sum of absolute magnitudes):</b><br><span class='m big'>Distance = |A<sub>+</sub>| + |A<sub>−</sub>| = 16 + 4 = <span class='ans'>20 m</span></span>"
+        ],
+        tip: "Area above time axis contributes positively to displacement; area below contributes negatively. Distance adds both positively."
+      },
+      {
+        q: "A car accelerates from rest at constant rate <span class='m'>a₁ = 2 m/s²</span> for <span class='m'>5 s</span>, then immediately decelerates to rest at rate <span class='m'>a₂ = 5 m/s²</span>. Using the v–t graph area, find the total distance travelled.",
+        steps: [
+          "<b>Step 1: Calculate maximum velocity reached:</b><br><span class='m big'>v<sub>max</sub> = a₁ t₁ = 2 × 5 = 10 m/s</span>",
+          "<b>Step 2: Calculate deceleration time t₂:</b><br><span class='m big'>t₂ = <span class='frac'><span>v<sub>max</sub></span><span>a₂</span></span> = <span class='frac'><span>10</span><span>5</span></span> = 2 s</span>",
+          "<b>Step 3: Total duration of motion:</b><br><span class='m big'>T = t₁ + t₂ = 5 + 2 = 7 s</span>",
+          "<b>Step 4: Total distance is area of the single large triangle:</b><br><span class='m big'>Distance = <span class='frac'><span>1</span><span>2</span></span> × total base × peak height = <span class='frac'><span>1</span><span>2</span></span> × 7 × 10 = <span class='ans'>35 m</span></span>"
+        ],
+        tip: "When an object accelerates from rest and then decelerates to rest, the v–t graph is a single triangle of base (t₁ + t₂) and height v_max."
+      },
+      {
+        q: "For a particle moving along a straight line, the v–t graph is an upper semi-circle of radius <span class='m'>R = 4</span> (base spanning <span class='m'>t = 0 to 8 s</span>, peak velocity <span class='m'>4 m/s</span>). Find the total displacement.",
+        steps: [
+          "<b>Step 1: Identify geometry:</b><br>The region under the graph is a semi-circle of radius <span class='m'>R = 4</span> with base along time axis from 0 to 8 s.",
+          "<b>Step 2: Compute area of the semi-circle:</b><br><span class='m big'>Area = <span class='frac'><span>1</span><span>2</span></span> π R² = <span class='frac'><span>1</span><span>2</span></span> π (4)² = <span class='frac'><span>1</span><span>2</span></span> π (16) = 8π</span>",
+          "<b>Step 3: Total displacement:</b><br><span class='m big'>Δx = 8π ≈ 8 × 3.14159 = <span class='ans'>25.13 m</span></span>"
+        ],
+        tip: "Area under curved v–t boundaries follows standard geometric area formulas."
+      },
+      {
+        q: "A train moves along a track with a trapezoidal v–t graph: it accelerates from rest to <span class='m'>20 m/s</span> in <span class='m'>10 s</span>, maintains <span class='m'>20 m/s</span> until <span class='m'>t = 25 s</span>, and brakes to rest at <span class='m'>t = 30 s</span>. Find: (a) total distance, and (b) average velocity.",
+        steps: [
+          "<b>Step 1: Identify trapezoid dimensions:</b><br>Bottom base: <span class='m'>b₁ = 30 s</span><br>Top base (constant velocity duration): <span class='m'>b₂ = 25 − 10 = 15 s</span><br>Height: <span class='m'>h = 20 m/s</span>",
+          "<b>Step 2: (a) Total Distance = Area of trapezoid:</b><br><span class='m big'>Distance = <span class='frac'><span>1</span><span>2</span></span> (b₁ + b₂) × h = <span class='frac'><span>1</span><span>2</span></span> (30 + 15) × 20 = 45 × 10 = <span class='ans'>450 m</span></span>",
+          "<b>Step 3: (b) Average velocity over the entire 30 s:</b><br><span class='m big'>v<sub>avg</sub> = <span class='frac'><span>Total Displacement</span><span>Total Time</span></span> = <span class='frac'><span>450 m</span><span>30 s</span></span> = <span class='ans'>15 m/s</span></span>"
+        ],
+        tip: "Trapezoid formula Area = ½(a + b)h is the fastest way to solve standard 3-stage vehicle motions."
+      }
+    ]
+  }
+};
+
+
+var currentFormulaId = 1;
+var currentExampleIdx = 0;
+
+function syncClickableRects(){
+  if(window.parent && window.parent !== window){
+    var els = document.querySelectorAll(".clickable");
+    var rects = [];
+    for(var k=0;k<els.length;k++){
+      var r = els[k].getBoundingClientRect();
+      if(r.width > 0 && r.height > 0)
+        rects.push({ x:r.left, y:r.top, w:r.width, h:r.height });
+    }
+    window.parent.postMessage({ type:"lf-rects", rects:rects }, "*");
+  }
+}
+
+function openFormulaModal(fid){
+  currentFormulaId = fid;
+  currentExampleIdx = 0;
+  var modal = document.getElementById("formula-modal");
+  if(!modal) return;
+  modal.classList.add("active");
+  renderModal();
+  setTimeout(syncClickableRects, 60);
+  setTimeout(syncClickableRects, 300);
+}
+
+function closeFormulaModal(){
+  var modal = document.getElementById("formula-modal");
+  if(modal) modal.classList.remove("active");
+  setTimeout(syncClickableRects, 60);
+}
+
+function selectExample(idx){
+  currentExampleIdx = idx;
+  renderModal();
+}
+
+function prevExample(){
+  if(currentExampleIdx > 0){
+    currentExampleIdx--;
+    renderModal();
+  }
+}
+
+function nextExample(){
+  var data = FORMULA_DATA[currentFormulaId];
+  if(data && currentExampleIdx < data.examples.length - 1){
+    currentExampleIdx++;
+    renderModal();
+  }
+}
+
+function renderModal(){
+  var data = FORMULA_DATA[currentFormulaId];
+  if(!data) return;
+  
+  var titleEl = document.getElementById("modal-title");
+  var badgeEl = document.getElementById("modal-badge");
+  var tabsEl = document.getElementById("modal-tabs");
+  var contentEl = document.getElementById("modal-content");
+  var prevBtn = document.getElementById("modal-prev-btn");
+  var nextBtn = document.getElementById("modal-next-btn");
+  var indEl = document.getElementById("modal-indicator");
+
+  titleEl.innerHTML = data.title;
+  badgeEl.textContent = data.tag;
+  badgeEl.className = "chip " + (data.color === "green" ? "g" : (data.color === "amber" ? "a" : (data.color === "violet" ? "v" : "")));
+  
+  // Render tabs
+  var tabsHtml = "";
+  for(var i=0; i<data.examples.length; i++){
+    var act = (i === currentExampleIdx) ? "active" : "";
+    tabsHtml += '<button class="ex-modal-tab clickable ' + act + '" onclick="selectExample(' + i + ')">Example ' + (i+1) + '</button>';
+  }
+  tabsEl.innerHTML = tabsHtml;
+
+  // Render content
+  var ex = data.examples[currentExampleIdx];
+  var stepsHtml = "";
+  for(var s=0; s<ex.steps.length; s++){
+    stepsHtml += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px 20px;font-size:22px;line-height:1.6">' + ex.steps[s] + '</div>';
+  }
+
+  var html = '<div class="card question" style="border-left-width:4px;padding:16px 22px">' +
+             '<span class="tag">Problem Statement (Example ' + (currentExampleIdx+1) + ')</span>' +
+             '<p style="font-size:22px;line-height:1.55">' + ex.q + '</p>' +
+             '</div>' +
+             '<div class="card solution" style="border-left-width:4px;padding:16px 22px">' +
+             '<span class="tag">Step-by-Step Solution</span>' +
+             '<div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">' + stepsHtml + '</div>' +
+             '</div>' +
+             '<div class="card note" style="border-left-width:4px;padding:14px 22px">' +
+             '<span class="tag">Key Concept Takeaway</span>' +
+             '<p class="sm" style="font-size:20px;line-height:1.45">' + ex.tip + '</p>' +
+             '</div>';
+
+  contentEl.innerHTML = html;
+
+  // Update controls
+  indEl.textContent = "Example " + (currentExampleIdx + 1) + " of " + data.examples.length;
+  prevBtn.disabled = (currentExampleIdx === 0);
+  nextBtn.disabled = (currentExampleIdx === data.examples.length - 1);
+  
+  syncClickableRects();
+}
+
+// Keyboard shortcuts for modal
+document.addEventListener("keydown", function(e){
+  var modal = document.getElementById("formula-modal");
+  if(modal && modal.classList.contains("active")){
+    if(e.key === "Escape"){
+      e.preventDefault();
+      closeFormulaModal();
+    } else if(e.key === "ArrowLeft"){
+      e.preventDefault();
+      e.stopPropagation();
+      prevExample();
+    } else if(e.key === "ArrowRight"){
+      e.preventDefault();
+      e.stopPropagation();
+      nextExample();
+    }
+  }
+}, true);
+</script>
+
 </body>
 </html>
