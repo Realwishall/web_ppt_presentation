@@ -32,8 +32,11 @@
         startCOM(frame, w, h, kind); return;
       }
       if (kind === 'work-dot'){ startWorkDot(frame, w, h); return; }
+      if (kind === 'projectile-power'){ startProjectilePower(frame, w, h); return; }
       if (kind === 'impulse-wall' || kind === 'explosion-momentum' ||
-          kind === 'recoil-momentum' || kind === 'collision-momentum'){
+          kind === 'recoil-momentum' || kind === 'collision-momentum' ||
+          kind === 'restitution-e' || kind === 'newton-cradle' ||
+          kind === 'bounce-decay'){
         startMech2D(frame, w, h, kind); return;
       }
       if (kind === 'slinky-drop' || kind === 'lift-frame' ||
@@ -1810,6 +1813,219 @@
       })();
     }
 
+    /* --------------------------------------------------- projectile power --
+       `data-three="projectile-power"`. The power of gravity on a projectile.
+       A still figure can draw the arc, v and mg; what it cannot show is that
+       P = F·v = -mg·v_y runs -ve on the way up, passes through exactly zero at
+       the crest (v is horizontal there, so gravity's shadow on it vanishes),
+       and comes back +ve on the way down — and that plotted against time this
+       is a STRAIGHT LINE through the crest, which is the whole of the P-t
+       graph question. So the scene flies the particle, resolves v into its
+       horizontal and vertical parts at the dot, and draws the P-t line
+       underneath as the flight happens, with a marker riding it.
+
+       Geometry only — no lesson text lives in the canvas beyond the axis
+       names and the sign readout, and the frame ships a .scene-fallback with
+       the source slide's own arc, which is what prints (rules 11, 20).      */
+    function startProjectilePower(frame, w, h){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
+          RED = 0xfb7185, INK = 0xf4f7fb;
+
+      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 12);
+      camera.lookAt(0, 0, 0);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(4.15 / t2, 6.1 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+      var world = new T.Group();
+      world.position.set(0, 0.15, 0);
+      group.add(world);
+
+      function line(pts, color, opacity){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function makeArrow(color, rad){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 12), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 16), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad, mat: mat };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.06){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.42);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 74px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 4, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        m.userData = { redraw: function(txt, colour){
+          ctx.clearRect(0, 0, 512, 128);
+          ctx.fillStyle = colour; ctx.fillText(txt, 256, 64);
+          tex.needsUpdate = true;
+        } };
+        return m;
+      }
+
+      /* the flight: x runs -5 -> 5, y is the parabola 4*4u(1-u) */
+      var X0 = -5, X1 = 5, HMAX = 3.3;
+      function px(u){ return X0 + (X1 - X0) * u; }
+      function py(u){ return 4 * HMAX * u * (1 - u); }
+
+      /* ground, and the arc drawn as a faint dotted road the dot then runs */
+      world.add(line([new T.Vector3(X0 - 0.7, 0, 0), new T.Vector3(X1 + 0.7, 0, 0)], INK, 0.24));
+      var arcPts = [];
+      for (var i = 0; i <= 96; i++) arcPts.push(new T.Vector3(px(i / 96), py(i / 96), 0));
+      world.add(line(arcPts, INK, 0.30));
+
+      /* the P-t axes underneath — scaffolding, drawn once and never animated */
+      var GY = -2.55, GH = 1.15;                 /* t-axis height, half-span   */
+      world.add(line([new T.Vector3(X0, GY - GH - 0.35, 0),
+                      new T.Vector3(X0, GY + GH + 0.35, 0)], INK, 0.42));
+      world.add(line([new T.Vector3(X0 - 0.35, GY, 0),
+                      new T.Vector3(X1 + 0.5, GY, 0)], INK, 0.42));
+
+      /* the P-t line itself, revealed as far as the flight has got */
+      var LN = 64;
+      var linePos = new Float32Array((LN + 1) * 3);
+      var lineGeo = new T.BufferGeometry();
+      lineGeo.setAttribute('position', new T.BufferAttribute(linePos, 3));
+      world.add(new T.Line(lineGeo, new T.LineBasicMaterial({ color: GOLD })));
+
+      var body = new T.Mesh(new T.SphereGeometry(0.17, 20, 16),
+        new T.MeshBasicMaterial({ color: GOLD }));
+      world.add(body);
+      var pen = new T.Mesh(new T.SphereGeometry(0.11, 16, 12),
+        new T.MeshBasicMaterial({ color: GOLD }));
+      world.add(pen);
+
+      var aV  = makeArrow(GOLD, 0.055);          /* v, tangent to the path     */
+      var aG  = makeArrow(INDIGO, 0.055);        /* mg, always straight down   */
+      var aVy = makeArrow(GREEN, 0.045);         /* the vertical part of v     */
+      world.add(aV); world.add(aG); world.add(aVy);
+
+      /* the dashed rectangle closing v_x and v_y back onto v */
+      var boxGeo = new T.BufferGeometry();
+      boxGeo.setAttribute('position', new T.BufferAttribute(new Float32Array(12), 3));
+      world.add(new T.Line(boxGeo, new T.LineBasicMaterial({
+        color: INK, transparent: true, opacity: 0.30 })));
+
+      var lV  = label('v', '#f5c542', 0.66);
+      var lG  = label('mg', '#7c8cff', 0.60);
+      var lVy = label('vy', '#34d399', 0.56);
+      var lP  = label('P', '#f4f7fb', 0.58);
+      var lT  = label('t', '#f4f7fb', 0.58);
+      var lR  = label('P = −ve', '#fb7185', 1.05);
+      world.add(lV); world.add(lG); world.add(lVy); world.add(lP); world.add(lT); world.add(lR);
+      lP.position.set(X0 - 0.66, GY + GH + 0.34, 0);
+      lT.position.set(X1 + 0.62, GY - 0.48, 0);
+      lR.position.set(2.6, GY + GH + 1.02, 0);
+
+      var t0 = Date.now(), lastW = w, lastH = h, lastBand = null;
+
+      (function loop(){
+        requestAnimationFrame(loop);
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;                  /* page hidden — spare the GPU */
+        if (nw !== lastW || nh !== lastH){
+          lastW = nw; lastH = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        var t = (Date.now() - t0) / 1000;
+        group.rotation.y = Math.sin(t / 9) * 0.09;
+        group.rotation.x = -0.04;
+
+        /* one flight every 9 s, with a beat of stillness on the ground */
+        var cyc = (t % 9) / 9;
+        var u = Math.min(Math.max((cyc - 0.06) / 0.82, 0), 1);
+
+        var X = px(u), Y = py(u);
+        var at = new T.Vector3(X, Y, 0);
+        body.position.copy(at);
+
+        /* v from the tangent, scaled small enough to stay inside the box */
+        var vx = (X1 - X0), vy = 4 * HMAX * (1 - 2 * u);
+        var k = 0.105;
+        var tip = new T.Vector3(X + vx * k, Y + vy * k, 0);
+        aim(aV, at, tip);
+        lV.position.set(tip.x + 0.44, tip.y + 0.30, 0);
+
+        aim(aG, at, new T.Vector3(X, Y - 1.15, 0));
+        lG.position.set(X + 0.72, Y - 0.86, 0);
+
+        /* the vertical part of v — the only part gravity can see */
+        var vyTip = new T.Vector3(X, Y + vy * k, 0);
+        aim(aVy, at, vyTip);
+        lVy.position.set(X - 0.46, Y + vy * k * 0.55, 0);
+        lVy.visible = Math.abs(vy * k) > 0.42;
+
+        var b = boxGeo.getAttribute('position');
+        b.array[0] = vyTip.x; b.array[1] = vyTip.y; b.array[2] = 0;
+        b.array[3] = tip.x;   b.array[4] = tip.y;   b.array[5] = 0;
+        b.array[6] = X + vx * k; b.array[7] = Y;    b.array[8] = 0;
+        b.array[9] = X;       b.array[10] = Y;      b.array[11] = 0;
+        b.needsUpdate = true;
+
+        /* P = -mg.v_y : straight line in t, zero at the crest */
+        for (var j = 0; j <= LN; j++){
+          var uu = Math.min(j / LN, u);
+          linePos[j * 3]     = px(uu);
+          linePos[j * 3 + 1] = GY + GH * (2 * uu - 1);
+          linePos[j * 3 + 2] = 0;
+        }
+        lineGeo.getAttribute('position').needsUpdate = true;
+        lineGeo.computeBoundingSphere();
+        pen.position.set(X, GY + GH * (2 * u - 1), 0);
+
+        var band = u < 0.47 ? 'n' : (u > 0.53 ? 'p' : 'z');
+        if (band !== lastBand){
+          lastBand = band;
+          if (band === 'n'){ lR.userData.redraw('P = −ve', '#fb7185');
+                             aVy.userData.mat.color.setHex(RED); }
+          else if (band === 'p'){ lR.userData.redraw('P = +ve', '#34d399');
+                             aVy.userData.mat.color.setHex(GREEN); }
+          else { lR.userData.redraw('P = 0', '#f4f7fb');
+                 aVy.userData.mat.color.setHex(INK); }
+        }
+
+        renderer.render(scene, camera);
+      })();
+    }
+
     /* ------------------------------------------------ mechanics scenes 2D --
        Two scenes for the Laws-of-Motion / momentum decks. Both draw geometry
        only — no lesson text lives in the canvas, and every frame carries a
@@ -1832,6 +2048,30 @@
                              same length through the collision — the one thing
                              "momentum is conserved" means and a still figure
                              has to assert rather than show.
+
+       Three more for the Collision deck. Each exists because the thing being
+       taught is a comparison across a *repeated event*, which no still figure
+       can hold:
+
+         restitution-e       the same head-on collision run three times over, at
+                             e = 1, e = 0.5 and e = 0. Under the track, the
+                             approach speed (fixed) and the separation speed
+                             (shrinking) are drawn as two bars, so e is read off
+                             as the ratio of one bar to the other and the bar
+                             collapses to nothing exactly when the two bodies
+                             leave stuck together. e is a definition about two
+                             speeds, and both speeds only exist across time.
+         newton-cradle       five balls on cords. One is lifted and released and
+                             exactly one leaves the far end; then two are lifted
+                             and exactly two leave. The whole "warning for the
+                             pendulum case" slide is that the answer is not one
+                             ball at u/2 — which is a claim about what happens,
+                             not about what the apparatus looks like.
+         bounce-decay        a ball dropped from h bouncing with e, leaving a
+                             faint marker at each apex, so the heights h, e2h,
+                             e4h … stand as a visible geometric progression.
+                             The GP is the slide; the GP is made of successive
+                             bounces.
     */
     function startMech2D(frame, w, h, kind){
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
@@ -2177,6 +2417,198 @@
                     new T.Vector3(x2 + a2v * 0.42, LY + 0.62, 0));
           }
           sum(u < 0.46 ? U1 : V1, u < 0.46 ? 2 * U2 : 2 * V2);
+        };
+      }
+
+      /* ----------------------------------------------------- restitution-e --
+         The same head-on collision at e = 1, 0.5, 0. Equal masses, so
+         v1 = ((1-e)u1 + (1+e)u2)/2 and v2 = ((1+e)u1 + (1-e)u2)/2, which makes
+         the separation speed exactly e times the approach speed. Two bars
+         under the track carry those two speeds: the top one never changes, the
+         bottom one shrinks with e and vanishes at e = 0 — which is the moment
+         the two bodies leave together. That ratio is the definition, and it
+         cannot be drawn without running the event more than once.           */
+      if (kind === 'restitution-e'){
+        var RLY = 3.65, RMEET = 4.0, RU1 = 2.2, RU2 = -1.0, RR1 = 0.28, RR2 = 0.34;
+        var ES = [1, 0.5, 0];
+        world.add(dashed(new T.Vector3(0.6, RLY, 0), new T.Vector3(7.5, RLY, 0), INK, 0.16, 0.18));
+
+        var rb1 = dot(GOLD, RR1), rb2 = dot(INDIGO, RR2);
+        world.add(rb1); world.add(rb2);
+        var rl1 = label('m', '#f5c542', 0.5), rl2 = label('m', '#9fb4ff', 0.5);
+        world.add(rl1); world.add(rl2);
+        var rw1 = arrow(GOLD, 0.05), rw2 = arrow(INDIGO, 0.05);
+        world.add(rw1); world.add(rw2);
+
+        /* the two speed bars — approach on top, separation under it */
+        var BX = 1.35, BSC = 1.34, BYA = 1.62, BYS = 0.92;
+        var barA = arrow(CYAN, 0.062), barS = arrow(GREEN, 0.062);
+        world.add(barA); world.add(barS);
+        var laA = label('app', '#56ccf2', 0.62), laS = label('sep', '#34d399', 0.62),
+            laE = label('e = 1', '#f5c542', 0.86);
+        world.add(laA); world.add(laS); world.add(laE);
+        /* top-left, clear of the bars — the app label ends near x = 6.2 */
+        laE.position.set(1.15, 4.62, 0);
+        var APP = RU1 - RU2;                              /* fixed at 3.2      */
+        aim(barA, new T.Vector3(BX, BYA, 0), new T.Vector3(BX + APP * BSC, BYA, 0));
+        laA.position.set(BX + APP * BSC + 0.72, BYA, 0);
+
+        tick = function(t){
+          var LEG = 6.2, idx = Math.floor((t / LEG) % 3), u = ((t % LEG) / LEG);
+          var e = ES[idx];
+          var v1 = ((1 - e) * RU1 + (1 + e) * RU2) / 2;
+          var v2 = ((1 + e) * RU1 + (1 - e) * RU2) / 2;
+          var gap = RR1 + RR2, x1, x2, a1v, a2v;
+          if (u < 0.40){
+            var s = u / 0.40;
+            x1 = RMEET - gap - RU1 * 1.15 * (1 - s);
+            x2 = RMEET + gap - RU2 * 1.15 * (1 - s);
+            a1v = RU1; a2v = RU2;
+          } else if (u < 0.48){
+            x1 = RMEET - gap; x2 = RMEET + gap; a1v = 0; a2v = 0;
+          } else {
+            var s2 = Math.min(1, (u - 0.48) / 0.42);
+            x1 = RMEET - gap + v1 * 1.25 * s2;
+            x2 = RMEET + gap + v2 * 1.25 * s2;
+            a1v = v1; a2v = v2;
+          }
+          /* at e = 0 they travel together — keep them touching, not overlapping */
+          if (e === 0 && u >= 0.48){ x1 = x2 - gap; }
+          rb1.position.set(x1, RLY, 0); rb2.position.set(x2, RLY, 0);
+          rl1.position.set(x1, RLY - 0.58, 0);
+          rl2.position.set(x2, RLY - 0.64, 0);
+          if (!a1v && !a2v){ rw1.visible = false; rw2.visible = false; }
+          else {
+            aim(rw1, new T.Vector3(x1, RLY + 0.62, 0),
+                     new T.Vector3(x1 + a1v * 0.46, RLY + 0.62, 0));
+            aim(rw2, new T.Vector3(x2, RLY + 0.62, 0),
+                     new T.Vector3(x2 + a2v * 0.46, RLY + 0.62, 0));
+          }
+          /* the separation bar only means anything after they have left */
+          var sep = (u < 0.48) ? 0 : (v2 - v1);
+          if (sep < 0.04){ barS.visible = false; laS.visible = false; }
+          else {
+            barS.visible = true; laS.visible = true;
+            aim(barS, new T.Vector3(BX, BYS, 0), new T.Vector3(BX + sep * BSC, BYS, 0));
+            laS.position.set(BX + sep * BSC + 0.72, BYS, 0);
+          }
+          var want = 'e = ' + (e === 0.5 ? '0.5' : e);
+          if (laE.userData.txt !== want){
+            laE.userData.txt = want;
+            world.remove(laE);
+            laE = label(want, '#f5c542', 0.86);
+            laE.userData.txt = want;
+            laE.position.set(1.15, 4.62, 0);
+            world.add(laE);
+          }
+        };
+      }
+
+      /* ------------------------------------------------------ newton-cradle --
+         Five equal balls on cords. One is lifted and released and exactly one
+         leaves the far end at the same speed; then two are lifted and exactly
+         two leave. The slide this pairs with is a warning against answering
+         "one ball at u/2", and the answer is an event, not an apparatus.    */
+      if (kind === 'newton-cradle'){
+        var TOPY = 4.62, CORD = 2.5, BR = 0.36, SPACE = 0.73, CX0 = 4 - 2 * SPACE;
+        var A0 = 0.6;                                     /* swing amplitude   */
+
+        /* the rig — scaffolding, drawn once */
+        world.add(line([new T.Vector3(CX0 - 1.15, TOPY, 0),
+                        new T.Vector3(CX0 + 4 * SPACE + 1.15, TOPY, 0)], INK, 0.42));
+        world.add(line([new T.Vector3(CX0 - 1.15, TOPY, 0),
+                        new T.Vector3(CX0 - 1.15, TOPY - CORD - 0.95, 0)], INK, 0.3));
+        world.add(line([new T.Vector3(CX0 + 4 * SPACE + 1.15, TOPY, 0),
+                        new T.Vector3(CX0 + 4 * SPACE + 1.15, TOPY - CORD - 0.95, 0)], INK, 0.3));
+        world.add(line([new T.Vector3(CX0 - 1.45, TOPY - CORD - 0.95, 0),
+                        new T.Vector3(CX0 + 4 * SPACE + 1.45, TOPY - CORD - 0.95, 0)], INK, 0.3));
+
+        var ncBalls = [], ncCords = [];
+        for (var bi = 0; bi < 5; bi++){
+          var bb = dot(bi === 2 ? INDIGO : INDIGO, BR);
+          world.add(bb); ncBalls.push(bb);
+          var cg = line([new T.Vector3(0, 0, 0), new T.Vector3(0, -1, 0)], INK, 0.34);
+          world.add(cg); ncCords.push(cg);
+        }
+        function ncPlace(i, th){
+          var px = CX0 + i * SPACE, x = px + CORD * Math.sin(th),
+              y = TOPY - CORD * Math.cos(th);
+          ncBalls[i].position.set(x, y, 0);
+          ncCords[i].geometry.setFromPoints([new T.Vector3(px, TOPY, 0),
+                                             new T.Vector3(x, y, 0)]);
+          ncCords[i].geometry.attributes.position.needsUpdate = true;
+        }
+
+        tick = function(t){
+          var CYC = 12.4, u = (t % CYC) / CYC;
+          var n, s;
+          if (u < 0.46){ n = 1; s = u / 0.46; }
+          else if (u < 0.5){ n = 1; s = 1; }
+          else if (u < 0.96){ n = 2; s = (u - 0.5) / 0.46; }
+          else { n = 2; s = 1; }
+          var lt = 0, rt = 0, q = Math.PI / 2;
+          if (s < 0.25)      { lt = -A0 * Math.cos((s / 0.25) * q); }
+          else if (s < 0.5)  { rt =  A0 * Math.sin(((s - 0.25) / 0.25) * q); }
+          else if (s < 0.75) { rt =  A0 * Math.cos(((s - 0.5) / 0.25) * q); }
+          else               { lt = -A0 * Math.sin(((s - 0.75) / 0.25) * q); }
+          for (var i = 0; i < 5; i++){
+            var th = 0;
+            if (i < n) th = lt;
+            else if (i >= 5 - n) th = rt;
+            ncPlace(i, th);
+            ncBalls[i].material.color.setHex((i < n || i >= 5 - n) ? GOLD : INDIGO);
+          }
+        };
+      }
+
+      /* -------------------------------------------------------- bounce-decay --
+         A ball dropped from h bouncing with e, leaving a faint marker at every
+         apex. The markers are the geometric progression h, e2h, e4h … standing
+         still on the board while the ball keeps making the next term.       */
+      if (kind === 'bounce-decay'){
+        var GY = 1.05, H0 = 3.55, EE = 0.74, G = 6.0, NB = 7;
+        var t0 = Math.sqrt(2 * H0 / G), v0 = G * t0;
+        var legs = [t0], apex = [];
+        for (var k = 1; k <= NB; k++){
+          legs.push(2 * Math.pow(EE, k) * t0);
+          apex.push(H0 * Math.pow(EE, 2 * k));
+        }
+        var TT = legs.reduce(function(a, b){ return a + b; }, 0);
+        var X0 = 1.05, X1 = 7.3;
+        world.add(line([new T.Vector3(0.6, GY, 0), new T.Vector3(7.6, GY, 0)], INK, 0.55));
+
+        /* apex markers — static, so the printed fallback carries the same idea */
+        var acc = legs[0];
+        for (var k2 = 0; k2 < NB; k2++){
+          var ta = acc + legs[k2 + 1] / 2;
+          var ax = X0 + (X1 - X0) * (ta / TT), ay = GY + apex[k2];
+          world.add(dashed(new T.Vector3(0.72, ay, 0), new T.Vector3(ax, ay, 0),
+                           GOLD, 0.16, 0.14));
+          var mk = dot(GOLD, 0.075); mk.position.set(ax, ay, 0);
+          mk.material.transparent = true; mk.material.opacity = 0.65;
+          world.add(mk);
+          acc += legs[k2 + 1];
+        }
+        world.add(dashed(new T.Vector3(0.72, GY + H0, 0), new T.Vector3(X0, GY + H0, 0),
+                         INK, 0.24, 0.14));
+        var bd = dot(INDIGO, 0.24); world.add(bd);
+
+        tick = function(t){
+          var CYC = TT + 1.15, tau = (t % CYC);
+          if (tau > TT) tau = TT;
+          var x = X0 + (X1 - X0) * (tau / TT), y;
+          if (tau < legs[0]){
+            y = GY + H0 - 0.5 * G * tau * tau;
+          } else {
+            var rest = tau - legs[0], j = 1;
+            while (j <= NB && rest > legs[j]){ rest -= legs[j]; j++; }
+            if (j > NB){ y = GY; }
+            else {
+              var vk = Math.pow(EE, j) * v0;
+              y = GY + vk * rest - 0.5 * G * rest * rest;
+            }
+          }
+          bd.position.set(x, Math.max(GY, y), 0);
         };
       }
 

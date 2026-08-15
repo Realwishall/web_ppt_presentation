@@ -134,9 +134,14 @@ for (const spec of [
 
 let texCount = 0;
 let texFailed = 0;
+/* Any empty element carrying data-tex, not just <span>. It used to be span-only,
+   and a `<div class="eq" data-tex="…"></div>` then survived the build as an
+   EMPTY DIV — the equation vanished from the slide with nothing in the log and
+   nothing for the gate to catch, because the markup was otherwise valid. The
+   guard below turns that class of mistake into a build failure.             */
 body = body.replace(
-  /<span([^>]*?)\bdata-tex="([^"]*)"([^>]*?)>\s*<\/span>/g,
-  (whole, pre, tex, post) => {
+  /<(span|div|p|li|td|th)([^>]*?)\bdata-tex="([^"]*)"([^>]*?)>\s*<\/\1>/g,
+  (whole, tag, pre, tex, post) => {
     texCount += 1;
     const raw = tex
       .replace(/&amp;/g, '&').replace(/&lt;/g, '<')
@@ -148,7 +153,7 @@ body = body.replace(
         output: 'mathml', throwOnError: true, displayMode: display, strict: false,
       });
       const attrs = (pre + post).replace(/\s*data-tex="[^"]*"/, '').trim();
-      return `<span ${attrs}>${mathml}</span>`;
+      return `<${tag} ${attrs}>${mathml}</${tag}>`;
     } catch (e) {
       texFailed += 1;
       console.warn(`  ! LaTeX failed: ${raw}  (${e.message.split('\n')[0]})`);
@@ -160,6 +165,19 @@ body = body.replace(
    it emits <math> directly inside a small wrapper — strip the wrapper so our
    own `math{}` rule in deck-base.css applies cleanly. */
 body = body.replace(/<span class="katex">\s*(<math[\s\S]*?<\/math>)\s*<\/span>/g, '$1');
+
+/* A data-tex left standing means the element was not empty, or its tag is not
+   one we convert — either way the formula would ship blank or as raw LaTeX.
+   Fail loudly rather than let a silent hole through the gate.               */
+{
+  const left = [...body.matchAll(/data-tex="([^"]*)"/g)].map((m) => m[1]);
+  if (left.length) {
+    console.error(`${left.length} data-tex attribute(s) were not converted — `
+      + `the element must be EMPTY and one of span/div/p/li/td/th:`);
+    left.slice(0, 8).forEach((t) => console.error(`  ! ${t}`));
+    process.exit(1);
+  }
+}
 
 /* ------------------------------------------------------------------- css -- */
 const css = fs.readFileSync(path.join(TOOLS, 'deck-base.css'), 'utf8');
@@ -297,10 +315,121 @@ const motifSvg = {
     <path d="M566 548 V872" stroke="#f5c542" stroke-opacity="0.075" stroke-width="2.4" stroke-linecap="round"/>
   </svg>`,
 
+  /* Chapter motif "power": energy leaving a source at a rate. Streamlines run
+     off to the right and thin as they go — the field a turbine sits in — with
+     one faint rotor low-right and a transmission span along the very bottom.
+     Everything lives outside the centre and the upper-left, which is the board
+     the teacher writes on. The dashes creep along the streamlines through a
+     CSS animation in deck-base.css (`.motif-power`), so the flow is real
+     motion but costs no script and flattens in print (rules 11, 20).        */
+  power: `<svg class="motif-power" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="lf-flow-a" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.42" stop-color="#f5c542" stop-opacity="0.30"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lf-flow-b" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0"/>
+        <stop offset="0.48" stop-color="#7c8cff" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="lf-source" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.20"/>
+        <stop offset="0.55" stop-color="#f5c542" stop-opacity="0.06"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- the source the energy leaves from, far right of the writing area -->
+    <circle cx="1452" cy="404" r="250" fill="url(#lf-source)"/>
+    <!-- streamlines: right half only, fanning out and thinning as they go -->
+    <g class="flow" fill="none" stroke-linecap="round">
+      <path d="M812 128 C1030 104 1230 118 1580 84"   stroke="url(#lf-flow-a)" stroke-width="4"   stroke-dasharray="26 34"/>
+      <path d="M888 214 C1108 196 1300 214 1600 182"  stroke="url(#lf-flow-b)" stroke-width="3.2" stroke-dasharray="20 30"/>
+      <path d="M840 300 C1076 288 1288 314 1600 296"  stroke="url(#lf-flow-a)" stroke-width="2.6" stroke-dasharray="30 40"/>
+      <path d="M910 392 C1140 388 1330 420 1600 414"  stroke="url(#lf-flow-b)" stroke-width="3.6" stroke-dasharray="24 32"/>
+      <path d="M862 482 C1096 490 1300 520 1600 530"  stroke="url(#lf-flow-a)" stroke-width="2.4" stroke-dasharray="18 28"/>
+      <path d="M934 570 C1160 588 1348 620 1600 640"  stroke="url(#lf-flow-b)" stroke-width="3"   stroke-dasharray="28 38"/>
+    </g>
+    <!-- the rotor the flow turns: three blades, low-right, never a figure -->
+    <g class="rotor" stroke="#ffffff" stroke-opacity="0.075" stroke-width="9" fill="none" stroke-linecap="round">
+      <circle cx="1338" cy="716" r="132"/>
+      <path d="M1338 716 L1338 596"/>
+      <path d="M1338 716 L1442 776"/>
+      <path d="M1338 716 L1234 776"/>
+    </g>
+    <circle cx="1338" cy="716" r="17" fill="#f5c542" fill-opacity="0.10"/>
+    <!-- the transmission span along the very bottom edge -->
+    <g stroke="#ffffff" stroke-opacity="0.055" stroke-width="2.6" fill="none">
+      <path d="M0 862 C260 838 520 886 780 858 C1040 830 1300 878 1600 852"/>
+      <path d="M0 884 C260 860 520 900 780 878 C1040 856 1300 898 1600 876"/>
+    </g>
+    <path d="M0 828 H1600" stroke="#f5c542" stroke-opacity="0.05" stroke-width="1.6" stroke-dasharray="30 52"/>
+  </svg>`,
+
+  /* Chapter motif "collision": the event itself, drawn as the two things a
+     collision leaves behind — the lines of approach converging on one contact
+     point, and the impact ring spreading out of it. Two faint tracks come in
+     from the left and low-right and meet at a node just off the writing area;
+     three concentric rings sit on that node and breathe outward through a CSS
+     animation in deck-base.css (`.motif-collision`), so the board carries the
+     *instant* rather than a picture of two balls. A bounce train decays along
+     the bottom edge (the e-chapter's other signature), and one dashed line of
+     centres crosses the node. Everything is outside the centre and the upper
+     left, which is where the teacher writes; print flattens the motion.     */
+  collision: `<svg class="motif-collision" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-impact" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0.22"/>
+        <stop offset="0.45" stop-color="#f5c542" stop-opacity="0.07"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-track-a" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.7" stop-color="#f5c542" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0.05"/>
+      </linearGradient>
+      <linearGradient id="lf-track-b" x1="1" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0"/>
+        <stop offset="0.72" stop-color="#7c8cff" stop-opacity="0.24"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.05"/>
+      </linearGradient>
+    </defs>
+    <!-- the contact point: low-right, clear of the board -->
+    <circle cx="1246" cy="556" r="300" fill="url(#lf-impact)"/>
+    <!-- the impact rings breathing out of it -->
+    <g class="burst" fill="none" stroke="#f5c542" stroke-linecap="round">
+      <circle cx="1246" cy="556" r="96"  stroke-opacity="0.16" stroke-width="3.2"/>
+      <circle cx="1246" cy="556" r="168" stroke-opacity="0.10" stroke-width="2.4" stroke-dasharray="24 30"/>
+      <circle cx="1246" cy="556" r="248" stroke-opacity="0.06" stroke-width="2"   stroke-dasharray="16 42"/>
+    </g>
+    <circle cx="1246" cy="556" r="15" fill="#f5c542" fill-opacity="0.16"/>
+    <!-- the two lines of approach, converging on that node -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M604 556 H1150"                          stroke="url(#lf-track-a)" stroke-width="4"/>
+      <path d="M1592 872 C1470 782 1360 664 1290 596"    stroke="url(#lf-track-b)" stroke-width="3.4"/>
+      <path d="M700 470 C900 486 1050 512 1140 534"      stroke="url(#lf-track-a)" stroke-width="2.2" stroke-dasharray="22 30"/>
+    </g>
+    <!-- the line of centres through the contact point -->
+    <path d="M980 754 L1512 358" stroke="#ffffff" stroke-opacity="0.055"
+          stroke-width="2.2" stroke-dasharray="18 26"/>
+    <!-- the bounce train: h, e²h, e⁴h … decaying along the bottom edge -->
+    <g class="bounce" fill="none" stroke="#ffffff" stroke-opacity="0.06"
+       stroke-width="2.6" stroke-linecap="round">
+      <path d="M60 884 C112 640 214 640 266 884"/>
+      <path d="M266 884 C302 726 372 726 408 884"/>
+      <path d="M408 884 C432 786 480 786 504 884"/>
+      <path d="M504 884 C520 824 552 824 568 884"/>
+      <path d="M568 884 C578 848 600 848 610 884"/>
+      <path d="M610 884 C617 862 631 862 638 884"/>
+    </g>
+    <path d="M0 884 H760" stroke="#f5c542" stroke-opacity="0.05" stroke-width="1.6" stroke-dasharray="30 52"/>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision`);
   process.exit(1);
 }
 

@@ -68,13 +68,13 @@
   /* type scale — presentation scale, NOT web scale (rule 9) */
   --fs-title:     clamp(36px, 8.8vmin, 100px);
   --fs-h2:        clamp(26px, 5.6vmin, 60px);
-  --fs-h3:        clamp(22px, 4.4vmin, 46px);
-  --fs-body:      clamp(19px, 3.3vmin, 38px);
-  --fs-small:     clamp(17px, 2.8vmin, 32px);
-  --fs-note:      clamp(16px, 2.6vmin, 28px);
-  --fs-eq:        clamp(20px, 3.9vmin, 44px);
-  --fs-th:        clamp(15px, 2.2vmin, 25px);
-  --fs-td:        clamp(15px, 2.35vmin, 26px);
+  --fs-h3:        clamp(26px, 5.6vmin, 60px);
+  --fs-body:      clamp(26px, 5.6vmin, 60px);
+  --fs-small:     clamp(26px, 5.6vmin, 60px);
+  --fs-note:      clamp(26px, 5.6vmin, 60px);
+  --fs-eq:        clamp(26px, 5.6vmin, 60px);
+  --fs-th:        clamp(26px, 5.6vmin, 60px);
+  --fs-td:        clamp(26px, 5.6vmin, 60px);
 
   /* fonts (rule 17) */
   --font-ui:      Calibri, Candara, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
@@ -122,7 +122,7 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 #bg svg{position:absolute;inset:0;width:100%;height:100%;opacity:.32}
 
 .kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
-    font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    font-size:clamp(26px, 5.6vmin, 60px);letter-spacing:.16em;text-transform:uppercase;font-weight:700;
     padding:.7vmin 1.6vmin;border-radius:99px;opacity:.72;
     background:rgba(245,197,66,.08);border:.1vmin solid rgba(245,197,66,.22);
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
@@ -173,7 +173,7 @@ h2.heading:before{content:"";position:absolute;left:0;top:.16em;bottom:.16em;wid
     border-radius:99px;
     background:linear-gradient(180deg,var(--gold),rgba(245,197,66,.15))}
 h3.sub-heading {margin:0 0 .6vmin;font-size:var(--fs-h3);color:var(--gold);font-weight:700}
-h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(19px,3.4vmin,36px);color:var(--gold);
+h4.cell-heading{margin:0 0 .8vmin;font-size:clamp(26px, 5.6vmin, 60px);color:var(--gold);
     font-weight:700;letter-spacing:.005em}
 h4.cell-heading small{color:var(--sub);font-weight:400;font-size:.6em}
 
@@ -187,7 +187,7 @@ p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
 .caption{color:var(--muted);font-size:var(--fs-note)}
 .example{color:var(--sub);font-style:italic;font-size:var(--fs-small)}
 .example b{color:var(--ink);font-style:normal}
-.lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.4;
+.lead   {font-size:clamp(26px, 5.6vmin, 60px);font-weight:700;line-height:1.4;
          letter-spacing:-.01em}
 
 /* -------------------------------------------------------------- layouts --- */
@@ -232,9 +232,9 @@ ul.bullets ul.bullets{margin-top:.8vmin;padding-left:1.6vmin}
 .qa{margin-bottom:1.6vmin;padding:1.6vmin 2vmin;border-radius:var(--radius);
     background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.015));
     box-shadow:var(--lip)}
-.qa .q{color:var(--gold);font-weight:700;font-size:clamp(18px,2.9vmin,32px);line-height:1.35}
+.qa .q{color:var(--gold);font-weight:700;font-size:clamp(26px, 5.6vmin, 60px);line-height:1.35}
 .qa .a{margin-top:.8vmin;padding-left:2.4vmin;color:var(--sub);
-       font-size:clamp(17px,2.7vmin,30px);line-height:1.45}
+       font-size:clamp(26px, 5.6vmin, 60px);line-height:1.45}
 
 /* -------------------------------------------------------------- surfaces --- */
 .card{background:var(--card-bg);border:.12vmin solid var(--card-border);
@@ -299,7 +299,7 @@ table.data td.note-cell{font-style:italic;color:var(--muted);box-shadow:none!imp
 .eq-block{display:flex;flex-direction:column;gap:1.6vmin;margin:1vmin 0}
 .eq-note{font-style:italic;color:var(--muted);font-size:var(--fs-note)}
 .eq.small{font-size:var(--fs-small)}
-.eq.big  {font-size:clamp(24px,5vmin,56px);color:var(--gold-soft);
+.eq.big  {font-size:clamp(26px, 5.6vmin, 60px);color:var(--gold-soft);
           text-shadow:0 .3vmin 2.4vmin rgba(245,197,66,.22)}
 
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;
@@ -429,7 +429,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .options.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5vmin}
 .option{position:relative;display:flex;align-items:center;gap:1.4vmin;
         border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
-        padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
+        padding:1.6vmin 2.2vmin;font-size:clamp(26px, 5.6vmin, 60px);cursor:pointer;
         min-height:44px;box-sizing:border-box;line-height:1.3;
         background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
         box-shadow:var(--lip),var(--lift);
@@ -454,7 +454,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .option.correct .opt-badge{background:linear-gradient(180deg,#bbf7d0,var(--green));color:#04291d}
 .option.wrong   .opt-badge{background:linear-gradient(180deg,#fecdd3,var(--red));color:#3f0a14}
 .answer-box{position:relative;margin-top:1.2vmin;padding:1.7vmin 2.2vmin 1.7vmin 3vmin;
-            border-radius:var(--radius);font-size:clamp(17px,2.8vmin,32px);line-height:1.4;
+            border-radius:var(--radius);font-size:clamp(26px, 5.6vmin, 60px);line-height:1.4;
             background:linear-gradient(180deg,rgba(52,211,153,.18),rgba(52,211,153,.05));
             box-shadow:var(--lip),var(--lift)}
 .answer-box:before{content:"";position:absolute;left:.9vmin;top:1.1vmin;bottom:1.1vmin;
@@ -590,28 +590,28 @@ math[display="block"]{display:block;margin:.8vmin 0}
   border-bottom:.1vmin solid var(--rule)}
 .sim-row:last-child{border-bottom:0}
 .sim-key{color:var(--gold);font-weight:700;line-height:1.2;
-  font-size:clamp(13px,2vmin,22px);letter-spacing:.015em}
+  font-size:clamp(26px, 5.6vmin, 60px);letter-spacing:.015em}
 .sim-val{font-family:var(--font-math);text-align:right;white-space:nowrap;
-  color:var(--ink);font-size:clamp(14px,2.2vmin,25px)}
+  color:var(--ink);font-size:clamp(26px, 5.6vmin, 60px)}
 .sim-row.total{margin-top:.5vmin;padding-top:.9vmin;border-bottom:0;
   border-top:.16vmin solid rgba(245,197,66,.5)}
-.sim-row.total .sim-key{font-size:clamp(14px,2.2vmin,24px)}
+.sim-row.total .sim-key{font-size:clamp(26px, 5.6vmin, 60px)}
 .sim-row.total .sim-val{color:var(--gold-soft);font-weight:700;
-  font-size:clamp(18px,3.1vmin,35px)}
+  font-size:clamp(26px, 5.6vmin, 60px)}
 .sim-note{margin-top:.9vmin;color:var(--muted);font-style:italic;line-height:1.35;
-  font-size:clamp(12px,1.85vmin,20px)}
+  font-size:clamp(26px, 5.6vmin, 60px)}
 
 .sim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;
   gap:1.4vmin 2.6vmin;margin-top:1.4vmin}
 .sim-group{display:flex;flex-direction:column;gap:.7vmin;min-width:0}
 .sim-group-label{color:var(--muted);font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;font-size:clamp(11px,1.7vmin,18px)}
+  text-transform:uppercase;font-size:clamp(26px, 5.6vmin, 60px)}
 .sim-keys{display:flex;flex-wrap:wrap;gap:.9vmin}
 .sim-btn{display:inline-flex;align-items:center;justify-content:center;
   min-height:44px;padding:.9vmin 1.7vmin;box-sizing:border-box;cursor:pointer;
   border-radius:1.1vmin;border:.12vmin solid rgba(255,255,255,.18);
   font-family:var(--font-ui);font-weight:700;line-height:1.15;color:var(--ink);
-  font-size:clamp(13px,2vmin,23px);
+  font-size:clamp(26px, 5.6vmin, 60px);
   background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
   box-shadow:var(--lip),var(--lift);
   transition:border-color .25s ease,background .25s ease,color .25s ease}
@@ -627,7 +627,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
 
 /* --------------------------------------------------------------- button --- */
 .btn{border:0;border-radius:1.2vmin;padding:1.3vmin 2.4vmin;
-     font:700 2.4vmin var(--font-ui);color:#241a02;min-height:44px;
+     font:700 clamp(26px, 5.6vmin, 60px) var(--font-ui);color:#241a02;min-height:44px;
      background:linear-gradient(180deg,var(--gold-soft),var(--gold));cursor:pointer;
      box-shadow:0 .6vmin 2.4vmin rgba(245,197,66,.3)}
 
@@ -716,7 +716,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
    sits at the surrounding text size, not at --fs-eq.                         */
 .qa .q-head,.qa .a-head{display:block;margin-bottom:.5vmin;
   font-family:var(--font-ui);font-weight:700;letter-spacing:.12em;
-  text-transform:uppercase;font-size:clamp(12px,1.9vmin,21px)}
+  text-transform:uppercase;font-size:clamp(26px, 5.6vmin, 60px)}
 .qa .q-head{color:var(--gold-deep)}
 .qa .a-head{color:var(--muted)}
 .qa .q math,.qa .a math{font-size:inherit}
@@ -725,7 +725,7 @@ math[display="block"]{display:block;margin:.8vmin 0}
 .tag-hot{display:inline-flex;align-items:center;margin-left:1.2vmin;
   padding:.2vmin 1.4vmin;border-radius:99px;vertical-align:middle;
   font-family:var(--font-ui);font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;font-size:clamp(12px,1.8vmin,20px);color:#ffd8a6;
+  text-transform:uppercase;font-size:clamp(26px, 5.6vmin, 60px);color:#ffd8a6;
   border:.12vmin solid rgba(251,146,60,.5);
   background:linear-gradient(180deg,rgba(251,113,133,.2),rgba(217,119,6,.1))}
 

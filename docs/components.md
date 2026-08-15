@@ -182,6 +182,13 @@ Primitives: `.eq` (inline math run), `.eq.small` / `.eq.big`, `.frac` + `.num`/`
 converts `data-tex` to MathML at build time. Never emit `\(…\)` for a runtime
 renderer — scripts are stripped on export and the equation would come out blank.
 
+The element carrying `data-tex` must be **empty** and one of
+`span` / `div` / `p` / `li` / `td` / `th` — `<div class="eq big" data-tex="…"></div>`
+is a display equation, `<span class="eq inline" data-tex="…"></span>` is an inline
+run. Anything else (or an element with text already inside it) is left alone and
+`build-deck.mjs` now **fails the build** rather than shipping the blank element
+the old span-only converter used to produce.
+
 The MathML this produces is upright too, but only because `deck-base.css`
 carries `math mi, math mn, math mo, math mtext, math ms { text-transform: none }`
 — browsers italicise single-letter `<mi>` through `text-transform: math-auto`,
@@ -405,6 +412,10 @@ that element becomes visible.
 | `data-three="lift-frame"` | `<div class="scene-frame">` | the same hanging mass drawn twice: in the **ground frame** (the cage rises, `T` and `mg` only) and in the **lift frame** (the cage is at rest, and a red `ma` has appeared) — with `T = mg + ma` under both. The point of a pseudo force is that two frames disagree about the forces and agree about the answer, which needs both frames on screen at once |
 | `data-three="friction-ramp"` | `<div class="scene-frame">` | a block with a growing applied `F`, friction `fr` matching it arrow-for-arrow up to the **limiting value**, then dropping to kinetic as the block breaks away — while the `fr`–`F` graph draws itself alongside. The Case Study slide's graph is a record of an event, so it needs the event |
 | `data-three="equilibrium-types"` | `<div class="scene-frame">` | a bowl, a dome and a plane side by side, each with a bead sitting exactly at its equilibrium. Every cycle all three get the **same** small nudge and are let go: the bowl's bead swings back and damps to rest, the dome's creeps away and leaves the crest, the plane's simply stops where it was put. The definitions on that slide are all about what happens *after* the displacement, which is precisely what a still picture of three surfaces cannot show |
+| `data-three="projectile-power"` | `<div class="scene-frame">` | the power of gravity on a projectile: the particle flies, `v` is resolved into its horizontal and vertical parts at the dot, and the **P–t line draws itself underneath as the flight happens** — `−ve` climbing, exactly `0` at the crest (gravity's shadow on a horizontal `v` vanishes), `+ve` falling. A still figure can draw the arc; it cannot show that the sign turns over at the top, nor that plotted against time the turn-over is a straight line, which is the whole of the P–t graph MCQ |
+| `data-three="restitution-e"` | `<div class="scene-frame">` | the **same head-on collision run three times over**, at `e = 1`, `e = 0.5`, `e = 0`. Under the track, the approach speed (fixed, cyan) and the separation speed (green, shrinking) stand as two bars, so `e` is read off as one bar over the other — and the lower bar vanishes exactly when the two bodies leave together. `e` is a ratio of two speeds that exist at different times, which is precisely what one still figure cannot hold |
+| `data-three="newton-cradle"` | `<div class="scene-frame">` | five balls on cords: lift one and exactly one leaves, lift two and exactly two leave. The "warning for the pendulum case" board is an argument about **what happens**, not about what the apparatus looks like — momentum alone permits two at `u/2`, and the cradle is the counter-example |
+| `data-three="bounce-decay"` | `<div class="scene-frame">` | a ball dropped from `h` bouncing with `e`, leaving a faint marker at every apex so `h`, `e²h`, `e⁴h` … accumulate on the board as a visible geometric progression. The G.P. *is* the slide, and a G.P. is made of successive bounces |
 | `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle, turning, with `ω` drawn **along the axle** in the right-hand sense — the one thing a still figure cannot show, that `ω` stands on the axis rather than lying in the plane. `data-sense="ccw"` (default) turns anticlockwise seen from above and points `ω` up / out of the plane; `data-sense="cw"` reverses both |
 
 ```html
@@ -800,7 +811,9 @@ run short enough for its column.
 | `hex` (default) | the PW hexagon weave — unchanged, what every existing deck uses |
 | `graph` | squared paper, one pale axis pair low-left and a rising curve |
 | `rail` | long-exposure speed streaks down the right, a track with sleepers low across the board — for the constant-velocity / relative-motion chapters |
+| `power` | energy leaving a source: streamlines fanning off down the right-hand side with the dashes **creeping along them**, one faint rotor low-right, a transmission span along the bottom edge — for the Work / Energy / Power chapter. The creep is a CSS animation on `.motif-power .flow` (no script, flattened in `@media print`), so the field reads as a *rate* rather than a picture |
 | `well` | a potential landscape low across the board: a well with the bead resting in its minimum, an empty crest further along, and the two levels dashed back to a pale axis — for the equilibrium / potential-energy boards |
+| `collision` | the impact itself: two lines of approach converging on a contact node low-right, three rings **breathing outward** from that node, the line of centres crossing it dashed, and a decaying bounce train along the bottom edge — for the Collision chapter. The rings are a CSS animation on `.motif-collision .burst` (no script, flattened in `@media print`), so the board carries the *instant* rather than a picture of two balls |
 
 It is texture, never information (rule 11): it sits behind the writing area at
 a fraction of an opacity, and `@media print` drops it further. Authors do not

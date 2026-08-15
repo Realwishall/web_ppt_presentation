@@ -124,6 +124,39 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
    centre / upper-left, which is where the teacher writes. Texture, never
    information (rule 11).                                                     */
 #bg svg.motif-rail{opacity:.7}
+/* Chapter motif "power" (manifest "motif":"power"): the Work-Energy-Power
+   chapter's signature — streamlines leaving a source down the right-hand side,
+   one faint rotor low-right, a transmission span along the bottom edge. The
+   dashes creep along the streamlines so the field reads as a RATE rather than
+   a picture, which is the whole of P = dW/dt; it is still only texture and
+   carries nothing the class must read (rule 11). Right half + bottom edge
+   only, so the centre and upper-left stay clear for the pen.                */
+#bg svg.motif-power{opacity:.66}
+#bg svg.motif-power .flow path{animation:lf-flow 26s linear infinite}
+#bg svg.motif-power .flow path:nth-child(2n){animation-duration:34s}
+#bg svg.motif-power .flow path:nth-child(3n){animation-duration:44s}
+#bg svg.motif-power .rotor{transform-box:fill-box;transform-origin:50% 50%;
+    animation:lf-rotor 72s linear infinite}
+@keyframes lf-flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-360}}
+@keyframes lf-rotor{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-power .flow path,#bg svg.motif-power .rotor{animation:none}}
+/* Chapter motif "collision" (manifest "motif":"collision"): the impact itself.
+   The rings on the contact node breathe outward and the approach tracks creep
+   toward it, so the board carries an *event* rather than a picture of two
+   balls. Pure CSS, so it costs no script; it flattens in print (rules 11, 20)
+   and it never sits under the writing area.                                 */
+#bg svg.motif-collision{opacity:.62}
+#bg svg.motif-collision .burst circle{transform-box:fill-box;transform-origin:50% 50%;
+    animation:lf-burst 9s ease-out infinite}
+#bg svg.motif-collision .burst circle:nth-child(2){animation-delay:1.1s}
+#bg svg.motif-collision .burst circle:nth-child(3){animation-delay:2.2s}
+@keyframes lf-burst{
+  0%{transform:scale(.55);opacity:0}
+  18%{opacity:1}
+  100%{transform:scale(1.28);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-collision .burst circle{animation:none}}
 /* Chapter motif "well" (manifest "motif":"well"): the equilibrium chapter's own
    signature — a potential landscape running low across the board with the bead
    resting in the minimum and an empty crest further along. It sits below and to
@@ -916,6 +949,10 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
   /* the motif is texture, not information — drop it out of the PDF entirely */
   #bg svg.motif-graph{opacity:.28!important}
   #bg svg.motif-rail {opacity:.24!important}
+  #bg svg.motif-power{opacity:.20!important}
+  #bg svg.motif-power .flow path,#bg svg.motif-power .rotor{animation:none!important}
+  #bg svg.motif-collision{opacity:.18!important}
+  #bg svg.motif-collision .burst circle{animation:none!important;opacity:1!important}
   #bg svg.motif-well {opacity:.26!important}
   .kicker-tag,.no-print{display:none!important}
   html,body,.page{background:#080a14!important}
