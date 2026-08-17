@@ -58,6 +58,13 @@
     --board-radius:0;
     --board-shadow:none;
   }
+  /* The radius was only half of that story. `contain:paint` is ALSO a clip —
+     it promises the browser nothing paints outside the box, which is exactly
+     the guarantee that stops the ink canvas being handed straight to the
+     display. With the radius already at 0 in lite there is nothing left to
+     clip, so paint containment buys nothing here and costs the low-latency
+     path. Layout containment is free and stays. */
+  html.lite .board{contain:layout}
   /* A 4K radial gradient is a full-viewport blur the panel GPU re-paints
      under the board. Lite drops it; the board itself is already opaque. */
   html.lite body{background:var(--bg)}
@@ -110,7 +117,10 @@
   .board{
     position:relative;width:100%;height:100%;   /* no aspect cap — take it all */
     contain:layout paint;
-    border-radius:var(--board-radius);overflow:hidden;
+    /* `clip`, not `hidden`: identical visual result, but `hidden` makes the
+       board a scroll container (a scrollable overflow region the compositor
+       has to keep track of) for a box that can never scroll. */
+    border-radius:var(--board-radius);overflow:clip;
     /* Only the gradient lives in CSS now. The paper pattern (dots / graph /
        axes) is painted per page on #paper by one painter that the board, the
        page thumbnails and the PDF export all share, so a page that is graph
@@ -122,6 +132,12 @@
     opacity:0;pointer-events:none;transition:opacity .3s ease;
   }
   .board.visible{opacity:1;pointer-events:auto}
+  /* Set once the entry fade has run. A declared opacity transition on the
+     element the pen draws into is a standing invitation for the compositor to
+     take the board back off the fast path — every className write on .board
+     (tool changes, page turns) is a chance for it to re-evaluate. The board
+     only ever fades in once, so retire the transition afterwards. */
+  .board.settled{transition:none}
 
   #snapBox{position:absolute;z-index:1;overflow:hidden;display:none;pointer-events:none}
   #snapDeck{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;pointer-events:none;display:none}
@@ -1785,8 +1801,24 @@ for(var i=0;i<cues.length;i++){
      step: rebuilding would restart the video each time the teacher presses
      Next. Same key -> reposition the existing iframe and leave it playing. */
   const mediaLayer = document.getElementById("mediaLayer");
+  const mediaHome = mediaLayer.parentNode;
   const mediaEmbeds = {};                       // key -> {box, iframe, toggle, deckId}
   const mediaKey = (m) => (m.provider || "youtube") + "|" + m.id + "|" + m.start + "|" + m.end;
+
+  /* ── the layer is only in the document when it holds something ──────────
+     #mediaLayer sits directly above #ink in paint order. A canvas asked for
+     `desynchronized` only gets the fast path while nothing can paint over it,
+     and the overwhelming majority of pages in a physics lecture have no video
+     at all — so an empty player layer was quietly taxing every stroke on every
+     slide for a feature that page never uses. Attach it when a video arrives,
+     detach it the moment the last one goes. */
+  mediaLayer.remove();
+  function mediaAttach(){
+    if(!mediaLayer.isConnected) mediaHome.insertBefore(mediaLayer, canvas.nextSibling);
+  }
+  function mediaDetachIfEmpty(){
+    if(mediaLayer.isConnected && !mediaLayer.firstChild) mediaLayer.remove();
+  }
 
   function mediaSrc(m){
     const id = encodeURIComponent(m.id);
@@ -1805,6 +1837,7 @@ for(var i=0;i<cues.length;i++){
     rec.box.remove();
     rec.toggle.remove();
     delete mediaEmbeds[key];
+    mediaDetachIfEmpty();
   }
   function clearMedia(pred){
     for(const key in mediaEmbeds) if(!pred || pred(mediaEmbeds[key])) dropMedia(key);
@@ -1838,6 +1871,7 @@ for(var i=0;i<cues.length;i++){
           t.textContent = on ? "Back to video" : "Write over video";
         });
 
+        mediaAttach();
         mediaLayer.append(box, t);
         rec = mediaEmbeds[key] = { box, iframe:f, toggle:t, deckId };
       }
@@ -1916,14 +1950,167 @@ for(var i=0;i<cues.length;i++){
       : "Animations off — every page opens with its full content");
   }
 
-  /* show the current page's deck slide (if any) and hide all other decks */
+  /* ═══ LIVE DECK FRAMES ════════════════════════
+     `deckFrames` used to hold every deck the lesson had ever loaded, forever.
+     Each entry is a whole document plus its own compiled copy of the vendor
+     bundle — ~850 KB of JavaScript per deck, none of it shared, because a
+     srcdoc iframe with `sandbox="allow-scripts"` has an opaque origin and so
+     gets no HTTP cache entry and no V8 code cache. Six decks open for a
+     double period meant six of those, plus their WebGL contexts, competing
+     for the one main thread this renderer gives all of them.
+
+     A frame is fully reconstructible from state.decks[i].text, which is
+     retained anyway, so it does not have to be kept. Keep the deck on screen
+     and the ones a single press away; drop the rest and rebuild on return.
+
+     What a rebuilt frame does NOT carry back is the deck's own live DOM
+     state — a multiple-choice option the class already turned green comes
+     back ungreened. Step position survives (the host owns it and re-sends it
+     with lf-show), and the ink is the presenter's, never the deck's. That is
+     the whole of the trade. */
+  const MAX_LIVE_DECKS = 3;
+  const frameUse = [];             // deckIds, most recently shown last
+  /* Declared here rather than beside the pointer handlers that set it:
+     syncDeck reads it, and syncDeck can run from an iframe load event before
+     the drawing section has been reached. */
+  let inkBusy = false;
+
+  function ensureFrame(deckId){
+    if(deckId == null) return null;
+    const key = String(deckId);
+    let frame = deckFrames[key];
+    if(!frame){
+      const deck = state.decks.find(d => String(d.id) === key);
+      if(!deck) return null;
+      frame = document.createElement("iframe");
+      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("allowtransparency", "true");
+      frame.title = "Slides — " + (deck.name || "Deck");
+      frame.style.display = "none";
+      /* Registered, and the document set, BEFORE the element joins the page.
+         Appending an iframe fires a load event for its initial about:blank
+         synchronously — so with syncDeck now building frames, an unregistered
+         frame meant syncDeck → ensureFrame → appendChild → load → syncDeck,
+         all the way down, building a new document at every level. Both halves
+         of the fix matter: registering first makes the re-entrant call find
+         the frame instead of making another, and the guard in syncDeck stops
+         the recursion outright.
+
+         The listener is deliberately NOT `once`: the about:blank load may get
+         there before the srcdoc one, and __lfLoaded has to end up true for the
+         document that actually holds the deck. syncDeck is idempotent, so
+         being called twice costs nothing. */
+      deckFrames[key] = frame;
+      frame.addEventListener("load", () => { frame.__lfLoaded = true; syncDeck(); });
+      frame.srcdoc = deck.text + deckController(state.anim);
+      deckLayer.appendChild(frame);
+    }
+    const at = frameUse.indexOf(key);
+    if(at >= 0) frameUse.splice(at, 1);
+    frameUse.push(key);
+    return frame;
+  }
+
+  /* Deck ids one press away in either direction: the whole point of a budget
+     bigger than one is that stepping across a deck boundary never waits for a
+     document to be built. */
+  function nearbyDeckIds(){
+    const ids = [];
+    [state.current, state.current + 1, state.current - 1].forEach(i => {
+      const p = state.pages[i];
+      if(!p || p.deckId == null) return;
+      const k = String(p.deckId);
+      if(!ids.includes(k)) ids.push(k);
+    });
+    return ids;
+  }
+
+  /* While this is non-zero nothing is evicted. The export builds every deck's
+     frame and then waits for it to load — and building a frame fires a load
+     event, which calls syncDeck, which used to evict the very frames the
+     export had just asked for. The export then sat out its whole timeout
+     waiting on frames that were no longer in the document, and fell back to
+     the authored deck.text for each one: five seconds slower AND wrong, since
+     a deck baked from text has never had a layout pass and so carries no
+     per-page zoom. */
+  let frameHold = 0;
+
+  function evictFrames(keep){
+    if(frameHold > 0) return;
+    const protectedIds = new Set(keep);
+    // oldest first, and never past the budget
+    for(let i = 0; i < frameUse.length && Object.keys(deckFrames).length > MAX_LIVE_DECKS; i++){
+      const key = frameUse[i];
+      if(protectedIds.has(key) || !deckFrames[key]) continue;
+      try{ deckFrames[key].remove(); }catch(err){}
+      delete deckFrames[key];
+      frameUse.splice(i--, 1);
+    }
+  }
+
+  /* Resolves when a frame has fired its load event — or after a grace period,
+     because a deck that never loads must cost the export a moment, not the
+     whole document. Never rejects. */
+  function frameReady(frame, ms){
+    if(!frame || frame.__lfLoaded) return Promise.resolve();
+    return new Promise(resolve => {
+      let done = false;
+      const finish = () => { if(done) return; done = true; clearTimeout(t); resolve(); };
+      const t = setTimeout(finish, ms || 6000);
+      frame.addEventListener("load", finish, { once:true });
+    });
+  }
+
+  /* Build every deck's frame at once and hand back a function that restores
+     the budget. Only the export/bake paths need this — they genuinely have to
+     ask every deck for its live DOM. */
+  function materialiseAll(){
+    frameHold++;
+    state.decks.forEach(d => ensureFrame(d.id));
+    let released = false;
+    return () => {
+      if(released) return;                       // idempotent — see the pre-warm
+      released = true;
+      frameHold = Math.max(0, frameHold - 1);
+      evictFrames(nearbyDeckIds());
+    };
+  }
+
+  /* Every deck live AND finished loading. */
+  function allFramesReady(){
+    return Promise.all(state.decks.map(d => frameReady(deckFrames[String(d.id)])));
+  }
+
+  /* show the current page's deck slide (if any) and hide all other decks.
+     Re-entrant by construction now — it builds frames, and building a frame
+     fires load events that call back into here. Rather than dropping the
+     nested call (which would lose the lf-show that a freshly loaded deck is
+     waiting for), remember it and run one more pass when the current one is
+     done. The bound is there because eviction and creation could otherwise
+     argue with each other forever on a pathological page order. */
+  let syncing = false, syncAgain = false;
   function syncDeck(){
+    if(syncing){ syncAgain = true; return; }
+    syncing = true;
+    try{
+      let guard = 0;
+      do { syncAgain = false; syncDeckOnce(); } while(syncAgain && ++guard < 4);
+    } finally { syncing = false; }
+  }
+
+  function syncDeckOnce(){
     deckClickRects = [];          // stale until the active deck reports back
     const page = state.pages[state.current];
     const activeId = page && page.deckId != null ? page.deckId : null;
     // Decks other than the active one never report, so prune their players
     // here; the active deck's own empty report handles everything else.
     clearMedia(rec => activeId === null || String(rec.deckId) !== String(activeId));
+
+    // the deck on screen first, so its build starts before the neighbours'
+    if(activeId != null) ensureFrame(activeId);
+    nearbyDeckIds().forEach(ensureFrame);
+    evictFrames(nearbyDeckIds());
+
     for(const id in deckFrames){
       const f = deckFrames[id];
       if(String(activeId) === String(id)){
@@ -1931,6 +2118,10 @@ for(var i=0;i<cues.length;i++){
         if(f.contentWindow)
           f.contentWindow.postMessage(
             { type:"lf-show", index:page.deckIndex, step:shownStep(page), anim:state.anim }, "*");
+        /* A frame built while the pen was already down would otherwise come up
+           animating on top of a live stroke. */
+        if(inkBusy && f.contentWindow)
+          f.contentWindow.postMessage({ type:"lf-ink", on:true }, "*");
       } else {
         f.style.display = "none";
       }
@@ -1981,6 +2172,22 @@ html.__lf-noanim *,html.__lf-noanim *::before,html.__lf-noanim *::after{
 html.__lf-noanim .scene-frame canvas{display:none!important}
 html.__lf-noanim .scene-frame .scene-fallback{display:flex!important}
 
+/* ── WHILE THE PEN IS DOWN ────────────────────────────────────────────────
+   A sandboxed srcdoc iframe is NOT site-isolated into a process of its own —
+   Chromium keeps it in the parent's renderer, and every local frame in a
+   renderer shares one main thread. So a slide's CSS keyframes and its WebGL
+   loops are in the same queue as the pen's pointerrawupdate handler, and the
+   ink is drawn whenever the slide is finished with the frame.
+
+   The teacher is either watching motion or writing on it, never both. This
+   pauses the deck's declarative animation for the length of a stroke; the JS
+   side is handled by the requestAnimationFrame hold below. Transitions are
+   deliberately NOT paused — they are short, and a half-finished reveal frozen
+   under the pen would read as a bug. */
+html.__lf-inking *,html.__lf-inking *::before,html.__lf-inking *::after{
+  animation-play-state:paused!important;
+}
+
 /* ── NO SCROLLING, EVER ───────────────────────────────────────────────────
    A slide is a fixed frame, not a document. Nothing inside a deck may ever
    present a scrollbar or a scroll offset: the auto-fit engine below is what
@@ -1997,6 +2204,66 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
 <\/style>
 <script>
 (function(){
+  /* ── THE PEN OWNS THE THREAD ───────────────────────────────────────────
+     See the html.__lf-inking rule above for why this is necessary at all.
+     That rule stops CSS animation; this stops the JavaScript, which is the
+     expensive half — a deck with ten [data-three] scenes runs ten rAF
+     callbacks per frame, and until now every one of them was serviced in
+     front of the pen.
+
+     The mechanism is deliberately blunt: while the pen is down, callbacks
+     handed to requestAnimationFrame are HELD rather than scheduled, and
+     replayed in one batch when it lifts. That covers the scene loops in
+     fx-three-runtime, anime.js's ticker, three's own setAnimationLoop and
+     anything a deck author writes by hand — none of them have to know this
+     exists. A held handle is returned NEGATIVE so cancelAnimationFrame can
+     tell the two queues apart; it is still a truthy number, which is all any
+     caller ever tests it for.
+
+     Everything this file needs for itself (the fit engine, sendRects) goes
+     through origRaf, so the frame stays responsive to the host while held. */
+  var origRaf = window.requestAnimationFrame.bind(window);
+  var origCaf = window.cancelAnimationFrame.bind(window);
+  var held = [], heldSeq = 0, inkTimer = 0;
+  window.__lfInkBusy = false;
+
+  window.requestAnimationFrame = function(cb){
+    if(!window.__lfInkBusy) return origRaf(cb);
+    var id = ++heldSeq;
+    held.push({ id:id, cb:cb });
+    return -id;
+  };
+  window.cancelAnimationFrame = function(h){
+    if(typeof h === "number" && h < 0){
+      for(var i=0;i<held.length;i++)
+        if(held[i].id === -h){ held.splice(i,1); return; }
+      return;
+    }
+    return origCaf(h);
+  };
+  function releaseHeld(){
+    if(!held.length) return;
+    var list = held; held = [];
+    origRaf(function(ts){
+      for(var i=0;i<list.length;i++){
+        try{ list[i].cb(ts); }catch(err){ /* one dead loop must not stop the rest */ }
+      }
+    });
+  }
+  function setInk(on){
+    on = !!on;
+    if(window.__lfInkBusy === on) return;
+    window.__lfInkBusy = on;
+    document.documentElement.classList.toggle("__lf-inking", on);
+    if(inkTimer){ clearTimeout(inkTimer); inkTimer = 0; }
+    /* A pointerup that never arrives — a dropped gesture, a lost capture, a
+       panel that stops reporting mid-stroke — must not leave the slide frozen
+       for the rest of the lesson. Nothing about a stroke takes eight seconds. */
+    if(on) inkTimer = setTimeout(function(){ setInk(false); }, 8000);
+    else   releaseHeld();
+  }
+  window.__lfSetInk = setInk;
+
   /* ── animation switch ──────────────────────────────────────────────────
      CSS above handles the deck's own transitions. The [data-anime] presets
      are JS, and their runtime captured \`window.anime\` at load — so the only
@@ -2053,6 +2320,9 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     };
     var origRender = proto.render;
     proto.render = function(scene, camera){
+      /* Belt and braces with the rAF hold above: a scene driven by something
+         other than requestAnimationFrame still must not draw over a stroke. */
+      if(window.__lfInkBusy) return;
       var el = this.domElement;
       if(el){
         if(document.hidden) return;
@@ -2064,6 +2334,34 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
   installGfxCap();
   window.addEventListener("load", installGfxCap);
+
+  /* ── MSAA off on a big panel ───────────────────────────────────────────
+     Antialiasing is a multisample resolve on every rendered frame, and the
+     classroom board is driven by an OPS stick with an integrated GPU. At the
+     back of a room, on a 75–86" panel, it is invisible; on the GPU it is not.
+
+     This is patched at getContext rather than on THREE.WebGLRenderer on
+     purpose: antialias is a CONSTRUCTOR argument, so catching it at the
+     renderer would mean wrapping the class and re-running every deck through
+     the build. Every deck already in the library gets it this way, today,
+     without being rebuilt. */
+  (function(){
+    var big = ((window.innerWidth || 0) * (window.innerHeight || 0)) > 2000000;
+    if(!big || !window.HTMLCanvasElement) return;
+    var proto = HTMLCanvasElement.prototype;
+    if(proto.__lfAA) return;
+    proto.__lfAA = true;
+    var orig = proto.getContext;
+    proto.getContext = function(type, attrs){
+      if(typeof type === "string" && type.indexOf("webgl") === 0){
+        attrs = Object.assign({}, attrs || {}, {
+          antialias: false,
+          powerPreference: "high-performance"
+        });
+      }
+      return orig.call(this, type, attrs);
+    };
+  })();
 
   /* ── AUTO-FIT ENGINE ───────────────────────────────────────────────────
      Why this exists: a deck sizes itself with vmin/clamp (or a fixed px
@@ -2295,6 +2593,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
 
   function sendFrozenBody(requestId){
     var out = "";
+    window.__lfBaking = true;      // same reason as sendExportDoc below
     try{
       fitActive();                       // settle the zoom before it is baked
       var live = document.querySelectorAll(".page"), keep = -1;
@@ -2324,6 +2623,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       });
       out = body.outerHTML;
     }catch(err){ out = ""; }
+    finally { window.__lfBaking = false; }
     parent.postMessage({
       type: "lf-frozen-body", requestId: requestId, html: out,
       rootClass: document.documentElement.className || "",
@@ -2332,6 +2632,13 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
 
   function sendExportDoc(requestId){
+    /* The sweep below marks every page active in turn. That is exactly the
+       signal the scene runtime watches to decide which WebGL scene to build
+       and which to tear down — so an export used to walk a 44-page deck
+       building and disposing a renderer at every step, for scenes that print
+       as their static .scene-fallback anyway (see @media print in
+       deck-base.css). Freeze the lifecycle for the length of the bake. */
+    window.__lfBaking = true;
     var ps = document.querySelectorAll(".page");
     var cur = 0, curStep = 0;
     for(var a = 0; a < ps.length; a++){
@@ -2367,6 +2674,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       bakeCanvases(liveBody, cloneBody);
       html = "<!DOCTYPE html>" + root.outerHTML;
     }catch(err){ html = ""; }
+    finally { window.__lfBaking = false; }
     show(cur, curStep);                 // put the board back as it was
     parent.postMessage({ type:"lf-export-doc", requestId:requestId, html:html }, "*");
   }
@@ -2446,6 +2754,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       show(d.index, d.step || 0);
     }
     if(d.type === "lf-click") doClick(d.x, d.y);
+    if(d.type === "lf-ink") setInk(d.on);
     /* The host fires this whenever the board could have changed size —
        full-screen enter/exit above all, where the resize event inside this
        frame is unreliable and arrives before the viewport has settled. */
@@ -2537,8 +2846,13 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
        force-losing the oldest. The pages still append, which is what the
        teacher asked for; they simply point at the deck that is already
        loaded. */
+    /* Same deck, same version, already on this board — reuse it rather than
+       loading a second copy. This used to also require a LIVE frame; with
+       frames now built on demand, the deck's presence in state.decks is the
+       real test, and requiring a frame would silently double-load a deck the
+       teacher had simply moved away from. */
     const twin = (m.code && m.version)
-      ? state.decks.find(d => d.code === m.code && d.version === m.version && deckFrames[d.id])
+      ? state.decks.find(d => d.code === m.code && d.version === m.version)
       : null;
     if(twin){
       const startIdxT = state.pages.length;
@@ -2572,14 +2886,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       tag: m.tag || null
     });
 
-    const frame = document.createElement("iframe");
-    frame.setAttribute("sandbox", "allow-scripts");
-    frame.setAttribute("allowtransparency", "true");
-    frame.title = "Loaded slides — " + sourceName;
-    frame.addEventListener("load", syncDeck, { once:true });
-    deckLayer.appendChild(frame);
-    deckFrames[deckId] = frame;
-    frame.srcdoc = text + deckController(state.anim);
+    /* No frame is built here. syncDeck materialises the deck the teacher is
+       actually on — loading six decks for a double period used to build six
+       live documents up front, all of them compiling their own copy of the
+       vendor bundle before a single slide was shown. */
 
     const startIdx = state.pages.length;
     for(let i = 0; i < count; i++){
@@ -2778,6 +3088,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     state.pages = []; state.current = -1;
     state.decks = [];
     for(const id in deckFrames){ deckFrames[id].remove(); delete deckFrames[id]; }
+    frameUse.length = 0;
     clearMedia(() => true);
     board.classList.remove("visible");
     emptyState.classList.remove("hidden");
@@ -2806,14 +3117,9 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
         chapterId: deck.chapterId || null,
         tag: deck.tag || null
       });
-      const frame = document.createElement("iframe");
-      frame.setAttribute("sandbox", "allow-scripts");
-      frame.setAttribute("allowtransparency", "true");
-      frame.title = "Restored — " + (deck.name || "Deck");
-      frame.addEventListener("load", syncDeck, { once:true });
-      deckLayer.appendChild(frame);
-      deckFrames[newId] = frame;
-      frame.srcdoc = deck.text + deckController(state.anim);
+      /* Frames are built on demand — see ensureFrame. A crash recovery that
+         restored a whole double period used to rebuild every deck's document
+         at once, which is the slowest possible moment to do it. */
     }
 
     /* v1 payloads are in pixels — divide them down by the board they are being
@@ -3099,7 +3405,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       const r = board.getBoundingClientRect();
       const url = composeCurrent(false);   // ink only — HTML comes from the frozen deck iframe
       const baked = cur.deckId != null
-        ? await requestFrozenBody(deckFrames[cur.deckId])
+        ? await requestFrozenBody(ensureFrame(cur.deckId))
         : null;
       /* Freezing a page that is ITSELF a frozen page. That page is a blank
          page — blankPage() gives it deckId:null — so there is no live deck to
@@ -3172,6 +3478,8 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       try{ deckFrames[id].remove(); }catch(err){}
       delete deckFrames[id];
     }
+    for(let i = frameUse.length - 1; i >= 0; i--)
+      if(!deckFrames[frameUse[i]]) frameUse.splice(i, 1);
     state.decks = state.decks.filter(d => used.has(String(d.id)));
   }
 
@@ -3287,13 +3595,79 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     return false;
   }
 
+  /* Board-pixel bbox of one stroke, padded by its own width. */
+  function strokeBox(s){
+    const pts = s.pts;
+    if(!pts || !pts.length) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for(let i=0;i<pts.length;i++){
+      const x = pts[i].x * boardW, y = pts[i].y * boardH;
+      if(x < x0) x0 = x; if(y < y0) y0 = y;
+      if(x > x1) x1 = x; if(y > y1) y1 = y;
+    }
+    const pad = strokePx(s) / 2 + 2;
+    return { x:x0 - pad, y:y0 - pad, w:(x1 - x0) + pad*2, h:(y1 - y0) + pad*2 };
+  }
+
+  /* Dragging the stroke eraser through dense ink used to clear the whole
+     buffer and repaint every surviving stroke, once per frame, for the length
+     of the drag — O(all strokes × all points) per frame on the one gesture
+     most likely to happen on a page that already has a lot of ink on it.
+     Only the removed strokes' own boxes changed, so only those are rebuilt:
+     clear that rect, repaint the strokes that still overlap it, blit that
+     rect. `redraw()` stays for everything structural (page turn, undo, clear,
+     resize), where the whole surface really is stale. */
+  let eraseDirty = null;                   // board-pixel rect, union over the drag
+  function repaintRegion(box){
+    const page = state.pages[state.current];
+    if(!page) return;
+    const surf = cssRectToSurf(box.x, box.y, box.w, box.h);
+    if(surf.w <= 0 || surf.h <= 0) return;
+    bctx.save();
+    bctx.setTransform(1,0,0,1,0,0);
+    bctx.clearRect(surf.x, surf.y, surf.w, surf.h);
+    bctx.restore();
+    bctx.save();
+    bctx.beginPath();
+    bctx.rect(box.x, box.y, box.w, box.h);
+    bctx.clip();
+    const list = page.strokes;
+    for(let i=0;i<list.length;i++){
+      const b = strokeBox(list[i]);
+      if(!b) continue;
+      if(b.x > box.x + box.w || b.x + b.w < box.x ||
+         b.y > box.y + box.h || b.y + b.h < box.y) continue;   // no overlap
+      paintStroke(list[i], bctx, boardW, boardH);
+    }
+    bctx.globalCompositeOperation = "source-over";
+    bctx.restore();
+    present({ dirty: surf });
+  }
+  function unionBox(a, b){
+    if(!a) return b;
+    if(!b) return a;
+    const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+    const x1 = Math.max(a.x + a.w, b.x + b.w), y1 = Math.max(a.y + a.h, b.y + b.h);
+    return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+  }
+
   function eraseStrokesAt(p){
     const page = state.pages[state.current];
     const before = page.strokes.length;
-    page.strokes = page.strokes.filter(s => s.mode === "erase" || !strokeHit(p, s));
+    const kept = [];
+    for(let i=0;i<page.strokes.length;i++){
+      const s = page.strokes[i];
+      if(s.mode === "erase" || !strokeHit(p, s)) kept.push(s);
+      else eraseDirty = unionBox(eraseDirty, strokeBox(s));
+    }
+    page.strokes = kept;
     if(page.strokes.length !== before){
       if(eraseRaf) return;
-      eraseRaf = requestAnimationFrame(() => { eraseRaf = 0; redraw(); });
+      eraseRaf = requestAnimationFrame(() => {
+        eraseRaf = 0;
+        const box = eraseDirty; eraseDirty = null;
+        if(box) repaintRegion(box); else redraw();
+      });
     }
   }
 
@@ -3461,6 +3835,29 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     if(!laserRaf && laserPts.length){ laserPts = []; present(); }
   }
 
+  /* ═══ THE DECK STOPS WHILE THE PEN IS DOWN ════
+     The single biggest thing left on this board's frame budget was not in the
+     ink path at all. A deck iframe is sandboxed but same-process, so its
+     scene loops and the pen's pointerrawupdate handler share one main thread;
+     a 44-page deck with ten [data-three] scenes was running ten callbacks per
+     frame in front of every stroke, whichever slide was showing.
+
+     So the deck is told. `lf-ink` goes to EVERY live frame, not just the
+     active one — a hidden frame's rAF is throttled rather than stopped, and
+     throttled is not the same as silent. See deckController for what the
+     other end does with it. */
+  function setInkBusy(on){
+    on = !!on;
+    if(inkBusy === on) return;
+    inkBusy = on;
+    for(const id in deckFrames){
+      const f = deckFrames[id];
+      try{
+        if(f && f.contentWindow) f.contentWindow.postMessage({ type:"lf-ink", on }, "*");
+      }catch(err){ /* a frame mid-load catches the next gesture */ }
+    }
+  }
+
   canvas.addEventListener("pointerdown", e => {
     const page = state.pages[state.current];
     if(!page) return;
@@ -3469,12 +3866,16 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     rawFed = false;                 // this gesture has not been raw-fed yet
     const p = pos(e);
     hoverPt = p;
+    setInkBusy(true);
 
     if(state.tool === "laser"){ laserInside = true; pushLaser(p); return; }
 
     // tap landed on a .clickable element of the loaded deck →
     // forward a real click to it instead of starting a stroke
     if(clickableAt(p)){
+      /* This one wants the deck AWAKE — it is about to be clicked, and the
+         answer it reveals is usually the thing that animates. */
+      setInkBusy(false);
       const f = activeDeckFrame();
       if(f && f.contentWindow)
         f.contentWindow.postMessage({ type:"lf-click", x:p.x, y:p.y }, "*");
@@ -3607,8 +4008,9 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       flushRaw();          // the tail of a fast flick lives in here
       endStroke();
       erasing = false;
-      if(eraseRaf){ cancelAnimationFrame(eraseRaf); eraseRaf = 0; redraw(); }
+      if(eraseRaf){ cancelAnimationFrame(eraseRaf); eraseRaf = 0; eraseDirty = null; redraw(); }
       if(ringTools[state.tool]) scheduleRing();
+      setInkBusy(false);   // the deck may move again
       scheduleRecover();
     })
   );
@@ -3622,6 +4024,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   /* ═══ CHROME / UI SYNC ════════════════════════ */
   let dotCur = -1;                 // which page dot currently carries .cur
   let boardClass = "";             // last value written to board.className
+  let boardSettled = false, settleTimer = 0;   // entry fade done — retire the transition
   function updateChrome(){
     const n = state.pages.length, c = state.current;
     const page = state.pages[c];
@@ -3651,7 +4054,12 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     // Written only on a real change. Assigning className unconditionally
     // invalidates style for the board and everything under it — the deck
     // iframe and the ink canvas included — on every single press.
-    const bc = "board tool-" + state.tool + (n ? " visible" : "");
+    /* `settled` has to be part of the computed string, not a stray
+       classList.add: this assignment REPLACES className, so anything added
+       out of band is wiped on the next tool change or page turn. */
+    if(n && !boardSettled && !settleTimer)
+      settleTimer = setTimeout(() => { settleTimer = 0; boardSettled = true; updateChrome(); }, 400);
+    const bc = "board tool-" + state.tool + (n ? " visible" : "") + (boardSettled ? " settled" : "");
     if(bc !== boardClass) board.className = boardClass = bc;
     renderRails();
   }
@@ -3937,13 +4345,40 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     setTimeout(() => { try{ vBatchCode.focus(); }catch(err){} }, 60);
   }
 
+  /* Rebuilding an evicted deck's document is the one cost the frame budget
+     adds to an export, and it is entirely hideable: start it the moment the
+     teacher commits to exporting, so the decks are parsing while the vars
+     form is on screen and the covers are being measured, rather than after.
+     Ref-counted and idempotent — exportPDF takes its own hold, so whichever
+     of the two finishes last is the one that lets the budget close again. */
+  let exportPreWarm = null;
+  let preWarmTimer = 0;
+  function preWarmDecks(){
+    if(exportPreWarm) return;
+    exportPreWarm = materialiseAll();
+    /* Mirrors the `exporting` guard's own safety net: an overlay dismissed by
+       some route that never reaches cancel must not pin every deck live for
+       the rest of the lesson. */
+    clearTimeout(preWarmTimer);
+    preWarmTimer = setTimeout(releasePreWarm, 120000);
+  }
+  function releasePreWarm(){
+    clearTimeout(preWarmTimer); preWarmTimer = 0;
+    if(!exportPreWarm) return;
+    const rel = exportPreWarm; exportPreWarm = null;
+    rel();
+  }
+
   function beginExport(through){
+    preWarmDecks();
     if(!state.batchId) return exportPDF({ through });
     openExportVars(through);
   }
 
-  document.getElementById("cancelVars").addEventListener("click", () =>
-    varsOverlay.classList.remove("show"));
+  document.getElementById("cancelVars").addEventListener("click", () => {
+    varsOverlay.classList.remove("show");
+    releasePreWarm();                 // not exporting after all
+  });
 
   document.getElementById("confirmVars").addEventListener("click", () => {
     const lec = Number(vLecture.value);
@@ -4225,7 +4660,7 @@ html,body{margin:0!important;padding:0!important}
   /* Ask one deck's live frame for its current DOM. Resolves to null — never
      rejects, never hangs — so a silent frame only costs the fallback. */
   function requestDeckSnapshot(deck){
-    const frame = deckFrames[deck.id];
+    const frame = deckFrames[String(deck.id)];
     if(!frame || !frame.contentWindow) return Promise.resolve(null);
     return new Promise((resolve) => {
       const requestId = "snap_" + deck.id + "_" + Date.now();
@@ -4443,6 +4878,17 @@ html,body{margin:0!important;padding:0!important}
        do on the board, while painting nothing — no flash of six decks
        strobing through their slides behind the toast. Restored below in a
        finally, so a bake that throws does not leave the board wrong. */
+    /* Frames are kept to a budget now (see MAX_LIVE_DECKS), so on a long
+       lesson most decks have no live document at all by the time Export is
+       pressed. requestDeckSnapshot would resolve them to null and the bake
+       would silently fall back to deck.text — the authored slide, without
+       whatever the class actually did to it. This is the one path that has a
+       real claim on every deck at once: build them all, and hand the budget
+       back in the same finally that restores visibility. */
+    const restoreBudget = materialiseAll();
+    releasePreWarm();               // this hold supersedes the pre-warm's
+    await allFramesReady();
+
     const shown = new Map();
     for(const id in deckFrames){
       const f = deckFrames[id];
@@ -4456,6 +4902,7 @@ html,body{margin:0!important;padding:0!important}
       shown.forEach(([display, visibility], f) => {
         f.style.display = display; f.style.visibility = visibility;
       });
+      restoreBudget();
     }
     for(let di = 0; di < state.decks.length; di++){
       const deck = state.decks[di];

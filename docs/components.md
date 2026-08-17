@@ -161,6 +161,13 @@ Modifiers: `.compact` (tighter padding, ≥6 columns), `.center` (centre cells),
 Cell helpers: `td.num` (right-aligned, math font), `td.note-cell` (italic muted
 footer row spanning the table), `.ok` (✓ green), `.no` (✗ red).
 
+**Figure as the row header.** A "remember these bodies" sheet pairs a small
+schematic with its formula, so the figure *is* the row label: put the
+`<svg class="dgm">` straight into the `td.prop` (unstepped, like any other row
+header) and step only the formula cell. `deck-base.css` sizes a bare `svg.dgm` /
+`svg.gph` inside a `td.prop` — without it an SVG in a table cell has no
+intrinsic size and collapses to a thumbnail. Never fix it with an inline style.
+
 ### `formula-sheet` / inline math
 
 Script-free by design — survives PDF export.
@@ -400,7 +407,9 @@ that element becomes visible.
 | `data-anime="count"` | an element whose text is a number | counts up to that number |
 | `data-anime="pulse"` | any non-`.step` element | one gentle attention pulse |
 | `data-anime="float"` | a decorative mark | slow endless bob |
+| `class="mv-slide"` / `"mv-spin"` | a shape (or `<g>`) inside an `svg.dgm` | the body translates bodily / turns about its own centre — the translation-vs-rotation pair, pure CSS |
 | `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
+| `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle turning, with `ω` drawn **along the axle** in the right-hand sense — that `ω` stands on the plane rather than lying in it. `data-sense="cw"` reverses both |
 | `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
 | `data-three="solid-angle-cone"` | `<div class="scene-frame">` | cone of semi-vertical angle α on a sphere |
 | `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
@@ -423,6 +432,10 @@ that element becomes visible.
 | `data-three="bounce-decay"` | `<div class="scene-frame">` | a ball dropped from `h` bouncing with `e`, leaving a faint marker at every apex so `h`, `e²h`, `e⁴h` … accumulate on the board as a visible geometric progression. The G.P. *is* the slide, and a G.P. is made of successive bounces |
 | `data-three="max-ke-loss"` | `<div class="scene-frame">` | the instant the max-loss formula is about: `m` and `2m` meet through a spring, the two velocities close on each other, and at **maximum compression** they are equal. Under the track the total KE stands as one bar in two parts — an indigo part that is the KE of the centre of mass, which no interaction can touch, and a gold part, exactly `½μ(u₂−u₁)²`, that drains into the green spring bar and comes back. The maximum possible loss is the whole of the gold part **and nothing more** — a still figure can assert that, it cannot show it |
 | `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle, turning, with `ω` drawn **along the axle** in the right-hand sense — the one thing a still figure cannot show, that `ω` stands on the axis rather than lying in the plane. `data-sense="ccw"` (default) turns anticlockwise seen from above and points `ω` up / out of the plane; `data-sense="cw"` reverses both |
+| `data-three="spin-top"` | `<div class="scene-frame">` | a top spinning on its point with `L` drawn **along the axle**, and the axle itself walking slowly round the vertical. The hook for angular momentum: the thing that keeps the top up is a vector nobody can see, and it lives on the axis |
+| `data-three="cross-product"` | `<div class="scene-frame">` | `r` and `v` lying in a plane with `L = r × v` **standing on** that plane, while `v` swings from 15° to 165° so the answer grows, peaks at 90° and dies back. The two facts a still figure cannot carry: the product leaves the plane, and its length is `sin θ` |
+| `data-three="conical-pendulum"` | `<div class="scene-frame">` | the bob going round its cone: about the ring's centre `B`, `L` stands still on the axis; about the apex `A` it leans by the string's angle and **precesses with the bob**. "Angular momentum depends on the point of observation" is a statement about two answers at once, so it needs both drawn together |
+| `data-three="torque-lever"` | `<div class="scene-frame">` | a spanner on its nut: `r` along the shaft, `F` swinging at its tip, `τ = r × F` standing on the pivot with a cyan arc for the sense it turns in. The torque twin of `cross-product` |
 
 ```html
 <div class="step">
@@ -785,6 +798,7 @@ never needs a `style` attribute to draw one.
 | `.water` `.wave` `.hull` `.sail` `.mast` | the river band and the boat on it |
 | `.stair` `.figr` (`.b`) | escalator treads and the person on them |
 | `text.lab` / `text.num` | labels (UI face) / numbers (math face) |
+| `.mv-slide` / `.mv-spin` | the same body shown **translating** (every point moves alike) and **rotating** about its own centre (no point leaves). CSS animation on the shape, so it needs no script and flattens in print — put it on the shape or a `<g>`, never on a `.step` |
 | `.traj` (`.b` gold, `.w` white) | a free path through space — a trajectory, a river crossing, a spiral |
 | `.dot` (`.b` indigo, `.w` white) | the body itself, marked on the figure |
 | `.guide` | a dashed projection / construction line |
@@ -858,11 +872,29 @@ run short enough for its column.
 | `rail` | long-exposure speed streaks down the right, a track with sleepers low across the board — for the constant-velocity / relative-motion chapters |
 | `power` | energy leaving a source: streamlines fanning off down the right-hand side with the dashes **creeping along them**, one faint rotor low-right, a transmission span along the bottom edge — for the Work / Energy / Power chapter. The creep is a CSS animation on `.motif-power .flow` (no script, flattened in `@media print`), so the field reads as a *rate* rather than a picture |
 | `well` | a potential landscape low across the board: a well with the bead resting in its minimum, an empty crest further along, and the two levels dashed back to a pale axis — for the equilibrium / potential-energy boards |
+| `inertia` | the definition itself, reduced to texture: a spin axis standing low-right, a body's rings **turning about it**, and one point mass carried round its own orbit at radius `r` with the radius drawn out to it — for the Moment of Inertia / rotation chapters. The rings turn by CSS animation (`.motif-inertia .spin` / `.orbit`, no script, flattened in `@media print`), because a moment of inertia is about a body that is *turning* and a still ring is only a circle. This motif also switches on the persistent WebGL backdrop below |
 | `collision` | the impact itself: two lines of approach converging on a contact node low-right, three rings **breathing outward** from that node, the line of centres crossing it dashed, and a decaying bounce train along the bottom edge — for the Collision chapter. The rings are a CSS animation on `.motif-collision .burst` (no script, flattened in `@media print`), so the board carries the *instant* rather than a picture of two balls |
+| `torque` | the cross product as texture: a pivot low-right with an arm **turning** about it, a force across the end of that arm, the sense it turns in creeping the other way, and the axis the answer stands on running through the pivot — plus a balance beam rocking at the bottom left for the rotational-equilibrium half of the chapter. The arm turns by CSS animation (`.motif-torque .lever` / `.turn` / `.beam`, no script, flattened in `@media print`), because a torque is a thing that *turns* something and a still lever is only a stick. Like `inertia`, this motif also switches on the persistent WebGL backdrop below |
 
 It is texture, never information (rule 11): it sits behind the writing area at
 a fraction of an opacity, and `@media print` drops it further. Authors do not
 reference `#bg` — they set `"motif"` in the manifest and nothing else.
+
+### Persistent WebGL backdrop — `manifest.bg_scene`
+
+A motif may carry a 3D companion: `canvas.bg-scene`, a sibling of `.page`
+inside `#bg` and **behind** the motif SVG, holding slowly turning wireframe
+bodies (ring, disc, rod, shell) drifting in depth. `build-deck.mjs` emits it
+and inlines three.js for it; the author writes nothing. On by default for the
+`inertia` motif, forced with `"bg_scene": true` (or `--bg-scene <name>`), off
+with `--no-bg-scene`.
+
+It is decoration in the strictest sense: scripts are stripped for PDF export
+and a room with no GPU never gets it, so the **motif SVG is the real backdrop**
+and the canvas only adds depth on top of it. It inits after `load` behind a
+zero-size guard, a `WebGLRenderer` try/catch and a `prefers-reduced-motion`
+check, stops rendering while the tab is hidden, and is `display:none` in print.
+Nothing on any slide may depend on it (rules 7, 11, 20).
 
 ## Declared slide merges — `manifest.merged_slides`
 

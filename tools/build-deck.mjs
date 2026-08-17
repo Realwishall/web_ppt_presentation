@@ -34,6 +34,7 @@ const flag = (name) => {
   const i = argv.indexOf(name);
   return i !== -1 && argv[i + 1] ? argv[i + 1] : null;
 };
+const has = (name) => argv.indexOf(name) !== -1;
 
 const TOOLS = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 
@@ -430,17 +431,223 @@ const motifSvg = {
     <path d="M0 884 H760" stroke="#f5c542" stroke-opacity="0.05" stroke-width="1.6" stroke-dasharray="30 52"/>
   </svg>`,
 
+  /* Chapter motif "inertia": the rotational-inertia chapter's signature, which
+     is the definition itself — an axis, a radius, and a mass going round. One
+     spin axis stands low-right; a body's rings turn about it (CSS, so it costs
+     no script and flattens in print); a single point mass rides its own orbit
+     at radius r with the radius drawn to it. A rod and a disc edge sit further
+     out as the two bodies the chapter keeps coming back to. Right of centre
+     and below the writing band throughout — texture, never information
+     (rule 11).                                                               */
+  inertia: `<svg class="motif-inertia" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-moi-glow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.16"/>
+        <stop offset="0.5" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-moi-axis" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.28" stop-color="#f5c542" stop-opacity="0.20"/>
+        <stop offset="0.78" stop-color="#f5c542" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <circle cx="1210" cy="512" r="330" fill="url(#lf-moi-glow)"/>
+    <!-- the spin axis the whole chapter is about -->
+    <path d="M1210 86 V928" stroke="url(#lf-moi-axis)" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- the body: rings turning about that axis, seen in perspective -->
+    <g class="spin" fill="none" stroke="#7c8cff" stroke-linecap="round">
+      <ellipse cx="1210" cy="512" rx="286" ry="86" stroke-opacity="0.20" stroke-width="2.6"/>
+      <ellipse cx="1210" cy="512" rx="200" ry="60" stroke-opacity="0.13" stroke-width="2.2" stroke-dasharray="26 34"/>
+    </g>
+    <g class="spin slow" fill="none" stroke="#7c8cff" stroke-linecap="round">
+      <ellipse cx="1210" cy="512" rx="352" ry="106" stroke-opacity="0.10" stroke-width="2"   stroke-dasharray="18 46"/>
+      <ellipse cx="1210" cy="512" rx="116" ry="35"  stroke-opacity="0.16" stroke-width="2.4"/>
+    </g>
+    <!-- one point mass on its own orbit, with r drawn out to it -->
+    <g class="orbit">
+      <path d="M1210 512 H1462" stroke="#f5c542" stroke-opacity="0.13"
+            stroke-width="2.2" stroke-dasharray="14 20"/>
+      <circle cx="1462" cy="512" r="11" fill="#f5c542" fill-opacity="0.16"/>
+    </g>
+    <!-- the two bodies the chapter keeps returning to, further out and faint -->
+    <g class="spin rev" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-linecap="round">
+      <ellipse cx="1210" cy="512" rx="430" ry="130" stroke-width="1.8" stroke-dasharray="10 58"/>
+    </g>
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-linecap="round">
+      <path d="M96 848 H520" stroke-width="3"/>
+      <path d="M308 806 V890" stroke-width="2.2" stroke-dasharray="12 16"/>
+      <ellipse cx="742" cy="846" rx="132" ry="34" stroke-width="2.2"/>
+      <path d="M742 796 V896" stroke-width="2" stroke-dasharray="12 16"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "torque": the angular-momentum / torque board's signature,
+     which is the cross product itself — a pivot, an arm reaching out from it,
+     a force across the end of that arm, and the answer standing on the axis
+     rather than lying in the plane. The arm turns about the pivot and the
+     sense-arc creeps the other way (CSS only, no script), because a torque is
+     a thing that *turns* something and a still lever is only a stick. A
+     balance beam rocks gently at the bottom left for the rotational-
+     equilibrium half of the chapter. Right of centre and low, clear of the
+     writing band — texture, never information (rule 11).                     */
+  torque: `<svg class="motif-torque" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-tq-glow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.17"/>
+        <stop offset="0.55" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-tq-axis" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.30" stop-color="#f5c542" stop-opacity="0.22"/>
+        <stop offset="0.80" stop-color="#f5c542" stop-opacity="0.14"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <circle cx="1210" cy="500" r="340" fill="url(#lf-tq-glow)"/>
+    <!-- the axis the answer stands on -->
+    <path d="M1210 74 V916" stroke="url(#lf-tq-axis)" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M1198 128 l12 -46 l12 46 z" fill="#f5c542" fill-opacity="0.16"/>
+    <!-- the plane the arm sweeps, seen edge-on -->
+    <g fill="none" stroke="#7c8cff" stroke-linecap="round">
+      <ellipse cx="1210" cy="500" rx="312" ry="94" stroke-opacity="0.16" stroke-width="2.4"/>
+      <ellipse cx="1210" cy="500" rx="196" ry="59" stroke-opacity="0.10" stroke-width="2" stroke-dasharray="20 30"/>
+    </g>
+    <!-- r reaching out of the pivot, with F across its end -->
+    <g class="lever" fill="none" stroke-linecap="round">
+      <path d="M1210 500 H1502" stroke="#f5c542" stroke-opacity="0.20" stroke-width="3"/>
+      <circle cx="1502" cy="500" r="9" fill="#f5c542" fill-opacity="0.18" stroke="none"/>
+      <path d="M1502 500 V386" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2.8"/>
+      <path d="M1490 392 l12 -34 l12 34 z" fill="#ffffff" fill-opacity="0.16" stroke="none"/>
+    </g>
+    <!-- the sense it turns in -->
+    <g class="turn" fill="none" stroke="#56ccf2" stroke-opacity="0.13" stroke-linecap="round">
+      <path d="M1210 500 m-150 0 a150 150 0 1 1 96 140" stroke-width="2.6" stroke-dasharray="16 26"/>
+    </g>
+    <circle cx="1210" cy="500" r="13" fill="#7c8cff" fill-opacity="0.24"/>
+    <!-- rotational equilibrium, at rest and far from the pen -->
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-linecap="round">
+      <path d="M392 862 l-40 44 h80 z" stroke-width="2.4"/>
+      <path d="M262 792 H150" stroke-width="2" stroke-dasharray="10 18"/>
+    </g>
+    <g class="beam" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-linecap="round">
+      <path d="M150 806 H634" stroke-width="3.4"/>
+      <rect x="176" y="774" width="46" height="32" stroke-width="2"/>
+      <rect x="566" y="784" width="30" height="22" stroke-width="2"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque`);
   process.exit(1);
 }
 
-const persistentLayers = `<div id="bg" aria-hidden="true">
+/* ------------------------------------------ persistent WebGL backdrop -----
+   A motif may ask for a 3D companion layer: a canvas sibling of .page, behind
+   the motif SVG, carrying slowly turning wireframe bodies. It is decoration in
+   the strict sense of rule 11 — scripts are stripped for PDF export and a room
+   with no GPU never sees it, so the SVG motif above is the real backdrop and
+   this only adds depth. Opt in with manifest "bg_scene": true (implied by the
+   "inertia" motif) and off with --no-bg-scene.                               */
+const bgScene = has('--no-bg-scene')
+  ? null
+  : (flag('--bg-scene') || manifest.bg_scene || ((motif === 'inertia' || motif === 'torque') ? 'inertia' : null));
+const bgSceneName = bgScene === true ? 'inertia' : bgScene;
+
+const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
+  <canvas class="bg-scene" data-bg-scene="${esc(bgSceneName)}"></canvas>` : ''}
   ${motifSvg}
 </div>${noKicker ? '' : `
 <div class="kicker-tag">${esc(kicker)}</div>`}`;
+
+/* The runtime for that canvas. Self-contained, no-op when the canvas is
+   absent, when three.js failed to inline, or when WebGL is unavailable; it
+   guards a zero-size canvas by waiting a frame, re-sizes on resize, and it
+   stops rendering while the tab is hidden. Nothing on a slide depends on it
+   (rules 7, 11, 20).                                                         */
+const bgSceneFx = !bgSceneName ? '' : `<script>
+(function(){
+  var cv = document.querySelector('canvas.bg-scene');
+  if (!cv) return;
+  window.addEventListener('load', function(){
+    var T = window.THREE;
+    if (!T || !T.WebGLRenderer) return;                       // lib missing -> silent
+    var reduce = false;
+    try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    function start(){
+      var w = cv.clientWidth, h = cv.clientHeight;
+      if (!w || !h) { requestAnimationFrame(start); return; } // zero-size guard
+      var renderer;
+      try {
+        renderer = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true });
+      } catch (e) { return; }                                 // no WebGL -> silent
+      try {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(w, h, false);
+
+        var scene  = new T.Scene();
+        var camera = new T.PerspectiveCamera(42, w / h, 0.1, 200);
+        camera.position.set(0, 3.4, 26);
+        camera.lookAt(0, 0, 0);
+
+        var INDIGO = 0x7c8cff, GOLD = 0xf5c542;
+        function mat(c, o){
+          return new T.LineBasicMaterial({ color: c, transparent: true, opacity: o });
+        }
+        function wire(geo, c, o){
+          return new T.LineSegments(new T.WireframeGeometry(geo), mat(c, o));
+        }
+
+        /* The four bodies the chapter is built on. Each turns about ITS OWN
+           axis, because that is the only thing the picture has to say. They
+           live right of centre and low, clear of the writing area.          */
+        var bodies = [];
+        function add(obj, pos, spin, tilt){
+          obj.position.set(pos[0], pos[1], pos[2]);
+          obj.rotation.x = tilt;
+          scene.add(obj);
+          bodies.push({ o: obj, s: spin });
+        }
+        add(wire(new T.TorusGeometry(3.1, 0.10, 6, 64), INDIGO, 0.30),
+            [13.5, -1.4, -10], 0.16, Math.PI / 2 - 0.42);                    // ring
+        add(wire(new T.CylinderGeometry(2.5, 2.5, 0.34, 34, 1), INDIGO, 0.22),
+            [-13.0, -5.2, -14], 0.11, 0.40);                                 // disc
+        add(wire(new T.BoxGeometry(7.4, 0.26, 0.26), GOLD, 0.16),
+            [-2.0, -8.6, -9], 0.09, 0.22);                                   // rod
+        add(wire(new T.SphereGeometry(2.4, 18, 12), INDIGO, 0.15),
+            [15.5, -8.4, -16], 0.07, 0);                                     // shell
+
+        function resize(){
+          var nw = cv.clientWidth, nh = cv.clientHeight;
+          if (!nw || !nh) return;
+          camera.aspect = nw / nh; camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh, false);
+        }
+        window.addEventListener('resize', resize);
+
+        var t0 = performance.now();
+        function frame(now){
+          requestAnimationFrame(frame);
+          if (document.hidden) return;
+          var dt = Math.min((now - t0) / 1000, 0.05); t0 = now;
+          if (!reduce){
+            for (var i = 0; i < bodies.length; i++) bodies[i].o.rotation.y += bodies[i].s * dt;
+            camera.position.x = Math.sin(now / 24000) * 1.5;
+            camera.lookAt(0, 0, 0);
+          }
+          renderer.render(scene, camera);
+        }
+        requestAnimationFrame(frame);
+      } catch (e) { /* a broken backdrop must never blank a slide */ }
+    }
+    start();
+  });
+})();
+</script>`;
 
 /* ------------------------------------------- standalone fallback (rule 6) -- */
 const fallback = `<script>
@@ -604,6 +811,7 @@ const VENDOR_FILES = { anime: 'anime.umd.min.js', three: 'three.iife.min.js' };
 const libsAsked = new Set(Array.isArray(manifest.libs) ? manifest.libs : []);
 if (/\bdata-anime\s*=/.test(body)) libsAsked.add('anime');
 if (/\bdata-three\s*=/.test(body)) libsAsked.add('three');
+if (bgSceneName) libsAsked.add('three');       // the persistent WebGL backdrop
 
 let vendorScripts = '';
 let vendorBytes = 0;
@@ -1049,6 +1257,9 @@ ${lightsFx}
 ${animeFx}
 
 ${threeFx}
+
+<!-- Persistent WebGL backdrop (no-op without canvas.bg-scene) -->
+${bgSceneFx}
 
 <!-- Screw-gauge instrument (no-op without [data-sim="screw-gauge"]) -->
 ${simFx}

@@ -163,6 +163,54 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
    the right of the writing area, and it is texture: the class never reads a
    value off it (rule 11).                                                    */
 #bg svg.motif-well{opacity:.44}
+/* Chapter motif "inertia" (manifest "motif":"inertia"): the rotational-inertia
+   chapter's own signature — one spin axis standing low-right with a body's
+   rings turning about it, and a point mass carried round on its own orbit at
+   radius r. It is the Σmr² picture reduced to texture: an axis, a radius, a
+   mass going round. Everything is right of centre and below the writing band,
+   and the class never reads a value off it (rule 11).
+
+   The rings turn by CSS (no script), which is the point — a moment of inertia
+   is about a body that is *turning*, and a still ring is just a circle. Print
+   and prefers-reduced-motion both flatten it (rules 11, 20).                 */
+#bg svg.motif-inertia{opacity:.56}
+#bg svg.motif-inertia .spin{transform-box:fill-box;transform-origin:50% 50%;
+    animation:lf-moi-spin 46s linear infinite}
+#bg svg.motif-inertia .spin.slow{animation-duration:78s}
+#bg svg.motif-inertia .spin.rev{animation-direction:reverse;animation-duration:62s}
+#bg svg.motif-inertia .orbit{transform-box:fill-box;transform-origin:50% 50%;
+    animation:lf-moi-spin 34s linear infinite}
+@keyframes lf-moi-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-inertia .spin,#bg svg.motif-inertia .orbit{animation:none}}
+/* Chapter motif "torque" (manifest "motif":"torque"): the cross product as
+   texture — a pivot low-right, an arm turning about it with a force across its
+   end, the sense it turns in creeping the other way, and the axis the answer
+   stands on running through the pivot. A balance beam rocks at the bottom left
+   for the rotational-equilibrium half of the chapter. The arm turns by CSS
+   (no script), which is the point: a torque is a thing that *turns* something,
+   and a still lever is only a stick. Print and prefers-reduced-motion flatten
+   it, and the class never reads a value off it (rules 11, 20).              */
+#bg svg.motif-torque{opacity:.58}
+#bg svg.motif-torque .lever{transform-box:view-box;transform-origin:1210px 500px;
+    animation:lf-moi-spin 58s linear infinite}
+#bg svg.motif-torque .turn{transform-box:view-box;transform-origin:1210px 500px;
+    animation:lf-moi-spin 104s linear infinite reverse}
+#bg svg.motif-torque .beam{transform-box:view-box;transform-origin:392px 806px;
+    animation:lf-tq-rock 26s ease-in-out infinite}
+@keyframes lf-tq-rock{0%,100%{transform:rotate(-3.4deg)}50%{transform:rotate(3.4deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-torque .lever,#bg svg.motif-torque .turn,
+  #bg svg.motif-torque .beam{animation:none}}
+
+/* The WebGL companion to the "inertia" motif — a persistent canvas of slowly
+   turning wireframe bodies (ring, disc, rod, shell) drifting in depth behind
+   every slide. It is a sibling of .page (rule 1), it sits *under* the motif
+   SVG, and it carries nothing: scripts are stripped for PDF export and a room
+   with no GPU never gets it, so the SVG above is the real backdrop and this is
+   only depth on top of it (rules 7, 11, 20).                                 */
+#bg canvas.bg-scene{position:absolute;inset:0;width:100%;height:100%;
+    display:block;opacity:.34;pointer-events:none}
 
 .kicker-tag{position:fixed;left:3vmin;top:3vmin;z-index:5;color:var(--gold);
     font-size:1.75vmin;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
@@ -351,6 +399,12 @@ table.data tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
 table.data td.prop{color:var(--gold);font-weight:700;
       box-shadow:inset .35vmin 0 0 rgba(245,197,66,.6)}
 table.data td.num{text-align:right;font-family:var(--font-math)}
+/* A "remember this body" sheet pairs a small schematic of the body with its
+   formula, so the FIGURE is the row header (td.prop) rather than a word. A bare
+   <svg> in a table cell has no intrinsic size and collapses to a thumbnail, so
+   the sheet is sized here once instead of with a per-deck inline style.      */
+table.data td.prop>svg.dgm,table.data td.prop>svg.gph{
+      display:block;width:100%;min-width:14vmin;max-width:26vmin;height:auto;margin:0 auto}
 table.data.compact th{padding:1.05vmin 1.3vmin}
 table.data.compact td{padding:1.05vmin 1.3vmin}
 table.data.center td{text-align:center}
@@ -695,6 +749,31 @@ svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
 svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
 svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
 
+/* Translation vs rotation, as motion rather than as two pictures.
+   The rotation chapter opens on the same rod shown twice: one sliding
+   bodily across the board, one turning about its own centre and going
+   nowhere. That difference IS the definition, and two still rods cannot
+   carry it — so it is a CSS animation on the shape itself, which means no
+   script, nothing for the host to start, and a figure that is already
+   complete and correct when the animation is flattened.
+     .mv-slide   the body translates: every point moves the same way
+     .mv-spin    the body rotates about its own centre: no point leaves
+   The travel is +/-108 user units, so draw the pair on a viewBox about 420
+   units wide and stand the body in the middle of it.
+   Put either class on the shape (or a <g> around it), never on a .step —
+   the host owns .step transform with !important (rule 20). Print and
+   prefers-reduced-motion both stop them dead (rules 11, 20).               */
+svg.dgm .mv-slide{transform-box:fill-box;transform-origin:50% 50%;
+                  animation:lf-mv-slide 5.2s cubic-bezier(.45,.02,.55,.98) infinite}
+svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
+                  animation:lf-mv-spin 4.6s linear infinite}
+@keyframes lf-mv-slide{0%{transform:translateX(-108px)}
+                       50%{transform:translateX(108px)}
+                       100%{transform:translateX(-108px)}}
+@keyframes lf-mv-spin {from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none}}
+
 /* Small-multiple grid — the "here are four graphs, which one" layout that
    this chapter repeats on nearly every slide. The GRID is never the .step;
    each `.graph-cell` is, so the class meets one figure at a time.           */
@@ -960,6 +1039,16 @@ svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
   #bg svg.motif-collision{opacity:.18!important}
   #bg svg.motif-collision .burst circle{animation:none!important;opacity:1!important}
   #bg svg.motif-well {opacity:.26!important}
+  #bg svg.motif-inertia{opacity:.20!important}
+  #bg svg.motif-inertia .spin,#bg svg.motif-inertia .orbit{animation:none!important}
+  #bg svg.motif-torque{opacity:.20!important}
+  #bg svg.motif-torque .lever,#bg svg.motif-torque .turn,
+  #bg svg.motif-torque .beam{animation:none!important}
+  /* the translation/rotation pair prints as two identical rods — the caption
+     under each is what carries the difference on paper */
+  svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none!important;transform:none!important}
+  /* the WebGL layer renders blank on export anyway — take it out cleanly */
+  #bg canvas.bg-scene{display:none!important}
   .kicker-tag,.no-print{display:none!important}
   html,body,.page{background:#080a14!important}
   .page:before{background:none!important;height:0!important}

@@ -8,16 +8,224 @@
     if (!T || !T.WebGLRenderer) return;
     try {
       var probe = document.createElement('canvas');
-      if (!(probe.getContext('webgl') || probe.getContext('experimental-webgl'))) return;
+      var pg = probe.getContext('webgl') || probe.getContext('experimental-webgl');
+      if (!pg) return;
+      /* Hand the probe's context straight back. It is never drawn into, but it
+         counts against the browser's per-page context budget just the same —
+         and this file's whole point is to stop spending that budget. */
+      var lose = pg.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
     } catch (e) { return; }
 
-    frames.forEach(function(frame){
-      try { start(frame); } catch (e) { /* a dead scene must not blank the slide */ }
-    });
+    /* ═══ SCENE LIFECYCLE ══════════════════════════════════════════════════
+       Every [data-three] scene on every page used to be built here, on load,
+       and then looped forever. A 44-page deck meant ten WebGLRenderers, ten
+       live WebGL contexts and ten requestAnimationFrame callbacks per frame —
+       for the one scene the class can actually see. Chromium evicts contexts
+       past ~16 per page, so two decks open at once also meant context-loss
+       churn mid-lecture; and because a sandboxed srcdoc iframe shares the
+       presenter's renderer process, all ten callbacks sat on the same main
+       thread as the pen.
+
+       So a scene is built when its page becomes active, paused when it
+       leaves, and disposed outright once the teacher is more than a page
+       away. A disposed scene falls back to its .scene-fallback — the same
+       static figure the PDF export prints — and rebuilds if the page comes
+       back. Live contexts: one, sometimes two. Never ten.                  */
+
+    /* Antialiasing is an MSAA resolve on every rendered frame. On a 4K
+       classroom panel driven by an OPS stick that is real money, and at
+       classroom viewing distance on a 75–86" board it buys nothing. */
+    var LF_AA = ((window.innerWidth || 0) * (window.innerHeight || 0)) <= 2000000;
+
+    /* One place that knows whether the pen is down. The host sets it via the
+       lf-ink message (see deckController in presenter.html); a deck opened
+       bare in a browser simply never has it set. */
+    function inking(){ return !!window.__lfInkBusy; }
+
+    /* A frame's loops, renderers and window listeners, so a scene can be
+       stopped and taken apart without every startX() having to return a
+       teardown of its own. */
+    function slot(frame){
+      if (!frame.__lf) frame.__lf = { loops: [], renderers: [], offs: [], built: false };
+      return frame.__lf;
+    }
+
+    /* Replaces `(function loop(){ requestAnimationFrame(loop); … })()`.
+       Three differences that matter: the tick can be paused and resumed, it
+       yields the frame entirely while the pen is down, and it is cancelled
+       when the scene is disposed instead of running until the tab closes. */
+    function lfLoop(frame, fn){
+      var s = slot(frame);
+      var rec = { fn: fn, live: false, raf: 0 };
+      rec.tick = function(){
+        rec.raf = 0;
+        if (!rec.live) return;
+        rec.raf = requestAnimationFrame(rec.tick);
+        if (inking()) return;          // the pen owns the thread until it lifts
+        try { fn(); } catch (e) { rec.live = false; }
+      };
+      rec.start = function(){
+        if (rec.live) return;
+        rec.live = true;
+        if (!rec.raf) rec.raf = requestAnimationFrame(rec.tick);
+      };
+      rec.stop = function(){
+        rec.live = false;
+        if (rec.raf){ cancelAnimationFrame(rec.raf); rec.raf = 0; }
+      };
+      s.loops.push(rec);
+      /* A scene built by the retry path above may have lost its page while it
+         was waiting for a layout. Only self-start if this really is the page
+         on screen; `lastActive < 0` is the host-less fallback, where the
+         IntersectionObserver decides instead. */
+      if (lastActive < 0 || frame.__lfPage === lastActive) rec.start();
+      return rec;
+    }
+
+    /* Registers a renderer so it can be disposed later, and is the one place
+       a renderer is handed back for assignment. */
+    function lfOwn(frame, renderer){
+      slot(frame).renderers.push(renderer);
+      return renderer;
+    }
+
+    /* window listeners a scene installs (all of them are 'resize') have to come
+       off with the scene, or a disposed renderer gets resized. */
+    function lfOn(frame, type, fn){
+      window.addEventListener(type, fn);
+      slot(frame).offs.push(function(){ window.removeEventListener(type, fn); });
+    }
+
+    function build(frame){
+      var s = slot(frame);
+      if (s.built) return;
+      s.built = true;
+      try { start(frame); }
+      catch (e) { /* a dead scene must not blank the slide */ }
+    }
+
+    function resume(frame){
+      var s = slot(frame);
+      if (!s.built) return build(frame);
+      for (var i = 0; i < s.loops.length; i++) s.loops[i].start();
+    }
+
+    function pause(frame){
+      var s = frame.__lf;
+      if (!s) return;
+      for (var i = 0; i < s.loops.length; i++) s.loops[i].stop();
+    }
+
+    /* Give the GPU everything back. The scene shows its .scene-fallback until
+       the page is next opened, which is exactly what a machine with no WebGL
+       shows — so this can never leave a slide blank. */
+    function destroy(frame){
+      var s = frame.__lf;
+      if (!s || !s.built) return;
+      pause(frame);
+      for (var i = 0; i < s.offs.length; i++) { try { s.offs[i](); } catch (e) {} }
+      for (var j = 0; j < s.renderers.length; j++){
+        var r = s.renderers[j];
+        try { r.dispose(); } catch (e) {}
+        try { r.forceContextLoss(); } catch (e) {}
+        try { if (r.domElement && r.domElement.parentNode) r.domElement.parentNode.removeChild(r.domElement); }
+        catch (e) {}
+      }
+      var canvases = frame.querySelectorAll('canvas');
+      for (var k = 0; k < canvases.length; k++) canvases[k].remove();
+      frame.classList.remove('is-live');
+      frame.__lf = null;
+    }
+
+    /* ── which page a scene lives on ─────────────────────────────────────── */
+    var pages = [].slice.call(document.querySelectorAll('.page'));
+    function pageIndexOf(frame){
+      var p = frame.closest ? frame.closest('.page') : null;
+      return p ? pages.indexOf(p) : -1;
+    }
+    frames.forEach(function(frame){ frame.__lfPage = pageIndexOf(frame); });
+
+    /* A page either side may stay BUILT but paused, so stepping onto it does
+       not pay for a fresh renderer and a shader compile mid-sentence. HOLD is
+       what may stay; CAP is what actually does — on a deck where several
+       consecutive pages each carry a scene, "one page either side" is three
+       live contexts, and the whole point of this file is not to spend them.
+       So: the page on screen, plus at most one warm neighbour. */
+    var HOLD = 1;
+    var CAP = 2;
+    var lastActive = -1;
+
+    function reconcile(active){
+      /* The host sweeps __lf-active across every page while it bakes a deck
+         for export or for a frozen page. That is a measuring pass, not a
+         teacher turning pages: reacting to it would build and dispose a
+         renderer per page, and the export prints .scene-fallback regardless.
+         Sit the whole sweep out — the class is not looking at this. */
+      if (window.__lfBaking) return;
+      if (active === lastActive) return;
+      lastActive = active;
+
+      /* Nearest first, so the budget is spent on the pages most likely to be
+         asked for next. */
+      var order = frames.slice().sort(function(a, b){
+        var da = a.__lfPage < 0 ? 0 : Math.abs(a.__lfPage - active);
+        var db = b.__lfPage < 0 ? 0 : Math.abs(b.__lfPage - active);
+        return da - db;
+      });
+
+      var kept = 0;
+      order.forEach(function(frame){
+        var d = frame.__lfPage < 0 ? 0 : Math.abs(frame.__lfPage - active);
+        if (frame.__lfPage === active){ kept++; resume(frame); return; }
+        if (d <= HOLD && kept < CAP){ kept++; pause(frame); return; }
+        destroy(frame);
+      });
+    }
+
+    function activeIndex(){
+      for (var i = 0; i < pages.length; i++)
+        if (pages[i].classList.contains('__lf-active')) return i;
+      return -1;
+    }
+
+    /* The host adds __lf-active; watching the class rather than listening for
+       lf-show means this works under the presenter, under the deck editor, and
+       under anything else that drives the same convention. */
+    if (window.MutationObserver && pages.length){
+      var mo = new MutationObserver(function(){
+        var a = activeIndex();
+        if (a >= 0) reconcile(a);
+      });
+      pages.forEach(function(p){ mo.observe(p, { attributes: true, attributeFilter: ['class'] }); });
+    }
+
+    /* A deck opened bare in a browser has no host, so nothing ever sets
+       __lf-active and the reconcile above would never start a single scene.
+       Fall back to "start what is on screen" — still lazy, still one context
+       at a time in practice, but the file keeps working on its own. */
+    var a0 = activeIndex();
+    if (a0 >= 0) reconcile(a0);
+    else setTimeout(function(){
+      if (activeIndex() >= 0) return;                 // a host turned up after all
+      if (!window.IntersectionObserver){ frames.forEach(build); return; }
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (en.isIntersecting) resume(en.target); else pause(en.target);
+        });
+      }, { rootMargin: '200px' });
+      frames.forEach(function(frame){ io.observe(frame); });
+    }, 1200);
 
     function start(frame){
       var w = frame.clientWidth, h = frame.clientHeight;
-      if (!w || !h) { requestAnimationFrame(function(){ start(frame); }); return; }
+      /* No size yet — the page is still laying out. Retry, but drop the retry
+         if the scene was disposed in the meantime, or a page the teacher has
+         already left rebuilds itself behind her. */
+      if (!w || !h) {
+        requestAnimationFrame(function(){ if (frame.__lf && frame.__lf.built) start(frame); });
+        return;
+      }
 
       var kind = (frame.getAttribute('data-three') || 'globe').trim();
       if (kind === 'screw-gauge') { startScrewGauge(frame, w, h); return; }
@@ -44,8 +252,13 @@
         startFbd2D(frame, w, h, kind); return;
       }
       if (kind === 'equilibrium-types'){ startEquilibrium(frame, w, h); return; }
+      if (kind === 'spin-top' || kind === 'cross-product' ||
+          kind === 'conical-pendulum' || kind === 'torque-lever' ||
+          kind === 'spin-axis'){
+        startRot3D(frame, w, h, kind); return;
+      }
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -84,13 +297,12 @@
         camera.aspect = nw / nh; camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfOn(frame, 'resize', resize);
+      lfLoop(frame, function loop(){
         group.rotation.y += 0.0022;
         group.rotation.x = Math.sin(Date.now() / 9000) * 0.18;
         renderer.render(scene, camera);
-      })();
+      });
     }
 
 
@@ -115,7 +327,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
           GREEN = 0x34d399, RED = 0xfb7185, INK = 0xf4f7fb;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -325,8 +537,7 @@
         a.needsUpdate = true;
       }
 
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         var nw = frame.clientWidth, nh = frame.clientHeight;
         if (!nw || !nh) return;                    /* page hidden — don't burn a GPU */
         if (nw !== lastW || nh !== lastH){
@@ -422,7 +633,7 @@
         }
 
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* ------------------------------------------------------ centre of mass ---
@@ -453,7 +664,7 @@
       var GOLD = 0xf5c542, GOLDS = 0xffe9a8, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
           INK = 0xf4f7fb, RED = 0xfb7185;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -785,14 +996,13 @@
         place(nw / nh);
         refDist = camera.position.distanceTo(lookAt);
       }
-      window.addEventListener('resize', resize);
+      lfOn(frame, 'resize', resize);
 
       var t0 = Date.now();
       var qGroup = new T.Quaternion(), qFace = new T.Quaternion(), refDist = 1;
       refDist = camera.position.distanceTo(lookAt);
       var wp = new T.Vector3();
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         var t = (Date.now() - t0) / 1000;
         if (spin){
           group.rotation.y += spin;
@@ -814,7 +1024,7 @@
           }
         }
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* ---------------------------------------------- solid angle (steradian) ---
@@ -822,7 +1032,7 @@
        Same Ω cuts patch A on the sphere and a larger patch A′ further out at r′.
        Slow auto-orbit; no OrbitControls (pointer-events are owned by the host). */
     function startSolidAngle(frame, w, h){
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -944,19 +1154,18 @@
         camera.aspect = nw / nh; camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfOn(frame, 'resize', resize);
+      lfLoop(frame, function loop(){
         group.rotation.y += 0.0035;
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* ----------------------------------------- solid angle of a cone (sr) ---
        Sphere + right circular cone of semi-vertical angle α from the centre.
        The cone cuts a spherical cap; slow auto-orbit for the classroom.       */
     function startSolidAngleCone(frame, w, h){
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -1063,12 +1272,11 @@
         camera.aspect = nw / nh; camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfOn(frame, 'resize', resize);
+      lfLoop(frame, function loop(){
         group.rotation.y += 0.004;
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* ---------------------------------------------------- screw-gauge 3D ---
@@ -1076,7 +1284,7 @@
        orbit controls. Sim drives state via __sgUpdate; view via __sgOrbit /
        __sgView (wired from data-act="orbit"|"view" buttons).                 */
     function startScrewGauge(frame, w, h){
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       renderer.domElement.style.display = 'block';
@@ -1503,10 +1711,9 @@
         camera.aspect = nw / nh; camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
+      lfOn(frame, 'resize', resize);
 
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         cur.gap += (tgt.gap - cur.gap) * 0.2;
         var targetRot = (tgt.csr / Math.max(1, tgt.divs)) * Math.PI * 2;
         var d = targetRot - cur.rot;
@@ -1524,7 +1731,7 @@
 
         applyVisual();
         renderer.render(scene, camera);
-      })();
+      });
 
       /* ---------- texture / sprite helpers ---------- */
       function makeMainScalePlate(){
@@ -1628,7 +1835,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
           RED = 0xfb7185, INK = 0xf4f7fb;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -1743,8 +1950,7 @@
 
       var t0 = Date.now(), lastW = w, lastH = h, lastBand = null;
 
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         var nw = frame.clientWidth, nh = frame.clientHeight;
         if (!nw || !nh) return;                 /* page hidden — don't burn a GPU */
         if (nw !== lastW || nh !== lastH){
@@ -1810,7 +2016,7 @@
         }
 
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* --------------------------------------------------- projectile power --
@@ -1831,7 +2037,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
           RED = 0xfb7185, INK = 0xf4f7fb;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -1956,8 +2162,7 @@
 
       var t0 = Date.now(), lastW = w, lastH = h, lastBand = null;
 
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         var nw = frame.clientWidth, nh = frame.clientHeight;
         if (!nw || !nh) return;                  /* page hidden — spare the GPU */
         if (nw !== lastW || nh !== lastH){
@@ -2023,7 +2228,7 @@
         }
 
         renderer.render(scene, camera);
-      })();
+      });
     }
 
     /* ------------------------------------------------ mechanics scenes 2D --
@@ -2077,7 +2282,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
           GREEN = 0x34d399, INK = 0xf4f7fb;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -2772,14 +2977,13 @@
         fit(nw / nh);
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
+      lfOn(frame, 'resize', resize);
 
       var t0 = Date.now();
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         if (tick) tick((Date.now() - t0) / 1000);
         renderer.render(scene, camera);
-      })();
+      });
       return live;
     }
 
@@ -2806,7 +3010,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2,
           GREEN = 0x34d399, RED = 0xf87171, INK = 0xf4f7fb;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -3081,14 +3285,13 @@
         fit(nw / nh);
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
+      lfOn(frame, 'resize', resize);
 
       var tf0 = Date.now();
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         if (tick) tick((Date.now() - tf0) / 1000);
         renderer.render(scene, camera);
-      })();
+      });
     }
 
 
@@ -3114,7 +3317,7 @@
       var GOLD = 0xf5c542, INDIGO = 0x7c8cff, INK = 0xf4f7fb, GREEN = 0x34d399,
           RED = 0xf87171;
 
-      var renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h);
       frame.appendChild(renderer.domElement);
@@ -3249,11 +3452,10 @@
         layout(nw / nh);
         renderer.setSize(nw, nh);
       }
-      window.addEventListener('resize', resize);
+      lfOn(frame, 'resize', resize);
 
       var t0 = Date.now();
-      (function loop(){
-        requestAnimationFrame(loop);
+      lfLoop(frame, function loop(){
         var t = ((Date.now() - t0) / 1000) % CYCLE;
 
         /* phase 1: at rest.  phase 2: pushed aside.  phase 3: released. */
@@ -3275,7 +3477,355 @@
         });
 
         renderer.render(scene, camera);
-      })();
+      });
+    }
+
+    /* ------------------------------------------------- rotation 3D scenes ---
+       Four scenes for the angular-momentum / torque board. All four say the
+       same thing, and it is the one thing a still figure cannot: the answer to
+       a cross product does not lie in the plane you drew it in — it STANDS on
+       that plane — and its length lives on sin(theta).
+
+         spin-top          a top on its point, L drawn along the axle, the axle
+                           itself walking slowly round the vertical
+         cross-product     r and v in a plane, L = r x v standing perpendicular,
+                           v swinging so |L| = m r v sin(theta) opens and shuts
+         conical-pendulum  the bob going round: about the ring's centre B, L
+                           stands still on the axis; about the apex A it leans
+                           and precesses — the whole of that slide
+         torque-lever      a spanner on a nut: r along the shaft, F swinging at
+                           its tip, tau standing on the pivot in the sense the
+                           spanner turns
+
+       Every frame ships a .scene-fallback that prints (rules 11, 20).       */
+    function startRot3D(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      /* Aim at the middle of what the scene actually draws and pull back only
+         far enough to hold it — a scene that sits as a stamp in the middle of
+         a classroom-sized box is worse than no scene at all. */
+      var AIM  = (kind === 'conical-pendulum') ? 2.15 : (kind === 'spin-top' ? 1.80 : (kind === 'spin-axis' ? 0.80 : 0.85));
+      var HALF = (kind === 'conical-pendulum') ? 2.45 : (kind === 'spin-top' ? 2.05 : (kind === 'spin-axis' ? 2.00 : 1.45));
+      var WIDE = (kind === 'conical-pendulum') ? 2.10 : (kind === 'spin-top' ? 2.20 : (kind === 'spin-axis' ? 1.95 : 2.45));
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.set(0, AIM + HALF * 0.34,
+          Math.max(HALF * 1.04 / t2, WIDE * 1.04 / (t2 * aspect)));
+        camera.lookAt(0, AIM, 0);
+      }
+      fit(w / h);
+
+      var group = new T.Group();          /* everything that yaws */
+      scene.add(group);
+
+      function mat(c, o){ return new T.LineBasicMaterial({ color: c, transparent: true, opacity: o }); }
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(color, opacity === undefined ? 1 : opacity));
+      }
+      function dashRing(y, r, color, opacity, n){
+        var pts = [], k;
+        for (k = 0; k <= n; k++) pts.push(new T.Vector3(r * Math.cos(k / n * Math.PI * 2), y, r * Math.sin(k / n * Math.PI * 2)));
+        return line(pts, color, opacity);
+      }
+      /* an arrow that can be re-aimed every frame: unit cylinder + cone */
+      function makeArrow(color, rad, opacity){
+        var g = new T.Group();
+        var m = new T.MeshBasicMaterial({ color: color,
+          transparent: opacity !== undefined, opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), m);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), m);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      /* classroom-size label on a canvas — no webfont, no external asset */
+      function label(text, css, size){
+        var F = 72, c = document.createElement('canvas');
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold ' + F + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        var tw = Math.max(40, Math.ceil(ctx.measureText(text).width));
+        c.width = tw + 28; c.height = Math.round(F * 1.5);
+        ctx = c.getContext('2d');
+        ctx.font = 'bold ' + F + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, c.width / 2, c.height / 2);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * c.width / c.height, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      /* Labels live on the scene root and are re-placed every frame from a
+         point in the FIGURE's own space, so they never turn edge-on as the
+         stage yaws. Anchors are written in group coordinates (that is where
+         the geometry is authored), so the loop pushes each one through
+         group.matrixWorld before placing the sprite — without that a scene
+         whose group is offset or yawing leaves its labels behind the thing
+         they name. */
+      var bills = [];
+      function tag(text, css, size, at){
+        var m = label(text, css, size);
+        scene.add(m);
+        bills.push({ m: m, at: at });
+        return m;
+      }
+
+      var spin = 0, prec = 0, tick = null;
+
+      /* ------------------------------------------------------- spin-top --- */
+      if (kind === 'spin-top'){
+        group.add(dashRing(0, 2.15, INDIGO, 0.16, 64));
+        group.add(line([new T.Vector3(0, 0, 0), new T.Vector3(0, 3.5, 0)], INK, 0.16));
+
+        var lean = new T.Group();                 /* the axle's tilt */
+        lean.rotation.z = 0.30;
+        var precG = new T.Group();                /* the axle walking round */
+        precG.add(lean); group.add(precG);
+
+        var spinG = new T.Group(); lean.add(spinG);
+        var coneGeo = new T.ConeGeometry(0.92, 1.45, 18);
+        var shell = new T.Mesh(coneGeo, new T.MeshBasicMaterial({
+          color: 0x0d1020, transparent: true, opacity: 0.72, side: T.DoubleSide }));
+        shell.rotation.x = Math.PI; shell.position.y = 0.725; spinG.add(shell);
+        var wire = new T.LineSegments(new T.WireframeGeometry(coneGeo), mat(INDIGO, 0.34));
+        wire.rotation.x = Math.PI; wire.position.y = 0.725; spinG.add(wire);
+        var rim = new T.Mesh(new T.TorusGeometry(0.92, 0.045, 8, 40),
+          new T.MeshBasicMaterial({ color: INDIGO, transparent: true, opacity: 0.8 }));
+        rim.rotation.x = Math.PI / 2; rim.position.y = 1.45; spinG.add(rim);
+        var stem = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 1.0, 10),
+          new T.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.7 }));
+        stem.position.y = 1.95; spinG.add(stem);
+        var flag = new T.Mesh(new T.BoxGeometry(0.62, 0.05, 0.05),
+          new T.MeshBasicMaterial({ color: GOLD }));
+        flag.position.set(0.31, 1.45, 0); spinG.add(flag);   /* so the spin is visible */
+
+        var arrL = makeArrow(GOLD, 0.055); lean.add(arrL);
+        aim(arrL, new T.Vector3(0, 1.1, 0), new T.Vector3(0, 3.35, 0));
+        var tipL = new T.Vector3(), pL = new T.Vector3(0, 3.62, 0);
+        tag('L', '#f5c542', 0.42, function(){ return pL.clone().applyMatrix4(lean.matrixWorld); });
+
+        tick = function(t){
+          spin += 0.16; prec += 0.006;
+          spinG.rotation.y = spin;
+          precG.rotation.y = prec;
+          group.rotation.y = Math.sin(t / 7) * 0.22;
+        };
+      }
+
+      /* --------------------------------------------- conical-pendulum ----- */
+      if (kind === 'conical-pendulum'){
+        var AY = 3.05, BY = 0.85, RR = 1.45;
+        group.add(line([new T.Vector3(0, AY, 0), new T.Vector3(0, -0.15, 0)], INK, 0.22));
+        group.add(dashRing(BY, RR, INK, 0.5, 72));
+        var k;
+        for (k = 0; k < 24; k++){                 /* the cone the string sweeps */
+          var a = k / 24 * Math.PI * 2;
+          group.add(line([new T.Vector3(0, AY, 0),
+            new T.Vector3(RR * Math.cos(a), BY, RR * Math.sin(a))], INDIGO, 0.10));
+        }
+        var dotA = new T.Mesh(new T.SphereGeometry(0.075, 16, 12), new T.MeshBasicMaterial({ color: INK }));
+        dotA.position.set(0, AY, 0); group.add(dotA);
+        var dotB = new T.Mesh(new T.SphereGeometry(0.065, 16, 12), new T.MeshBasicMaterial({ color: INK }));
+        dotB.position.set(0, BY, 0); group.add(dotB);
+        tag('A', '#f4f7fb', 0.34, function(){ return new T.Vector3(-0.32, AY + 0.22, 0); });
+        tag('B', '#f4f7fb', 0.34, function(){ return new T.Vector3(-0.30, BY - 0.02, 0); });
+
+        var bob = new T.Mesh(new T.SphereGeometry(0.155, 22, 16), new T.MeshBasicMaterial({ color: GOLD }));
+        group.add(bob);
+        var cord = line([new T.Vector3(0, AY, 0), new T.Vector3(RR, BY, 0)], INK, 0.62);
+        group.add(cord);
+
+        var arrB = makeArrow(GOLD, 0.05);  group.add(arrB);      /* L about B — fixed */
+        var arrA = makeArrow(CYAN, 0.05);  group.add(arrA);      /* L about A — leans */
+        aim(arrB, new T.Vector3(0, BY, 0), new T.Vector3(0, BY + 1.5, 0));
+        var aTip = new T.Vector3();
+        tag('L about B', '#f5c542', 0.32, function(){ return new T.Vector3(0.68, BY + 1.62, 0); });
+        tag('L about A', '#56ccf2', 0.32, function(){
+          return aTip.clone().add(new T.Vector3(0, 0.30, 0).addScaledVector(
+            aTip.clone().sub(new T.Vector3(0, AY, 0)).setY(0).normalize(), 0.42)); });
+
+        tick = function(t){
+          var ps = t * 0.9;
+          /* x -> -z, so omega (and L about B) comes out along +y: the bob turns
+             anticlockwise seen from above, which is the sense the arrow shows. */
+          var P = new T.Vector3(RR * Math.cos(ps), BY, -RR * Math.sin(ps));
+          bob.position.copy(P);
+          cord.geometry.setFromPoints([new T.Vector3(0, AY, 0), P]);
+          cord.geometry.attributes.position.needsUpdate = true;
+          /* L about A = r x p, r from A to the bob, p along the tangent.
+             It leans off the vertical by the same angle the string makes, and
+             it walks round with the bob — which is the point of the slide. */
+          var r = P.clone().sub(new T.Vector3(0, AY, 0));
+          var v = new T.Vector3(-Math.sin(ps), 0, -Math.cos(ps));
+          var L = new T.Vector3().crossVectors(r, v).normalize().multiplyScalar(1.5);
+          var base = new T.Vector3(0, AY, 0);
+          aTip.copy(base).add(L);
+          aim(arrA, base, aTip);
+          group.rotation.y = Math.sin(t / 9) * 0.20;
+        };
+      }
+
+      /* ------------------------------------------------------ spin-axis --- */
+      /* A disc on its axle, turning, with omega drawn ALONG the axle in the
+         right-hand sense. It is the one fact every "about axis of rotation"
+         line on this board depends on and the one a still figure cannot
+         carry: omega does not lie in the plane the disc is spinning in — it
+         stands on it. data-sense="cw" reverses both the turn and the arrow. */
+      if (kind === 'spin-axis'){
+        var sense = (frame.getAttribute('data-sense') || 'ccw').trim() === 'cw' ? -1 : 1;
+        var RD = 1.30, YC = 0.85;
+
+        var hub = new T.Group(); hub.position.y = YC; group.add(hub);
+
+        /* the disc: a filled face kept dark so the wireframe reads, plus its
+           rim and a pair of spokes so the turn is actually visible */
+        var face = new T.Mesh(new T.CircleGeometry(RD, 56),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.72,
+                                    side: T.DoubleSide }));
+        face.rotation.x = -Math.PI / 2; hub.add(face);
+
+        var rimPts = [], kk, NR = 72;
+        for (kk = 0; kk <= NR; kk++)
+          rimPts.push(new T.Vector3(RD * Math.cos(kk / NR * Math.PI * 2), 0,
+                                    RD * Math.sin(kk / NR * Math.PI * 2)));
+        hub.add(line(rimPts, INDIGO, 0.9));
+        hub.add(dashRing(0, RD * 0.62, INDIGO, 0.34, 48));
+        for (kk = 0; kk < 4; kk++){
+          var aa = kk * Math.PI / 2;
+          hub.add(line([new T.Vector3(0, 0, 0),
+                        new T.Vector3(RD * Math.cos(aa), 0, RD * Math.sin(aa))],
+                       INK, kk === 0 ? 0.85 : 0.24));
+        }
+
+        /* the axle it turns on — a thin line right through the disc */
+        group.add(line([new T.Vector3(0, YC - 1.55, 0), new T.Vector3(0, YC + 1.95, 0)],
+                       INK, 0.30));
+
+        /* omega, standing on the plane */
+        var arrW = makeArrow(GOLD, 0.055); group.add(arrW);
+        aim(arrW, new T.Vector3(0, YC, 0), new T.Vector3(0, YC + sense * 1.62, 0));
+
+        /* the sense it turns in, as an arc riding just above the disc */
+        var senseArc = line([new T.Vector3(0,0,0)], CYAN, 0.8); group.add(senseArc);
+        var sp2 = [], n3 = 40;
+        for (kk = 0; kk <= n3; kk++){
+          var a3 = sense * (kk / n3) * Math.PI * 1.42;
+          sp2.push(new T.Vector3(RD * 0.44 * Math.cos(a3), YC + 0.30, -RD * 0.44 * Math.sin(a3)));
+        }
+        senseArc.geometry.setFromPoints(sp2);
+
+        tag('omega', '#f5c542', 0.34,
+            function(){ return new T.Vector3(0.62, YC + sense * 1.62 + sense * 0.16, 0); });
+        tag('axis of rotation', '#f4f7fb', 0.26,
+            function(){ return new T.Vector3(0, YC - 1.72, 0); });
+
+        tick = function(t){
+          hub.rotation.y = sense * t * 1.15;
+          group.rotation.y = 0.38 + Math.sin(t / 9) * 0.20;
+        };
+      }
+
+      /* ------------------------------- cross-product / torque-lever ------- */
+      if (kind === 'cross-product' || kind === 'torque-lever'){
+        var isTau = (kind === 'torque-lever');
+        var RX = 2.0, i2, j2, gp = [];
+        for (i2 = -3; i2 <= 3; i2++){             /* the plane you drew it in */
+          gp.push(i2 * 0.6, 0, -1.8, i2 * 0.6, 0, 1.8);
+          gp.push(-1.8, 0, i2 * 0.6, 1.8, 0, i2 * 0.6);
+        }
+        var gg = new T.BufferGeometry();
+        gg.setAttribute('position', new T.Float32BufferAttribute(gp, 3));
+        var plane = new T.LineSegments(gg, mat(INDIGO, 0.14));
+        plane.position.x = 0.6; group.add(plane);
+        group.position.x = -1.25;          /* the figure lives on +x — recentre it */
+
+        if (isTau){                                /* a spanner on its nut */
+          var nut = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 0.18, 6),
+            new T.MeshBasicMaterial({ color: INDIGO, transparent: true, opacity: 0.85 }));
+          nut.position.y = 0.03; group.add(nut);
+          var shaft2 = new T.Mesh(new T.BoxGeometry(RX + 0.35, 0.08, 0.24),
+            new T.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.30 }));
+          shaft2.position.set((RX + 0.35) / 2 - 0.1, 0.03, 0); group.add(shaft2);
+        } else {
+          var orig = new T.Mesh(new T.SphereGeometry(0.075, 16, 12), new T.MeshBasicMaterial({ color: INK }));
+          group.add(orig);
+          var bod = new T.Mesh(new T.SphereGeometry(0.135, 20, 14), new T.MeshBasicMaterial({ color: INDIGO }));
+          bod.position.set(RX, 0, 0); group.add(bod);
+        }
+
+        var arrR = makeArrow(INDIGO, 0.05); group.add(arrR);
+        aim(arrR, new T.Vector3(0, 0, 0), new T.Vector3(RX, 0, 0));
+        var arrF = makeArrow(INK, 0.05);    group.add(arrF);
+        var arrT = makeArrow(GOLD, 0.058);  group.add(arrT);
+        var arc  = line([new T.Vector3(0,0,0), new T.Vector3(0,0,0)], CYAN, 0.75); group.add(arc);
+
+        var tTip = new T.Vector3(0, 1, 0), fTip = new T.Vector3();
+        tag('r', '#7c8cff', 0.36, function(){ return new T.Vector3(RX * 0.5, 0.02, 0.34); });
+        tag(isTau ? 'F' : 'v', '#f4f7fb', 0.36, function(){ return fTip.clone().add(new T.Vector3(0, 0.26, 0)); });
+        tag(isTau ? 'torque' : 'L', '#f5c542', 0.34, function(){ return tTip.clone().add(new T.Vector3(0, 0.26, 0)); });
+
+        tick = function(t){
+          /* theta opens 15 deg -> 165 deg and shuts again, so the class watches
+             the perpendicular answer grow, peak at 90 and die back. */
+          var th = (Math.PI / 180) * (90 - 75 * Math.cos(t * 0.42));
+          var dir = new T.Vector3(Math.cos(th), 0, -Math.sin(th));
+          var base = new T.Vector3(RX, 0, 0);
+          fTip.copy(base).add(dir.clone().multiplyScalar(1.35));
+          aim(arrF, base, fTip);
+          var mag = 1.9 * Math.abs(Math.sin(th)) + 0.06;
+          tTip.set(0, mag, 0);
+          aim(arrT, new T.Vector3(0, 0, 0), tTip);
+          var pts = [], k2, n2 = 26;              /* the angle between them */
+          for (k2 = 0; k2 <= n2; k2++){
+            var a2 = th * k2 / n2;
+            pts.push(new T.Vector3(RX + 0.72 * Math.cos(a2), 0.005, -0.72 * Math.sin(a2)));
+          }
+          arc.geometry.setFromPoints(pts);
+          arc.geometry.attributes.position.needsUpdate = true;
+          group.rotation.y = 0.42 + Math.sin(t / 8) * 0.22;
+        };
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      lfOn(frame, 'resize', resize);
+
+      var t0 = Date.now();
+      lfLoop(frame, function loop(){
+        var t = (Date.now() - t0) / 1000;
+        if (tick) tick(t);
+        group.updateMatrixWorld(true);
+        for (var b = 0; b < bills.length; b++){
+          bills[b].m.position.copy(bills[b].at()).applyMatrix4(group.matrixWorld);
+          bills[b].m.quaternion.copy(camera.quaternion);
+        }
+        renderer.render(scene, camera);
+      });
     }
 
   });
