@@ -205,6 +205,50 @@
   #snapResize{background:#0f172a;border:1px solid var(--violet);color:#c4b5fd;cursor:nwse-resize}
   #snapClose{background:#0f172a;border:1px solid var(--danger);color:var(--danger);cursor:pointer}
 
+  /* ── CAMERA BUBBLE ─────────────────────────────────────────────────────
+     A round self-view that floats over everything: the teacher's face while
+     the board is doing the talking. Fixed to the viewport, not the board, so
+     full screen and page turns never move it. Dragged by its own body,
+     resized by the grip on its rim, and parked in a corner with 1–4. The
+     corner insets match the stage (14 / 44 / 82 / 44) so a parked bubble
+     never sits on top of a rail or the control strip. */
+  #camBubble{
+    position:fixed;z-index:55;width:220px;height:220px;border-radius:50%;
+    overflow:hidden;background:#0b101d;cursor:grab;touch-action:none;
+    border:2px solid rgba(124,58,237,.85);
+    box-shadow:0 18px 50px rgba(0,0,0,.6);
+    transition:left .18s ease,top .18s ease;
+  }
+  #camBubble[hidden]{display:none}
+  #camBubble:active{cursor:grabbing}
+  /* during a drag or resize the box must follow the pointer exactly — the
+     corner-park easing would otherwise lag a frame behind the finger */
+  #camBubble.cam-dragging{transition:none}
+  #camVideo{
+    width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;
+    /* self-view: mirrored, the way the teacher sees themselves in a mirror */
+    transform:scaleX(-1);background:#0b101d;
+  }
+  .cam-grip{
+    position:absolute;width:28px;height:28px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);touch-action:none;
+    opacity:.35;transition:opacity .15s ease;
+  }
+  #camBubble:hover .cam-grip,.cam-grip:focus-visible{opacity:1}
+  .cam-grip svg{width:14px;height:14px}
+  /* 14.6% = (1 − cos45°)/2 — puts the grip on the circle's rim, not the
+     corner of its bounding box, where it would float in empty space */
+  #camResize{
+    right:calc(14.6% - 14px);bottom:calc(14.6% - 14px);
+    background:#0f172a;border:1px solid var(--violet);color:#c4b5fd;cursor:nwse-resize;
+  }
+  #camClose{
+    right:calc(14.6% - 14px);top:calc(14.6% - 14px);
+    background:#0f172a;border:1px solid var(--danger);color:var(--danger);cursor:pointer;
+  }
+  @media print{ #camBubble{display:none !important} }
+
   .empty{
     position:absolute;inset:14px 44px 76px;display:flex;flex-direction:column;gap:18px;
     align-items:center;justify-content:center;text-align:center;color:var(--muted);
@@ -559,6 +603,18 @@
   <!-- Mirrored rails (filled by JS) -->
   <nav class="rail rail-left" data-rail aria-label="Ink tools"></nav>
   <nav class="rail rail-right" data-rail aria-label="Ink tools (mirror)"></nav>
+
+  <!-- Round self-view. Toggled from the camera button in either rail; the
+       grips are wired in the CAMERA section of the script. -->
+  <div id="camBubble" hidden role="region" aria-label="Camera">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <button class="cam-grip" id="camClose" title="Turn the camera off (C)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <button class="cam-grip" id="camResize" title="Drag to resize — 1 / 2 / 3 / 4 park it in a corner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v6h-6"/><path d="M9 3H3v6"/><path d="M21 21 14 14"/><path d="M3 3l7 7"/></svg>
+    </button>
+  </div>
 
   <!-- Bottom control strip -->
   <footer class="bottom-strip">
@@ -966,7 +1022,9 @@
     laser:  S(`<circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/>`),
     grid:   S(`<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>`),
     eye:    S(`<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>`),
-    eyeOff: S(`<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a18.2 18.2 0 0 1-1.82 2.62"/><path d="M6.61 6.61C3.45 8.66 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.39-1.02"/><path d="M2 2l20 20"/>`)
+    eyeOff: S(`<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a18.2 18.2 0 0 1-1.82 2.62"/><path d="M6.61 6.61C3.45 8.66 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.39-1.02"/><path d="M2 2l20 20"/>`),
+    cam:    S(`<path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/>`),
+    camOff: S(`<path d="M10.66 6H14a2 2 0 0 1 2 2v2.34l1 1L22 8v8"/><path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="m2 2 20 20"/>`)
   };
 
   /* ═══ RAILS ═══════════════════════════════════
@@ -982,6 +1040,7 @@
     { id:"add-page",   icon:"plus",  title:"Add blank page" },
     { id:"paper",      icon:"grid",  title:"Page background — dots / graph / axes / plain (G)" },
     { id:"duplicate",  icon:"copy",  title:"Duplicate & freeze this page" },
+    { id:"camera",     icon:"cam",   title:"Camera bubble (C) — drag it, resize it, 1-4 park it in a corner" },
     { id:"fullscreen", icon:"frame", title:"Enter / exit full screen (F)" },
     { id:"close",      icon:"close", title:"End session", cls:"danger" }
   ];
@@ -1038,6 +1097,7 @@
       // the two frame icons read almost the same at 20px, so the button also
       // lights up while full screen is on — otherwise "exit" looks like a no-op
       if(a.id === "fullscreen" && isFS()){ icon = "unframe"; cls += " is-active"; }
+      if(a.id === "camera" && camIsOn()){ icon = "camOff"; cls += " is-active"; }
       const title = a.id === "add-page" ? addPageTitle() : a.title;
       return `
       <button class="tool-btn ${cls}" data-action="${a.id}" title="${title}">
@@ -1054,7 +1114,7 @@
      otherwise patch only the attributes that differ. */
   let railsBuilt = false, railKey = "";
   function renderRails(){
-    const key = [state.tool, state.color, state.width, state.anim, isFS(), curPaper(), curSkip() ? 1 : 0, shortcutLabel(addPageShortcut)].join("|");
+    const key = [state.tool, state.color, state.width, state.anim, isFS(), curPaper(), curSkip() ? 1 : 0, shortcutLabel(addPageShortcut), camIsOn() ? 1 : 0].join("|");
     if(railsBuilt && key === railKey) return;
     const first = !railsBuilt;
     railKey = key; railsBuilt = true;
@@ -1098,6 +1158,17 @@
         fs.classList.toggle("is-active", on);
         const want = ICONS[on ? "unframe" : "frame"];
         if(fs.innerHTML !== want) fs.innerHTML = want;
+      }
+      const cam = r.querySelector('[data-action="camera"]');
+      if(cam){
+        const on = camIsOn();
+        cam.classList.toggle("is-active", on);
+        cam.setAttribute("aria-pressed", on ? "true" : "false");
+        cam.title = on
+          ? "Camera on — click to turn it off (C). Drag to move, 1-4 park it in a corner"
+          : "Camera bubble (C) — drag it, resize it, 1-4 park it in a corner";
+        const want = ICONS[on ? "camOff" : "cam"];
+        if(cam.innerHTML !== want) cam.innerHTML = want;
       }
       const pp = r.querySelector('[data-action="paper"]');
       if(pp) pp.title = "Page background — " + (PAPER_LABEL[curPaper()] || "Dot grid") + " (G)";
@@ -3028,6 +3099,10 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
         altKey: !!d.altKey, metaKey: !!d.metaKey
       };
       if(matchesShortcut(fake, addPageShortcut)){ addPage(); return; }
+      if(!fake.ctrlKey && !fake.metaKey && !fake.altKey){
+        if(camIsOn() && CAM_CORNERS[d.key]){ parkCam(+d.key); return; }
+        if(String(d.key).toLowerCase() === "c"){ toggleCam(); return; }
+      }
       handleNavKey(d.key);
     }
   });
@@ -4130,6 +4205,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
       case "close": closeOverlay.classList.add("show"); break;
       case "export": requestExport(); break;
       case "fullscreen": toggleFS(); break;
+      case "camera": toggleCam(); break;
       case "anim": setAnim(!state.anim); break;
       case "library": openLibrary(); break;
       case "settings": openSettings(); break;
@@ -5265,6 +5341,169 @@ ${bgRules}
     }
   }
 
+  /* ═══ CAMERA BUBBLE ═══════════════════════════
+     A round webcam self-view floating over the board — the teacher's face
+     while the slide does the talking. It is deliberately NOT part of the
+     board: it is not inked over, not exported into the PDF, and not saved
+     into the session. Position and size ARE remembered per machine, so the
+     bubble comes back where this teacher left it.
+
+     Geometry is stored in viewport pixels (top-left + diameter) and clamped
+     on every window resize, because a bubble parked against the right edge
+     of a 4K projector must not disappear off a laptop screen. */
+  const camBubble = document.getElementById("camBubble");
+  const camVideo  = document.getElementById("camVideo");
+  const CAM_KEY   = "lf-presenter-cam";
+  const CAM_MIN   = 120;
+  // Insets match .stage — a parked bubble clears both rails and the strip.
+  const CAM_PAD   = { top:14, right:44, bottom:82, left:44 };
+  let camStream = null;
+  // Set the moment the button is pressed, so a second press during the
+  // permission prompt cancels instead of opening a second stream.
+  let camWanted = false;
+  let camGeom = { x:null, y:null, size:220 };
+
+  function camIsOn(){ return !!camStream; }
+
+  try{
+    const saved = JSON.parse(localStorage.getItem(CAM_KEY) || "null");
+    if(saved && typeof saved.size === "number") camGeom = saved;
+  }catch(err){ /* a corrupt entry just means default placement */ }
+
+  function saveCamGeom(){
+    try{ localStorage.setItem(CAM_KEY, JSON.stringify(camGeom)); }
+    catch(err){ /* private mode: the bubble simply forgets between sessions */ }
+  }
+
+  function clampCam(){
+    const s = Math.max(CAM_MIN, Math.min(camGeom.size,
+      Math.min(window.innerWidth, window.innerHeight) - 20));
+    camGeom.size = s;
+    // Default (never placed): bottom-right, the corner a right-handed teacher
+    // writes furthest from.
+    if(camGeom.x == null) camGeom.x = window.innerWidth  - CAM_PAD.right  - s;
+    if(camGeom.y == null) camGeom.y = window.innerHeight - CAM_PAD.bottom - s;
+    camGeom.x = Math.max(0, Math.min(camGeom.x, window.innerWidth  - s));
+    camGeom.y = Math.max(0, Math.min(camGeom.y, window.innerHeight - s));
+  }
+
+  function placeCam(){
+    clampCam();
+    camBubble.style.width  = camGeom.size + "px";
+    camBubble.style.height = camGeom.size + "px";
+    camBubble.style.left   = camGeom.x + "px";
+    camBubble.style.top    = camGeom.y + "px";
+  }
+
+  /* 1 2      Hotkeys park the bubble in a corner — one key, no aiming, while
+     3 4      a hundred students are watching. */
+  const CAM_CORNERS = {
+    1:["left","top"], 2:["right","top"], 3:["left","bottom"], 4:["right","bottom"]
+  };
+  function parkCam(n){
+    const corner = CAM_CORNERS[n];
+    if(!corner || !camIsOn()) return;
+    clampCam();
+    const s = camGeom.size;
+    camGeom.x = corner[0] === "left" ? CAM_PAD.left : window.innerWidth  - CAM_PAD.right  - s;
+    camGeom.y = corner[1] === "top"  ? CAM_PAD.top  : window.innerHeight - CAM_PAD.bottom - s;
+    placeCam();
+    saveCamGeom();
+  }
+
+  async function camOn(){
+    if(camStream || camWanted) return;
+    camWanted = true;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      camWanted = false;
+      return toast("This browser can't open a camera here");
+    }
+    let stream;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video:{ width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false,
+      });
+    }catch(err){
+      camWanted = false;
+      const denied = err && (err.name === "NotAllowedError" || err.name === "SecurityError");
+      toast(denied ? "Camera blocked — allow camera access for this page"
+                   : "No camera available");
+      renderRails();
+      return;
+    }
+    // Turned off again while the permission prompt was up.
+    if(!camWanted){ stream.getTracks().forEach(t => t.stop()); return; }
+    camStream = stream;
+    camVideo.srcObject = stream;
+    camBubble.hidden = false;
+    placeCam();
+    // A camera that is unplugged (or grabbed by another app) must not leave a
+    // frozen last frame on the board pretending to be live.
+    stream.getVideoTracks().forEach(t => t.addEventListener("ended", () => camOff()));
+    try{ await camVideo.play(); }catch(err){ /* autoplay of a muted stream */ }
+    renderRails();
+    toast("Camera on — drag to move, 1-4 park it in a corner");
+  }
+
+  function camOff(){
+    camWanted = false;
+    if(camStream){
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    camVideo.srcObject = null;
+    camBubble.hidden = true;
+    renderRails();
+  }
+
+  function toggleCam(){ camIsOn() || camWanted ? camOff() : camOn(); }
+
+  /* Drag the body, resize from the rim grip. Pointer capture (not a document
+     listener) so a fast drag that leaves the circle — or the window — still
+     ends cleanly. */
+  function camDrag(el, onMove){
+    el.addEventListener("pointerdown", e => {
+      if(e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.setPointerCapture(e.pointerId);
+      camBubble.classList.add("cam-dragging");
+      const start = { px:e.clientX, py:e.clientY, x:camGeom.x, y:camGeom.y, size:camGeom.size };
+      const move = ev => { onMove(start, ev.clientX - start.px, ev.clientY - start.py); placeCam(); };
+      const up = () => {
+        camBubble.classList.remove("cam-dragging");
+        saveCamGeom();
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        el.removeEventListener("pointercancel", up);
+      };
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+      el.addEventListener("pointercancel", up);
+    });
+  }
+  camDrag(camBubble, (start, dx, dy) => {
+    camGeom.x = start.x + dx;
+    camGeom.y = start.y + dy;
+  });
+  camDrag(document.getElementById("camResize"), (start, dx, dy) => {
+    // The grip is on the bottom-right rim, so out-and-down grows the circle.
+    // The average of the two axes keeps it a circle whichever way the hand
+    // actually travels.
+    camGeom.size = start.size + (dx + dy) / 2;
+  });
+  const camCloseBtn = document.getElementById("camClose");
+  // The pointerdown must be stopped here, not just the click: letting it reach
+  // the bubble would start a drag AND capture the pointer, and a captured
+  // pointer sends the follow-up click to the capture target — so the close
+  // button would look pressed and do nothing.
+  camCloseBtn.addEventListener("pointerdown", e => e.stopPropagation());
+  camCloseBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    camOff();
+  });
+  window.addEventListener("resize", () => { if(camIsOn()) placeCam(); });
+
   pageCounterBtn.addEventListener("click", () => togglePageSheet());
   pageSheetInner.addEventListener("click", e => {
     const skipEl = e.target.closest("[data-skip]");
@@ -5320,6 +5559,8 @@ ${bgRules}
     closeOverlay.classList.remove("show"));
   document.getElementById("confirmClose").addEventListener("click", () => {
     closeOverlay.classList.remove("show");
+    // The lesson is over — release the webcam, and its light, immediately.
+    camOff();
     // Save before wiping if the host is tracking a batch session.
     if(hosted && state.batchId && state.pages.length){
       tellHost({
@@ -5453,6 +5694,15 @@ ${bgRules}
     // Shift+R before plain R for the same reason.
     else if(e.shiftKey && e.key.toLowerCase() === "r"){ e.preventDefault(); toggleRawTouch(); }
     else if(matchesShortcut(e, addPageShortcut)){ e.preventDefault(); addPage(); }
+    // 1 / 2 / 3 / 4 park the camera bubble in a corner. Only while it is on,
+    // so the digits stay free for anything else when it is not — and after
+    // the add-page shortcut, which the teacher may have bound to a digit.
+    else if(camIsOn() && !e.ctrlKey && !e.metaKey && !e.altKey && CAM_CORNERS[e.key]){
+      e.preventDefault(); parkCam(+e.key);
+    }
+    else if(e.key.toLowerCase() === "c" && !e.ctrlKey && !e.metaKey && !e.altKey){
+      e.preventDefault(); toggleCam();
+    }
     else if(e.key.toLowerCase() === "p") setTool("pen");
     else if(e.key.toLowerCase() === "e") setTool("eraser");
     else if(e.key.toLowerCase() === "l") setTool("laser");

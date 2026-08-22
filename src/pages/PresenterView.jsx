@@ -529,11 +529,16 @@ export default function PresenterView() {
     const NAV_KEYS = new Set([
       'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' ', 'Spacebar', 'Backspace',
     ])
+    // Camera bubble: C toggles it, 1-4 park it in a corner. Forwarded for the
+    // same reason as the clicker keys — the teacher should not have to click
+    // the board first for them to work.
+    const CAM_KEYS = new Set(['1', '2', '3', '4', 'c', 'C'])
     const onKey = (e) => {
       if (libOpen) return
       if (e.target?.matches?.('input,textarea,[contenteditable="true"]')) return
       const isAddPage = matchesShortcut(e, addPageShortcutRef.current)
-      if (!NAV_KEYS.has(e.key) && !isAddPage) return
+      const isCam = CAM_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey
+      if (!NAV_KEYS.has(e.key) && !isAddPage && !isCam) return
       e.preventDefault()
       touchActivity()
       post({
@@ -563,11 +568,14 @@ export default function PresenterView() {
 
   return (
     <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">
+      {/* `camera` in `allow` is what lets the panel's camera bubble open a
+          webcam from inside this frame — without it getUserMedia rejects with
+          NotAllowedError before the browser ever asks the teacher. */}
       <iframe
         ref={iframeRef}
         title="Presenter panel"
         src="/presenter.html"
-        allow="fullscreen"
+        allow="fullscreen; camera"
         onLoad={onIframeLoad}
         className="h-full w-full border-0"
         style={{ contain: 'strict' }}

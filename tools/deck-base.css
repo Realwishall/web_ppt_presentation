@@ -819,6 +819,15 @@ svg.dgm .plane  {fill:rgba(124,140,255,.30);stroke:rgba(159,180,255,.9);
                  stroke-width:2.6;stroke-linejoin:round}
 svg.dgm .plane.hollow{fill:none}
 svg.dgm .ring   {fill:none;stroke:rgba(255,255,255,.85);stroke-width:3}
+/* Kepler / central-force props. An orbit board draws the same two things on
+   page after page — the sector the radius vector sweeps out, and the focus
+   the sun sits at — so they are components, not per-slide decisions.
+     .wedge   a swept sector, filled (.b = gold, for the second of a pair)
+     .focus   the focus mark of a conic (.b = the sun sitting in it)        */
+svg.dgm .wedge  {fill:rgba(124,140,255,.28);stroke:rgba(159,180,255,.7);stroke-width:1.6}
+svg.dgm .wedge.b{fill:rgba(245,197,66,.22);stroke:rgba(245,197,66,.65)}
+svg.dgm .focus  {fill:rgba(255,255,255,.95);stroke:none}
+svg.dgm .focus.b{fill:var(--gold);stroke:none}
 svg.dgm .disc   {fill:rgba(124,140,255,.45);stroke:rgba(159,180,255,.95);stroke-width:2.4}
 svg.dgm .spoke  {fill:none;stroke:rgba(255,255,255,.7);stroke-width:1.8;
                  stroke-dasharray:8 6;stroke-linecap:round}

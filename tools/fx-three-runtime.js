@@ -268,8 +268,13 @@
         startGravity(frame, w, h, kind); return;
       }
       if (kind === 'escape-speed' || kind === 'launch-direction' ||
-          kind === 'angled-launch'){
+          kind === 'angled-launch' || kind === 'kepler-areas' ||
+          kind === 'kepler-t2a3'){
         startEscape(frame, w, h, kind); return;
+      }
+      if (kind === 'satellite-orbit' || kind === 'geo-vs-polar' ||
+          kind === 'coverage-cap'){
+        startSatellite(frame, w, h, kind); return;
       }
 
       var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
@@ -5273,6 +5278,203 @@
         return;
       }
 
+      /* ------------------------------------------------------ kepler-areas ---
+         Kepler's second law as the event it actually is. A real orbit —
+         dν/dt = L/r² integrated every frame, never a constant sweep — so the
+         body genuinely races through perihelion and genuinely crawls at
+         aphelion. Two wedges of EQUAL AREA stand on the board, one at each
+         end of the major axis: the near one short and fat, the far one long
+         and thin. The one thing the source slide's two shaded triangles
+         cannot carry is that the planet spends the SAME time inside each of
+         them, which is the whole of the law — so a clock bar under each wedge
+         fills while the body is inside it, and the two bars finish level.  */
+      if (kind === 'kepler-areas'){
+        var aK = 1.00, eK = 0.62, MUK = 1.0;
+        var pK = aK * (1 - eK * eK);
+        var LK = Math.sqrt(MUK * pK);                 /* per unit mass       */
+        var TK = 2 * Math.PI * Math.sqrt(aK * aK * aK / MUK);
+        function rK(nu){ return pK / (1 + eK * Math.cos(nu)); }
+        var SCK = 1.45;                               /* scene units per a   */
+        var CK  = new T.Vector3(0, 0.28, 0);          /* the sun, at a focus */
+        function ptK(nu){
+          var r = rK(nu) * SCK;
+          return new T.Vector3(CK.x + r * Math.cos(nu), CK.y + r * Math.sin(nu), 0);
+        }
+
+        /* the orbit itself */
+        var orbPts = [];
+        for (var oi = 0; oi <= 220; oi++) orbPts.push(ptK(oi / 220 * Math.PI * 2));
+        group.add(onTop(line(orbPts, INK, 0.42), 8));
+
+        /* the sun */
+        var sun = onTop(new T.Mesh(new T.SphereGeometry(0.115, 20, 14),
+          new T.MeshBasicMaterial({ color: GOLD })), 11);
+        sun.position.copy(CK); group.add(sun);
+        group.add(onTop(dashed([ptK(0), ptK(Math.PI)], INK, 0.22), 8));
+
+        /* Two wedges of the same area. Kepler's own construction: pick the
+           same Δt at each apse and let the integrator say how far the body
+           gets. Δν is solved by stepping the real rate, so the areas are
+           equal by construction rather than by drawing them that way.     */
+        var DT = TK / 9;
+        function sweepFrom(nu0k){
+          var nu = nu0k, t = 0, dtI = TK / 4000;
+          while (t < DT){ nu += (LK / (rK(nu) * rK(nu))) * dtI; t += dtI; }
+          return nu;
+        }
+        function wedge(nuA, nuB, colour, opacity){
+          var verts = [], N = 40;
+          for (var k = 0; k < N; k++){
+            var n1 = nuA + (nuB - nuA) * k / N, n2 = nuA + (nuB - nuA) * (k + 1) / N;
+            var p1 = ptK(n1), p2 = ptK(n2);
+            verts.push(CK.x, CK.y, 0, p1.x, p1.y, 0, p2.x, p2.y, 0);
+          }
+          var g = new T.BufferGeometry();
+          g.setAttribute('position', new T.BufferAttribute(new Float32Array(verts), 3));
+          var m = new T.Mesh(g, new T.MeshBasicMaterial({ color: colour,
+            transparent: true, opacity: opacity, side: T.DoubleSide }));
+          return onTop(m, 7);
+        }
+        var nearA = -0.5 * (sweepFrom(0) - 0), nearB = -nearA;   /* about ν=0 */
+        nearA = 0 - (sweepFrom(0) - 0) / 2; nearB = 0 + (sweepFrom(0) - 0) / 2;
+        var farMid = Math.PI, halfFar = (sweepFrom(Math.PI) - Math.PI) / 2;
+        var farA = farMid - halfFar, farB = farMid + halfFar;
+
+        var wNear = wedge(nearA, nearB, GOLD, 0.16);   group.add(wNear);
+        var wFar  = wedge(farA,  farB,  INDIGO, 0.16); group.add(wFar);
+        var wNearLit = wedge(nearA, nearB, GOLD, 0.42);   group.add(wNearLit);
+        var wFarLit  = wedge(farA,  farB,  INDIGO, 0.42); group.add(wFarLit);
+        wNearLit.visible = false; wFarLit.visible = false;
+
+        var lNear = label('A', '#f5c542', 0.30);
+        var lFar  = label('A', '#7c8cff', 0.30);
+        onTop(lNear, 13); onTop(lFar, 13); group.add(lNear); group.add(lFar);
+        var pN = ptK(0), pF = ptK(Math.PI);
+        lNear.position.set(CK.x + (pN.x - CK.x) * 0.55, CK.y + (pN.y - CK.y) * 0.55 - 0.30, 0.02);
+        lFar.position.set(CK.x + (pF.x - CK.x) * 0.52, CK.y + (pF.y - CK.y) * 0.52 + 0.32, 0.02);
+
+        /* the two clock bars — same length when both are full */
+        var BARW = 1.15, BARY = -1.42, BARH = 0.085;
+        function bar(x0, colour, opacity){
+          var m = new T.Mesh(new T.PlaneGeometry(1, BARH),
+            new T.MeshBasicMaterial({ color: colour, transparent: true, opacity: opacity }));
+          m.userData = { x0: x0 };
+          return onTop(m, 9);
+        }
+        function setBar(m, frac){
+          var wpx = Math.max(0.0001, BARW * frac);
+          m.scale.set(wpx, 1, 1);
+          m.position.set(m.userData.x0 + wpx / 2, BARY, 0.02);
+        }
+        var trackN = bar(-BARW - 0.10, INK, 0.16), trackF = bar(0.10, INK, 0.16);
+        group.add(trackN); group.add(trackF); setBar(trackN, 1); setBar(trackF, 1);
+        var fillN = bar(-BARW - 0.10, GOLD, 0.85), fillF = bar(0.10, INDIGO, 0.85);
+        group.add(fillN); group.add(fillF); setBar(fillN, 0); setBar(fillF, 0);
+        var lBar = label('same area  ⇒  same time', '#8ea0b8', 0.22);
+        onTop(lBar, 13); group.add(lBar);
+        lBar.position.set(0, BARY - 0.30, 0.02);
+
+        var bodyK = onTop(new T.Mesh(new T.SphereGeometry(0.085, 16, 12),
+          new T.MeshBasicMaterial({ color: INK })), 12);
+        group.add(bodyK);
+        var radK = onTop(line([CK, ptK(0)], INK, 0.55), 10);
+        group.add(radK);
+
+        HALF = 1.95; WIDE = 2.90; fit(w / h);
+        group.position.set(0.10, 0.42, 0);
+
+        var nuK = nearA, tpK = Date.now(), tN = 0, tF = 0;
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== w || nh !== h){
+            w = nw; h = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var now = Date.now(), dt = Math.min((now - tpK) / 1000, 0.05); tpK = now;
+          if (!inking()){
+            var rr2 = rK(nuK);
+            nuK += (LK / (rr2 * rr2)) * dt * 0.42;
+            if (nuK >= nearA + Math.PI * 2){
+              nuK = nearA; tN = 0; tF = 0;               /* one clean lap    */
+            }
+            var m2 = ((nuK % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+            var inN = (m2 >= (nearA + Math.PI * 2) % (Math.PI * 2)) || (m2 <= nearB);
+            var inF = (m2 >= farA && m2 <= farB);
+            if (inN) tN = Math.min(DT, tN + dt * 0.42);
+            if (inF) tF = Math.min(DT, tF + dt * 0.42);
+            wNearLit.visible = inN; wFarLit.visible = inF;
+            setBar(fillN, tN / DT); setBar(fillF, tF / DT);
+          }
+          var P2 = ptK(nuK);
+          bodyK.position.copy(P2);
+          radK.geometry.setFromPoints([CK, P2]);
+          radK.geometry.attributes.position.needsUpdate = true;
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ------------------------------------------------------- kepler-t2a3 ---
+         Kepler's third law, run rather than plotted. Three bodies on three
+         circles of radius a, 1.6a and 2.5a, each turning at ω = √(GM/a³) —
+         so the outer one visibly crawls and the ratio of the laps you can
+         count on the board is exactly the ratio the formula gives. A T²–a³
+         line plotted on a still slide asserts the relation; this is the
+         relation happening.                                                */
+      if (kind === 'kepler-t2a3'){
+        var MU3 = 1.0;
+        var RADII = [0.72, 1.15, 1.80];
+        var TONE  = [GOLD, INDIGO, GREEN];
+        var NAME  = ['a', '1.6 a', '2.5 a'];
+        var star = onTop(new T.Mesh(new T.SphereGeometry(0.14, 20, 14),
+          new T.MeshBasicMaterial({ color: GOLD })), 12);
+        group.add(star);
+        var bodies3 = [];
+        for (var s3 = 0; s3 < RADII.length; s3++){
+          var rr3 = RADII[s3], ring = [];
+          for (var c3 = 0; c3 <= 140; c3++){
+            var ca = c3 / 140 * Math.PI * 2;
+            ring.push(new T.Vector3(rr3 * Math.cos(ca), rr3 * Math.sin(ca), 0));
+          }
+          group.add(onTop(line(ring, TONE[s3], 0.30), 8));
+          var d3 = onTop(new T.Mesh(new T.SphereGeometry(0.085, 16, 12),
+            new T.MeshBasicMaterial({ color: TONE[s3] })), 12);
+          group.add(d3);
+          var l3 = label(NAME[s3], '#' + TONE[s3].toString(16).padStart(6, '0'), 0.24);
+          onTop(l3, 13); group.add(l3);
+          l3.position.set(0, rr3 + 0.20, 0.02);
+          bodies3.push({ r: rr3, w: Math.sqrt(MU3 / (rr3 * rr3 * rr3)), dot: d3, th: -Math.PI / 2 });
+        }
+        var l3c = label('ω = √(GM / a³)   ⇒   T² ∝ a³', '#8ea0b8', 0.22);
+        onTop(l3c, 13); group.add(l3c);
+        l3c.position.set(0, -2.16, 0.02);
+
+        HALF = 2.35; WIDE = 2.60; fit(w / h);
+
+        var tp3 = Date.now();
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== w || nh !== h){
+            w = nw; h = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var now3 = Date.now(), dt3 = Math.min((now3 - tp3) / 1000, 0.05); tp3 = now3;
+          for (var b3 = 0; b3 < bodies3.length; b3++){
+            var B = bodies3[b3];
+            if (!inking()) B.th += B.w * dt3 * 0.42;
+            B.dot.position.set(B.r * Math.cos(B.th), B.r * Math.sin(B.th), 0);
+          }
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
       /* ---------------------------------------------------- angled-launch --- */
       /* A real Kepler arc. GM = 1, R = 1 inside the maths; the scene is scaled
          to fit afterwards. Launch speed n·v_e at θ from the local horizontal.
@@ -5410,6 +5612,360 @@
         renderer.render(scene, camera);
       });
       lfOn(frame, 'resize', function(){});
+    }
+
+
+    /* ══════════════════════════ satellite scenes ══════════════════════════
+       Three WebGL figures for the "Satellite" board. Each exists only because
+       the still figure on the source slide cannot carry the thing the slide is
+       actually claiming:
+
+         satellite-orbit  the answer to "why doesn't it fall". The pull is
+                          always at the centre and the speed is always across
+                          it, so the body never gets any nearer — drawn as
+                          Newton's own construction: the straight line the
+                          satellite WOULD travel in the next instant, and the
+                          little green fall from the end of it back onto the
+                          orbit. A still arrow-pair asserts "it is falling";
+                          this shows the fall, and shows it never arriving.
+         geo-vs-polar     the two satellite types side by side on two earths
+                          turning at the SAME rate: the polar one crosses both
+                          poles many times while the earth turns once, the
+                          geostationary one hangs over one marked point and
+                          rides round with it. "Appears stationary" is a
+                          statement about two motions matching, so it needs
+                          both motions.
+         coverage-cap     the coverage board: as the satellite is walked out
+                          from the surface, the tangent lines slide round, the
+                          max latitude theta opens, and the spherical cap it
+                          can see grows with it. cos(theta) = R/d becomes a
+                          thing that happens rather than a formula.
+
+       Geometry and axis names only — no lesson text lives in the canvas, every
+       frame ships a .scene-fallback carrying the same figure flat, and that is
+       what prints and what a room with no WebGL sees (rules 11, 20).         */
+    function startSatellite(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 12);
+      camera.lookAt(0, 0, 0);
+      var HALF = (kind === 'geo-vs-polar') ? 1.78 : (kind === 'coverage-cap' ? 1.32 : 2.72);
+      var WIDE = (kind === 'geo-vs-polar') ? 4.25 : (kind === 'coverage-cap' ? 2.45 : 3.05);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(HALF / t2, WIDE / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts),
+          new T.LineBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(pts, color, opacity, dash){
+        var l = line(pts, color, opacity);
+        l.material.dispose();
+        l.material = new T.LineDashedMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity,
+          dashSize: dash || 0.12, gapSize: (dash || 0.12) * 0.8 });
+        l.computeLineDistances();
+        return l;
+      }
+      function ring(radius, color, opacity, seg){
+        var pts = [], n = seg || 128, i;
+        for (i = 0; i <= n; i++){
+          var a = (i / n) * Math.PI * 2;
+          pts.push(new T.Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
+        }
+        return dashed(pts, color, opacity, 0.09);
+      }
+      function arrow(color, rad){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 12), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 16), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.06){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.44);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 74px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * 4, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      function globe(r, colour, opacity, seg){
+        var g = new T.Group();
+        g.add(new T.LineSegments(
+          new T.WireframeGeometry(new T.SphereGeometry(r, seg || 20, Math.round((seg || 20) * 0.6))),
+          new T.LineBasicMaterial({ color: colour, transparent: true, opacity: opacity })));
+        g.add(new T.Mesh(new T.SphereGeometry(r * 0.994, 40, 26),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.72 })));
+        return g;
+      }
+      /* The construction is ABOUT the body, not inside it: depth-testing the
+         arrows against the sphere buries half of every one of them the moment
+         the satellite swings behind. This is a figure, not a rendering. */
+      function onTop(obj, order){
+        obj.renderOrder = order === undefined ? 10 : order;
+        obj.traverse(function(n){
+          if (!n.material) return;
+          var ms = Array.isArray(n.material) ? n.material : [n.material];
+          for (var i = 0; i < ms.length; i++){ ms[i].depthTest = false; ms[i].depthWrite = false; }
+          n.renderOrder = obj.renderOrder;
+        });
+        return obj;
+      }
+      function resized(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return false;
+        if (nw !== w || nh !== h){
+          w = nw; h = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        return true;
+      }
+
+      /* -------------------------------------------- satellite-orbit ------ */
+      if (kind === 'satellite-orbit'){
+        var R = 1.24, RO = 2.02, DPHI = 0.50;
+        var earth = globe(R, INDIGO, 0.30, 22);
+        group.add(earth);
+        group.add(ring(RO, INK, 0.26));
+
+        var sat = onTop(new T.Mesh(new T.SphereGeometry(0.075, 14, 10),
+          new T.MeshBasicMaterial({ color: GOLD })));
+        group.add(sat);
+
+        var vArw = onTop(arrow(GOLD, 0.036));   group.add(vArw);
+        var fArw = onTop(arrow(INDIGO, 0.036)); group.add(fArw);
+        var dropArw = onTop(arrow(GREEN, 0.028)); group.add(dropArw);
+
+        /* the straight line it would have travelled — rebuilt every frame,
+           because it is a claim about THIS instant, not a fixed decoration  */
+        var straight = onTop(dashed([new T.Vector3(), new T.Vector3()], INK, 0.80, 0.14), 9);
+        group.add(straight);
+
+        var lv = label('v', '#f5c542', 0.44);
+        var lf = label('F', '#a8b4ff', 0.44);
+        onTop(lv, 12); onTop(lf, 12);
+        group.add(lv); group.add(lf);
+
+        var t0 = Date.now();
+        lfLoop(frame, function loop(){
+          if (!resized()) return;
+          var t = (Date.now() - t0) / 1000;
+          earth.rotation.y += 0.004;
+          group.rotation.y = Math.sin(t / 11) * 0.06;
+
+          var phi = t * 0.42;
+          var cp = Math.cos(phi), sp = Math.sin(phi);
+          var P = new T.Vector3(cp * RO, sp * RO, 0);
+          var tan = new T.Vector3(-sp, cp, 0);            /* direction of v   */
+          var inw = new T.Vector3(-cp, -sp, 0);           /* direction of F   */
+          sat.position.copy(P);
+
+          aim(vArw, P, new T.Vector3().copy(tan).multiplyScalar(0.62).add(P));
+          aim(fArw, P, new T.Vector3().copy(inw).multiplyScalar(0.62).add(P));
+          lv.position.set(P.x + tan.x * 0.52 + inw.x * -0.34,
+                          P.y + tan.y * 0.52 + inw.y * -0.34, 0.02);
+          lf.position.set(P.x + inw.x * 0.80 + tan.x * -0.26,
+                          P.y + inw.y * 0.80 + tan.y * -0.26, 0.02);
+
+          /* S = where the tangent meets the radius one DPHI further round;
+             Q = where the orbit actually is then. S -> Q is the fall.       */
+          var S = new T.Vector3().copy(tan).multiplyScalar(RO * Math.tan(DPHI)).add(P);
+          var Q = new T.Vector3(Math.cos(phi + DPHI) * RO, Math.sin(phi + DPHI) * RO, 0);
+          straight.geometry.setFromPoints([P, S]);
+          straight.computeLineDistances();
+          aim(dropArw, S, Q);
+
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ------------------------------------------------ geo-vs-polar ----- */
+      if (kind === 'geo-vs-polar'){
+        var Rp = 0.82, XL = -2.15, XR = 2.15;
+
+        /* left — polar: the orbit plane contains the spin axis            */
+        var lHub = new T.Group(); lHub.position.x = XL; lHub.rotation.x = -0.50; group.add(lHub);
+        var lSpin = globe(Rp, INDIGO, 0.28, 22); lHub.add(lSpin);
+        var polarRing = ring(1.45, INK, 0.34); lHub.add(polarRing);
+        var pAxis = line([new T.Vector3(0, -1.32, 0), new T.Vector3(0, 1.32, 0)], INK, 0.22);
+        lHub.add(pAxis);
+        var pSat = onTop(new T.Mesh(new T.SphereGeometry(0.075, 14, 10),
+          new T.MeshBasicMaterial({ color: GOLD })));
+        lHub.add(pSat);
+
+        /* right — geostationary: equatorial ring, and one marked point on
+           the surface that the satellite never leaves the sky above        */
+        var rHub = new T.Group(); rHub.position.x = XR; rHub.rotation.x = -0.50; group.add(rHub);
+        var rSpin = globe(Rp, INDIGO, 0.28, 22); rHub.add(rSpin);
+        var eqRing = ring(1.85, INK, 0.34);
+        eqRing.rotation.x = Math.PI / 2;                 /* into the equator */
+        rHub.add(eqRing);
+        var rAxis = line([new T.Vector3(0, -1.32, 0), new T.Vector3(0, 1.32, 0)], INK, 0.22);
+        rHub.add(rAxis);
+        var gSat = onTop(new T.Mesh(new T.SphereGeometry(0.075, 14, 10),
+          new T.MeshBasicMaterial({ color: GOLD })));
+        rHub.add(gSat);
+        var city = onTop(new T.Mesh(new T.SphereGeometry(0.062, 12, 10),
+          new T.MeshBasicMaterial({ color: GREEN })));
+        rHub.add(city);
+        var tether = onTop(line([new T.Vector3(), new T.Vector3()], GREEN, 0.80), 9);
+        rHub.add(tether);
+
+        var lPolar = label('Polar', '#f4f7fb', 0.34);
+        var lGeo   = label('Geostationary', '#f4f7fb', 0.34);
+        onTop(lPolar, 12); onTop(lGeo, 12);
+        lPolar.position.set(XL, 1.48, 0.04);
+        lGeo.position.set(XR, 1.48, 0.04);
+        group.add(lPolar); group.add(lGeo);
+
+        var t1 = Date.now();
+        lfLoop(frame, function loop(){
+          if (!resized()) return;
+          var t = (Date.now() - t1) / 1000;
+          var day = t * 0.42;                     /* both earths, one rate   */
+          lSpin.rotation.y = day;
+          rSpin.rotation.y = day;
+          group.rotation.y = Math.sin(t / 13) * 0.05;
+
+          /* polar satellite: many turns per day, over both poles            */
+          var a = t * 2.2;
+          pSat.position.set(Math.sin(a) * 1.45, Math.cos(a) * 1.45, 0);
+
+          /* geostationary: the same angle as the ground point, always       */
+          var g = day;
+          city.position.set(Math.cos(g) * Rp, 0, -Math.sin(g) * Rp);
+          gSat.position.set(Math.cos(g) * 1.85, 0, -Math.sin(g) * 1.85);
+          tether.geometry.setFromPoints([city.position, gSat.position]);
+
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ------------------------------------------------- coverage-cap ---- */
+      if (kind === 'coverage-cap'){
+        var Rc = 1.00;
+        group.position.x = -1.05;            /* the figure lives 0..3.2 in x */
+        var earthC = globe(Rc, INDIGO, 0.26, 24);
+        group.add(earthC);
+
+        /* the visible cap, a spherical zone cut at the tangent latitude     */
+        var capMat = new T.MeshBasicMaterial({ color: GOLD, transparent: true,
+          opacity: 0.30, side: T.DoubleSide, depthWrite: false });
+        var cap = new T.Mesh(new T.SphereGeometry(Rc * 1.004, 48, 32, 0, Math.PI * 2, 0, 0.6), capMat);
+        cap.rotation.z = -Math.PI / 2;              /* pole of the cap -> +x  */
+        group.add(cap);
+        var rim = new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3()]),
+          new T.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.85 }));
+        group.add(rim);
+
+        var satC = onTop(new T.Mesh(new T.SphereGeometry(0.062, 14, 10),
+          new T.MeshBasicMaterial({ color: GOLD })));
+        group.add(satC);
+
+        var ray1 = onTop(line([new T.Vector3(), new T.Vector3()], INK, 0.70), 9);
+        var ray2 = onTop(line([new T.Vector3(), new T.Vector3()], INK, 0.70), 9);
+        group.add(ray1); group.add(ray2);
+        var radius = onTop(line([new T.Vector3(), new T.Vector3()], GOLD, 0.85), 9);
+        group.add(radius);
+        var dLine = onTop(dashed([new T.Vector3(), new T.Vector3()], INK, 0.45, 0.10), 9);
+        group.add(dLine);
+        var arc = onTop(line([new T.Vector3()], GREEN, 0.85), 9);
+        group.add(arc);
+
+        var lR = label('R', '#f5c542', 0.36);
+        var lD = label('d', '#f4f7fb', 0.36);
+        var lTh = label('θ', '#34d399', 0.36);
+        onTop(lR, 12); onTop(lD, 12); onTop(lTh, 12);
+        group.add(lR); group.add(lD); group.add(lTh);
+
+        var t2s = Date.now();
+        lfLoop(frame, function loop(){
+          if (!resized()) return;
+          var t = (Date.now() - t2s) / 1000;
+          earthC.rotation.y += 0.003;
+          group.rotation.y = Math.sin(t / 12) * 0.14;
+
+          var u = 0.5 - 0.5 * Math.cos(t * 0.34);
+          var d = 1.36 + u * 1.72;                     /* the satellite walks out */
+          var th = Math.acos(Rc / d);                  /* cos(theta) = R / d      */
+
+          var S = new T.Vector3(d, 0, 0);
+          satC.position.copy(S);
+          var Tp = new T.Vector3(Math.cos(th) * Rc,  Math.sin(th) * Rc, 0);
+          var Tm = new T.Vector3(Math.cos(th) * Rc, -Math.sin(th) * Rc, 0);
+          ray1.geometry.setFromPoints([S, Tp]);
+          ray2.geometry.setFromPoints([S, Tm]);
+          radius.geometry.setFromPoints([new T.Vector3(0, 0, 0), Tp]);
+          dLine.geometry.setFromPoints([new T.Vector3(0, 0, 0), S]);
+          dLine.computeLineDistances();
+
+          /* the cap itself: half-angle theta about the +x axis              */
+          cap.geometry.dispose();
+          cap.geometry = new T.SphereGeometry(Rc * 1.004, 48, 32, 0, Math.PI * 2, 0, th);
+          var rimPts = [], i, n = 72;
+          for (i = 0; i <= n; i++){
+            var a2 = (i / n) * Math.PI * 2;
+            rimPts.push(new T.Vector3(Math.cos(th) * Rc,
+              Math.sin(th) * Rc * Math.cos(a2), Math.sin(th) * Rc * Math.sin(a2)));
+          }
+          rim.geometry.setFromPoints(rimPts);
+
+          var arcPts = [];
+          for (i = 0; i <= 24; i++){
+            var a3 = (i / 24) * th;
+            arcPts.push(new T.Vector3(Math.cos(a3) * 0.42, Math.sin(a3) * 0.42, 0));
+          }
+          arc.geometry.setFromPoints(arcPts);
+
+          lR.position.set(Tp.x * 0.52 - 0.10, Tp.y * 0.52 + 0.16, 0.02);
+          lD.position.set(d * 0.55, -0.20, 0.02);
+          lTh.position.set(Math.cos(th / 2) * 0.60, Math.sin(th / 2) * 0.60, 0.02);
+
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
     }
 
   });
