@@ -203,6 +203,76 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
   #bg svg.motif-torque .lever,#bg svg.motif-torque .turn,
   #bg svg.motif-torque .beam{animation:none}}
 
+/* Chapter motif "conserve" (manifest "motif":"conserve"): the conservation of
+   angular momentum, as texture. An axis low-right carries an L arrow that never
+   changes length; two point masses ride radii that draw in and go out again;
+   and the body turns.
+
+   The two animations below share one 20s period on purpose. `.arm` scales the
+   radii about the axis, linearly. `.spin` is NOT linear: its keyframes are cut
+   so the body turns at one rate while the masses are out and about 5.7x that
+   while they are in — the ratio 1/r^2 gives for r -> 0.42r. That coupling is
+   the only claim the chapter makes, and it is worth spending twelve keyframe
+   stops on, because a ring turning at a constant rate says the opposite of what
+   the slide says. The total is 720deg, an exact number of turns, so the loop
+   does not jump. Both flatten in print and under prefers-reduced-motion, and
+   nothing is ever read off it (rules 11, 20).                                */
+#bg svg.motif-conserve{opacity:.58}
+#bg svg.motif-conserve .spin{transform-box:view-box;transform-origin:1206px 508px;
+    animation:lf-cn-spin 20s linear infinite}
+#bg svg.motif-conserve .arm{transform-box:view-box;transform-origin:1206px 508px;
+    animation:lf-cn-pull 20s linear infinite}
+@keyframes lf-cn-spin{
+  0%{transform:rotate(0deg)}      18%{transform:rotate(45deg)}
+  42%{transform:rotate(246deg)}   58%{transform:rotate(474deg)}
+  82%{transform:rotate(675deg)}  100%{transform:rotate(720deg)}}
+@keyframes lf-cn-pull{
+  0%,18%{transform:scale(1)}      42%,58%{transform:scale(.42)}
+  82%,100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-conserve .spin,#bg svg.motif-conserve .arm{animation:none}}
+
+/* Chapter motif "rolling" (manifest "motif":"rolling"): the rolling-motion
+   chapter's signature, which is one constraint — v = ωR, i.e. one turn buys
+   exactly one circumference of ground.
+
+   The two animations below share one 44s period on purpose, and that is the
+   whole point. `.roll` translates the wheel by 1382px, which is exactly two
+   circumferences (2 x 2πR) for the R = 110 wheel drawn in the motif; `.spin`
+   turns it through exactly 720deg in the same time. Start both at zero and the
+   gold rim dot rides the two cycloid arches that are drawn, at rest, underneath
+   it, touching down at each cusp with zero speed. Break the ratio — or offset
+   the start — and the backdrop shows a wheel slipping, which contradicts every
+   slide in front of it. Both flatten in print and under prefers-reduced-motion,
+   and nothing is ever read off it (rules 11, 20).                            */
+#bg svg.motif-rolling{opacity:.56}
+#bg svg.motif-rolling .roll{transform-box:view-box;
+    animation:lf-rl-roll 44s linear infinite}
+#bg svg.motif-rolling .spin{transform-box:view-box;transform-origin:240px 680px;
+    animation:lf-rl-spin 44s linear infinite}
+@keyframes lf-rl-roll{from{transform:translateX(0)}
+                        to{transform:translateX(1382px)}}
+@keyframes lf-rl-spin{from{transform:rotate(0)}to{transform:rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-rolling .roll,#bg svg.motif-rolling .spin{animation:none}}
+
+/* Chapter motif "gravity" — the field of the earth. Two things move and both
+   of them are things the chapter says move: the meridians turn about the polar
+   axis (half the chapter is what that rotation does to g), and one satellite
+   runs its orbit. The g-r curve does NOT move: it is a graph, and a graph that
+   drifts reads as a measurement changing. Periods are deliberately unrelated —
+   a spin and an orbit locked together would assert a synchronous rotation the
+   chapter never claims. Texture only; nothing is read off it (rules 11, 20).  */
+#bg svg.motif-gravity{opacity:.58}
+#bg svg.motif-gravity .spin{transform-box:view-box;transform-origin:1230px 470px;
+    animation:lf-gv-spin 96s linear infinite}
+#bg svg.motif-gravity .orbit{transform-box:view-box;transform-origin:1230px 470px;
+    animation:lf-gv-orbit 54s linear infinite}
+@keyframes lf-gv-spin{from{transform:scaleX(1)}50%{transform:scaleX(-1)}to{transform:scaleX(1)}}
+@keyframes lf-gv-orbit{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-gravity .spin,#bg svg.motif-gravity .orbit{animation:none}}
+
 /* The WebGL companion to the "inertia" motif — a persistent canvas of slowly
    turning wireframe bodies (ring, disc, rod, shell) drifting in depth behind
    every slide. It is a sibling of .page (rule 1), it sits *under* the motif
@@ -286,6 +356,16 @@ p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
 .example b{color:var(--ink);font-style:normal}
 .lead   {font-size:clamp(24px,5.4vmin,58px);font-weight:700;line-height:1.4;
          letter-spacing:-.01em}
+/* A word the source slide crosses out and replaces — "escape ~~velocity~~
+   speed". The correction IS the teaching point, so it has to survive into the
+   HTML rather than being silently tidied away. Pure CSS, so it prints. */
+.strike {text-decoration:line-through;text-decoration-thickness:.09em;
+         text-decoration-color:currentColor;opacity:.62}
+/* h1.title paints its text with a clipped gradient and a transparent fill, so
+   a plain .strike inside it comes out INVISIBLE — the crossed-out word
+   disappears and the title reads with a hole in it. Give it a real colour. */
+h1.title .strike{-webkit-text-fill-color:var(--sub);color:var(--sub);
+         background:none;opacity:.72;text-decoration-color:var(--sub)}
 
 /* -------------------------------------------------------------- layouts --- */
 .two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
@@ -535,6 +615,17 @@ math{math-style:normal}
                   display:flex;align-items:baseline;gap:.5em}
 .derivation .line .why{font-family:var(--font-ui);font-style:italic;color:var(--muted);
                        font-size:var(--fs-note)}
+/* A beat of a derivation that is a SENTENCE, not a formula. Rule 19 says prose
+   is the UI font and only symbol-only runs get the math serif — but a line of
+   reasoning ("inside a shell the field is exactly zero") is a real step of the
+   working and belongs in the flow of the derivation, not banished to a .why
+   aside. `.line.prose` keeps the line where it is and puts it back in the UI
+   face at body size; any <span class="eq inline"> inside it still sets in the
+   math serif, so "inside, g ∝ r — it grows outward" reads correctly on both
+   halves. Upright, not italic: .why is the italic aside, this is the argument. */
+.derivation .line.prose{font-family:var(--font-ui);font-size:var(--fs-body);
+                        color:var(--sub);line-height:1.4}
+.derivation .line.prose .eq{font-size:var(--fs-body)}
 .stack>.result,.graph-cell>.result{align-self:flex-start}
 /* A result that closes a derivation belongs at the foot of THAT column — in a
    two-column working the answer box otherwise lands under the left column
@@ -1044,6 +1135,12 @@ svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
   #bg svg.motif-torque{opacity:.20!important}
   #bg svg.motif-torque .lever,#bg svg.motif-torque .turn,
   #bg svg.motif-torque .beam{animation:none!important}
+  #bg svg.motif-conserve{opacity:.20!important}
+  #bg svg.motif-conserve .spin,#bg svg.motif-conserve .arm{animation:none!important}
+  #bg svg.motif-rolling{opacity:.20!important}
+  #bg svg.motif-rolling .roll,#bg svg.motif-rolling .spin{animation:none!important}
+  #bg svg.motif-gravity{opacity:.20!important}
+  #bg svg.motif-gravity .spin,#bg svg.motif-gravity .orbit{animation:none!important}
   /* the translation/rotation pair prints as two identical rods — the caption
      under each is what carries the difference on paper */
   svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none!important;transform:none!important}

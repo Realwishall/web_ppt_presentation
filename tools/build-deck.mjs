@@ -539,10 +539,195 @@ const motifSvg = {
     </g>
   </svg>`,
 
+  /* Chapter motif "conserve": the conservation-of-angular-momentum board's
+     signature, which is a claim about two things changing and one thing not.
+     A spin axis stands low-right carrying an L arrow that NEVER changes
+     length; about that axis a body turns, and two point masses ride radii
+     that draw in and go out again. The turn is keyed to the pull: the spin
+     keyframes are deliberately non-linear, so the body runs slowly while the
+     masses are out and fast while they are in, at roughly the ratio 1/r^2
+     gives. That coupling is the whole chapter, and it costs no script — CSS
+     only, flattened in @media print (rule 11). A skater's trace sits far
+     bottom-left as the case the class already knows. Right of centre and low,
+     clear of the writing band — texture, never information.                  */
+  conserve: `<svg class="motif-conserve" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-cn-glow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.17"/>
+        <stop offset="0.55" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-cn-axis" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.30" stop-color="#f5c542" stop-opacity="0.22"/>
+        <stop offset="0.80" stop-color="#f5c542" stop-opacity="0.14"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <circle cx="1206" cy="508" r="336" fill="url(#lf-cn-glow)"/>
+    <!-- the axis, and on it the one quantity that does not move -->
+    <path d="M1206 78 V922" stroke="url(#lf-cn-axis)" stroke-width="3.4" stroke-linecap="round"/>
+    <!-- the head sits where the axis gradient is actually opaque, or it floats
+         alone above a line nobody can see -->
+    <path d="M1194 316 l12 -48 l12 48 z" fill="#f5c542" fill-opacity="0.20"/>
+    <!-- the plane it turns in, seen edge-on: scaffolding, so it never moves -->
+    <g fill="none" stroke="#7c8cff" stroke-linecap="round">
+      <ellipse cx="1206" cy="508" rx="318" ry="96" stroke-opacity="0.15" stroke-width="2.4"/>
+      <ellipse cx="1206" cy="508" rx="188" ry="57" stroke-opacity="0.09" stroke-width="2" stroke-dasharray="20 30"/>
+    </g>
+    <!-- the body, turning; slow while the masses are out, fast while they are in -->
+    <g class="spin" fill="none" stroke="#7c8cff" stroke-linecap="round">
+      <ellipse cx="1206" cy="508" rx="252" ry="76" stroke-opacity="0.18" stroke-width="2.6" stroke-dasharray="30 44"/>
+    </g>
+    <!-- the two masses on radii that draw in and go out again -->
+    <g class="arm">
+      <path d="M1206 508 H1478" stroke="#f5c542" stroke-opacity="0.14" stroke-width="2.4" stroke-dasharray="14 20"/>
+      <circle cx="1478" cy="508" r="12" fill="#f5c542" fill-opacity="0.18"/>
+      <path d="M1206 508 H934" stroke="#f5c542" stroke-opacity="0.14" stroke-width="2.4" stroke-dasharray="14 20"/>
+      <circle cx="934" cy="508" r="12" fill="#f5c542" fill-opacity="0.18"/>
+    </g>
+    <circle cx="1206" cy="508" r="13" fill="#7c8cff" fill-opacity="0.24"/>
+    <!-- the case the class already knows, at rest and far from the pen -->
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-linecap="round">
+      <ellipse cx="286" cy="852" rx="176" ry="30" stroke-width="2.2"/>
+      <path d="M286 726 V852" stroke-width="2" stroke-dasharray="12 16"/>
+      <path d="M212 782 H360" stroke-width="2.2"/>
+      <path d="M556 858 H812" stroke-width="2.4" stroke-dasharray="10 26"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "gravity": the field of the earth, which is the whole of
+     this chapter — g standing on the radius everywhere outside, and the same
+     g dying linearly to nothing on the way in. The globe low-right carries a
+     polar axis and latitude rings that TURN, because half the chapter is what
+     that rotation does to g; a satellite rides its orbit around it; and the
+     g-r curve is drawn once, at rest, low across the left: linear out to R,
+     then 1/r-squared away from it, with the kink at the surface marked.
+
+     The curve is the one thing on the board a student could try to read, so it
+     is drawn without numbers and at texture opacity — it is a silhouette of
+     the graph the deck draws properly on its own slides, never a substitute
+     for it (rule 11). The spin and the orbit are CSS animations on
+     `.motif-gravity .spin` / `.orbit` (no script), flattened in @media print
+     and under prefers-reduced-motion.                                        */
+  gravity: `<svg class="motif-gravity" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-gv-glow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.18"/>
+        <stop offset="0.55" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-gv-axis" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.18" stop-color="#f5c542" stop-opacity="0.16"/>
+        <stop offset="0.86" stop-color="#f5c542" stop-opacity="0.12"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <circle cx="1230" cy="470" r="430" fill="url(#lf-gv-glow)"/>
+    <!-- the field: every arrow on the radius, pointing at the centre -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.15" stroke-width="2.6" stroke-linecap="round">
+      <path d="M1230 130 V214"/><path d="M1230 810 V726"/>
+      <path d="M890 470 H974"/><path d="M1570 470 H1486"/>
+      <path d="M990 230 L1050 290"/><path d="M1470 230 L1410 290"/>
+      <path d="M990 710 L1050 650"/><path d="M1470 710 L1410 650"/>
+    </g>
+    <g fill="#7c8cff" fill-opacity="0.16">
+      <path d="M1230 226 l-11 -26 l22 0 z"/><path d="M1230 714 l-11 26 l22 0 z"/>
+      <path d="M986 470 l26 -11 l0 22 z"/><path d="M1474 470 l-26 -11 l0 22 z"/>
+    </g>
+    <!-- the body itself: polar axis, equator, and meridians that turn -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M1230 218 V722" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2"/>
+      <circle cx="1230" cy="470" r="185" stroke="#7c8cff" stroke-opacity="0.26" stroke-width="3"/>
+      <ellipse cx="1230" cy="470" rx="185" ry="52" stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.4"/>
+      <ellipse cx="1230" cy="384" rx="164" ry="44" stroke="#ffffff" stroke-opacity="0.07" stroke-width="1.8"/>
+      <ellipse cx="1230" cy="556" rx="164" ry="44" stroke="#ffffff" stroke-opacity="0.07" stroke-width="1.8"/>
+      <g class="spin">
+        <ellipse cx="1230" cy="470" rx="62" ry="185" stroke="#7c8cff" stroke-opacity="0.11" stroke-width="1.8"/>
+        <ellipse cx="1230" cy="470" rx="132" ry="185" stroke="#7c8cff" stroke-opacity="0.08" stroke-width="1.8"/>
+        <path d="M1230 285 V655" stroke="#7c8cff" stroke-opacity="0.09" stroke-width="1.8"/>
+      </g>
+    </g>
+    <!-- something in orbit, because g does not stop at the surface -->
+    <g fill="none">
+      <ellipse cx="1230" cy="470" rx="296" ry="296" stroke="#ffffff" stroke-opacity="0.05"
+               stroke-width="1.6" stroke-dasharray="10 20"/>
+      <g class="orbit"><circle cx="1526" cy="470" r="9" fill="#f5c542" fill-opacity="0.24" stroke="none"/></g>
+    </g>
+    <!-- the graph the chapter is about, at rest, well below the writing band -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M60 852 H800" stroke="url(#lf-gv-axis)" stroke-width="2.6"/>
+      <path d="M60 852 V690" stroke="#f5c542" stroke-opacity="0.10" stroke-width="2.2"/>
+      <path d="M60 830 L260 700" stroke="#7c8cff" stroke-opacity="0.20" stroke-width="3"/>
+      <path d="M260 700 L310 747 L360 772 L420 790 L500 803 L600 812 L700 817 L780 820"
+            stroke="#f5c542" stroke-opacity="0.20" stroke-width="3"/>
+      <path d="M260 700 V852" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1.8" stroke-dasharray="8 14"/>
+    </g>
+    <circle cx="260" cy="700" r="7" fill="#f5c542" fill-opacity="0.16"/>
+  </svg>`,
+
+  /* Chapter motif "rolling": the rolling chapter's own signature, which is a
+     constraint — one turn of the wheel advances it by exactly one circumference,
+     so the point on the rim comes back to the ground and does not slide. The
+     wheel below runs that constraint honestly: `.roll` translates by 2πR
+     (691px at R = 110) in exactly the time `.spin` turns 360°, so the rim dot
+     rides the cycloid drawn faintly under it and touches down at each cusp.
+     A wheel turning at some unrelated rate would be a picture of slipping,
+     which is the one thing the chapter says does not happen here.
+
+     CSS only (no script), flattened in @media print and under
+     prefers-reduced-motion. Low across the board and mostly right of centre,
+     under the writing band — texture, never information (rule 11).           */
+  rolling: `<svg class="motif-rolling" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <radialGradient id="lf-rl-glow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.16"/>
+        <stop offset="0.55" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lf-rl-ground" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.22" stop-color="#f5c542" stop-opacity="0.18"/>
+        <stop offset="0.80" stop-color="#f5c542" stop-opacity="0.14"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <circle cx="900" cy="676" r="360" fill="url(#lf-rl-glow)"/>
+    <!-- the ground the constraint is written against -->
+    <path d="M40 790 H1580" stroke="url(#lf-rl-ground)" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- the path the rim point actually takes: two cycloid arches, at rest -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.13" stroke-width="2.4" stroke-linecap="round">
+      <path d="M240 790 L240 789 L240 786 L241 782 L243 775 L245 767 L249 758 L254 747 L260 735 L268 722 L278 708 L289 694 L303 680 L318 666 L335 652 L354 638 L375 625 L398 613 L421 602 L447 593 L473 585 L500 578 L528 574 L557 571 L586 570 L614 571 L643 574 L671 578 L698 585 L725 593 L750 602 L774 613 L796 625 L817 638 L836 652 L853 666 L868 680 L882 694 L893 708 L903 722 L911 735 L918 747 L923 758 L926 767 L929 775 L930 782 L931 786 L931 789 L931 790"/>
+      <path d="M931 790 L931 789 L931 786 L932 782 L934 775 L936 767 L940 758 L945 747 L951 735 L959 722 L969 708 L980 694 L994 680 L1009 666 L1026 652 L1045 638 L1066 625 L1089 613 L1112 602 L1138 593 L1164 585 L1191 578 L1219 574 L1248 571 L1277 570 L1305 571 L1334 574 L1362 578 L1389 585 L1416 593 L1441 602 L1465 613 L1487 625 L1508 638 L1527 652 L1544 666 L1559 680 L1573 694 L1584 708 L1594 722 L1602 735 L1609 747 L1614 758 L1617 767 L1620 775 L1621 782 L1622 786 L1622 789 L1622 790" stroke-opacity="0.07"/>
+    </g>
+    <!-- the cusps: where the rim point is instantaneously at rest -->
+    <g fill="#f5c542" fill-opacity="0.13">
+      <circle cx="240" cy="790" r="7"/><circle cx="931" cy="790" r="7"/><circle cx="1622" cy="790" r="7"/>
+    </g>
+    <!-- the wheel: advances 2πR while it turns once, so it never slips -->
+    <g class="roll">
+      <g class="spin" fill="none" stroke-linecap="round">
+        <circle cx="240" cy="680" r="110" stroke="#7c8cff" stroke-opacity="0.22" stroke-width="3"/>
+        <circle cx="240" cy="680" r="64"  stroke="#7c8cff" stroke-opacity="0.11" stroke-width="2.2" stroke-dasharray="18 26"/>
+        <path d="M130 680 H350" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2"/>
+        <path d="M240 570 V790" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2"/>
+        <circle cx="240" cy="790" r="10" fill="#f5c542" fill-opacity="0.30" stroke="none"/>
+      </g>
+    </g>
+    <!-- the two bodies the chapter keeps coming back to, at rest and far left -->
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-linecap="round">
+      <circle cx="196" cy="176" r="62" stroke-width="2.4"/>
+      <ellipse cx="196" cy="176" rx="62" ry="19" stroke-width="1.8" stroke-dasharray="10 16"/>
+      <circle cx="382" cy="196" r="42" stroke-width="2.2"/>
+      <path d="M120 262 H452" stroke-width="2" stroke-dasharray="12 22"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity`);
   process.exit(1);
 }
 
@@ -555,7 +740,10 @@ if (!motifSvg) {
    "inertia" motif) and off with --no-bg-scene.                               */
 const bgScene = has('--no-bg-scene')
   ? null
-  : (flag('--bg-scene') || manifest.bg_scene || ((motif === 'inertia' || motif === 'torque') ? 'inertia' : null));
+  : (flag('--bg-scene') || manifest.bg_scene
+     || ((motif === 'inertia' || motif === 'torque' || motif === 'conserve'
+          || motif === 'rolling') ? 'inertia'
+         : (motif === 'gravity' ? 'gravity' : null)));
 const bgSceneName = bgScene === true ? 'inertia' : bgScene;
 
 const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
@@ -573,6 +761,7 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
 (function(){
   var cv = document.querySelector('canvas.bg-scene');
   if (!cv) return;
+  var SCENE = (cv.getAttribute('data-bg-scene') || 'inertia').trim();
   window.addEventListener('load', function(){
     var T = window.THREE;
     if (!T || !T.WebGLRenderer) return;                       // lib missing -> silent
@@ -612,6 +801,21 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
           scene.add(obj);
           bodies.push({ o: obj, s: spin });
         }
+        if (SCENE === 'gravity'){
+          /* The gravitation chapter's bodies: the earth itself, the ring its
+             satellite runs on, and two smaller spheres further out. Each turns
+             about its own axis; the ring is laid flat around the earth so the
+             backdrop reads as a body with something going round it, which is
+             what every board in front of it is about.                       */
+          add(wire(new T.SphereGeometry(4.2, 26, 16), INDIGO, 0.20),
+              [14.0, -2.6, -12], 0.06, 0);                                   // earth
+          add(wire(new T.TorusGeometry(6.6, 0.06, 5, 72), GOLD, 0.13),
+              [14.0, -2.6, -12], 0.10, Math.PI / 2 - 0.34);                  // orbit
+          add(wire(new T.SphereGeometry(1.5, 14, 10), INDIGO, 0.13),
+              [-13.5, -6.4, -15], 0.09, 0);                                  // moon
+          add(wire(new T.SphereGeometry(2.1, 16, 10), INDIGO, 0.10),
+              [-1.5, -9.4, -18], 0.05, 0);                                   // far body
+        } else {
         add(wire(new T.TorusGeometry(3.1, 0.10, 6, 64), INDIGO, 0.30),
             [13.5, -1.4, -10], 0.16, Math.PI / 2 - 0.42);                    // ring
         add(wire(new T.CylinderGeometry(2.5, 2.5, 0.34, 34, 1), INDIGO, 0.22),
@@ -620,6 +824,7 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
             [-2.0, -8.6, -9], 0.09, 0.22);                                   // rod
         add(wire(new T.SphereGeometry(2.4, 18, 12), INDIGO, 0.15),
             [15.5, -8.4, -16], 0.07, 0);                                     // shell
+        }
 
         function resize(){
           var nw = cv.clientWidth, nh = cv.clientHeight;

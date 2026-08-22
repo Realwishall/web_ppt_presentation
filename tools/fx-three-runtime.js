@@ -244,7 +244,8 @@
       if (kind === 'impulse-wall' || kind === 'explosion-momentum' ||
           kind === 'recoil-momentum' || kind === 'collision-momentum' ||
           kind === 'restitution-e' || kind === 'newton-cradle' ||
-          kind === 'bounce-decay' || kind === 'max-ke-loss'){
+          kind === 'bounce-decay' || kind === 'max-ke-loss' ||
+          kind === 'rolling-contact'){
         startMech2D(frame, w, h, kind); return;
       }
       if (kind === 'slinky-drop' || kind === 'lift-frame' ||
@@ -252,10 +253,23 @@
         startFbd2D(frame, w, h, kind); return;
       }
       if (kind === 'equilibrium-types'){ startEquilibrium(frame, w, h); return; }
+      if (kind === 'normal-shift' || kind === 'toppling' || kind === 'car-topple'){
+        startTopple2D(frame, w, h, kind); return;
+      }
       if (kind === 'spin-top' || kind === 'cross-product' ||
           kind === 'conical-pendulum' || kind === 'torque-lever' ||
           kind === 'spin-axis'){
         startRot3D(frame, w, h, kind); return;
+      }
+      if (kind === 'skater-spin' || kind === 'hoberman'){
+        startConserve(frame, w, h, kind); return;
+      }
+      if (kind === 'earth-g' || kind === 'latitude-g' || kind === 'oblate-earth'){
+        startGravity(frame, w, h, kind); return;
+      }
+      if (kind === 'escape-speed' || kind === 'launch-direction' ||
+          kind === 'angled-launch'){
+        startEscape(frame, w, h, kind); return;
       }
 
       var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
@@ -2970,6 +2984,72 @@
         };
       }
 
+      /* --------------------------------------------------- rolling-contact --
+         The whole of rolling motion in one figure: the wheel advances by
+         exactly one circumference per turn, so the rim point rides the cycloid
+         drawn under it — and its own velocity arrow, v + ω x r, GROWS from
+         nothing at the ground to 2v at the crest and dies back to nothing at
+         the next cusp. Two things a still figure cannot carry: that the contact
+         point is instantaneously at rest even though the body is moving, and
+         that the top is going twice as fast as the centre at the same instant.
+         Everything the class must be able to read is also on the slide in HTML
+         (rule 20) — this only shows it happening.                            */
+      if (kind === 'rolling-contact'){
+        var RGY = 1.05, RR = 1.12, RCY = RGY + RR, RX0 = 1.15, RV = 1.05;
+        var RSPAN = 2 * Math.PI * RR * 2;            /* two full turns across */
+        world.add(line([new T.Vector3(0.3, RGY, 0),
+                        new T.Vector3(7.7, RGY, 0)], INK, 0.7));
+
+        /* the path the rim point actually takes — drawn once, and at rest */
+        var cyc = [];
+        for (var ci = 0; ci <= 260; ci++){
+          var cth = (ci / 260) * (RSPAN / RR);
+          cyc.push(new T.Vector3(RX0 + RR * cth - RR * Math.sin(cth),
+                                 RCY - RR * Math.cos(cth), 0));
+        }
+        world.add(line(cyc, INDIGO, 0.32));
+
+        var wheel = new T.Group();
+        wheel.position.set(RX0, RCY, 0);
+        world.add(wheel);
+        var rimPts = [];
+        for (var ri = 0; ri <= 72; ri++){
+          rimPts.push(new T.Vector3(RR * Math.cos(ri / 72 * Math.PI * 2),
+                                    RR * Math.sin(ri / 72 * Math.PI * 2), 0));
+        }
+        wheel.add(line(rimPts, INDIGO, 0.95));
+        wheel.add(line([new T.Vector3(-RR, 0, 0), new T.Vector3(RR, 0, 0)], INK, 0.26));
+        wheel.add(line([new T.Vector3(0, -RR, 0), new T.Vector3(0, RR, 0)], INK, 0.26));
+        var rimDot = dot(GOLD, 0.13); rimDot.position.set(0, -RR, 0); wheel.add(rimDot);
+
+        var cDot = dot(GREEN, 0.12);  world.add(cDot);
+        var hubDot = dot(INDIGO, 0.1); world.add(hubDot);
+
+        var aTop = arrow(GOLD, 0.05), aCen = arrow(CYAN, 0.05), aRim = arrow(GOLD, 0.045);
+        world.add(aTop); world.add(aCen); world.add(aRim);
+        var lTop = label('2v', '#f5c542', 0.42), lCen = label('v', '#56ccf2', 0.36),
+            lBot = label('0', '#34d399', 0.36);
+        world.add(lTop); world.add(lCen); world.add(lBot);
+
+        tick = function(t){
+          var s = (RV * t) % RSPAN, th = s / RR, x = RX0 + s;
+          wheel.position.x = x;
+          wheel.rotation.z = -th;                  /* rolling right = clockwise */
+          hubDot.position.set(x, RCY, 0);
+          cDot.position.set(x, RGY, 0);
+          aim(aTop, new T.Vector3(x, RCY + RR, 0), new T.Vector3(x + 1.86, RCY + RR, 0));
+          aim(aCen, new T.Vector3(x, RCY, 0),      new T.Vector3(x + 0.93, RCY, 0));
+          lTop.position.set(x + 2.16, RCY + RR, 0);
+          lCen.position.set(x + 1.20, RCY, 0);
+          lBot.position.set(x, RGY - 0.36, 0);
+          /* the rim point's own velocity — zero at the cusp, 2v at the crest */
+          var px = x - RR * Math.sin(th), py = RCY - RR * Math.cos(th);
+          aim(aRim, new T.Vector3(px, py, 0),
+                    new T.Vector3(px + (1 - Math.cos(th)) * 0.93,
+                                  py + Math.sin(th) * 0.93, 0));
+        };
+      }
+
       function resize(){
         var nw = frame.clientWidth, nh = frame.clientHeight;
         if (!nw || !nh) return;
@@ -3290,6 +3370,338 @@
       var tf0 = Date.now();
       lfLoop(frame, function loop(){
         if (tick) tick((Date.now() - tf0) / 1000);
+        renderer.render(scene, camera);
+      });
+    }
+
+
+    /* ===================================================== topple scenes ====
+       Three scenes for the "shifting of normal reaction / toppling" board.
+       Each exists because the still figure on the source slide cannot show the
+       one thing the slide is actually about:
+
+         normal-shift  the normal reaction is a DISTRIBUTION, not an arrow. As
+                       the applied force grows the pressure under the base skews
+                       and the resultant N walks towards the leading edge. The
+                       source slide draws two frozen states side by side and
+                       asks the class to imagine the walk; here they watch it.
+         toppling      a body tips at the exact instant the toppling moment
+                       passes the restoring moment. Two bars under the block —
+                       gold F·l growing, indigo mg·b/2 fixed — and the block
+                       leaves the floor on the frame the gold bar crosses the
+                       indigo one. The inequality and the event are one thing.
+         car-topple    the same law with speed as the variable: mv²/r × b/2
+                       against mg × l/2, the inner wheels lifting when the
+                       gold bar wins. "Body will over turn" is a prediction
+                       about an event, so it needs the event.
+
+       Same conventions as startFbd2D — a flat x 0..8 / y 0..5 world, canvas
+       labels, cylinder+cone arrows, and a `.scene-fallback` in the markup that
+       carries the still version for print and for a room with no WebGL.      */
+    function startTopple2D(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9.6);
+      camera.lookAt(0, 0, 0);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(2.9 / t2, 4.35 / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var world = new T.Group();
+      world.position.set(-4, -2.5, 0);
+      scene.add(world);
+
+      function line(pts, color, opacity){
+        var g = new T.BufferGeometry().setFromPoints(pts);
+        return new T.Line(g, new T.LineBasicMaterial({
+          color: color, transparent: true, opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(a, b, color, opacity, dash){
+        var g = new T.Group(), d = dash || 0.2,
+            v = new T.Vector3().subVectors(b, a), len = v.length(), n = v.clone().normalize();
+        for (var s = 0; s < len; s += d * 2){
+          g.add(line([a.clone().addScaledVector(n, s),
+                      a.clone().addScaledVector(n, Math.min(s + d, len))], color, opacity));
+        }
+        return g;
+      }
+      function arrow(color, rad, opacity){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad, mat: mat };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 64px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 4, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        m.userData.retext = function(txt, col){
+          ctx.clearRect(0, 0, 512, 128);
+          ctx.fillStyle = col || css;
+          ctx.fillText(txt, 256, 64);
+          tex.needsUpdate = true;
+        };
+        return m;
+      }
+      /* a rectangle drawn about its OWN centre, so a parent group can pivot it
+         about a corner without the fill and the outline drifting apart */
+      function slab(bw, bh, color, opacity){
+        var g = new T.Group();
+        g.add(new T.Mesh(new T.PlaneGeometry(bw, bh),
+          new T.MeshBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 0.30 : opacity })));
+        g.add(line([new T.Vector3(-bw/2, -bh/2, 0), new T.Vector3( bw/2, -bh/2, 0),
+                    new T.Vector3( bw/2,  bh/2, 0), new T.Vector3(-bw/2,  bh/2, 0),
+                    new T.Vector3(-bw/2, -bh/2, 0)], color, 0.95));
+        return g;
+      }
+      function floor(x0, x1, y, tone){
+        var g = new T.Group();
+        g.add(line([new T.Vector3(x0, y, 0), new T.Vector3(x1, y, 0)], tone || INK, 0.8));
+        for (var gx = x0 + 0.1; gx < x1; gx += 0.3){
+          g.add(line([new T.Vector3(gx, y, 0),
+                      new T.Vector3(gx - 0.2, y - 0.24, 0)], INDIGO, 0.45));
+        }
+        return g;
+      }
+      /* the two moment bars: gold = what turns the body, indigo = what holds
+         it. The body leaves the floor exactly when gold passes indigo, so the
+         inequality on the slide and the event on screen are the same fact. */
+      function bars(x0, y0, span, goldName, holdName){
+        var g = new T.Group();
+        g.add(line([new T.Vector3(x0, y0 - 0.34, 0),
+                    new T.Vector3(x0, y0 + 0.5, 0)], INK, 0.45));
+        var hold = new T.Mesh(new T.PlaneGeometry(1, 0.2),
+          new T.MeshBasicMaterial({ color: INDIGO, transparent: true, opacity: 0.75 }));
+        var turn = new T.Mesh(new T.PlaneGeometry(1, 0.2),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.9 }));
+        g.add(hold); g.add(turn);
+        var lh = label(holdName, '#9fb4ff', 0.34), lt = label(goldName, '#f5c542', 0.34);
+        g.add(lh); g.add(lt);
+        lh.position.set(x0 + span * 0.5, y0 - 0.28, 0);
+        lt.position.set(x0 + span * 0.5, y0 + 0.5, 0);
+        g.userData.set = function(uTurn, uHold){
+          var wt = Math.max(span * uTurn, 0.001), wh = Math.max(span * uHold, 0.001);
+          turn.scale.set(wt, 1, 1); turn.position.set(x0 + wt / 2, y0 + 0.24, 0);
+          hold.scale.set(wh, 1, 1); hold.position.set(x0 + wh / 2, y0 - 0.02, 0);
+        };
+        return g;
+      }
+
+      var tick = null;
+
+      /* ----------------------------------------------------- normal-shift -- */
+      if (kind === 'normal-shift'){
+        var GY = 1.55, BX = 3.15, BW = 2.3, BH = 2.3, NARR = 15;
+        world.add(floor(0.5, 6.2, GY));
+        var blk = slab(BW, BH, INDIGO, 0.26);
+        blk.position.set(BX, GY + BH / 2, 0);
+        world.add(blk);
+        var lm = label('m', '#cfd8e8', 0.4);
+        lm.position.set(BX - 0.05, GY + BH * 0.72, 0); world.add(lm);
+
+        /* the pressure distribution — one short arrow per strip of the base */
+        var strips = [];
+        for (var i = 0; i < NARR; i++){
+          var a = arrow(INK, 0.026, 0.7); world.add(a); strips.push(a);
+        }
+        var aF = arrow(GOLD, 0.05); world.add(aF);
+        var lF = label('F', '#f5c542', 0.42); world.add(lF);
+        var aN = arrow(CYAN, 0.055); world.add(aN);
+        var lN = label('N', '#56ccf2', 0.4); world.add(lN);
+        var cen = dashed(new T.Vector3(BX, GY - 0.7, 0),
+                         new T.Vector3(BX, GY + BH + 0.35, 0), INK, 0.28, 0.14);
+        world.add(cen);
+        var lCen = label('centre', '#8ea0bd', 0.36);
+        lCen.position.set(BX, GY + BH + 0.62, 0); world.add(lCen);
+        var lRead = label('N through the centre', '#34d399', 0.42);
+        lRead.position.set(4.0, 0.55, 0); world.add(lRead);
+
+        tick = function(t){
+          var CY = 6.4, p = (t % CY) / CY;
+          var u = p < 0.5 ? p * 2 : (1 - p) * 2;          /* 0 -> 1 -> 0 */
+          u = u * u * (3 - 2 * u);                        /* ease */
+
+          /* the resultant walks from the centre towards the leading edge */
+          var xN = BX + u * (BW / 2 - 0.16);
+          aim(aN, new T.Vector3(xN, GY - 0.02, 0), new T.Vector3(xN, GY + BH * 0.62, 0));
+          lN.position.set(xN + 0.34, GY + BH * 0.36, 0);
+
+          /* the distribution that resultant is the resultant OF */
+          for (var k = 0; k < NARR; k++){
+            var s = (k + 0.5) / NARR;                     /* 0 left -> 1 right */
+            var x = BX - BW / 2 + s * BW;
+            var wgt = 1 + u * 2.4 * (s - 0.5) * 2;        /* skews with u */
+            var len = Math.max(0.12, 0.34 * wgt);
+            aim(strips[k], new T.Vector3(x, GY - len, 0), new T.Vector3(x, GY - 0.02, 0));
+          }
+
+          /* F presses down on the far top corner, exactly as the slide draws it */
+          var fl = 0.25 + u * 1.05;
+          aim(aF, new T.Vector3(BX + BW / 2 - 0.2, GY + BH + fl, 0),
+                  new T.Vector3(BX + BW / 2 - 0.2, GY + BH + 0.06, 0));
+          lF.position.set(BX + BW / 2 + 0.62, GY + BH + fl * 0.75, 0);
+
+          if (lRead.userData.retext){
+            if (u < 0.08) lRead.userData.retext('N through the centre', '#34d399');
+            else if (u > 0.88) lRead.userData.retext('N at the leading edge', '#f5c542');
+            else lRead.userData.retext('N has shifted', '#56ccf2');
+          }
+        };
+      }
+
+      /* --------------------------------------------------------- toppling -- */
+      if (kind === 'toppling'){
+        var TGY = 1.75, TBW = 1.5, TBH = 2.5, PX = 4.55;   /* pivot = right foot */
+        world.add(floor(1.4, 6.6, TGY));
+        var pivot = new T.Group();
+        pivot.position.set(PX, TGY, 0);
+        world.add(pivot);
+        var body = slab(TBW, TBH, INDIGO, 0.28);
+        body.position.set(-TBW / 2, TBH / 2, 0);
+        pivot.add(body);
+        var aFt = arrow(GOLD, 0.05); pivot.add(aFt);
+        var lFt = label('F', '#f5c542', 0.42); pivot.add(lFt);
+        var aW = arrow(CYAN, 0.05); pivot.add(aW);
+        var lW = label('mg', '#56ccf2', 0.44); pivot.add(lW);
+        aim(aW, new T.Vector3(-TBW / 2, TBH / 2, 0), new T.Vector3(-TBW / 2, -0.55, 0));
+        lW.position.set(-TBW / 2 - 0.62, -0.2, 0);
+        var mgLine = dashed(new T.Vector3(-TBW / 2, TBH / 2, 0),
+                            new T.Vector3(-TBW / 2, -1.5, 0), CYAN, 0.3, 0.13);
+        pivot.add(mgLine);
+        var dotG = new T.Mesh(new T.CircleGeometry(0.11, 20),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.95 }));
+        pivot.add(dotG);
+        var lPiv = label('pivot', '#f5c542', 0.34);
+        lPiv.position.set(PX + 0.62, TGY - 0.36, 0); world.add(lPiv);
+        var bar = bars(0.9, 0.62, 2.6, 'F l', 'mg b/2'); world.add(bar);
+        var verdict = label('stable', '#34d399', 0.46);
+        verdict.position.set(5.6, 0.72, 0); world.add(verdict);
+
+        tick = function(t){
+          var CY = 6.0, p = (t % CY) / CY;
+          var u = p < 0.72 ? p / 0.72 : 1;                /* applied force 0..1 */
+          if (p > 0.94) u = Math.max(0, (1 - p) / 0.06);  /* snap back, then re-run */
+          var TIP = 0.62;                                 /* F l = mg b/2 here */
+          var over = Math.max(0, u - TIP) / (1 - TIP);
+          var ang = -over * over * 0.62;                  /* it turns, it does not jump */
+
+          pivot.rotation.z = ang;
+          var fl = 0.4 + u * 1.5;
+          aim(aFt, new T.Vector3(-TBW / 2 - 0.06 - fl, TBH - 0.12, 0),
+                   new T.Vector3(-TBW / 2 - 0.06,      TBH - 0.12, 0));
+          lFt.position.set(-TBW / 2 - 0.5 - fl, TBH + 0.34, 0);
+
+          bar.userData.set(u, TIP);
+          if (verdict.userData.retext){
+            if (over > 0.02) verdict.userData.retext('topples', '#f87171');
+            else if (u > TIP - 0.06) verdict.userData.retext('on the point', '#f5c542');
+            else verdict.userData.retext('stable', '#34d399');
+          }
+        };
+      }
+
+      /* ------------------------------------------------------- car-topple -- */
+      if (kind === 'car-topple'){
+        var RGY = 1.7, CBW = 1.9, CBH = 2.0, RPX = 4.6;   /* pivot = outer wheel */
+        world.add(floor(1.2, 6.9, RGY));
+        var car = new T.Group();
+        car.position.set(RPX, RGY, 0);
+        world.add(car);
+        var hull = slab(CBW, CBH, INDIGO, 0.3);
+        hull.position.set(-CBW / 2, CBH / 2 + 0.34, 0);
+        car.add(hull);
+        [-CBW + 0.28, -0.28].forEach(function(wx){
+          var wheel = new T.Mesh(new T.CircleGeometry(0.24, 22),
+            new T.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.32 }));
+          wheel.position.set(wx, 0.24, 0); car.add(wheel);
+        });
+        var aC = arrow(GOLD, 0.05); car.add(aC);
+        var lC = label('mv²/r', '#f5c542', 0.46); car.add(lC);
+        var aG2 = arrow(CYAN, 0.05); car.add(aG2);
+        var lG2 = label('mg', '#56ccf2', 0.44); car.add(lG2);
+        aim(aG2, new T.Vector3(-CBW / 2, CBH / 2 + 0.34, 0), new T.Vector3(-CBW / 2, -0.5, 0));
+        lG2.position.set(-CBW / 2 - 0.6, -0.16, 0);
+        var lTrack = label('l', '#cfd8e8', 0.34);
+        lTrack.position.set(-CBW / 2, CBH + 0.72, 0); car.add(lTrack);
+        var lHigh = label('b', '#cfd8e8', 0.34);
+        lHigh.position.set(-CBW - 0.42, CBH / 2 + 0.34, 0); car.add(lHigh);
+        var bar2 = bars(0.9, 0.62, 2.6, 'mv²/r × b/2', 'mg × l/2'); world.add(bar2);
+        var verd2 = label('will not over turn', '#34d399', 0.46);
+        verd2.position.set(5.7, 0.72, 0); world.add(verd2);
+        var lV = label('v', '#f5c542', 0.4);
+        lV.position.set(1.0, 4.5, 0); world.add(lV);
+
+        tick = function(t){
+          var CY = 6.4, p = (t % CY) / CY;
+          var u = p < 0.72 ? p / 0.72 : 1;
+          if (p > 0.94) u = Math.max(0, (1 - p) / 0.06);
+          var TIP2 = 0.6;
+          var over2 = Math.max(0, u - TIP2) / (1 - TIP2);
+          car.rotation.z = -over2 * over2 * 0.5;
+
+          var cl = 0.4 + u * 1.6;
+          aim(aC, new T.Vector3(-CBW / 2,      CBH / 2 + 0.34, 0),
+                  new T.Vector3(-CBW / 2 + cl, CBH / 2 + 0.34, 0));
+          lC.position.set(-CBW / 2 + cl + 0.9, CBH / 2 + 0.72, 0);
+
+          bar2.userData.set(u, TIP2);
+          if (verd2.userData.retext){
+            if (over2 > 0.02) verd2.userData.retext('will over turn', '#f87171');
+            else verd2.userData.retext('will not over turn', '#34d399');
+          }
+          if (lV.userData.retext){
+            lV.userData.retext('v = ' + Math.round(20 + u * 55) + ' km/h', '#f5c542');
+          }
+        };
+      }
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      lfOn(frame, 'resize', resize);
+
+      var tt0 = Date.now();
+      lfLoop(frame, function loop(){
+        if (tick) tick((Date.now() - tt0) / 1000);
         renderer.render(scene, camera);
       });
     }
@@ -3826,6 +4238,1178 @@
         }
         renderer.render(scene, camera);
       });
+    }
+
+    /* ---------------------------------------- conservation-of-L 3D scenes ---
+       Two scenes for the "no external torque, so L is constant" board. They
+       stand in for the two lecture-demo clips the source deck embedded as
+       local .mov files — a self-contained single-file deck cannot carry a
+       36 MB video, and a video cannot be written on.
+
+         skater-spin   the turntable demo: a body on a stool with a mass in
+                       each hand. The arms draw in and go out again. Nothing
+                       pushes it; it speeds up anyway.
+         hoberman      the same law on a body that changes its own size: a
+                       sphere of rings that breathes in and out as it turns.
+
+       The physics is integrated, not faked: I is recomputed from the current
+       radius every frame and omega is L / I, so the turn rate on screen is the
+       one the formula gives. The three bars underneath are the whole reason
+       these are scenes and not pictures — I falls, omega rises, and the bar
+       for L = I omega NEVER MOVES. A still figure can assert that a product is
+       constant; only the event can show it.
+
+       Rules 7, 11 and 20 still hold: the frame ships a .scene-fallback, that
+       is what prints and what a room with no WebGL sees, and no slide depends
+       on anything in here.                                                  */
+    function startConserve(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2, INK = 0xf4f7fb;
+      var isSkater = (kind === 'skater-spin');
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      var AIM = 0.42, HALF = 2.30, WIDE = 2.70;
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.set(0, AIM + HALF * 0.26,
+          Math.max(HALF * 1.04 / t2, WIDE * 1.04 / (t2 * aspect)));
+        camera.lookAt(0, AIM, 0);
+      }
+      fit(w / h);
+
+      var group = new T.Group();          /* everything that yaws */
+      scene.add(group);
+      var spinG = new T.Group();          /* everything that turns about the axis */
+      group.add(spinG);
+
+      function mat(c, o){ return new T.LineBasicMaterial({ color: c, transparent: true, opacity: o }); }
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(color, opacity === undefined ? 1 : opacity));
+      }
+      function ring(r, color, opacity, n){
+        var pts = [], k;
+        n = n || 64;
+        for (k = 0; k <= n; k++) pts.push(new T.Vector3(r * Math.cos(k / n * Math.PI * 2), 0, r * Math.sin(k / n * Math.PI * 2)));
+        return line(pts, color, opacity);
+      }
+      function solid(c, o){
+        return new T.MeshBasicMaterial({ color: c, transparent: true, opacity: o === undefined ? 1 : o });
+      }
+      function makeArrow(color, rad){
+        var g = new T.Group();
+        var m = solid(color);
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 10), m);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 14), m);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.45);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      /* classroom-size label on a canvas — no webfont, no external asset */
+      function label(text, css, size){
+        var F = 72, c = document.createElement('canvas');
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold ' + F + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        var tw = Math.max(40, Math.ceil(ctx.measureText(text).width));
+        c.width = tw + 28; c.height = Math.round(F * 1.5);
+        ctx = c.getContext('2d');
+        ctx.font = 'bold ' + F + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, c.width / 2, c.height / 2);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * c.width / c.height, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      /* Labels that ride the figure: re-placed every frame from a point in the
+         yawing group's own space, so they never turn edge-on. Anchors must be
+         written in GROUP coordinates — a point taken off something inside
+         spinG has to be pushed through spinG.matrix first, or the label sits
+         at the angle the body started from and the mass turns out from under
+         its own name. */
+      var bills = [];
+      function tag(text, css, size, at){
+        var m = label(text, css, size);
+        scene.add(m);
+        bills.push({ m: m, at: at });
+        return m;
+      }
+      /* Labels that belong to the read-out, not to the figure. They sit in the
+         scene root at a fixed point — a bar chart that swings with the stage is
+         unreadable — but they still face the camera, or they foreshorten. */
+      var flatBills = [];
+      function fixedTag(text, css, size, x, y){
+        var m = label(text, css, size);
+        m.position.set(x, y, 0.42);
+        scene.add(m);
+        flatBills.push(m);
+        return m;
+      }
+
+      /* ------------------------------------------------ the turning body --- */
+      var RMAX = 1.52, RMIN = 0.46, IHUB, ballG;
+
+      group.add(line([new T.Vector3(0, -0.30, 0), new T.Vector3(0, 2.62, 0)], INK, 0.26));
+
+      if (isSkater){
+        /* the stool it stands on — this is what makes "no external torque"
+           believable: the class can see nothing is holding it */
+        var TT = 0.92;
+        var plate = new T.Mesh(new T.CircleGeometry(TT, 48), solid(0x0d1020, 0.78));
+        plate.rotation.x = -Math.PI / 2; spinG.add(plate);
+        spinG.add(ring(TT, INDIGO, 0.85));
+        spinG.add(ring(TT * 0.55, INDIGO, 0.28, 40));
+        var kk;
+        for (kk = 0; kk < 6; kk++){
+          var aa = kk * Math.PI / 3;
+          spinG.add(line([new T.Vector3(0, 0.002, 0),
+                          new T.Vector3(TT * Math.cos(aa), 0.002, TT * Math.sin(aa))],
+                         INK, kk === 0 ? 0.75 : 0.18));
+        }
+        var pedestal = new T.Mesh(new T.CylinderGeometry(0.10, 0.20, 0.30, 12), solid(INK, 0.20));
+        pedestal.position.y = -0.16; group.add(pedestal);
+
+        /* the body */
+        var torso = new T.Mesh(new T.CylinderGeometry(0.20, 0.26, 1.02, 16), solid(INDIGO, 0.55));
+        torso.position.y = 0.55; spinG.add(torso);
+        var head = new T.Mesh(new T.SphereGeometry(0.165, 20, 14), solid(INK, 0.62));
+        head.position.y = 1.26; spinG.add(head);
+
+        /* the two masses, on arms that draw in */
+        var armY = 0.92;
+        var armL = line([new T.Vector3(0, armY, 0), new T.Vector3(-RMAX, armY, 0)], INK, 0.70);
+        var armR = line([new T.Vector3(0, armY, 0), new T.Vector3( RMAX, armY, 0)], INK, 0.70);
+        spinG.add(armL); spinG.add(armR);
+        var mL = new T.Mesh(new T.SphereGeometry(0.16, 20, 14), solid(GOLD));
+        var mR = new T.Mesh(new T.SphereGeometry(0.16, 20, 14), solid(GOLD));
+        spinG.add(mL); spinG.add(mR);
+
+        IHUB = 0.62;                        /* body + stool, never changes */
+        var MARM = 1.00;                    /* 2 x m, folded into one number */
+        ballG = { setR: function(R){
+          mL.position.set(-R, armY, 0);
+          mR.position.set( R, armY, 0);
+          armL.geometry.setFromPoints([new T.Vector3(0, armY, 0), new T.Vector3(-R, armY, 0)]);
+          armR.geometry.setFromPoints([new T.Vector3(0, armY, 0), new T.Vector3( R, armY, 0)]);
+          armL.geometry.attributes.position.needsUpdate = true;
+          armR.geometry.attributes.position.needsUpdate = true;
+        }, inertia: function(R){ return IHUB + MARM * R * R; } };
+
+      } else {
+        /* the folding sphere: rings at unit radius, the whole cage scaled.
+           Each meridian gets its OWN holder group for its longitude, because a
+           mesh carrying both rotation.x and rotation.y composes them in one
+           Euler and the great circles do not come out evenly spaced. */
+        var cage = new T.Group(); spinG.add(cage); cage.position.y = 0.98;
+        var lat = [0, 0.42, -0.42, 0.74, -0.74], li;
+        for (li = 0; li < lat.length; li++){
+          var yy = lat[li], rr = Math.sqrt(Math.max(1 - yy * yy, 0.02));
+          var rg = ring(rr, li === 0 ? CYAN : INDIGO, li === 0 ? 0.85 : 0.42, 56);
+          rg.position.y = yy; cage.add(rg);
+        }
+        var lon;
+        for (lon = 0; lon < 6; lon++){
+          var holder = new T.Group();
+          holder.rotation.y = lon * Math.PI / 6;
+          var mer = ring(1, lon % 2 ? INDIGO : GOLD, lon % 2 ? 0.34 : 0.30, 56);
+          mer.rotation.x = Math.PI / 2;
+          holder.add(mer); cage.add(holder);
+        }
+        /* one node marked, so the turn is visible even when the cage is small */
+        var node = new T.Mesh(new T.SphereGeometry(0.085, 16, 12), solid(GOLD));
+        node.position.set(1, 0, 0); cage.add(node);
+
+        ballG = { setR: function(R){ cage.scale.setScalar(R * 0.86); },
+                  inertia: function(R){ return 0.16 + 0.92 * R * R; } };
+      }
+
+      /* L, standing on the axis — drawn once and never touched again, because
+         that is the entire claim the slide is making */
+      var arrL = makeArrow(GOLD, 0.055); group.add(arrL);
+      aim(arrL, new T.Vector3(0, 1.62, 0), new T.Vector3(0, 2.52, 0));
+      tag('L', '#f5c542', 0.34, function(){ return new T.Vector3(0.30, 2.62, 0); });
+
+      /* ------------------------------------------------------- the bars --- */
+      var X0 = -1.05, BW = 2.35, BY = [-0.62, -1.02, -1.42];
+      function bar(color, y, z, opacity){
+        var m = new T.Mesh(new T.PlaneGeometry(1, 0.145),
+          new T.MeshBasicMaterial({ color: color, transparent: true,
+                                    opacity: opacity === undefined ? 0.92 : opacity,
+                                    side: T.DoubleSide, depthWrite: false }));
+        m.position.set(X0, y, z);
+        scene.add(m);
+        return m;
+      }
+      function setBar(m, frac){
+        var len = Math.max(BW * frac, 0.004);
+        m.scale.x = len;
+        m.position.x = X0 + len / 2;
+      }
+      /* the scale each bar is read against — laid down FIRST and set behind, so
+         a translucent track never washes over the bar it is measuring */
+      var ti;
+      for (ti = 0; ti < 3; ti++) setBar(bar(INK, BY[ti], 0.34, 0.09), 1);
+      var bI = bar(INDIGO, BY[0], 0.40),
+          bW = bar(CYAN,   BY[1], 0.40),
+          bL = bar(GOLD,   BY[2], 0.40);
+
+      fixedTag('I',             '#7c8cff', 0.26, X0 - 0.30, BY[0]);
+      fixedTag('omega',         '#56ccf2', 0.24, X0 - 0.46, BY[1]);
+      fixedTag('L = I x omega', '#f5c542', 0.24, X0 - 0.86, BY[2]);
+
+      /* ------------------------------------------------------ the motion --- */
+      /* One cycle: hold out, draw in, hold in, let out. Linear in r, so the
+         speeding-up the class sees is entirely the 1/I in omega. */
+      var CYCLE = 13.0, L0 = null, ang = 0, last = null;
+      function radiusAt(t){
+        var p = (t % CYCLE) / CYCLE;
+        if (p < 0.20) return RMAX;
+        if (p < 0.38) return RMAX - (RMAX - RMIN) * (p - 0.20) / 0.18;
+        if (p < 0.62) return RMIN;
+        if (p < 0.80) return RMIN + (RMAX - RMIN) * (p - 0.62) / 0.18;
+        return RMAX;
+      }
+
+      var IMAX = ballG.inertia(RMAX), IMIN = ballG.inertia(RMIN);
+      /* Pick L so the FAST end of the cycle is watchable rather than dizzying:
+         omega_max = L/IMIN, and the sphere's I falls further than the skater's,
+         so it needs the smaller L to land at the same top speed (~0.6 rev/s). */
+      L0 = IMAX * (isSkater ? 1.05 : 0.62);
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh);
+        renderer.setSize(nw, nh);
+      }
+      lfOn(frame, 'resize', resize);
+
+      var t0 = Date.now();
+      lfLoop(frame, function loop(){
+        var t = (Date.now() - t0) / 1000;
+        var R = radiusAt(t);
+        var I = ballG.inertia(R);
+        var om = L0 / I;
+
+        /* integrate, so a paused scene resumes where it stopped instead of
+           jumping to wherever a t*omega formula would have put it */
+        var dt = last === null ? 0 : Math.min(t - last, 0.1);
+        last = t;
+        ang += om * dt;
+
+        ballG.setR(R);
+        spinG.rotation.y = ang;
+        group.rotation.y = 0.34 + Math.sin(t / 11) * 0.16;
+
+        setBar(bI, I / IMAX);
+        setBar(bW, IMIN / I);
+        setBar(bL, (I * om) / L0);       /* I x omega over L — identically 1 */
+
+        group.updateMatrixWorld(true);
+        var b;
+        for (b = 0; b < bills.length; b++){
+          bills[b].m.position.copy(bills[b].at()).applyMatrix4(group.matrixWorld);
+          bills[b].m.quaternion.copy(camera.quaternion);
+        }
+        for (b = 0; b < flatBills.length; b++) flatBills[b].quaternion.copy(camera.quaternion);
+        renderer.render(scene, camera);
+      });
+    }
+
+
+    /* ═══════════════════════════════ gravitation scenes ═══════════════════
+       Three WebGL figures for the "variation of g" chapter. Each exists only
+       because the still figure on the source slide cannot carry the thing the
+       board is actually about:
+
+         earth-g       g walked from the centre outward — the SAME point passes
+                       through both regimes, rising linearly to the surface and
+                       falling as 1/r² beyond it, with the g-r curve filling in
+                       underneath as it goes. A still graph asserts the kink at
+                       r = R; this shows the probe arriving at it.
+         latitude-g    the rotation board: a bead walks from the equator to the
+                       pole while mω²r — which depends on the distance to the
+                       AXIS, not to the centre — shrinks to nothing, and g_eff
+                       grows. "Max at the pole, min at the equator" is a claim
+                       about a journey, so it needs the journey.
+         oblate-earth  the shape term: the sphere and the real, flattened earth
+                       drawn on the same centre, so the 21 km of extra equatorial
+                       radius is a gap you can see rather than a number.
+
+       Geometry and axis names only — no lesson text lives in the canvas, every
+       frame ships a .scene-fallback carrying the same figure flat, and that is
+       what prints and what a room with no WebGL sees (rules 11, 20).         */
+    function startGravity(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
+          RED = 0xfb7185, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 12);
+      camera.lookAt(0, 0, 0);
+      var HALF = (kind === 'earth-g') ? 3.05 : (kind === 'latitude-g' ? 2.85 : 2.35);
+      var WIDE = (kind === 'earth-g') ? 3.55 : (kind === 'latitude-g' ? 3.05 : 2.60);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(HALF / t2, WIDE / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts),
+          new T.LineBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(pts, color, opacity){
+        var l = line(pts, color, opacity);
+        l.material.dispose();
+        l.material = new T.LineDashedMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity, dashSize: 0.13, gapSize: 0.1 });
+        l.computeLineDistances();
+        return l;
+      }
+      function arrow(color, rad){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 12), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 16), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.06){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.44);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold 74px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * 4, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      function sphere(r, colour, opacity, seg){
+        return new T.LineSegments(
+          new T.WireframeGeometry(new T.SphereGeometry(r, seg || 22, Math.round((seg || 22) * 0.6))),
+          new T.LineBasicMaterial({ color: colour, transparent: true, opacity: opacity }));
+      }
+      /* The construction — bead, vectors, dashed radius, labels — is ABOUT the
+         body, not inside it. Depth-testing it against the globe buries half of
+         every arrow the moment the bead swings to the far side, so the whole
+         construction is drawn on top of the sphere unconditionally. This is a
+         figure, not a rendering: the class needs to see mg and mω²r whatever
+         the globe happens to be doing behind them. */
+      function onTop(obj, order){
+        obj.renderOrder = order === undefined ? 10 : order;
+        obj.traverse(function(n){
+          if (!n.material) return;
+          var ms = Array.isArray(n.material) ? n.material : [n.material];
+          for (var i = 0; i < ms.length; i++){ ms[i].depthTest = false; ms[i].depthWrite = false; }
+          n.renderOrder = obj.renderOrder;
+        });
+        return obj;
+      }
+
+      /* ------------------------------------------------------- earth-g ---- */
+      if (kind === 'earth-g'){
+        var R = 1.10, C = new T.Vector3(-2.85, 1.30, 0);
+        var body = new T.Group();
+        body.position.copy(C);
+        group.add(body);
+        body.add(sphere(R, INDIGO, 0.30, 20));
+        body.add(new T.Mesh(new T.SphereGeometry(R * 0.995, 40, 26),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.60 })));
+
+        /* the radius the probe walks, drawn out to 4R so the road exists first */
+        group.add(line([C, new T.Vector3(C.x + 4 * R, C.y, 0)], INK, 0.20));
+        var probe = onTop(new T.Mesh(new T.SphereGeometry(0.085, 14, 10),
+          new T.MeshBasicMaterial({ color: GREEN })));
+        group.add(probe);
+        var gArrow = onTop(arrow(GOLD, 0.055));
+        group.add(gArrow);
+
+        /* the graph, at rest, with its axes and the surface marked */
+        var GX = -2.95, GY = -2.60, GW = 5.9, GH = 1.95, GR = 0.25 * GW;  /* R at 1/4 span */
+        group.add(line([new T.Vector3(GX, GY, 0), new T.Vector3(GX + GW, GY, 0)], INK, 0.34));
+        group.add(line([new T.Vector3(GX, GY, 0), new T.Vector3(GX, GY + GH, 0)], INK, 0.34));
+        var curve = [];
+        var i, rr, gg;
+        for (i = 0; i <= 40; i++){                      /* inside: g ∝ r      */
+          rr = i / 40;
+          curve.push(new T.Vector3(GX + rr * GR, GY + rr * GH, 0));
+        }
+        for (i = 1; i <= 90; i++){                      /* outside: g ∝ 1/r²  */
+          rr = 1 + (i / 90) * 3;                        /* r/R from 1 to 4    */
+          gg = 1 / (rr * rr);
+          curve.push(new T.Vector3(GX + rr * GR, GY + gg * GH, 0));
+        }
+        group.add(line(curve, GOLD, 0.55));
+        group.add(dashed([new T.Vector3(GX + GR, GY, 0), new T.Vector3(GX + GR, GY + GH, 0)], INK, 0.26));
+        var mark = new T.Mesh(new T.SphereGeometry(0.075, 14, 10),
+          new T.MeshBasicMaterial({ color: GREEN }));
+        group.add(mark);
+
+        var lR = label('R', '#f4f7fb', 0.36);
+        var lr = label('r', '#f4f7fb', 0.36);
+        var lg = label('g', '#f5c542', 0.36);
+        group.add(lR); group.add(lr); group.add(lg);
+        lR.position.set(GX + GR, GY - 0.28, 0);
+        lr.position.set(GX + GW - 0.1, GY - 0.28, 0);
+        lg.position.set(GX - 0.32, GY + GH, 0);
+
+        var t0 = Date.now(), lastW = w, lastH = h;
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== lastW || nh !== lastH){
+            lastW = nw; lastH = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var t = (Date.now() - t0) / 1000;
+          body.rotation.y += 0.004;
+          group.rotation.y = Math.sin(t / 9) * 0.10;
+
+          /* the probe walks 0 → 4R and back, slowly */
+          var u = 0.5 - 0.5 * Math.cos(t * 0.30);
+          var x = u * 4;                                  /* r/R              */
+          var gN = x <= 1 ? x : 1 / (x * x);              /* g/g_surface      */
+          var P = new T.Vector3(C.x + x * R, C.y, 0);
+          probe.position.copy(P);
+          aim(gArrow, P, new T.Vector3(P.x - gN * 1.45 * R, C.y, 0));
+          mark.position.set(GX + x * GR, GY + gN * GH, 0);
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ---------------------------------------------------- latitude-g ---- */
+      if (kind === 'latitude-g'){
+        var Re = 1.02;
+        var tilt = new T.Group();
+        tilt.rotation.z = 0.24;                    /* the axis, leant a little */
+        tilt.position.y = 0.42;
+        group.add(tilt);
+
+        var spinG = new T.Group();
+        tilt.add(spinG);
+        spinG.add(sphere(Re, INDIGO, 0.26, 22));
+        spinG.add(new T.Mesh(new T.SphereGeometry(Re * 0.995, 40, 26),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.62 })));
+
+        /* the axis: everything on this board is measured from it, not from
+           the centre, which is the one thing students get wrong */
+        tilt.add(line([new T.Vector3(0, -Re * 1.42, 0), new T.Vector3(0, Re * 1.42, 0)], INK, 0.36));
+        var eq = [];
+        for (var e = 0; e <= 72; e++){
+          var a = e / 72 * Math.PI * 2;
+          eq.push(new T.Vector3(Re * Math.cos(a), 0, Re * Math.sin(a)));
+        }
+        tilt.add(line(eq, GOLD, 0.28));
+
+        var bead = onTop(new T.Mesh(new T.SphereGeometry(0.11, 14, 10),
+          new T.MeshBasicMaterial({ color: GREEN })));
+        tilt.add(bead);
+        var aMg  = onTop(arrow(INK, 0.050));   /* mg, at the centre           */
+        var aCen = onTop(arrow(RED, 0.050));   /* mω²r, away from the AXIS    */
+        var aEff = onTop(arrow(GOLD, 0.062));  /* what is left: g_eff         */
+        tilt.add(aMg); tilt.add(aCen); tilt.add(aEff);
+        var rDash = onTop(dashed([new T.Vector3(), new T.Vector3()], RED, 0.55));
+        tilt.add(rDash);
+
+        /* the latitude circle the bead is currently on, redrawn each frame */
+        var RING = 60;
+        var ringPos = new Float32Array((RING + 1) * 3);
+        var ringGeo = new T.BufferGeometry();
+        ringGeo.setAttribute('position', new T.BufferAttribute(ringPos, 3));
+        tilt.add(new T.Line(ringGeo, new T.LineBasicMaterial({
+          color: INDIGO, transparent: true, opacity: 0.34 })));
+
+        /* g_eff as one bar, so "max at the pole" is a length, not a claim */
+        var BX = -2.15, BY = -2.30, BW = 4.3;
+        group.add(line([new T.Vector3(BX, BY - 0.16, 0), new T.Vector3(BX, BY + 0.16, 0)], INK, 0.30));
+        group.add(line([new T.Vector3(BX, BY, 0), new T.Vector3(BX + BW, BY, 0)], INK, 0.16));
+        var bar = new T.Mesh(new T.PlaneGeometry(1, 0.17),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.72 }));
+        group.add(bar);
+
+        var lTh  = label('θ', '#f4f7fb', 0.36);
+        var lMg  = label('mg', '#f4f7fb', 0.36);
+        var lCen = label('mω²r', '#fb7185', 0.36);
+        var lEff = label('g', '#f5c542', 0.36);
+        onTop(lTh, 12); onTop(lMg, 12); onTop(lCen, 12); onTop(lEff, 12);
+        tilt.add(lTh); tilt.add(lMg); tilt.add(lCen); tilt.add(lEff);
+        var lBar = label('g at this latitude', '#f5c542', 0.30);
+        group.add(lBar);
+        lBar.position.set(BX + BW * 0.5, BY - 0.42, 0);
+
+        var t1 = Date.now(), lw1 = w, lh1 = h;
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== lw1 || nh !== lh1){
+            lw1 = nw; lh1 = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var t = (Date.now() - t1) / 1000;
+          spinG.rotation.y += 0.010;
+          group.rotation.y = Math.sin(t / 10) * 0.09;
+
+          /* the bead walks equator → pole → equator */
+          var u = 0.5 - 0.5 * Math.cos(t * 0.26);
+          var th = u * (Math.PI / 2) * 0.94;              /* latitude θ       */
+          var ct = Math.cos(th), st = Math.sin(th);
+          var P = new T.Vector3(Re * ct, Re * st, 0);
+          bead.position.copy(P);
+
+          /* mg points at the centre, always the same length. mω²r points away
+             from the AXIS — horizontally, in the plane of the figure — and its
+             length goes as r = R cos θ, so it dies at the pole. g_eff is the
+             honest sum of the two, which is why it leans off the vertical
+             everywhere except at the equator and the pole. The centrifugal term
+             is drawn far larger than 0.34 % of g, or nothing would be visible;
+             the bar underneath is the one that carries the real proportion. */
+          var MG = 1.38, CEN = 0.68 * ct;
+          var uMg = new T.Vector3(-P.x, -P.y, 0).normalize();
+          var mgV  = uMg.clone().multiplyScalar(MG);
+          var cenV = new T.Vector3(CEN, 0, 0);
+          var effV = mgV.clone().add(cenV);
+          aim(aMg,  P, new T.Vector3(P.x + mgV.x,  P.y + mgV.y,  0));
+          aim(aCen, P, new T.Vector3(P.x + cenV.x, P.y + cenV.y, 0));
+          aim(aEff, P, new T.Vector3(P.x + effV.x, P.y + effV.y, 0));
+          var cen = CEN;
+
+          var axP = rDash.geometry.getAttribute('position');
+          axP.array[0] = 0;   axP.array[1] = P.y; axP.array[2] = 0;
+          axP.array[3] = P.x; axP.array[4] = P.y; axP.array[5] = 0;
+          axP.needsUpdate = true;
+          rDash.computeLineDistances();
+
+          for (var k = 0; k <= RING; k++){
+            var ang = k / RING * Math.PI * 2;
+            ringPos[k*3]   = Re * ct * Math.cos(ang);
+            ringPos[k*3+1] = Re * st;
+            ringPos[k*3+2] = Re * ct * Math.sin(ang);
+          }
+          ringGeo.getAttribute('position').needsUpdate = true;
+          ringGeo.computeBoundingSphere();
+
+          /* labels ride OFF their arrows, along the local perpendicular, so a
+             three-vector junction never stacks three words on one point */
+          var perp = new T.Vector3(-uMg.y, uMg.x, 0);
+          lTh.position.set(P.x * 0.44 + perp.x * 0.34, P.y * 0.44 + perp.y * 0.34, 0.03);
+          lMg.position.set(P.x + mgV.x * 0.60 - perp.x * 0.40,
+                           P.y + mgV.y * 0.60 - perp.y * 0.40, 0.03);
+          lCen.position.set(P.x + cen + 0.66, P.y + 0.30, 0.03);
+          lCen.visible = cen > 0.12;
+          lEff.position.set(P.x + effV.x * 0.70 + perp.x * 0.42,
+                            P.y + effV.y * 0.70 + perp.y * 0.42, 0.03);
+
+          /* the bar: g_eff = g − ω²R cos²θ, drawn from a suppressed zero so the
+             0.34 % the earth actually manages is visible at all */
+          var frac = 0.55 + 0.45 * (1 - ct * ct);
+          bar.scale.set(BW * frac, 1, 1);
+          bar.position.set(BX + BW * frac / 2, BY, 0);
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* -------------------------------------------------- oblate-earth ---- */
+      var Rs = 1.45, FLAT = 0.16;                 /* exaggerated, and labelled so */
+      var sph = new T.Group();
+      group.add(sph);
+
+      var trueEarth = new T.Mesh(new T.SphereGeometry(Rs, 34, 22),
+        new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.66 }));
+      trueEarth.scale.set(1 + FLAT, 1 - FLAT * 0.72, 1 + FLAT);
+      sph.add(trueEarth);
+      var trueWire = sphere(Rs, INDIGO, 0.34, 22);
+      trueWire.scale.set(1 + FLAT, 1 - FLAT * 0.72, 1 + FLAT);
+      sph.add(trueWire);
+
+      /* the perfect sphere it is NOT, on the same centre */
+      var ideal = [];
+      for (var q = 0; q <= 96; q++){
+        var b = q / 96 * Math.PI * 2;
+        ideal.push(new T.Vector3(Rs * Math.cos(b), Rs * Math.sin(b), 0));
+      }
+      group.add(dashed(ideal, INK, 0.40));
+
+      group.add(line([new T.Vector3(0, -Rs * 1.45, 0), new T.Vector3(0, Rs * 1.45, 0)], INK, 0.30));
+
+      /* the gap itself: equatorial radius against polar radius */
+      var aEq = onTop(arrow(GOLD, 0.042)), aPo = onTop(arrow(GREEN, 0.042));
+      group.add(aEq); group.add(aPo);
+      aim(aEq, new T.Vector3(0, 0, 0), new T.Vector3(Rs * (1 + FLAT), 0, 0));
+      aim(aPo, new T.Vector3(0, 0, 0), new T.Vector3(0, Rs * (1 - FLAT * 0.72), 0));
+      group.add(dashed([new T.Vector3(Rs, 0.0, 0), new T.Vector3(Rs, -0.9, 0)], INK, 0.28));
+      group.add(dashed([new T.Vector3(Rs * (1 + FLAT), 0.0, 0), new T.Vector3(Rs * (1 + FLAT), -0.9, 0)], INK, 0.28));
+      var gap = new T.Mesh(new T.PlaneGeometry(Rs * FLAT, 0.05),
+        new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.85 }));
+      gap.position.set(Rs * (1 + FLAT / 2), -0.78, 0);
+      group.add(gap);
+
+      var lEq = label('equator', '#f5c542', 0.30);
+      var lPo = label('pole', '#34d399', 0.30);
+      var lGap = label('21 km more', '#f5c542', 0.30);
+      onTop(lEq, 12); onTop(lPo, 12); onTop(lGap, 12);
+      group.add(lEq); group.add(lPo); group.add(lGap);
+      lEq.position.set(Rs * 0.62, 0.30, 0.02);
+      lPo.position.set(-0.62, Rs * 0.92, 0.02);
+      lGap.position.set(Rs * (1 + FLAT / 2) + 0.30, -1.16, 0.02);
+
+      var t2s = Date.now(), lw2 = w, lh2 = h;
+      lfLoop(frame, function loop(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        if (nw !== lw2 || nh !== lh2){
+          lw2 = nw; lh2 = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        var t = (Date.now() - t2s) / 1000;
+        sph.rotation.y += 0.006;
+        group.rotation.y = Math.sin(t / 12) * 0.07;
+        renderer.render(scene, camera);
+      });
+      lfOn(frame, 'resize', function(){});
+    }
+
+    /* ====================================================================
+       Escape-speed scenes — the three boards the Escape Speed chapter needs
+       and a still figure cannot carry.
+
+       escape-speed     three bodies leave the same planet along three
+                        different radii at 0.8 v_e, 1.0 v_e and 1.4 v_e. The
+                        slow one turns round at n²R/(1−n²) and comes home,
+                        the middle one crawls outward forever with its arrow
+                        shrinking toward nothing, the fast one leaves with
+                        v_inf = v_e√(n²−1) still on it. "Escape" is a
+                        statement about what happens after the launch, so it
+                        needs the launch.
+       launch-direction the direction board: the SAME arrow length in every
+                        direction out of one point — v_e does not care which
+                        way you point — while the earth's own ωR is added to
+                        the eastward one and is largest at the equator.
+       angled-launch    a real Kepler arc from a launch at θ to the horizon:
+                        the speed at the top is NOT zero, and r×v holds it to
+                        v R cos θ = v_top (R + h).
+       ==================================================================== */
+    function startEscape(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, GREEN = 0x34d399,
+          RED = 0xfb7185, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 200);
+      camera.position.set(0, 0, 14);
+      camera.lookAt(0, 0, 0);
+      var HALF = (kind === 'escape-speed') ? 3.30 : (kind === 'angled-launch' ? 2.85 : 2.30);
+      var WIDE = (kind === 'escape-speed') ? 3.70 : (kind === 'angled-launch' ? 3.40 : 3.05);
+      function fit(aspect){
+        var t2 = Math.tan((40 * Math.PI / 180) / 2);
+        camera.position.z = Math.max(HALF / t2, WIDE / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var group = new T.Group();
+      scene.add(group);
+
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts),
+          new T.LineBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function dashed(pts, color, opacity){
+        var l = line(pts, color, opacity);
+        l.material.dispose();
+        l.material = new T.LineDashedMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity, dashSize: 0.11, gapSize: 0.09 });
+        l.computeLineDistances();
+        return l;
+      }
+      function arrow(color, rad){
+        var g = new T.Group();
+        var mat = new T.MeshBasicMaterial({ color: color });
+        var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, 1, 12), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(rad * 3, rad * 7, 16), mat);
+        g.add(shaft); g.add(head);
+        g.userData = { shaft: shaft, head: head, rad: rad };
+        return g;
+      }
+      function aim(g, from, to){
+        var dir = new T.Vector3().subVectors(to, from), len = dir.length();
+        if (len < 0.05){ g.visible = false; return; }
+        g.visible = true;
+        var hl = Math.min(g.userData.rad * 7, len * 0.44);
+        var sl = Math.max(len - hl, 0.001);
+        g.userData.shaft.scale.set(1, sl, 1);
+        g.userData.shaft.position.set(0, sl / 2, 0);
+        g.userData.head.scale.set(1, hl / (g.userData.rad * 7), 1);
+        g.userData.head.position.set(0, sl + hl / 2, 0);
+        g.position.copy(from);
+        g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+      }
+      /* Auto-width: a fixed 512-wide canvas silently CLIPS anything longer than
+         about seven characters, which is how a caption ends up reading
+         "e v in every direc" on the board. Measure first, then size. */
+      var LBL_FONT = 'bold 70px Calibri, Candara, "Segoe UI", sans-serif';
+      function label(text, css, size){
+        var c = document.createElement('canvas');
+        var ctx = c.getContext('2d');
+        ctx.font = LBL_FONT;
+        var wpx = Math.max(96, Math.ceil(ctx.measureText(text).width) + 28);
+        c.width = wpx; c.height = 128;
+        ctx = c.getContext('2d');
+        ctx.font = LBL_FONT;
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, wpx / 2, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        return new T.Mesh(new T.PlaneGeometry(size * (wpx / 128), size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      }
+      function sphere(r, colour, opacity, seg){
+        return new T.LineSegments(
+          new T.WireframeGeometry(new T.SphereGeometry(r, seg || 22, Math.round((seg || 22) * 0.6))),
+          new T.LineBasicMaterial({ color: colour, transparent: true, opacity: opacity }));
+      }
+      function planet(r, tone){
+        var g = new T.Group();
+        g.add(sphere(r, tone === undefined ? INDIGO : tone, 0.30, 22));
+        g.add(new T.Mesh(new T.SphereGeometry(r * 0.995, 44, 28),
+          new T.MeshBasicMaterial({ color: 0x0d1020, transparent: true, opacity: 0.62 })));
+        return g;
+      }
+      /* The construction is ABOUT the bodies, not inside them — depth-testing
+         an arrow against the globe buries it the moment the body swings
+         behind. Figures are drawn on top unconditionally. */
+      function onTop(obj, order){
+        obj.renderOrder = order === undefined ? 10 : order;
+        obj.traverse(function(n){
+          if (!n.material) return;
+          var ms = Array.isArray(n.material) ? n.material : [n.material];
+          for (var i = 0; i < ms.length; i++){ ms[i].depthTest = false; ms[i].depthWrite = false; }
+          n.renderOrder = obj.renderOrder;
+        });
+        return obj;
+      }
+      /* A trail that is rewritten in place — allocating a BufferGeometry per
+         frame is what makes a classroom laptop drop to 8 fps. */
+      function trail(colour, opacity, cap){
+        var pos = new Float32Array(cap * 3);
+        var geo = new T.BufferGeometry();
+        geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+        geo.setDrawRange(0, 0);
+        var l = new T.Line(geo, new T.LineBasicMaterial({ color: colour,
+          transparent: true, opacity: opacity }));
+        l.userData = { n: 0, cap: cap, pos: pos, geo: geo };
+        l.userData.push = function(v){
+          var u = l.userData;
+          if (u.n >= u.cap) return;
+          u.pos[u.n * 3] = v.x; u.pos[u.n * 3 + 1] = v.y; u.pos[u.n * 3 + 2] = v.z;
+          u.n++;
+          u.geo.setDrawRange(0, u.n);
+          u.geo.attributes.position.needsUpdate = true;
+          u.geo.computeBoundingSphere();
+        };
+        l.userData.clear = function(){
+          l.userData.n = 0; geo.setDrawRange(0, 0);
+        };
+        return l;
+      }
+
+      /* ---------------------------------------------------- escape-speed --- */
+      if (kind === 'escape-speed'){
+        var R = 1.00;                         /* planet radius, in scene units */
+        var CY = -1.50;                       /* it sits low; the sky is the board */
+        var CAP = 3.00;                       /* how far out we can still see    */
+        var home = new T.Vector3(0, CY, 0);
+
+        var earth = planet(R);
+        earth.position.copy(home);
+        group.add(earth);
+        /* one meridian set, so the planet reads as a body and not a disc */
+        var mer = new T.Group();
+        earth.add(mer);
+
+        /* v_e = √(2GM/R). Work in units where GM = 1 and R is the radius
+           above, so v_e = √(2/R) and v(r) = v_e √(n² − 1 + R/r) exactly.  */
+        var MU = 1.0, VE = Math.sqrt(2 * MU / R);
+
+        var RUNS = [
+          { n: 0.80, colour: RED,   tag: '0.8 v', sub: 'e', deg:  32 },
+          { n: 1.00, colour: GOLD,  tag: 'v',     sub: 'e', deg:   0 },
+          { n: 1.40, colour: GREEN, tag: '1.4 v', sub: 'e', deg: -32 }
+        ];
+        var runs = [];
+        for (var ri = 0; ri < RUNS.length; ri++){
+          var spec = RUNS[ri];
+          var a = spec.deg * Math.PI / 180;
+          var dir = new T.Vector3(Math.sin(a), Math.cos(a), 0);
+          var tr = trail(spec.colour, 0.55, 900);
+          group.add(tr);
+          var dot = onTop(new T.Mesh(new T.SphereGeometry(0.095, 14, 10),
+            new T.MeshBasicMaterial({ color: spec.colour })), 11);
+          group.add(dot);
+          var arw = onTop(arrow(spec.colour, 0.044), 12);
+          group.add(arw);
+          var lab = label(spec.tag + (spec.sub ? 'ₑ' : ''),
+            '#' + spec.colour.toString(16).padStart(6, '0'), 0.26);
+          onTop(lab, 13); group.add(lab);
+          /* the turning point of the slow one, drawn once and left standing —
+             that ring IS the max-height formula n²R/(1−n²)                */
+          var apo = null;
+          if (spec.n < 1){
+            var rmax = R / (1 - spec.n * spec.n);
+            var pts = [];
+            for (var k = -26; k <= 26; k++){
+              var ang = a + k / 26 * 0.55;
+              pts.push(new T.Vector3(home.x + rmax * Math.sin(ang),
+                                     home.y + rmax * Math.cos(ang), 0));
+            }
+            apo = dashed(pts, spec.colour, 0.42);
+            onTop(apo, 9); group.add(apo);
+          }
+          runs.push({ spec: spec, dir: dir, r: R, v: spec.n * VE, sign: 1,
+                      tr: tr, dot: dot, arw: arw, lab: lab, apo: apo, done: false });
+        }
+
+        var caption = label('escape is what happens after the launch', '#8ea0b8', 0.22);
+        onTop(caption, 13); group.add(caption);
+        caption.position.set(0, CY - R - 0.42, 0.02);
+
+        /* The planet sits low and the flight runs up the board, so the useful
+           content is NOT centred on the origin. Shift the whole group instead
+           of widening the camera, or the figure ends up a thumbnail in one
+           corner of its own frame. */
+        group.position.y = -((CY - R - 0.62) + (CY + CAP + 0.45)) / 2;
+        HALF = ((CY + CAP + 0.45) - (CY - R - 0.62)) / 2 * 1.06;
+        WIDE = (CAP * Math.sin(32 * Math.PI / 180) + 0.85) * 1.06;
+        fit(w / h);
+
+        function resetRuns(){
+          for (var i = 0; i < runs.length; i++){
+            var rr = runs[i];
+            rr.r = R; rr.v = rr.spec.n * VE; rr.sign = 1; rr.done = false;
+            rr.tr.userData.clear();
+          }
+        }
+
+        var tPrev = Date.now(), holdFor = 0;
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== w || nh !== h){
+            w = nw; h = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var now = Date.now();
+          var dt = Math.min((now - tPrev) / 1000, 0.05);
+          tPrev = now;
+          earth.rotation.y += 0.004;
+
+          if (holdFor > 0){
+            holdFor -= dt;
+            if (holdFor <= 0) resetRuns();
+          } else {
+            var allDone = true;
+            for (var i = 0; i < runs.length; i++){
+              var rr = runs[i];
+              if (!rr.done){
+                allDone = false;
+                /* energy integral, not a force step: v(r) is exact at every r
+                   so the slow body turns round precisely at n²R/(1−n²)     */
+                var k = rr.spec.n * rr.spec.n - 1 + R / rr.r;
+                if (k <= 0){ rr.sign = -1; k = 1e-4; }
+                rr.v = VE * Math.sqrt(k);
+                rr.r += rr.sign * rr.v * dt * 0.20;
+                if (rr.r <= R){ rr.r = R; rr.done = true; }
+                if (rr.r >= CAP + 0.35){ rr.done = true; }
+              }
+              var p = new T.Vector3().copy(rr.dir).multiplyScalar(rr.r).add(home);
+              rr.dot.position.copy(p);
+              rr.dot.visible = rr.r <= CAP + 0.30;
+              rr.tr.userData.push(p);
+              /* the arrow IS the speed — it shrinks toward nothing on the
+                 v_e run and settles on v_inf for the fast one            */
+              var len = 0.16 + 0.66 * (rr.v / VE);
+              aim(rr.arw, p, new T.Vector3().copy(rr.dir)
+                .multiplyScalar(rr.sign > 0 ? len : -len).add(p));
+              rr.arw.visible = rr.dot.visible;
+              rr.lab.position.copy(new T.Vector3().copy(rr.dir)
+                .multiplyScalar(Math.min(rr.r, CAP) + 0.34).add(home));
+              rr.lab.position.z = 0.02;
+              rr.lab.visible = rr.dot.visible;
+            }
+            if (allDone) holdFor = 1.6;
+          }
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ------------------------------------------------- launch-direction --- */
+      if (kind === 'launch-direction'){
+        var Rd = 1.05;
+        var tilt = new T.Group();
+        tilt.rotation.z = 0.22;
+        group.add(tilt);
+        var spin = new T.Group();
+        tilt.add(spin);
+        spin.add(planet(Rd));
+
+        tilt.add(line([new T.Vector3(0, -Rd * 1.40, 0), new T.Vector3(0, Rd * 1.40, 0)], INK, 0.32));
+        var eqp = [];
+        for (var e = 0; e <= 80; e++){
+          var ea = e / 80 * Math.PI * 2;
+          eqp.push(new T.Vector3(Rd * Math.cos(ea), 0, Rd * Math.sin(ea)));
+        }
+        spin.add(line(eqp, GOLD, 0.30));
+
+        /* The fan: ONE point, five directions, ONE length — v_e does not know
+           which way the nose is pointing. It is drawn at the top of the globe
+           and in the plane of the screen; a fan around the equator points its
+           arrows straight down the lens and reads as a single blob. */
+        var P = new T.Vector3(0, Rd, 0);
+        var FAN = [-56, -28, 0, 28, 56];
+        for (var f = 0; f < FAN.length; f++){
+          var fa = FAN[f] * Math.PI / 180;
+          var dirv = new T.Vector3(Math.sin(fa), Math.cos(fa), 0);
+          var arw = onTop(arrow(INK, 0.034), 12);
+          tilt.add(arw);
+          aim(arw, P, new T.Vector3().copy(dirv).multiplyScalar(0.74).add(P));
+        }
+        var same = label('same vₑ every way', '#f4f7fb', 0.24);
+        onTop(same, 13); tilt.add(same);
+        same.position.set(0.05, Rd + 1.02, 0.02);
+
+        /* The bonus the earth hands you: ωR, east, biggest at the equator */
+        var eastA = onTop(arrow(GREEN, 0.046), 12); tilt.add(eastA);
+        var westA = onTop(arrow(RED, 0.040), 12);   tilt.add(westA);
+        aim(eastA, new T.Vector3(Rd * 0.02, 0, Rd), new T.Vector3(Rd * 0.80, 0, Rd));
+        aim(westA, new T.Vector3(-Rd * 0.02, 0, Rd), new T.Vector3(-Rd * 0.52, 0, Rd));
+        var lE = label('+ ωR  west → east', '#34d399', 0.24);
+        var lW = label('− ωR', '#fb7185', 0.24);
+        onTop(lE, 13); onTop(lW, 13); tilt.add(lE); tilt.add(lW);
+        lE.position.set(Rd * 1.02, -0.34, Rd + 0.02);
+        lW.position.set(-Rd * 0.72, -0.34, Rd + 0.02);
+
+        /* the same bonus, at latitude — shorter, because r = R cos φ       */
+        var latY = Rd * Math.sin(52 * Math.PI / 180),
+            latR = Rd * Math.cos(52 * Math.PI / 180);
+        var latA = onTop(arrow(GREEN, 0.030), 12); tilt.add(latA);
+        aim(latA, new T.Vector3(0, latY, latR), new T.Vector3(latR * 0.62, latY, latR));
+
+
+        var tls = Date.now();
+        lfLoop(frame, function loop(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          if (nw !== w || nh !== h){
+            w = nw; h = nh;
+            camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+            renderer.setSize(nw, nh);
+          }
+          var t = (Date.now() - tls) / 1000;
+          spin.rotation.y += 0.010;
+          group.rotation.y = Math.sin(t / 11) * 0.06;
+          renderer.render(scene, camera);
+        });
+        lfOn(frame, 'resize', function(){});
+        return;
+      }
+
+      /* ---------------------------------------------------- angled-launch --- */
+      /* A real Kepler arc. GM = 1, R = 1 inside the maths; the scene is scaled
+         to fit afterwards. Launch speed n·v_e at θ from the local horizontal.
+         The two things the slide claims and a still figure cannot show: the
+         speed at the top is not zero, and r×v holds it to v R cos θ.       */
+      var Rp = 1.0, MU2 = 1.0, VE2 = Math.sqrt(2 * MU2 / Rp);
+      var nLaunch = 0.80, thDeg = 42, th = thDeg * Math.PI / 180;
+      var v0 = nLaunch * VE2;
+      var L  = Rp * v0 * Math.cos(th);                 /* per unit mass       */
+      var EN = v0 * v0 / 2 - MU2 / Rp;                 /* specific energy     */
+      var aSemi = -MU2 / (2 * EN);
+      var ecc = Math.sqrt(Math.max(0, 1 + 2 * EN * L * L / (MU2 * MU2)));
+      var pSemi = L * L / MU2;
+      function rOf(nu){ return pSemi / (1 + ecc * Math.cos(nu)); }
+      /* true anomaly at launch (ascending branch) */
+      var cosNu0 = (pSemi / Rp - 1) / ecc;
+      cosNu0 = Math.max(-1, Math.min(1, cosNu0));
+      var nu0 = -Math.acos(cosNu0);                    /* negative = climbing */
+      var rApo = rOf(Math.PI), hMax = rApo - Rp;
+      var vTop = L / rApo;
+
+      var SC = 1.55 / Rp;                              /* scene units per R   */
+      var focus = new T.Vector3(0, -1.05, 0);          /* planet centre       */
+      /* the orbit is drawn in a frame where periapsis is along +x; rotate it
+         so the launch point sits on the left shoulder of the globe          */
+      var ROT = 2.15;
+      function pointAt(nu){
+        var r = rOf(nu);
+        var x = r * Math.cos(nu), y = r * Math.sin(nu);
+        var c = Math.cos(ROT), s = Math.sin(ROT);
+        return new T.Vector3(focus.x + (x * c - y * s) * SC,
+                             focus.y + (x * s + y * c) * SC, 0);
+      }
+      function velAt(nu){
+        /* dr/dnu and r dnu/dt give the velocity direction without a solver  */
+        var r = rOf(nu);
+        var vr = MU2 / L * ecc * Math.sin(nu);
+        var vt = L / r;
+        var ur = new T.Vector3(Math.cos(nu), Math.sin(nu), 0);
+        var ut = new T.Vector3(-Math.sin(nu), Math.cos(nu), 0);
+        var v = new T.Vector3().copy(ur).multiplyScalar(vr)
+          .add(new T.Vector3().copy(ut).multiplyScalar(vt));
+        var c = Math.cos(ROT), s = Math.sin(ROT);
+        return { dir: new T.Vector3(v.x * c - v.y * s, v.x * s + v.y * c, 0).normalize(),
+                 mag: v.length() };
+      }
+
+      var pl = planet(Rp * SC, INDIGO);
+      pl.children[0].material.opacity = 0.18;      /* the globe is context here */
+      pl.position.copy(focus);
+      group.add(pl);
+
+      var arcPts = [];
+      for (var q = 0; q <= 160; q++){
+        arcPts.push(pointAt(nu0 + (Math.PI - nu0) * q / 160));
+      }
+      group.add(onTop(line(arcPts, INDIGO, 0.40), 8));
+
+      /* Frame what is drawn. The apogee of a real Kepler arc is 2.3 R out and
+         off to one side, so a camera centred on the origin buries the whole
+         figure behind the planet. Fit the arc's own bounding box. */
+      var bx0 = focus.x - Rp * SC, bx1 = focus.x + Rp * SC,
+          by0 = focus.y - Rp * SC, by1 = focus.y + Rp * SC;
+      for (var bi = 0; bi < arcPts.length; bi++){
+        bx0 = Math.min(bx0, arcPts[bi].x); bx1 = Math.max(bx1, arcPts[bi].x);
+        by0 = Math.min(by0, arcPts[bi].y); by1 = Math.max(by1, arcPts[bi].y);
+      }
+      by0 -= 0.52;                                   /* room for the caption */
+      group.position.set(-(bx0 + bx1) / 2, -(by0 + by1) / 2, 0);
+      HALF = (by1 - by0) / 2 * 1.08;
+      WIDE = (bx1 - bx0) / 2 * 1.08;
+      fit(w / h);
+
+      var P0 = pointAt(nu0), PA = pointAt(Math.PI);
+      /* the two radii the angular-momentum line is written about */
+      group.add(onTop(dashed([focus, P0], INK, 0.28), 8));
+      group.add(onTop(dashed([focus, PA], INK, 0.28), 8));
+      /* the local horizontal at the launch point — θ is measured from it */
+      var outward = new T.Vector3().subVectors(P0, focus).normalize();
+      var horiz = new T.Vector3(-outward.y, outward.x, 0);
+      group.add(onTop(dashed([new T.Vector3().copy(P0).addScaledVector(horiz, -0.42),
+                              new T.Vector3().copy(P0).addScaledVector(horiz, 0.62)], INK, 0.34), 8));
+
+      var body = onTop(new T.Mesh(new T.SphereGeometry(0.075, 14, 10),
+        new T.MeshBasicMaterial({ color: GOLD })), 11);
+      group.add(body);
+      var vArw = onTop(arrow(GOLD, 0.038), 12); group.add(vArw);
+      var tTrail = trail(GOLD, 0.5, 700); group.add(tTrail);
+
+      var lTh = label('θ', '#f4f7fb', 0.26);
+      var lV  = label('v', '#f5c542', 0.26);
+      var lTop = label('v_top ≠ 0', '#34d399', 0.26);
+      var lH  = label('h', '#7c8cff', 0.24);
+      var lCons = label('v R cos θ  =  v_top (R + h)', '#8ea0b8', 0.24);
+      onTop(lTh, 13); onTop(lV, 13); onTop(lTop, 13); onTop(lH, 13); onTop(lCons, 13);
+      group.add(lTh); group.add(lV); group.add(lTop); group.add(lH); group.add(lCons);
+      lTh.position.set(P0.x + horiz.x * 0.34 + outward.x * 0.30,
+                       P0.y + horiz.y * 0.34 + outward.y * 0.30, 0.02);
+      lTop.position.set(PA.x + 0.62, PA.y + 0.20, 0.02);
+      lH.position.set((PA.x + focus.x) / 2 - 0.28, (PA.y + focus.y) / 2, 0.02);
+      lCons.position.set((bx0 + bx1) / 2, by0 + 0.26, 0.02);
+
+      var vTopArw = onTop(arrow(GREEN, 0.038), 12); group.add(vTopArw);
+      var vt0 = velAt(Math.PI);
+      aim(vTopArw, PA, new T.Vector3().copy(vt0.dir)
+        .multiplyScalar(0.16 + 0.52 * (vt0.mag / v0)).add(PA));
+
+      var nu = nu0, tp = Date.now(), pause = 0;
+      lfLoop(frame, function loop(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        if (nw !== w || nh !== h){
+          w = nw; h = nh;
+          camera.aspect = nw / nh; fit(nw / nh); camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        }
+        var now = Date.now(), dt = Math.min((now - tp) / 1000, 0.05); tp = now;
+        if (pause > 0){
+          pause -= dt;
+          if (pause <= 0){ nu = nu0; tTrail.userData.clear(); }
+        } else {
+          /* dnu/dt = L / r² — the real thing, so it crawls at the top      */
+          var r = rOf(nu);
+          nu += (L / (r * r)) * dt * 0.55;
+          if (nu >= Math.PI){ nu = Math.PI; pause = 1.5; }
+        }
+        var P = pointAt(nu);
+        body.position.copy(P);
+        tTrail.userData.push(P);
+        var vv = velAt(nu);
+        aim(vArw, P, new T.Vector3().copy(vv.dir)
+          .multiplyScalar(0.14 + 0.52 * (vv.mag / v0)).add(P));
+        lV.position.set(P.x + vv.dir.x * 0.62 + 0.10, P.y + vv.dir.y * 0.62 + 0.14, 0.02);
+        group.rotation.y = 0;
+        renderer.render(scene, camera);
+      });
+      lfOn(frame, 'resize', function(){});
     }
 
   });
