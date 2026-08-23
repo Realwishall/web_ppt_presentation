@@ -3078,8 +3078,16 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     } else if(d.type === "lf-restore-session" && d.payload){
       // the host's copy wins — don't also offer the local crash snapshot
       recoverOffered = true;
-      restoreSession(d.payload);
-      if(d.sessionId) state.sessionId = d.sessionId;
+      /* `ask` is the difference between reviewing a session (the teacher
+         already picked it, so put it up) and resuming one (nobody asked for
+         it yet — last lecture's board must not appear on the projector on its
+         own). Asked or not, the host is told what was decided, because it is
+         the host that owns the session id this board will be saved under. */
+      if(d.ask) offerHostRestore(d);
+      else {
+        restoreSession(d.payload);
+        if(d.sessionId) state.sessionId = d.sessionId;
+      }
     } else if(d.type === "lf-request-save"){
       // Host wants a snapshot (export / inactivity / teach handoff).
       tellHost({
@@ -3173,7 +3181,7 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
   }
 
   // Rebuild the board from a saved unfinished payload (decks + pages + ink).
-  function restoreSession(payload){
+  function restoreSession(payload, opts){
     if(!payload || !Array.isArray(payload.pages)) return;
     clearBoard();
 
@@ -3235,7 +3243,11 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     requestAnimationFrame(() => {
       sizeCanvas();          // idempotent — no-op when the size is already right
       loadPage(go);
-      toast(`Restored ${state.pages.length} unexported page${state.pages.length>1?"s":""}`);
+      const n = state.pages.length;
+      const ex = (opts && opts.exported) || 0;
+      toast(ex
+        ? `Restored ${n} page${n>1?"s":""} with ink — including the ${ex} already exported`
+        : `Restored ${n} page${n>1?"s":""} with ink`);
     });
     pingActivity();
   }
@@ -3422,6 +3434,50 @@ html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!i
     document.getElementById("discardRecover").onclick = () => {
       document.getElementById("recoverOverlay").classList.remove("show");
       dropRecover();
+    };
+  }
+
+  /* The same dialog, for the board the HOST found in session history.
+     Nothing is put on the board until the teacher says so: the payload waits
+     here, and either answer is reported back so the host knows whether this
+     board is a continuation of that session or a brand-new one. */
+  function offerHostRestore(d){
+    const payload = d.payload;
+    const s = d.summary || {};
+    const total = s.total != null ? s.total : (payload.pages || []).length;
+    const exported = s.exported || 0;
+    const overlay  = document.getElementById("recoverOverlay");
+    const titleEl  = document.getElementById("recoverTitle");
+    const msgEl    = document.getElementById("recoverMsg");
+
+    const mins = s.at ? Math.round((Date.now() - s.at) / 60000) : null;
+    const when = mins == null ? "" :
+      mins < 2  ? " left a moment ago"   :
+      mins < 90 ? ` left ${mins} minutes ago` :
+      mins < 1440 ? " left earlier today" : "";
+
+    titleEl.textContent = "Pick up where you left off?";
+    msgEl.textContent =
+      `${s.title ? "“" + s.title + "” — " : ""}${total} page${total>1?"s":""} with your ink${when}.`
+      + (exported
+          ? ` ${exported} of them ${exported>1?"were":"was"} already exported; `
+            + `${total - exported} ${total - exported === 1 ? "was" : "were"} not. `
+            + "Everything comes back, exported pages included."
+          : " Nothing has been exported yet.");
+    overlay.classList.add("show");
+
+    const close = () => overlay.classList.remove("show");
+    document.getElementById("doRecover").onclick = () => {
+      close();
+      restoreSession(payload, { exported });
+      if(d.sessionId) state.sessionId = d.sessionId;
+      tellHost({ type:"lf-restore-choice", sessionId: d.sessionId || null, accepted:true });
+    };
+    document.getElementById("discardRecover").onclick = () => {
+      close();
+      // The session stays in history untouched; this board starts empty and
+      // will be saved under an id of the host's choosing, not that one.
+      tellHost({ type:"lf-restore-choice", sessionId: d.sessionId || null, accepted:false });
     };
   }
 

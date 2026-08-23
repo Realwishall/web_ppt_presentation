@@ -273,6 +273,34 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 @media (prefers-reduced-motion:reduce){
   #bg svg.motif-gravity .spin,#bg svg.motif-gravity .orbit{animation:none}}
 
+/* Chapter motif "fluid" — the pressure / density chapter's own signature, and
+   it is a column of liquid, because everything in front of it is read off one:
+   ρ is what fills the column, ρgh is what the column does to its own floor.
+   The tank sits low-left with its walls carrying normal arrows that get longer
+   with depth (pressure grows downward, and it pushes square-on to the wall);
+   the air above it thins upward into the atmosphere band low-right, which is
+   the second half of the chapter. Two things move and both are things a liquid
+   actually does: the free surface swells, and a bubble train rises through the
+   column. The depth arrows deliberately do NOT move — they are a statement
+   about a standing column, and an arrow that breathes reads as a pressure that
+   is changing. CSS only (`.motif-fluid .swell` / `.rise`, no script),
+   flattened in @media print and under prefers-reduced-motion.
+   Texture, never information (rules 11, 20).                                 */
+#bg svg.motif-fluid{opacity:.56}
+#bg svg.motif-fluid .swell{animation:lf-fl-swell 19s ease-in-out infinite alternate}
+#bg svg.motif-fluid .rise circle{transform-box:view-box;
+    animation:lf-fl-rise 15s linear infinite}
+#bg svg.motif-fluid .rise circle:nth-child(2){animation-duration:21s;animation-delay:-6s}
+#bg svg.motif-fluid .rise circle:nth-child(3){animation-duration:17s;animation-delay:-11s}
+#bg svg.motif-fluid .rise circle:nth-child(4){animation-duration:25s;animation-delay:-3s}
+@keyframes lf-fl-swell{from{transform:translateX(0)}to{transform:translateX(-96px)}}
+@keyframes lf-fl-rise{0%{transform:translateY(0);opacity:0}
+                      14%{opacity:.5}
+                      86%{opacity:.5}
+                      100%{transform:translateY(-330px);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-fluid .swell,#bg svg.motif-fluid .rise circle{animation:none}}
+
 /* The WebGL companion to the "inertia" motif — a persistent canvas of slowly
    turning wireframe bodies (ring, disc, rod, shell) drifting in depth behind
    every slide. It is a sibling of .page (rule 1), it sits *under* the motif
@@ -1150,6 +1178,9 @@ svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
   #bg svg.motif-rolling .roll,#bg svg.motif-rolling .spin{animation:none!important}
   #bg svg.motif-gravity{opacity:.20!important}
   #bg svg.motif-gravity .spin,#bg svg.motif-gravity .orbit{animation:none!important}
+  #bg svg.motif-fluid{opacity:.20!important}
+  #bg svg.motif-fluid .swell{animation:none!important}
+  #bg svg.motif-fluid .rise circle{animation:none!important;opacity:.5!important}
   /* the translation/rotation pair prints as two identical rods — the caption
      under each is what carries the difference on paper */
   svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none!important;transform:none!important}

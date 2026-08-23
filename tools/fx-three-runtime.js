@@ -276,6 +276,9 @@
           kind === 'coverage-cap'){
         startSatellite(frame, w, h, kind); return;
       }
+      if (kind === 'pressure-depth' || kind === 'curved-projected'){
+        startFluid(frame, w, h, kind); return;
+      }
 
       var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -5289,7 +5292,7 @@
          them, which is the whole of the law — so a clock bar under each wedge
          fills while the body is inside it, and the two bars finish level.  */
       if (kind === 'kepler-areas'){
-        var aK = 1.00, eK = 0.62, MUK = 1.0;
+        var aK = 1.00, eK = 0.55, MUK = 1.0;
         var pK = aK * (1 - eK * eK);
         var LK = Math.sqrt(MUK * pK);                 /* per unit mass       */
         var TK = 2 * Math.PI * Math.sqrt(aK * aK * aK / MUK);
@@ -5316,11 +5319,15 @@
            same Δt at each apse and let the integrator say how far the body
            gets. Δν is solved by stepping the real rate, so the areas are
            equal by construction rather than by drawing them that way.     */
-        var DT = TK / 9;
-        function sweepFrom(nu0k){
-          var nu = nu0k, t = 0, dtI = TK / 4000;
-          while (t < DT){ nu += (LK / (rK(nu) * rK(nu))) * dtI; t += dtI; }
-          return nu;
+        /* Sweep HALF the interval each way from the apse, not the whole of it
+           forward — a forward sweep re-centred on the apse is a different
+           region and the two areas then differ by 60 %, which is the one
+           thing this figure may not get wrong.                             */
+        var DT = TK / 14;
+        function halfSweep(nu0k){
+          var nu = nu0k, t = 0, dtI = TK / 40000, half = DT / 2;
+          while (t < half){ var rr0 = rK(nu); nu += (LK / (rr0 * rr0)) * dtI; t += dtI; }
+          return nu - nu0k;
         }
         function wedge(nuA, nuB, colour, opacity){
           var verts = [], N = 40;
@@ -5335,10 +5342,9 @@
             transparent: true, opacity: opacity, side: T.DoubleSide }));
           return onTop(m, 7);
         }
-        var nearA = -0.5 * (sweepFrom(0) - 0), nearB = -nearA;   /* about ν=0 */
-        nearA = 0 - (sweepFrom(0) - 0) / 2; nearB = 0 + (sweepFrom(0) - 0) / 2;
-        var farMid = Math.PI, halfFar = (sweepFrom(Math.PI) - Math.PI) / 2;
-        var farA = farMid - halfFar, farB = farMid + halfFar;
+        var halfNear = halfSweep(0), halfFar = halfSweep(Math.PI);
+        var nearA = -halfNear, nearB = halfNear;              /* about ν = 0  */
+        var farA = Math.PI - halfFar, farB = Math.PI + halfFar;
 
         var wNear = wedge(nearA, nearB, GOLD, 0.16);   group.add(wNear);
         var wFar  = wedge(farA,  farB,  INDIGO, 0.16); group.add(wFar);
@@ -5380,9 +5386,15 @@
         var radK = onTop(line([CK, ptK(0)], INK, 0.55), 10);
         group.add(radK);
 
-        HALF = 1.95; WIDE = 2.90; fit(w / h);
-        group.position.set(0.10, 0.42, 0);
+        /* Centre what is actually drawn. The sun sits at a focus, so the orbit
+           is badly off-centre about it, and the clock bars hang below — a
+           camera pointed at the origin puts the figure in one corner. */
+        HALF = 1.85; WIDE = 2.05; fit(w / h);
+        group.position.set(0.50, 0.13, 0);
 
+        /* One lap in about 25 s of board time — slow enough that the crawl at
+           aphelion reads as a crawl rather than as a stall.                 */
+        var RATE = TK / 25;
         var nuK = nearA, tpK = Date.now(), tN = 0, tF = 0;
         lfLoop(frame, function loop(){
           var nw = frame.clientWidth, nh = frame.clientHeight;
@@ -5395,15 +5407,22 @@
           var now = Date.now(), dt = Math.min((now - tpK) / 1000, 0.05); tpK = now;
           if (!inking()){
             var rr2 = rK(nuK);
-            nuK += (LK / (rr2 * rr2)) * dt * 0.42;
+            nuK += (LK / (rr2 * rr2)) * dt * RATE;
             if (nuK >= nearA + Math.PI * 2){
               nuK = nearA; tN = 0; tF = 0;               /* one clean lap    */
             }
-            var m2 = ((nuK % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-            var inN = (m2 >= (nearA + Math.PI * 2) % (Math.PI * 2)) || (m2 <= nearB);
-            var inF = (m2 >= farA && m2 <= farB);
-            if (inN) tN = Math.min(DT, tN + dt * 0.42);
-            if (inF) tF = Math.min(DT, tF + dt * 0.42);
+            /* "inside the wedge" as an angular distance from the apse, so it
+               cannot break where the anomaly wraps through 2π.             */
+            function near(x, c){
+              var d = (x - c) % (Math.PI * 2);
+              if (d >  Math.PI) d -= Math.PI * 2;
+              if (d < -Math.PI) d += Math.PI * 2;
+              return Math.abs(d);
+            }
+            var inN = near(nuK, 0) <= halfNear;
+            var inF = near(nuK, Math.PI) <= halfFar;
+            if (inN) tN = Math.min(DT, tN + dt * RATE);
+            if (inF) tF = Math.min(DT, tF + dt * RATE);
             wNearLit.visible = inN; wFarLit.visible = inF;
             setBar(fillN, tN / DT); setBar(fillF, tF / DT);
           }
@@ -5966,6 +5985,282 @@
         lfOn(frame, 'resize', function(){});
         return;
       }
+    }
+
+    /* ---------------------------------------------------- fluid scenes ------
+       Two scenes for the pressure / density board, each carrying the one thing
+       its source slide asserts and a still figure cannot show.
+
+         pressure-depth     a probe walks down a standing column. Its four
+                            arrows — up, down and both sides — grow TOGETHER
+                            and stay equal, while the bar underneath fills in
+                            step with the depth line. So the class watches two
+                            facts arrive at once: pressure at a point pushes the
+                            same in every direction, and its size is ρgh. A
+                            still figure can draw either one; it cannot show
+                            that they are the same picture.
+
+         curved-projected   the "use projected area" slide, run. Uniform
+                            pressure lands normal to a curved surface, so its
+                            arrows fan; the surface then flattens into its own
+                            projection and the arrows come round to parallel —
+                            and the resultant arrow underneath NEVER CHANGES
+                            LENGTH through the whole morph. The slide asserts
+                            that the answer is P × (projected area); this is
+                            that assertion happening.
+
+       Both ship a .scene-fallback that prints (rules 11, 20).                */
+    function startFluid(frame, w, h, kind){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, CYAN = 0x56ccf2, INK = 0xf4f7fb;
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene = new T.Scene();
+      var camera = new T.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9);
+      camera.lookAt(0, 0, 0);
+
+      var HALF_H = kind === 'curved-projected' ? 1.72 : 2.30;
+      var HALF_W = kind === 'curved-projected' ? 3.30 : 2.60;
+      var t2 = Math.tan((40 * Math.PI / 180) / 2);
+      function fit(aspect){
+        camera.position.z = Math.max(HALF_H / t2, HALF_W / (t2 * aspect));
+      }
+      fit(w / h);
+
+      var world = new T.Group();
+      scene.add(world);
+
+      function line(pts, color, opacity){
+        return new T.Line(new T.BufferGeometry().setFromPoints(pts),
+          new T.LineBasicMaterial({ color: color, transparent: true,
+            opacity: opacity === undefined ? 1 : opacity }));
+      }
+      function label(text, css, size, px){
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold ' + (px || 58) + 'px Calibri, Candara, "Segoe UI", sans-serif';
+        ctx.fillStyle = css; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new T.CanvasTexture(c);
+        tex.minFilter = T.LinearFilter;
+        var m = new T.Mesh(new T.PlaneGeometry(size * 2, size),
+          new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+        m.userData.redraw = function(next){
+          ctx.clearRect(0, 0, 256, 128);
+          ctx.fillText(next, 128, 64);
+          tex.needsUpdate = true;
+        };
+        return m;
+      }
+      /* One arrow, re-aimed every frame from an origin, a direction and a
+         length. Same rig every other 2D scene in this file uses: a cylinder
+         shaft and a cone head, both pointing +y, turned onto the direction by
+         a quaternion — so the head always sits ON the tip whatever the angle. */
+      function arrow(color, opacity, rad){
+        var g = new T.Group(), r = rad || 0.030;
+        var mat = new T.MeshBasicMaterial({ color: color, transparent: true,
+          opacity: opacity === undefined ? 1 : opacity });
+        var shaft = new T.Mesh(new T.CylinderGeometry(r, r, 1, 10), mat);
+        var head  = new T.Mesh(new T.ConeGeometry(r * 3, r * 7, 14), mat);
+        g.add(shaft); g.add(head);
+        g.userData.set = function(ox, oy, dx, dy, len){
+          if (len < 0.04){ g.visible = false; return; }
+          g.visible = true;
+          var d = new T.Vector3(dx, dy, 0);
+          d.normalize();
+          var hl = Math.min(r * 7, len * 0.45);
+          var sl = Math.max(len - hl, 0.001);
+          shaft.scale.set(1, sl, 1);           shaft.position.set(0, sl / 2, 0);
+          head.scale.set(1, hl / (r * 7), 1);  head.position.set(0, sl + hl / 2, 0);
+          g.position.set(ox, oy, 0.01);
+          g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d);
+        };
+        return g;
+      }
+
+      /* ═══ pressure at a point, walked down the column ═══════════════════ */
+      if (kind === 'pressure-depth'){
+        var LEFT = -1.55, RIGHT = 1.55, TOP = 1.35, FLOOR = -1.55;
+
+        /* the vessel — scaffolding, drawn once */
+        world.add(line([new T.Vector3(LEFT, TOP + 0.42, 0), new T.Vector3(LEFT, FLOOR, 0),
+                        new T.Vector3(RIGHT, FLOOR, 0), new T.Vector3(RIGHT, TOP + 0.42, 0)], INK, 0.55));
+
+        /* the liquid, and the free surface on top of it */
+        var body = new T.Mesh(new T.PlaneGeometry(RIGHT - LEFT, TOP - FLOOR),
+          new T.MeshBasicMaterial({ color: INDIGO, transparent: true, opacity: 0.13 }));
+        body.position.set(0, (TOP + FLOOR) / 2, -0.02);
+        world.add(body);
+        var surf = line([new T.Vector3(LEFT, TOP, 0), new T.Vector3(RIGHT, TOP, 0)], INDIGO, 0.62);
+        world.add(surf);
+
+        /* the wall's own normal arrows: square-on, longer the deeper they are.
+           At rest — they describe a standing column. */
+        var wall = [];
+        for (var wi = 0; wi < 4; wi++){
+          var wy = TOP - (wi + 1) * (TOP - FLOOR) / 4.6;
+          var wl = 0.22 + (TOP - wy) * 0.42;
+          var wa = arrow(GOLD, 0.34);
+          wa.userData.set(RIGHT, wy, 1, 0, wl);
+          world.add(wa);
+          wall.push(wa);
+        }
+
+        /* the depth line, and the probe that walks down it */
+        var hLine = line([new T.Vector3(LEFT + 0.30, TOP, 0),
+                          new T.Vector3(LEFT + 0.30, TOP, 0)], CYAN, 0.55);
+        world.add(hLine);
+        var hLab = label('h', '#56ccf2', 0.44, 54);
+        world.add(hLab);
+
+        var probe = new T.Mesh(new T.CircleGeometry(0.11, 22),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.95 }));
+        world.add(probe);
+        var halo = new T.Mesh(new T.CircleGeometry(0.22, 22),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.16 }));
+        world.add(halo);
+
+        /* four arrows out of the probe. They are always the same length as each
+           other — that equality IS the fact. */
+        var DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        var spokes = DIRS.map(function(){
+          var a = arrow(GOLD, 0.9); world.add(a); return a;
+        });
+
+        /* the bar: P read off as a length, so "grows with depth" is visible
+           without a number the class has to trust */
+        var BAR_Y = FLOOR - 0.55, BAR_L = 2.9;
+        world.add(line([new T.Vector3(-BAR_L / 2, BAR_Y, 0),
+                        new T.Vector3(BAR_L / 2, BAR_Y, 0)], INK, 0.22));
+        var bar = new T.Mesh(new T.PlaneGeometry(1, 0.15),
+          new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.8 }));
+        world.add(bar);
+        var pLab = label('P = ρgh', '#f5c542', 0.50, 52);
+        pLab.position.set(0, BAR_Y - 0.46, 0);
+        world.add(pLab);
+
+        function resizeA(){
+          var nw = frame.clientWidth, nh = frame.clientHeight;
+          if (!nw || !nh) return;
+          camera.aspect = nw / nh; camera.updateProjectionMatrix();
+          fit(nw / nh); renderer.setSize(nw, nh);
+        }
+        lfOn(frame, 'resize', resizeA);
+
+        var t0 = Date.now(), CYCLE = 9.0;
+        lfLoop(frame, function loop(){
+          var t = ((Date.now() - t0) / 1000) % CYCLE;
+          /* down, hold at the bottom, back up — so the class sees it both ways */
+          var u;
+          if (t < 4.2)      u = t / 4.2;
+          else if (t < 5.4) u = 1;
+          else if (t < 8.2) u = 1 - (t - 5.4) / 2.8;
+          else              u = 0;
+
+          var y = TOP - u * (TOP - FLOOR - 0.18);
+          var depth = TOP - y;
+          var len = 0.16 + depth * 0.46;
+
+          probe.position.set(0.10, y, 0.02);
+          halo.position.copy(probe.position);
+          for (var i = 0; i < 4; i++){
+            spokes[i].userData.set(0.10 + DIRS[i][0] * 0.12, y + DIRS[i][1] * 0.12,
+              DIRS[i][0], DIRS[i][1], len);
+          }
+
+          hLine.geometry.setFromPoints([new T.Vector3(LEFT + 0.30, TOP, 0),
+                                        new T.Vector3(LEFT + 0.30, y, 0)]);
+          hLab.position.set(LEFT + 0.62, (TOP + y) / 2, 0.02);
+          hLab.material.opacity = Math.min(depth * 2.4, 1);
+
+          var f = depth / (TOP - FLOOR - 0.18);
+          bar.scale.x = Math.max(f * BAR_L, 0.001);
+          bar.position.set(-BAR_L / 2 + f * BAR_L / 2, BAR_Y, 0.01);
+
+          renderer.render(scene, camera);
+        });
+        return;
+      }
+
+      /* ═══ the curved surface flattening into its own projection ═════════ */
+      var R = 1.18, N = 13, CX = -1.55;
+      /* the surface, as a function of the morph parameter m: m = 0 is the
+         semicircle, m = 1 is the flat plate it projects onto */
+      function pointAt(i, m){
+        var a = -Math.PI / 2 + (i / (N - 1)) * Math.PI;      /* -90° … +90° */
+        var x = CX + Math.cos(a) * R * (1 - m);
+        var y = Math.sin(a) * R;
+        return { x: x, y: y, nx: (1 - m) * Math.cos(a) + m, ny: (1 - m) * Math.sin(a) };
+      }
+
+      var surface = line([new T.Vector3(CX, -R, 0), new T.Vector3(CX, R, 0)], INK, 0.75);
+      world.add(surface);
+      var chord = line([new T.Vector3(CX, -R, 0), new T.Vector3(CX, R, 0)], INDIGO, 0.22);
+      world.add(chord);
+
+      var fan = [];
+      for (var k = 0; k < N; k++) { var a2 = arrow(GOLD, 0.55); world.add(a2); fan.push(a2); }
+
+      /* the answer, drawn once and never allowed to change */
+      var RES_Y = -R - 0.62, RES_L = 1.55;
+      var res = arrow(CYAN, 0.95);
+      res.userData.set(CX - RES_L / 2, RES_Y, 1, 0, RES_L);
+      world.add(res);
+      var resLab = label('F = P × A', '#56ccf2', 0.50, 50);
+      resLab.position.set(CX, RES_Y - 0.44, 0);
+      world.add(resLab);
+
+      /* the projected area itself, standing to the right as the thing the
+         curved surface is being traded for */
+      var PX = 1.75;
+      world.add(line([new T.Vector3(PX, -R, 0), new T.Vector3(PX, R, 0)], INK, 0.75));
+      var flatFan = [];
+      for (var k2 = 0; k2 < N; k2++){
+        var a3 = arrow(GOLD, 0.30);
+        a3.userData.set(PX - 0.62, -R + (k2 / (N - 1)) * 2 * R, 1, 0, 0.56);
+        world.add(a3); flatFan.push(a3);
+      }
+      var projLab = label('projected area', '#f4f7fb', 0.46, 40);
+      projLab.position.set(PX, R + 0.42, 0);
+      world.add(projLab);
+      var tie = line([new T.Vector3(CX + 0.30, 0, 0), new T.Vector3(PX - 0.90, 0, 0)], GOLD, 0.22);
+      world.add(tie);
+
+      function resizeB(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        fit(nw / nh); renderer.setSize(nw, nh);
+      }
+      lfOn(frame, 'resize', resizeB);
+
+      var tB = Date.now(), CYC = 10.0;
+      lfLoop(frame, function loop(){
+        var t = ((Date.now() - tB) / 1000) % CYC;
+        var m;                                   /* 0 = curved, 1 = flattened */
+        if (t < 1.4)      m = 0;
+        else if (t < 4.4) m = (t - 1.4) / 3.0;
+        else if (t < 6.2) m = 1;
+        else if (t < 8.6) m = 1 - (t - 6.2) / 2.4;
+        else              m = 0;
+        m = m * m * (3 - 2 * m);                 /* ease, so it reads as a fold */
+
+        var pts = [];
+        for (var i = 0; i < N; i++){
+          var p = pointAt(i, m);
+          pts.push(new T.Vector3(p.x, p.y, 0));
+          /* the arrow lands ON the surface, pointing along its own normal */
+          fan[i].userData.set(p.x - p.nx * 0.62, p.y - p.ny * 0.62, p.nx, p.ny, 0.56);
+        }
+        surface.geometry.setFromPoints(pts);
+        renderer.render(scene, camera);
+      });
     }
 
   });

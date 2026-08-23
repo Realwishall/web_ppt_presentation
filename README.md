@@ -64,7 +64,7 @@ A deck is one HTML document made of `<section class="page">` slides, with its CS
 
 - `/login` — sign in, sign up, or phone OTP.
 - `/` — the dashboard: **Content creation** (classes → chapters → folders) on the left, **Batches** on the right, **Global settings** in the header.
-- `/teach?batch={batchId}` — the live presenter. `&fresh=1` starts on an empty board instead of restoring the last session's unexported pages.
+- `/teach?batch={batchId}` — the live presenter. If this batch has an unfinished session, the panel *asks* ("Pick up where you left off?") before putting anything on the board; accepting brings back the whole board — every page, exported ones included, with its ink. `&fresh=1` skips the question and starts empty.
 
 ### Teaching
 

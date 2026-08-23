@@ -724,10 +724,123 @@ const motifSvg = {
     </g>
   </svg>`,
 
+  /* Chapter motif "fluid": the pressure / density chapter's signature is a
+     column of liquid, because every board in front of it is read off one — ρ is
+     what fills the column and ρgh is what the column does to its own floor.
+
+     The tank stands low-left. Its right wall carries three normal arrows that
+     get longer with depth, which is the whole of ρgh and also the whole of
+     "pressure pushes square-on to the surface". Those arrows are deliberately
+     at REST: they describe a standing column, and an arrow that breathes reads
+     as a pressure that is changing. What moves is what a liquid really does —
+     the free surface swells (`.swell`) and a bubble train rises through the
+     column (`.rise`).
+
+     Low-right, the second half of the chapter: the earth's limb with air layers
+     that thin upward, and a pale P–h curve falling away from the ground. The
+     curve does not move — it is a graph, and a graph that drifts reads as a
+     measurement changing (same reasoning as the gravity motif).
+
+     CSS only, flattened in @media print and under prefers-reduced-motion, and
+     kept out of the band the teacher writes in — texture, never information.  */
+  fluid: `<svg class="motif-fluid" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="lf-fl-col" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0.20"/>
+      </linearGradient>
+      <linearGradient id="lf-fl-air" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#56ccf2" stop-opacity="0.15"/>
+        <stop offset="1" stop-color="#56ccf2" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lf-fl-floor" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.2" stop-color="#f5c542" stop-opacity="0.20"/>
+        <stop offset="0.82" stop-color="#f5c542" stop-opacity="0.15"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0"/>
+      </linearGradient>
+      <clipPath id="lf-fl-tank"><rect x="132" y="472" width="392" height="336"/></clipPath>
+    </defs>
+
+    <!-- the atmosphere, low-right: layers that thin upward off the limb -->
+    <g clip-path="none">
+      <path d="M980 900 A 720 720 0 0 1 1600 372 L1600 900 Z" fill="url(#lf-fl-air)"/>
+      <g fill="none" stroke="#56ccf2" stroke-linecap="round">
+        <path d="M1010 900 A 660 660 0 0 1 1600 452" stroke-opacity="0.13" stroke-width="2.6"/>
+        <path d="M1058 900 A 560 560 0 0 1 1600 546" stroke-opacity="0.10" stroke-width="2.2"/>
+        <path d="M1112 900 A 452 452 0 0 1 1600 640" stroke-opacity="0.07" stroke-width="2"/>
+        <path d="M1176 900 A 340 340 0 0 1 1600 730" stroke-opacity="0.05" stroke-width="1.8"/>
+      </g>
+      <!-- air molecules: crowded at the ground, sparse aloft. A statement, at rest. -->
+      <g fill="#ffffff">
+        <g fill-opacity="0.10">
+          <circle cx="1218" cy="866" r="4"/><circle cx="1302" cy="884" r="4"/>
+          <circle cx="1382" cy="852" r="4"/><circle cx="1466" cy="878" r="4"/>
+          <circle cx="1540" cy="846" r="4"/><circle cx="1256" cy="812" r="4"/>
+          <circle cx="1350" cy="800" r="4"/><circle cx="1444" cy="818" r="4"/>
+          <circle cx="1528" cy="786" r="4"/>
+        </g>
+        <g fill-opacity="0.07">
+          <circle cx="1288" cy="726" r="3.4"/><circle cx="1402" cy="700" r="3.4"/>
+          <circle cx="1512" cy="718" r="3.4"/><circle cx="1346" cy="642" r="3.4"/>
+          <circle cx="1478" cy="620" r="3.4"/>
+        </g>
+        <g fill-opacity="0.045">
+          <circle cx="1420" cy="536" r="3"/><circle cx="1544" cy="504" r="3"/>
+          <circle cx="1486" cy="430" r="3"/>
+        </g>
+      </g>
+      <!-- P against height: falls away from the ground and never reaches zero -->
+      <g fill="none" stroke="#f5c542" stroke-linecap="round">
+        <path d="M1104 852 V 470" stroke-opacity="0.10" stroke-width="2.2"/>
+        <path d="M1104 852 H 1470" stroke-opacity="0.10" stroke-width="2.2"/>
+        <path d="M1104 852 C 1150 852 1186 800 1214 716 C 1244 626 1272 546 1330 508 C 1382 476 1428 470 1466 468"
+              stroke-opacity="0.16" stroke-width="3" transform="rotate(-90 1104 852)"/>
+      </g>
+    </g>
+
+    <!-- the column: what ρ fills and what ρgh presses on -->
+    <g clip-path="url(#lf-fl-tank)">
+      <rect x="132" y="512" width="392" height="296" fill="url(#lf-fl-col)"/>
+      <!-- the free surface, swelling -->
+      <g class="swell">
+        <path d="M36 512 q48 -13 96 0 t96 0 t96 0 t96 0 t96 0 t96 0 t96 0"
+              fill="none" stroke="#7c8cff" stroke-opacity="0.28" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M36 526 q48 -11 96 0 t96 0 t96 0 t96 0 t96 0 t96 0 t96 0"
+              fill="none" stroke="#7c8cff" stroke-opacity="0.10" stroke-width="2.2" stroke-linecap="round"/>
+      </g>
+      <!-- a bubble train rising through it -->
+      <g class="rise" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1.8">
+        <circle cx="212" cy="792" r="7"/>
+        <circle cx="318" cy="800" r="5"/>
+        <circle cx="398" cy="786" r="9"/>
+        <circle cx="470" cy="798" r="6"/>
+      </g>
+    </g>
+    <!-- the vessel itself, and the floor the column stands on -->
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="3" stroke-linecap="round">
+      <path d="M132 452 V808 H524 V452"/>
+    </g>
+    <path d="M60 812 H600" stroke="url(#lf-fl-floor)" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- normal arrows on the wall: square-on, and longer the deeper they are -->
+    <g stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.6" stroke-linecap="round">
+      <path d="M524 576 H 566"/><path d="M524 668 H 590"/><path d="M524 764 H 626"/>
+    </g>
+    <g fill="#f5c542" fill-opacity="0.20">
+      <path d="M566 568 l20 8 l-20 8 z"/>
+      <path d="M590 660 l20 8 l-20 8 z"/>
+      <path d="M626 756 l20 8 l-20 8 z"/>
+    </g>
+    <!-- h, marked once down the inside of the wall -->
+    <g stroke="#7c8cff" stroke-opacity="0.14" stroke-width="2" stroke-linecap="round">
+      <path d="M172 520 V800" stroke-dasharray="12 18"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid`);
   process.exit(1);
 }
 
@@ -743,7 +856,8 @@ const bgScene = has('--no-bg-scene')
   : (flag('--bg-scene') || manifest.bg_scene
      || ((motif === 'inertia' || motif === 'torque' || motif === 'conserve'
           || motif === 'rolling') ? 'inertia'
-         : (motif === 'gravity' ? 'gravity' : null)));
+         : (motif === 'gravity' ? 'gravity'
+         : (motif === 'fluid' ? 'fluid' : null))));
 const bgSceneName = bgScene === true ? 'inertia' : bgScene;
 
 const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
@@ -815,6 +929,21 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
               [-13.5, -6.4, -15], 0.09, 0);                                  // moon
           add(wire(new T.SphereGeometry(2.1, 16, 10), INDIGO, 0.10),
               [-1.5, -9.4, -18], 0.05, 0);                                   // far body
+        } else if (SCENE === 'fluid'){
+          /* The pressure / density chapter's bodies. A tall wireframe cylinder
+             is the liquid column ρgh is written about; the flat plate is the
+             area a thrust is divided by; the sphere is the envelope of air the
+             atmospheric half of the chapter is about. Each turns about its own
+             axis and none of them means anything — the motif SVG is the real
+             backdrop and this is only depth behind it (rules 7, 11, 20).     */
+          add(wire(new T.CylinderGeometry(2.4, 2.4, 6.6, 26, 1), INDIGO, 0.22),
+              [-13.2, -4.6, -13], 0.09, 0.08);                               // liquid column
+          add(wire(new T.BoxGeometry(6.8, 0.18, 6.8, 3, 1, 3), GOLD, 0.13),
+              [-1.8, -9.0, -11], 0.07, 0.30);                                // the area
+          add(wire(new T.SphereGeometry(4.0, 24, 14), INDIGO, 0.16),
+              [14.2, -3.0, -13], 0.05, 0);                                   // air envelope
+          add(wire(new T.SphereGeometry(5.4, 20, 12), INDIGO, 0.07),
+              [14.2, -3.0, -13], 0.03, 0);                                   // its outer shell
         } else {
         add(wire(new T.TorusGeometry(3.1, 0.10, 6, 64), INDIGO, 0.30),
             [13.5, -1.4, -10], 0.16, Math.PI / 2 - 0.42);                    // ring

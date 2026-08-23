@@ -10,6 +10,7 @@ import {
 } from '../lib/content'
 import {
   findUnfinishedSession,
+  restoreSummary,
   saveTeachingSession,
   loadSessionForReview,
 } from '../lib/sessions'
@@ -87,6 +88,9 @@ export default function PresenterView() {
   // reaches the last page, stamp the session `complete`, which is what stops
   // it ever being offered for restore again.
   const renumberedRestoreRef = useRef(false)
+  // The last session found in history, held while the panel asks the teacher
+  // whether they want it. Adopted only if they say yes — see applyRestoreChoice.
+  const pendingRestore = useRef(null)
   const lastActivity = useRef(Date.now())
   const savingRef = useRef(false)
   // Signature of the board as it was the last time it was written anywhere —
@@ -404,32 +408,64 @@ export default function PresenterView() {
       return
     }
 
-    // Teach: auto-restore unexported / partially exported work from last session.
+    // Teach: OFFER last session's board back. The offer is the point — this
+    // used to restore on its own, so opening the panel put last lecture's
+    // pages on the projector before the teacher had said they wanted them.
+    // Nothing is adopted here: the panel asks, and `lf-restore-choice` below
+    // is where this board becomes a continuation of that session.
     if (batchId) {
       try {
         const found = await findUnfinishedSession(batchId)
         if (found?.payload) {
-          sessionIdRef.current = found.snapshot.id
-          // Restored, not taught: leaving again without touching anything
-          // must not write this board back a second time.
-          lastSavedSignatureRef.current = boardSignature(found.payload.pages)
-          renumberedRestoreRef.current = !!found.payload.renumbered
-          pushSessionConfig(batchId, sessionIdRef.current)
+          pendingRestore.current = found
           post({
             type: 'lf-restore-session',
-            sessionId: sessionIdRef.current,
+            ask: true,
+            sessionId: found.snapshot.id,
+            summary: restoreSummary(found.snapshot, found.payload),
             payload: found.payload,
           })
-          const n = found.payload.pages.length
-          setRestoreNote(
-            `Restored ${n} unexported page${n === 1 ? '' : 's'} (with ink) from your last session.`,
-          )
         }
       } catch (err) {
         console.warn('Unfinished session restore failed:', err)
       }
     }
   }, [batchId, freshStart, loadFolder, post, pushExportConfig, pushSessionConfig, pushShortcuts])
+
+  /**
+   * The teacher answered the panel's "pick up where you left off?" dialog.
+   *
+   * Accepted: this board IS that session — same id, same page numbering, same
+   * export mark. Inheriting `exportedThrough` is what stops the six pages that
+   * already went out as a PDF from being counted as unexported work all over
+   * again, and `renumbered` is false now because the whole board came back in
+   * its original numbering.
+   *
+   * Declined: touch nothing. The session keeps its id and its place in
+   * history, and this board carries on under the fresh id it was born with.
+   */
+  const applyRestoreChoice = useCallback((accepted) => {
+    const found = pendingRestore.current
+    pendingRestore.current = null
+    if (!found) return
+    if (!accepted) {
+      setRestoreNote('Started a fresh board — your last session is still in Old sessions.')
+      return
+    }
+    sessionIdRef.current = found.snapshot.id
+    // Restored, not taught: leaving again without touching anything must not
+    // write this board back a second time.
+    lastSavedSignatureRef.current = boardSignature(found.payload.pages)
+    renumberedRestoreRef.current = !!found.payload.renumbered
+    liveExportedThroughRef.current = found.payload.exportedThrough ?? -1
+    pushSessionConfig(batchId, sessionIdRef.current)
+    const { total, exported } = restoreSummary(found.snapshot, found.payload)
+    setRestoreNote(
+      exported
+        ? `Restored all ${total} pages with their ink — ${exported} of them had already been exported.`
+        : `Restored ${total} page${total === 1 ? '' : 's'} with ink from your last session.`,
+    )
+  }, [batchId, pushSessionConfig])
 
   useEffect(() => {
     if (!restoreNote) return
@@ -482,6 +518,9 @@ export default function PresenterView() {
         post({ type: 'lf-fullscreen-ack' })
         if (d.on) wrapRef.current?.requestFullscreen?.().catch(() => {})
         else if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+      } else if (d.type === 'lf-restore-choice') {
+        touchActivity()
+        applyRestoreChoice(!!d.accepted)
       } else if (d.type === 'lf-activity') {
         touchActivity()
       } else if (d.type === 'lf-export-vars') {
@@ -564,7 +603,8 @@ export default function PresenterView() {
       window.removeEventListener('keydown', onKey)
       wrapEl?.removeEventListener('pointerdown', onPointer)
     }
-  }, [batchId, leaveToDashboard, persistBoard, post, pushSessionConfig, touchActivity, libOpen])
+  }, [applyRestoreChoice, batchId, leaveToDashboard, persistBoard, post, pushSessionConfig,
+      touchActivity, libOpen])
 
   return (
     <div ref={wrapRef} className="fixed inset-0 z-50 bg-[#0b0f19]">

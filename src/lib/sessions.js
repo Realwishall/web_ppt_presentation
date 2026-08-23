@@ -248,6 +248,9 @@ function pageRecord(p) {
     strokes: p.strokes || [],
     snap: p.snap || null,
     paper: p.paper || 'dots',
+    // The board serializes this and restoreSession reads it back; dropping it
+    // here is why a page marked "skip" came back included in the next export.
+    skipExport: !!p.skipExport,
     deckId: p.deckId ?? null,
     deckIndex: p.deckIndex ?? null,   // ← the page number inside that deck
     stepCount: p.stepCount || 0,
@@ -487,37 +490,50 @@ export async function loadSessionForReview(batchId, sessionId) {
   return getSnapshotLocal(batchId, sessionId)
 }
 
+/**
+ * The board to put back on screen when a lecture is resumed: THE WHOLE THING.
+ *
+ * This used to hand back only the unexported tail, renumbered from
+ * `exportedThrough + 1` down to zero. A ten-page lesson where six pages had
+ * already gone out as a PDF came back as a four-page board, and the six pages
+ * — with the ink drawn over them — were reachable only through Old Sessions.
+ * That is not how the lesson is taught: the earlier pages are what the class
+ * refers back to, and their ink is part of the explanation.
+ *
+ * So every page and every deck comes back, in the numbering the session was
+ * saved under, with `exportedThrough` intact. Nothing is renumbered, which
+ * means the export mark still describes these exact pages and the caller can
+ * inherit it as-is. The board opens on the first page that was NOT exported —
+ * where the teacher actually stopped.
+ *
+ * Returns null only when there is nothing to put back (no pages at all).
+ */
 export function unfinishedRestorePayload(snapshot) {
   if (!snapshot?.pages?.length) return null
   const exportedThrough = snapshot.exportedThrough ?? -1
-  if (exportedThrough >= snapshot.pages.length - 1) return null
 
-  const keepIdx = []
-  for (let i = 0; i < snapshot.pages.length; i++) {
-    if (i > exportedThrough) keepIdx.push(i)
-  }
-  if (!keepIdx.length) return null
+  const pages = snapshot.pages.map((p) => ({
+    strokes: (p.strokes || []).map((s) => ({
+      ...s,
+      pts: (s.pts || []).map((pt) => ({ ...pt })),
+    })),
+    snap: p.snap ? { ...p.snap } : null,
+    paper: p.paper || 'dots',
+    skipExport: !!p.skipExport,
+    deckId: p.deckId ?? null,
+    deckIndex: p.deckIndex ?? null,
+    stepCount: p.stepCount || 0,
+    stepIndex: p.stepIndex || 0,
+  }))
 
-  const neededDeckIds = new Set(
-    keepIdx.map((i) => snapshot.pages[i].deckId).filter((id) => id != null),
+  // Every deck the board references — a page whose deck was filtered out
+  // restores as ink floating over an empty slide.
+  const usedDeckIds = new Set(pages.map((p) => p.deckId).filter((id) => id != null))
+  const decks = (snapshot.decks || []).filter(
+    (d) => usedDeckIds.has(d.id) || usedDeckIds.size === 0,
   )
-  const decks = (snapshot.decks || []).filter((d) => neededDeckIds.has(d.id))
-  const pages = keepIdx.map((i) => {
-    const p = snapshot.pages[i]
-    return {
-      strokes: (p.strokes || []).map((s) => ({
-        ...s,
-        pts: (s.pts || []).map((pt) => ({ ...pt })),
-      })),
-      snap: p.snap ? { ...p.snap } : null,
-      paper: p.paper || 'dots',
-      deckId: p.deckId ?? null,
-      deckIndex: p.deckIndex ?? null,
-      stepCount: p.stepCount || 0,
-      stepIndex: p.stepIndex || 0,
-    }
-  })
 
+  const firstUnexported = exportedThrough + 1
   return {
     sessionId: snapshot.id,
     batchId: snapshot.batchId,
@@ -525,11 +541,12 @@ export function unfinishedRestorePayload(snapshot) {
     v: snapshot.v || 1,
     decks,
     pages,
-    current: 0,
+    // Land where the lecture stopped, with the exported pages behind it.
+    current: Math.min(Math.max(0, firstUnexported), pages.length - 1),
+    exportedThrough,
     sourceExportedThrough: exportedThrough,
-    // These pages were renumbered from `exportedThrough + 1` down to 0, so the
-    // source session's export mark no longer describes them at all.
-    renumbered: true,
+    // Page numbers are the session's own, so the export mark still fits.
+    renumbered: false,
   }
 }
 
@@ -555,10 +572,31 @@ export async function findUnfinishedSession(batchId) {
   for (const snap of locals) {
     if (snap.status === 'complete') continue
     if (snap.batchId !== batchId) continue
+    // Same test the history loop applies: a board that went out in full is
+    // finished, even though the payload below would happily rebuild it.
+    const n = snap.pages?.length || 0
+    if (n > 0 && (snap.exportedThrough ?? -1) >= n - 1) continue
     const payload = unfinishedRestorePayload(snap)
     if (payload) return { snapshot: snap, payload }
   }
   return null
+}
+
+/**
+ * What the "pick up where you left off?" prompt needs to say, in numbers.
+ * Kept here so the host and the panel cannot disagree about the counts.
+ */
+export function restoreSummary(snapshot, payload) {
+  const total = payload?.pages?.length || 0
+  const exported = Math.min(Math.max((payload?.exportedThrough ?? -1) + 1, 0), total)
+  return {
+    title: snapshot?.title || 'your last session',
+    total,
+    exported,
+    unexported: total - exported,
+    deckNames: (payload?.decks || []).map((d) => d.name).filter(Boolean),
+    at: snapshot?.updatedAt || snapshot?.createdAt || null,
+  }
 }
 
 export function sessionStatusLabel(status) {
