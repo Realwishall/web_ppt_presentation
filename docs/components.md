@@ -765,6 +765,7 @@ across the deck, and because it is pure SVG + CSS it survives PDF export.
 | `.bead` | the body sitting on that surface |
 | `.dot` / `.dot.open` | a marked point / a ringed answer point |
 | `text.lab` / `text.num` | axis names / tick numbers |
+| `tspan.sub` | a subscript inside an SVG label (`F_res`, `F_ext`). SVG has no `<sub>`, and an HTML `<sub>` inside `<text>` **aborts the SVG parse** and silently drops every element after it — a curve that simply never draws. Carry the shift as a `dy` attribute; the size lives in `deck-base.css` |
 
 ```html
 <svg class="gph" viewBox="0 0 420 260">
@@ -789,6 +790,11 @@ deck stamps on a graph.
 column instead of across a row. Use it rather than a plain `.stack`: stacked
 figures have to share the board's height, and without it the last one walks off
 the bottom of the slide.
+
+`.graph-grid.mini` is the thumbnail scale of the same component — a ✓/✗ pair of
+small figures sitting beside prose in a half-width column ("a tyre wants the
+small loop, a shock absorber the large one"). Without it each figure renders at a
+third of the board's height and two of them walk off the bottom of the slide.
 
 **Graph MCQs.** `.options.graphs` is the "which of these four curves" question,
 four to a row (`.two` for 2×2). Each `.option` keeps its `clickable` and its
@@ -912,6 +918,7 @@ run short enough for its column.
 | `gravity` | the field of the earth as texture: a globe low-right with a polar axis, an equator and meridians that **turn** about it, field arrows standing on every radius pointing at the centre, one satellite running its orbit, and — at rest, low across the left — the `g`–`r` curve the chapter is about: linear out to `R`, `1/r²` beyond it, with the surface marked. The two moving things are the two things this chapter says move; the graph deliberately does **not** move, because a graph that drifts reads as a measurement changing. The spin and the orbit have unrelated periods on purpose — locking them would assert a synchronous rotation nothing here claims. CSS only (`.motif-gravity .spin` / `.orbit`), flattened in `@media print`. Like `inertia`, this motif also switches on the persistent WebGL backdrop below, in its own `gravity` body set (earth + orbit ring + two smaller bodies) |
 | `rolling` | the rolling constraint as texture: a ground line low across the board, the cycloid the rim point traces drawn on it at rest with a gold cusp at each touchdown, and a wheel that **rolls** along it — translating exactly `2πR` in the time it turns once, so it never slips. The coupling is the whole chapter (`v = ωR`), so the two CSS animations (`.motif-rolling .roll` / `.spin`) deliberately share one 26 s period; a wheel turning at an unrelated rate would contradict every slide in front of it. No script, flattened in `@media print`. Like `inertia`, this motif also switches on the persistent WebGL backdrop below |
 | `torque` | the cross product as texture: a pivot low-right with an arm **turning** about it, a force across the end of that arm, the sense it turns in creeping the other way, and the axis the answer stands on running through the pivot — plus a balance beam rocking at the bottom left for the rotational-equilibrium half of the chapter. The arm turns by CSS animation (`.motif-torque .lever` / `.turn` / `.beam`, no script, flattened in `@media print`), because a torque is a thing that *turns* something and a still lever is only a stick. Like `inertia`, this motif also switches on the persistent WebGL backdrop below |
+| `solid` | the mechanical-properties-of-solids chapter, and it is one block of matter held at a wall and **pulled**. The lattice low-left is what every modulus in the chapter is an average over — rows and columns of bonds, plus the diagonals, because a solid resists a change of *shape* and not only a change of size, which is the whole reason `η` exists alongside `B`. The block strains along x and springs back, and the `F/A` arrows ride out with the free face on the same beat, so the board carries one event rather than two. Low-right, at rest, is the stress-strain curve the whole chapter is read off: the straight Hooke run, the knee, the plateau and the fracture cross. It deliberately does **not** move — a graph that drifts reads as a measurement changing. CSS only (`.motif-solid .strain` / `.pull`), flattened in `@media print` and under prefers-reduced-motion. Like `inertia`, this motif also switches on the persistent WebGL backdrop below, in its own `solid` body set (a rod under tension, a lattice cell, a twisted shaft, a sagging beam) |
 
 It is texture, never information (rule 11): it sits behind the writing area at
 a fraction of an opacity, and `@media print` drops it further. Authors do not
@@ -921,7 +928,8 @@ reference `#bg` — they set `"motif"` in the manifest and nothing else.
 
 A motif may carry a 3D companion: `canvas.bg-scene`, a sibling of `.page`
 inside `#bg` and **behind** the motif SVG, holding slowly turning wireframe
-bodies (ring, disc, rod, shell) drifting in depth. `build-deck.mjs` emits it
+bodies (ring, disc, rod, shell) drifting in depth. `gravity`, `fluid` and
+`solid` each carry their own body set instead of the default four. `build-deck.mjs` emits it
 and inlines three.js for it; the author writes nothing. On by default for the
 `inertia` motif, forced with `"bg_scene": true` (or `--bg-scene <name>`), off
 with `--no-bg-scene`.

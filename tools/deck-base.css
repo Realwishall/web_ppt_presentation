@@ -917,9 +917,23 @@ svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
 /* Two or three graphs stacked down a column instead of across a row. They have
    to SHARE the board's height, so the per-figure cap comes down; without this
    the last figure walks off the bottom of the slide. */
+/* `.mini` — a row of thumbnail figures used as a ✓/✗ comparison beside prose
+   (the "tyre wants the small loop / shock absorber wants the large one" board).
+   Without a cap a two-up grid in a half-width column renders each figure at a
+   third of the board's height, and two of those plus their verdicts walk off
+   the bottom of the slide. Same component, thumbnail scale.                  */
+.graph-grid.mini{gap:1.6vmin}
+.graph-grid.mini .graph-cell svg{max-height:15vh}
+.graph-grid.mini .verdict{font-size:clamp(18px,3.2vmin,34px)}
 .graph-stack{display:flex;flex-direction:column;gap:1.6vmin;min-height:0}
 .graph-stack .graph-cell svg{max-height:26vh}
 .graph-stack.three .graph-cell svg{max-height:17vh}
+/* A subscript inside an SVG label — `F_res`, `F_ext`, `v_0`. SVG has no <sub>,
+   and an HTML <sub> inside <text> aborts the SVG parse and silently drops every
+   element after it (a curve that simply never draws). Use
+   `<tspan class="sub" dy="…">` instead; the shift stays in the markup because
+   it is geometry, the size lives here.                                       */
+svg.gph text tspan.sub,svg.dgm text tspan.sub{font-size:.68em}
 /* the verdict mark the source deck stamps on a graph: a big ✓ or ✗ */
 .verdict{display:block;text-align:center;font-size:clamp(22px,4.4vmin,48px);
          font-weight:900;line-height:1}
@@ -1181,6 +1195,9 @@ svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
   #bg svg.motif-fluid{opacity:.20!important}
   #bg svg.motif-fluid .swell{animation:none!important}
   #bg svg.motif-fluid .rise circle{animation:none!important;opacity:.5!important}
+  #bg svg.motif-solid{opacity:.20!important}
+  #bg svg.motif-solid .strain,#bg svg.motif-solid .pull{
+    animation:none!important;transform:none!important}
   /* the translation/rotation pair prints as two identical rods — the caption
      under each is what carries the difference on paper */
   svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none!important;transform:none!important}
@@ -1329,3 +1346,28 @@ svg.dgm .mv-spin {transform-box:fill-box;transform-origin:50% 50%;
   .blank{color:var(--gold)!important;background:none!important;
          border-bottom-color:rgba(245,197,66,.5)!important}
 }
+
+/* Chapter motif "solid" — the mechanical-properties-of-solids chapter, and it
+   is one block of matter held at a wall and pulled. The lattice low-left is
+   what every modulus in the chapter is an average over: rows and columns of
+   bonds, plus the diagonals, because a solid resists a change of SHAPE and not
+   only a change of size — that difference is the whole reason η exists
+   alongside B. The block strains along x and springs back, which is the one
+   claim the chapter opens with; the F/A arrows ride out with the free face on
+   the same beat, so the board carries a single event and not two.
+
+   The stress-strain curve low-right does NOT move. It is a graph, and a graph
+   that drifts reads as a measurement changing — the straight Hooke run, the
+   knee, the plateau and the fracture cross stay exactly where they are drawn.
+   Everything sits below the writing band and clear of the upper-left. CSS
+   only (no script), flattened in @media print and under prefers-reduced-motion.
+   Texture, never information (rules 11, 20).                                 */
+#bg svg.motif-solid{opacity:.56}
+#bg svg.motif-solid .strain{transform-box:view-box;transform-origin:110px 680px;
+    animation:lf-sd-strain 17s ease-in-out infinite}
+#bg svg.motif-solid .pull{transform-box:view-box;
+    animation:lf-sd-pull 17s ease-in-out infinite}
+@keyframes lf-sd-strain{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.075)}}
+@keyframes lf-sd-pull{0%,100%{transform:translateX(0)}50%{transform:translateX(33px)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-solid .strain,#bg svg.motif-solid .pull{animation:none}}

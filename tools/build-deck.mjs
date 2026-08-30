@@ -837,10 +837,95 @@ const motifSvg = {
     </g>
   </svg>`,
 
+  solid: `<svg class="motif-solid" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="lf-sd-pullgrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#f5c542" stop-opacity="0.22"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0.05"/>
+      </linearGradient>
+      <linearGradient id="lf-sd-curve" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.05"/>
+        <stop offset="0.42" stop-color="#7c8cff" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0.18"/>
+      </linearGradient>
+      <linearGradient id="lf-sd-elastic" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7c8cff" stop-opacity="0.07"/>
+        <stop offset="1" stop-color="#7c8cff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- The lattice, low-left: the solid itself, held at the wall and pulled.
+         Bonds are the springs every modulus in this chapter is an average of,
+         so the whole block strains along x and springs back. -->
+    <g class="strain">
+      <g stroke="#7c8cff" stroke-opacity="0.16" stroke-width="2.4" stroke-linecap="round">
+        <!-- rows -->
+        <path d="M110 530 H 550"/><path d="M110 630 H 550"/>
+        <path d="M110 730 H 550"/><path d="M110 830 H 550"/>
+        <!-- columns -->
+        <path d="M110 530 V 830"/><path d="M198 530 V 830"/><path d="M286 530 V 830"/>
+        <path d="M374 530 V 830"/><path d="M462 530 V 830"/><path d="M550 530 V 830"/>
+      </g>
+      <!-- the diagonals: what makes a solid keep its SHAPE, not just its size -->
+      <g stroke="#7c8cff" stroke-opacity="0.06" stroke-width="1.6">
+        <path d="M110 630 L 198 530"/><path d="M198 730 L 286 630"/>
+        <path d="M286 830 L 374 730"/><path d="M374 630 L 462 530"/>
+        <path d="M462 730 L 550 630"/>
+      </g>
+      <g fill="#ffffff" fill-opacity="0.13">
+        <circle cx="110" cy="530" r="6"/><circle cx="198" cy="530" r="6"/><circle cx="286" cy="530" r="6"/>
+        <circle cx="374" cy="530" r="6"/><circle cx="462" cy="530" r="6"/><circle cx="550" cy="530" r="6"/>
+        <circle cx="110" cy="630" r="6"/><circle cx="198" cy="630" r="6"/><circle cx="286" cy="630" r="6"/>
+        <circle cx="374" cy="630" r="6"/><circle cx="462" cy="630" r="6"/><circle cx="550" cy="630" r="6"/>
+        <circle cx="110" cy="730" r="6"/><circle cx="198" cy="730" r="6"/><circle cx="286" cy="730" r="6"/>
+        <circle cx="374" cy="730" r="6"/><circle cx="462" cy="730" r="6"/><circle cx="550" cy="730" r="6"/>
+        <circle cx="110" cy="830" r="6"/><circle cx="198" cy="830" r="6"/><circle cx="286" cy="830" r="6"/>
+        <circle cx="374" cy="830" r="6"/><circle cx="462" cy="830" r="6"/><circle cx="550" cy="830" r="6"/>
+      </g>
+    </g>
+
+    <!-- the wall the block is held against: the reason the pull becomes strain -->
+    <g stroke="#ffffff" stroke-opacity="0.09" stroke-width="2.6" stroke-linecap="round">
+      <path d="M84 496 V 864"/>
+      <path d="M84 512 l-26 -22"/><path d="M84 568 l-26 -22"/><path d="M84 624 l-26 -22"/>
+      <path d="M84 680 l-26 -22"/><path d="M84 736 l-26 -22"/><path d="M84 792 l-26 -22"/>
+      <path d="M84 848 l-26 -22"/>
+    </g>
+
+    <!-- F/A, applied to the free face and riding out with it -->
+    <g class="pull">
+      <path d="M578 630 H 700" stroke="url(#lf-sd-pullgrad)" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M578 730 H 700" stroke="url(#lf-sd-pullgrad)" stroke-width="3.4" stroke-linecap="round"/>
+      <g fill="#f5c542" fill-opacity="0.18">
+        <path d="M700 621 l24 9 l-24 9 z"/>
+        <path d="M700 721 l24 9 l-24 9 z"/>
+      </g>
+    </g>
+
+    <!-- Stress against strain, low-right: the one curve the whole chapter is
+         read off. It does NOT move — a graph that drifts reads as a
+         measurement changing. -->
+    <g stroke="#f5c542" stroke-opacity="0.12" stroke-width="2.4" stroke-linecap="round">
+      <path d="M1030 838 V 452"/>
+      <path d="M1030 838 H 1540"/>
+    </g>
+    <path d="M1030 838 L 1186 596 L 1188 838 Z" fill="url(#lf-sd-elastic)"/>
+    <path d="M1030 838 L 1186 596 C 1240 528 1290 506 1352 502 C 1410 498 1444 512 1470 540"
+          fill="none" stroke="url(#lf-sd-curve)" stroke-width="3.4" stroke-linecap="round"/>
+    <!-- the proportional limit, marked once and left alone -->
+    <g stroke="#7c8cff" stroke-opacity="0.10" stroke-width="1.8" stroke-dasharray="10 14">
+      <path d="M1186 596 V 838"/>
+    </g>
+    <g stroke="#ffffff" stroke-opacity="0.13" stroke-width="2.6" stroke-linecap="round">
+      <path d="M1458 528 l24 24"/><path d="M1482 528 l-24 24"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid, solid`);
   process.exit(1);
 }
 
@@ -857,7 +942,8 @@ const bgScene = has('--no-bg-scene')
      || ((motif === 'inertia' || motif === 'torque' || motif === 'conserve'
           || motif === 'rolling') ? 'inertia'
          : (motif === 'gravity' ? 'gravity'
-         : (motif === 'fluid' ? 'fluid' : null))));
+         : (motif === 'fluid' ? 'fluid'
+         : (motif === 'solid' ? 'solid' : null)))));
 const bgSceneName = bgScene === true ? 'inertia' : bgScene;
 
 const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
@@ -929,6 +1015,21 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
               [-13.5, -6.4, -15], 0.09, 0);                                  // moon
           add(wire(new T.SphereGeometry(2.1, 16, 10), INDIGO, 0.10),
               [-1.5, -9.4, -18], 0.05, 0);                                   // far body
+        } else if (SCENE === 'solid'){
+          /* The elasticity chapter's bodies, and each one is a slide in this
+             deck: the rod a tension is applied along, the cylinder a torque
+             twists, the lattice cube every modulus is an average over, and the
+             beam that sags. Each turns about its own axis; none of them means
+             anything — the motif SVG is the real backdrop and this is only
+             depth behind it (rules 7, 11, 20).                              */
+          add(wire(new T.CylinderGeometry(0.9, 0.9, 9.0, 20, 1), INDIGO, 0.20),
+              [-13.4, -4.4, -13], 0.10, Math.PI / 2 - 0.30);                   // the rod under tension
+          add(wire(new T.BoxGeometry(4.6, 4.6, 4.6, 3, 3, 3), INDIGO, 0.15),
+              [14.2, -3.2, -13], 0.06, 0.42);                                  // the lattice cell
+          add(wire(new T.CylinderGeometry(1.8, 1.8, 4.4, 22, 3), GOLD, 0.12),
+              [-1.6, -9.2, -12], 0.13, 0.24);                                  // the twisted shaft
+          add(wire(new T.TorusGeometry(6.2, 0.10, 4, 40, 1.15), INDIGO, 0.09),
+              [15.0, -8.8, -16], 0.04, Math.PI / 2 - 0.10);                    // the sagging beam
         } else if (SCENE === 'fluid'){
           /* The pressure / density chapter's bodies. A tall wireframe cylinder
              is the liquid column ρgh is written about; the flat plate is the
