@@ -156,6 +156,24 @@ export const deleteChapter = (classId, chapterId) =>
 export const restoreChapter = (classId, chapterId) =>
   updateDoc(udoc('classes', classId, 'chapters', chapterId), { visible: true, hiddenAtMs: null })
 
+/**
+ * The chapter called `name` in this class, creating it if it isn't there.
+ * Matching is case-insensitive and includes hidden chapters — importing a
+ * folder whose name matches a chapter you deleted last term brings that
+ * chapter back rather than growing a second one beside it.
+ */
+export async function ensureChapter(classId, name, { info = '', svgIcon = DEFAULT_CHAPTER_SVG } = {}) {
+  const want = (name || '').trim() || 'Untitled chapter'
+  const chapters = await listChapters(classId, { includeHidden: true })
+  const hit = chapters.find((c) => (c.name || '').trim().toLowerCase() === want.toLowerCase())
+  if (hit) {
+    if (hit.visible === false) await restoreChapter(classId, hit.id)
+    return { id: hit.id, name: hit.name || want, created: false }
+  }
+  const id = await createChapter(classId, { name: want, info, svgIcon }, chapters.length)
+  return { id, name: want, created: true }
+}
+
 // ---------- folders ----------
 const folderRef = (classId, chapterId, folderId) =>
   udoc('classes', classId, 'chapters', chapterId, 'folders', folderId)

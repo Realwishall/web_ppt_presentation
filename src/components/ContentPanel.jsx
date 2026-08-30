@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import {
   FolderPlus, Plus, Trash2, ChevronRight, Layers, FolderOpen, Pencil, Loader2,
   UploadCloud, ClipboardPaste, FileCode2, X, Play, ChevronUp, ChevronDown, GripVertical,
-  Download, Wand2, NotebookPen,
+  Download, Wand2, NotebookPen, FolderUp, FolderTree, CheckCheck,
 } from 'lucide-react'
 import ChapterIcon from './ChapterIcon'
 import FolderEditor from './FolderEditor'
 import {
   FOLDER_TAGS, DEFAULT_CHAPTER_SVG, extractHtmlTitle,
   listClasses, createClass, deleteClass,
-  listChapters, createChapter, deleteChapter,
+  listChapters, createChapter, deleteChapter, ensureChapter,
   listFolders, createFolder, deleteFolder, updateFolder, reorderFolders,
   readFolderHtml,
 } from '../lib/content'
+import { filesFromDrop, filesFromInput, groupIntoChapters, countFiles } from '../lib/folderImport'
 
 // Left half of the dashboard: author Classes → Chapters → Folders.
 // A folder holds one single-page HTML doc that the presenter can load.
@@ -178,6 +179,8 @@ function ChapterList({ cls, onOpen }) {
           </button>
         )}
       </div>
+      <ChapterFolderImport cls={cls} onImported={load} />
+
       {items.length === 0 && !form && <Empty icon={FolderOpen} text="No chapters in this class yet." />}
       <ul className="space-y-2">
         {items.map((c) => (
@@ -190,6 +193,175 @@ function ChapterList({ cls, onOpen }) {
           </Row>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// ---------- Import a folder of decks ----------
+// Drop (or browse to) a folder: every directory inside it that directly holds
+// .html files becomes one chapter, named after that directory, with one deck
+// per file. Drop several folders at once and each of them is a chapter.
+//
+// Nothing is written until the teacher has seen the plan and pressed Import —
+// folder trees are messy, and an import that guessed wrong is tedious to undo.
+function ChapterFolderImport({ cls, onImported }) {
+  const [plan, setPlan] = useState(null) // [{name, files}] awaiting confirmation
+  const [tag, setTag] = useState(FOLDER_TAGS[0])
+  const [dragOver, setDragOver] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState(null) // {done, total, label}
+  const [err, setErr] = useState('')
+  const [done, setDone] = useState('')
+  const inputRef = useRef(null)
+
+  // React has no JSX prop for these, and they are what turns the file picker
+  // into a folder picker.
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.setAttribute('webkitdirectory', '')
+    el.setAttribute('directory', '')
+  }, [])
+
+  function accept(entries) {
+    setErr(''); setDone('')
+    const groups = groupIntoChapters(entries)
+    if (!groups.length) {
+      setPlan(null)
+      setErr(entries.length
+        ? "Those .html files aren't inside a folder — a chapter takes its name from the folder holding the decks."
+        : 'No .html files found in there.')
+      return
+    }
+    setPlan(groups)
+  }
+
+  async function onDrop(e) {
+    e.preventDefault()
+    setDragOver(false)
+    try {
+      accept(await filesFromDrop(e.dataTransfer))
+    } catch (e2) {
+      setErr(e2.message || 'Could not read that folder.')
+    }
+  }
+
+  function rename(i, name) {
+    setPlan((prev) => prev.map((g, k) => (k === i ? { ...g, name } : g)))
+  }
+  function drop(i) {
+    setPlan((prev) => (prev.length > 1 ? prev.filter((_, k) => k !== i) : null))
+  }
+
+  async function run() {
+    if (!plan?.length) return
+    const total = countFiles(plan)
+    const chapters = plan.length
+    setBusy(true); setErr(''); setDone('')
+    setProgress({ done: 0, total, label: '' })
+    let n = 0
+    try {
+      for (const group of plan) {
+        const ch = await ensureChapter(cls.id, group.name, { info: 'Imported from a folder' })
+        // Append to whatever the chapter already holds, so a re-import of a
+        // folder into an existing chapter doesn't fight it for order 0.
+        const existing = await listFolders(cls.id, ch.id, { includeHidden: true })
+        let order = existing.length
+        for (const { file } of group.files) {
+          const html = await file.text()
+          const deckName = extractHtmlTitle(html, file.name.replace(/\.html?$/i, ''))
+          await createFolder(cls.id, ch.id, { name: deckName, tag, html }, order++)
+          n += 1
+          setProgress({ done: n, total, label: `${ch.name} · ${deckName}` })
+        }
+      }
+      setPlan(null)
+      setDone(`Imported ${total} deck${total === 1 ? '' : 's'} into ${chapters} chapter${chapters === 1 ? '' : 's'}.`)
+    } catch (e) {
+      setErr(`${e.message || 'Import failed.'} ${n} of ${total} decks were saved before it stopped.`)
+    } finally {
+      setBusy(false)
+      setProgress(null)
+      await onImported?.()
+    }
+  }
+
+  return (
+    <div className="mb-4">
+      <label
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-5 text-center text-sm transition ${
+          dragOver ? 'border-indigo-400 bg-indigo-500/10 text-indigo-300' : 'border-white/15 text-slate-400 hover:border-indigo-400/50 hover:bg-white/4'
+        }`}>
+        <FolderUp className="h-5 w-5" />
+        <span><b>Drop a folder</b> of decks — or <span className="text-indigo-400 underline">browse</span></span>
+        <span className="text-xs text-slate-500">
+          Each folder that holds .html files becomes a chapter with that folder's name
+        </span>
+        <input ref={inputRef} type="file" multiple className="hidden"
+          onChange={(e) => { accept(filesFromInput(e.target.files)); e.target.value = '' }} />
+      </label>
+
+      {plan && (
+        <div className="mt-2 rounded-xl border border-indigo-500/25 bg-indigo-500/8 p-3">
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-400">
+            <FolderTree className="h-3.5 w-3.5" />
+            {plan.length} chapter{plan.length === 1 ? '' : 's'} · {countFiles(plan)} deck{countFiles(plan) === 1 ? '' : 's'}
+            <span className="ml-auto flex items-center gap-2 normal-case tracking-normal">
+              <span className="text-slate-400">Tag every deck</span>
+              <select value={tag} onChange={(e) => setTag(e.target.value)} disabled={busy}
+                className="rounded-lg border border-white/10 bg-black/25 px-2 py-1 text-xs text-slate-100 outline-none focus:border-indigo-400 [&>option]:bg-slate-900">
+                {FOLDER_TAGS.map((t) => <option key={t}>{t}</option>)}
+              </select>
+            </span>
+          </div>
+
+          <ul className="max-h-56 space-y-1.5 overflow-y-auto">
+            {plan.map((g, i) => (
+              <li key={`${g.name}-${i}`} className="flex items-center gap-2">
+                <input value={g.name} onChange={(e) => rename(i, e.target.value)} disabled={busy}
+                  title="Chapter name — edit it before importing"
+                  className={`${inputCls} min-w-0 flex-1 py-1.5`} />
+                <span className="shrink-0 text-xs text-slate-400">
+                  {g.files.length} deck{g.files.length === 1 ? '' : 's'}
+                </span>
+                <IconBtn onClick={() => drop(i)} disabled={busy} danger title="Leave this folder out">
+                  <X className="h-4 w-4" />
+                </IconBtn>
+              </li>
+            ))}
+          </ul>
+
+          {progress && (
+            <div className="mt-2">
+              <div className="h-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full bg-indigo-400 transition-all"
+                  style={{ width: `${Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%` }} />
+              </div>
+              <p className="mt-1 truncate text-xs text-slate-400">
+                {progress.done}/{progress.total} — {progress.label}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3 flex justify-end gap-2">
+            <GhostBtn onClick={() => { setPlan(null); setErr('') }} disabled={busy}>Cancel</GhostBtn>
+            <SolidBtn busy={busy} type="button" onClick={run}
+              disabled={busy || !plan.some((g) => g.name.trim())}>
+              <FolderPlus className="h-4 w-4" /> Import
+            </SolidBtn>
+          </div>
+        </div>
+      )}
+
+      {err && <div className="mt-2 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-400">{err}</div>}
+      {done && (
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+          <CheckCheck className="h-4 w-4 shrink-0" /> {done}
+        </div>
+      )}
     </div>
   )
 }
