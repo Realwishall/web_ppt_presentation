@@ -922,10 +922,85 @@ const motifSvg = {
     </g>
   </svg>`,
 
+  /* Chapter motif "element": the whole of "integration on an object" is that a
+     body is the sum of the little pieces it is cut into, so the backdrop is
+     that cut being made and the pieces adding up. Low-left, a region is drawn
+     already divided into its elements and the sum sweeps across it while the
+     element itself walks along at the leading edge of the sum -- one animation
+     on one period, because the filled part IS the strips already counted. A
+     second period would say the two are independent, which is exactly what an
+     integral is not. Low-right, a disc drawn as its rings with one ring
+     growing outward from the centre: the dA = 2*pi*r*dr construction the deck
+     spends a slide on. The division into strips and the rings are drawn at
+     rest -- they are the geometry, not the event -- so the board still says
+     "cut into elements" with every animation off. It carries no information
+     (rule 11): it sits behind the writing area at a fraction of an opacity and
+     drops further in print. CSS only (`.motif-element .accum` / `.walk` /
+     `.grow`), no script.                                                     */
+  element: `<svg class="motif-element" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <clipPath id="lf-el-region">
+        <path d="M120 830 L120 700 C 336 556 520 664 700 520 C 818 426 890 452 940 468 L940 830 Z"/>
+      </clipPath>
+      <linearGradient id="lf-el-accum" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f5c542" stop-opacity="0"/>
+        <stop offset="0.45" stop-color="#f5c542" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#f5c542" stop-opacity="0.10"/>
+      </linearGradient>
+    </defs>
+    <!-- the body, already cut into its elements: sum, strips and the walking
+         element all live inside the region so they read as slices of it -->
+    <g clip-path="url(#lf-el-region)">
+      <rect class="accum" x="-700" y="420" width="820" height="410" fill="url(#lf-el-accum)"/>
+      <g class="strips" stroke="#7c8cff" stroke-opacity="0.09" stroke-width="1.5">
+      <path d="M140 420 V 830"/>
+      <path d="M180 420 V 830"/>
+      <path d="M220 420 V 830"/>
+      <path d="M260 420 V 830"/>
+      <path d="M300 420 V 830"/>
+      <path d="M340 420 V 830"/>
+      <path d="M380 420 V 830"/>
+      <path d="M420 420 V 830"/>
+      <path d="M460 420 V 830"/>
+      <path d="M500 420 V 830"/>
+      <path d="M540 420 V 830"/>
+      <path d="M580 420 V 830"/>
+      <path d="M620 420 V 830"/>
+      <path d="M660 420 V 830"/>
+      <path d="M700 420 V 830"/>
+      <path d="M740 420 V 830"/>
+      <path d="M780 420 V 830"/>
+      <path d="M820 420 V 830"/>
+      <path d="M860 420 V 830"/>
+      <path d="M900 420 V 830"/>
+      </g>
+      <rect class="walk" x="112" y="420" width="15" height="410" fill="#f5c542" fill-opacity="0.22"/>
+    </g>
+    <path d="M120 830 L120 700 C 336 556 520 664 700 520 C 818 426 890 452 940 468 L940 830"
+          fill="none" stroke="#f5c542" stroke-opacity="0.13" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M96 830 H 964" stroke="#ffffff" stroke-opacity="0.09" stroke-width="2"/>
+    <!-- the ring construction, low-right: the disc as its rings, one of them
+         growing out from the centre, and the ring unrolled into 2*pi*r beneath -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.10" stroke-width="1.5">
+      <circle cx="1332" cy="596" r="22"/>
+      <circle cx="1332" cy="596" r="44"/>
+      <circle cx="1332" cy="596" r="66"/>
+      <circle cx="1332" cy="596" r="88"/>
+      <circle cx="1332" cy="596" r="110"/>
+      <circle cx="1332" cy="596" r="132"/>
+      <circle cx="1332" cy="596" r="154"/>
+    </g>
+    <circle class="grow" cx="1332" cy="596" r="150" fill="none" stroke="#f5c542" stroke-width="3"/>
+    <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="2.4" stroke-linecap="round">
+      <path d="M1180 802 H 1484"/>
+      <path d="M1180 790 V 814"/><path d="M1484 790 V 814"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid, solid`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid, solid, element`);
   process.exit(1);
 }
 
@@ -943,7 +1018,8 @@ const bgScene = has('--no-bg-scene')
           || motif === 'rolling') ? 'inertia'
          : (motif === 'gravity' ? 'gravity'
          : (motif === 'fluid' ? 'fluid'
-         : (motif === 'solid' ? 'solid' : null)))));
+         : (motif === 'solid' ? 'solid'
+         : null)))));
 const bgSceneName = bgScene === true ? 'inertia' : bgScene;
 
 const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
@@ -995,6 +1071,7 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
            axis, because that is the only thing the picture has to say. They
            live right of centre and low, clear of the writing area.          */
         var bodies = [];
+        var sweeps = [];
         function add(obj, pos, spin, tilt){
           obj.position.set(pos[0], pos[1], pos[2]);
           obj.rotation.x = tilt;
@@ -1045,6 +1122,86 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
               [14.2, -3.0, -13], 0.05, 0);                                   // air envelope
           add(wire(new T.SphereGeometry(5.4, 20, 12), INDIGO, 0.07),
               [14.2, -3.0, -13], 0.03, 0);                                   // its outer shell
+        } else if (SCENE === 'element'){
+          /* The bodies this deck actually cuts up, drawn AS the cut: a sphere
+             as its rings at R sin(theta), a cone as its discs at r prop. x, a
+             cylinder as its slabs and a lamina as its strips -- the four
+             constructions on the slides in front of it. One slice at a time
+             brightens and the bright slice walks along the stack, because that
+             walk is what an integral is; the stack itself is complete before
+             the walk starts, so nothing is only in the motion. It carries no
+             information (rules 7, 11, 20).                                   */
+          var ring = function(r, y, c, o){
+            var pts = [], i, a;
+            for (i = 0; i <= 48; i++){
+              a = i / 48 * Math.PI * 2;
+              pts.push(new T.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+            }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var sliced = function(n, c, o, f){
+            var g = new T.Group(), i, s;
+            for (i = 0; i < n; i++){ s = f(i / (n - 1)); g.add(ring(s[0], s[1], c, o)); }
+            return g;
+          };
+          var strips = function(w, h, n, c, o){
+            var g = new T.Group(), i, x;
+            for (i = 0; i < n; i++){
+              x = -w / 2 + w * i / (n - 1);
+              g.add(new T.Line(new T.BufferGeometry().setFromPoints(
+                [new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0)]), mat(c, o)));
+            }
+            return g;
+          };
+          var sweep = function(g, period, phase, lo, hi){
+            sweeps.push({ g: g, p: period, ph: phase, lo: lo, hi: hi });
+            return g;
+          };
+          add(sweep(sliced(15, INDIGO, 0.13, function(t){
+                var th = 0.10 + t * (Math.PI - 0.20);
+                return [3.5 * Math.sin(th), 3.5 * Math.cos(th)];
+              }), 11, 0, 0.13, 0.40),
+              [13.8, -2.4, -12], 0.06, 0);                                   // sphere in rings
+          add(sweep(sliced(11, INDIGO, 0.14, function(t){
+                return [0.25 + 2.5 * t, -2.9 + 5.6 * t];
+              }), 9, 0.37, 0.14, 0.42),
+              [-13.2, -4.6, -13], 0.09, 0.30);                               // cone in discs
+          add(sweep(sliced(9, GOLD, 0.11, function(t){
+                return [2.0, -2.6 + 5.2 * t];
+              }), 13, 0.62, 0.11, 0.32),
+              [-2.0, -9.0, -11], 0.07, 0.16);                                // cylinder in slabs
+          add(sweep(strips(7.6, 4.2, 15, INDIGO, 0.10), 8, 0.14, 0.10, 0.30),
+              [15.2, -8.6, -16], 0.05, 0.26);                                // lamina in strips
+        } else if (SCENE === 'graph'){
+          /* The graph-drawing chapter's bodies are the CURVES themselves --
+             the straight line, the parabola, the sine train and the 1/x branch
+             the deck spends its whole hour on -- plus one sheet of squared
+             paper for them to be drawn on. They are real plots of the real
+             functions rather than stand-in solids, because that is the one
+             thing this chapter is about. Each turns slowly about its own axis
+             and none of them carries information (rules 7, 11, 20).         */
+          var grid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.09));
+          };
+          var plot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          add(grid(13, 9, 9), [13.8, -3.0, -13], 0.05, 0.26);                // squared paper
+          add(plot(function(x){ return 0.24 * x * x - 3.2; }, -5.4, 5.4, 64, GOLD, 0.26),
+              [13.8, -3.0, -12.5], 0.08, 0.26);                              // the parabola
+          add(plot(function(x){ return 2.3 * Math.sin(x * 0.85); }, -6.4, 6.4, 96, GOLD, 0.17),
+              [-13.0, -5.0, -13], 0.07, 0.16);                               // the sine train
+          add(plot(function(x){ return 2.7 / x; }, 0.62, 6.2, 56, INDIGO, 0.16),
+              [-2.2, -9.0, -11], 0.06, 0.10);                                // the 1/x branch
+          add(plot(function(x){ return 0.72 * x; }, -5.0, 5.0, 2, INDIGO, 0.14),
+              [15.2, -8.8, -16], 0.05, 0.34);                                // the straight line
         } else {
         add(wire(new T.TorusGeometry(3.1, 0.10, 6, 64), INDIGO, 0.30),
             [13.5, -1.4, -10], 0.16, Math.PI / 2 - 0.42);                    // ring
@@ -1071,6 +1228,11 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
           var dt = Math.min((now - t0) / 1000, 0.05); t0 = now;
           if (!reduce){
             for (var i = 0; i < bodies.length; i++) bodies[i].o.rotation.y += bodies[i].s * dt;
+            for (var q = 0; q < sweeps.length; q++){
+              var sw = sweeps[q], ch = sw.g.children, n = ch.length, j;
+              var k = Math.floor(((now / 1000 / sw.p + sw.ph) % 1) * n);
+              for (j = 0; j < n; j++) ch[j].material.opacity = (j === k) ? sw.hi : sw.lo;
+            }
             camera.position.x = Math.sin(now / 24000) * 1.5;
             camera.lookAt(0, 0, 0);
           }
@@ -1664,6 +1826,238 @@ const simFx = `<script>
 })();
 </script>`;
 
+/* ------------------------------------------ the element lab (rule 14, 20) --
+   `<div class="sim" data-sim="element" data-elem="sphere-disc">` turns a page
+   into the instrument this chapter is about: a body cut into N pieces, one
+   piece taken, and the pieces already taken added up in front of the class.
+
+   It exists because "take a small element" is three claims a still figure
+   cannot make, and every one of them is arithmetic:
+
+     · the element is the same wherever you put it — step it along and watch;
+     · the body IS the sum of the elements — the running total climbs to the
+       formula the slide already wrote at the top of the panel;
+     · the element has to be SMALL — at 6 pieces the sum is visibly wrong and
+       the panel says by how much; at 80 it is not.
+
+   The numbers here are a real left-endpoint Riemann sum of the real measure,
+   computed in this script and not in the 3D scene, so they are what the room
+   sees whether or not there is a GPU, and they are what the panel prints when
+   scripts are stripped for export (rule 11). The scene beside it draws the
+   same body from its own table and is told only { body, n, k }.
+
+   Declared with data attributes; fragments carry no JS:
+
+     [data-act="body"]  data-val = the body to cut       (.is-on marks the start)
+     [data-act="n"]     data-val = how many pieces       (.is-on marks the start)
+     [data-act="step"]  data-val = +1 / -1
+     [data-act="sweep"] run the element from limit to limit, and stop there
+     [data-act="all"]   count every piece at once
+     [data-act="reset"] back to the first element
+     [data-out="…"]     elem | pos | size | sum | bar | note
+
+   No-op for decks with no [data-sim="element"].                              */
+const elemFx = `<script>
+(function(){
+  var labs = [].slice.call(document.querySelectorAll('[data-sim="element"]'));
+  if (!labs.length) return;
+  var PI = Math.PI;
+
+  /* limits, the measure of the element, and how to name where it is */
+  var B = {
+    'rod':          { a:0, b:1, g:function(){ return 1; },
+                      v:'x', kind:'num', vu:'L', u:'L',
+                      el:'dl = dx', tot:'l = L' },
+    'arc':          { a:0, b:2, g:function(){ return 1; },
+                      v:'\\u03b8', kind:'deg', vu:'', u:'R',
+                      el:'dl = R d\\u03b8', tot:'l = R\\u03b8' },
+    'lamina-rect':  { a:0, b:1, g:function(){ return 1; },
+                      v:'x', kind:'num', vu:'L', u:'h\\u00b7L',
+                      el:'dA = height \\u00d7 dx', tot:'A = h\\u00b7L' },
+    'lamina-curve': { a:0, b:1,
+                      g:function(x){ return 0.68 + 0.25*Math.sin(3.4*x + 0.7) + 0.12*Math.sin(1.7*x); },
+                      v:'x', kind:'num', vu:'L', u:'sq',
+                      el:'dA = y \\u00b7 dx', tot:'A = \\u222b y dx' },
+    'lamina-tri':   { a:0, b:1, g:function(x){ return x; },
+                      v:'x', kind:'num', vu:'L', u:'sq',
+                      el:'dA = y \\u00b7 dx', tot:'A = \\u00bd x\\u00b7y' },
+    'disc-chord':   { a:-1, b:1, g:function(x){ return 2*Math.sqrt(Math.max(0, 1 - x*x)); },
+                      v:'x', kind:'num', vu:'R', u:'R\\u00b2',
+                      el:'dA = 2y \\u00b7 dx', tot:'A = \\u03c0R\\u00b2' },
+    'disc-ring':    { a:0, b:1, g:function(r){ return 2*PI*r; },
+                      v:'r', kind:'num', vu:'R', u:'R\\u00b2',
+                      el:'dA = 2\\u03c0r \\u00b7 dr', tot:'A = \\u03c0R\\u00b2' },
+    'disc-sector':  { a:0, b:2*PI, g:function(){ return 0.5; },
+                      v:'\\u03b8', kind:'deg', vu:'', u:'R\\u00b2',
+                      el:'dA = \\u00bdR \\u00b7 R d\\u03b8', tot:'A = \\u03c0R\\u00b2' },
+    'edge-ring':    { a:0, b:2, g:function(r){ return 2*r*Math.acos(Math.min(1, r/2)); },
+                      v:'r', kind:'num', vu:'R', u:'R\\u00b2',
+                      el:'dA = r \\u00b7 2\\u03b8 \\u00b7 dr', tot:'A = \\u03c0R\\u00b2' },
+    'sphere-band':  { a:0, b:PI, g:function(t){ return 2*PI*Math.sin(t); },
+                      v:'\\u03b8', kind:'deg', vu:'', u:'R\\u00b2',
+                      el:'dA = 2\\u03c0r \\u00b7 R d\\u03b8', tot:'A = 4\\u03c0R\\u00b2' },
+    'cone-ring':    { a:0, b:1, g:function(x){ return 2*PI*x*Math.SQRT2; },
+                      v:'x', kind:'num', vu:'h', u:'R\\u00b2',
+                      el:'dA = 2\\u03c0r \\u00b7 dl', tot:'A = \\u03c0Rl' },
+    'cylinder-slab':{ a:0, b:1, g:function(){ return PI; },
+                      v:'x', kind:'num', vu:'h', u:'R\\u00b2h',
+                      el:'dV = Area \\u00d7 dx', tot:'V = \\u03c0R\\u00b2h' },
+    'sphere-shell': { a:0, b:1, g:function(r){ return 4*PI*r*r; },
+                      v:'r', kind:'num', vu:'R', u:'R\\u00b3',
+                      el:'dV = 4\\u03c0r\\u00b2 \\u00b7 dr', tot:'V = 4/3 \\u03c0R\\u00b3' },
+    'sphere-disc':  { a:-1, b:1, g:function(y){ return PI*(1 - y*y); },
+                      v:'y', kind:'num', vu:'R', u:'R\\u00b3',
+                      el:'dV = \\u03c0r\\u00b2 \\u00b7 dy', tot:'V = 4/3 \\u03c0R\\u00b3' },
+    'cone-disc':    { a:0, b:1, g:function(x){ return PI*x*x; },
+                      v:'x', kind:'num', vu:'h', u:'R\\u00b2h',
+                      el:'dV = \\u03c0r\\u00b2 \\u00b7 dx', tot:'V = \\u2153\\u03c0R\\u00b2h' }
+  };
+
+  /* the value the sum is trying to reach — midpoint, fine enough that the
+     error the panel reports is the coarse sum's error and not its own */
+  function exact(s){
+    var N = 4096, h = (s.b - s.a) / N, t = 0, i;
+    for (i = 0; i < N; i++) t += s.g(s.a + (i + 0.5) * h);
+    return t * h;
+  }
+
+  function fmt(x){
+    var a = Math.abs(x);
+    var d = a >= 100 ? 1 : (a >= 10 ? 2 : 3);
+    return (x < 0 ? '\\u2212' : '') + a.toFixed(d);
+  }
+
+  window.addEventListener('load', function(){
+    labs.forEach(function(r){
+      try { init(r); } catch (e) { /* a dead lab must never blank the slide */ }
+    });
+  });
+
+  function init(root){
+    var frame = root.querySelector('[data-three="element-sweep"]');
+    var st = { body: (root.getAttribute('data-elem') || 'disc-ring').trim(), n: 12, k: 0, run: 0 };
+
+    var bodyBtns = [].slice.call(root.querySelectorAll('[data-act="body"]'));
+    var nBtns    = [].slice.call(root.querySelectorAll('[data-act="n"]'));
+    var onB = root.querySelector('[data-act="body"].is-on');
+    var onN = root.querySelector('[data-act="n"].is-on');
+    if (onB) st.body = onB.getAttribute('data-val') || st.body;
+    if (onN) st.n = Math.max(2, parseInt(onN.getAttribute('data-val'), 10) || 12);
+
+    var spec = B[st.body] || B['disc-ring'];
+    var ex = exact(spec);
+
+    function out(key, text){
+      var c = root.querySelectorAll('[data-out="' + key + '"]');
+      for (var i = 0; i < c.length; i++) c[i].textContent = text;
+    }
+    function mark(list, val){
+      list.forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-val') === val); });
+    }
+
+    function render(){
+      var h = (spec.b - spec.a) / st.n;
+      var u = spec.a + st.k * h;                    /* left endpoint: the honest one */
+      var size = spec.g(u) * h;
+      var sum = 0, i;
+      for (i = 0; i <= st.k; i++) sum += spec.g(spec.a + i * h) * h;
+
+      var where = spec.kind === 'deg'
+        ? spec.v + ' = ' + Math.round(u * 180 / PI) + '\\u00b0'
+        : spec.v + ' = ' + fmt(u) + (spec.vu ? ' ' + spec.vu : '');
+
+      out('elem', spec.el);
+      out('pos', where);
+      out('size', fmt(size) + ' ' + spec.u);
+      out('sum', fmt(sum) + ' ' + spec.u);
+
+      var bars = root.querySelectorAll('[data-out="bar"]');
+      for (i = 0; i < bars.length; i++)
+        bars[i].style.width = Math.max(0, Math.min(100, 100 * sum / ex)).toFixed(1) + '%';
+
+      var last = st.k === st.n - 1;
+      if (last){
+        var e = 100 * (ex - sum) / ex;
+        var side = e >= 0 ? 'short of' : 'over';
+        out('note', st.n + ' pieces add to ' + fmt(sum) + ' \\u00b7 the whole body is '
+          + spec.tot + ' = ' + fmt(ex) + ' \\u00b7 ' + Math.abs(e).toFixed(1) + '% ' + side + ' it'
+          + (Math.abs(e) > 3 ? ' \\u2014 the element is not small enough yet'
+                             : ' \\u2014 small enough to call it exact'));
+      } else {
+        out('note', (st.k + 1) + ' of ' + st.n + ' pieces counted \\u00b7 sweep to the far limit '
+          + 'and the pieces add up to ' + spec.tot);
+      }
+
+      if (frame && typeof frame.__lfElem === 'function'){
+        try { frame.__lfElem({ body: st.body, n: st.n, k: st.k }); } catch (e) {}
+      }
+    }
+
+    function stop(){ if (st.run){ clearInterval(st.run); st.run = 0; }
+      var b = root.querySelector('[data-act="sweep"]');
+      if (b) b.classList.remove('act'); }
+
+    function sweep(){
+      if (st.run){ stop(); return; }
+      var b = root.querySelector('[data-act="sweep"]');
+      if (b) b.classList.add('act');
+      if (st.k >= st.n - 1) st.k = -1;
+      var ms = Math.max(45, Math.min(380, Math.round(6200 / st.n)));
+      st.run = setInterval(function(){
+        if (document.hidden) return;
+        if (st.k >= st.n - 1){ stop(); return; }
+        st.k++; render();
+      }, ms);
+    }
+
+    function act(btn){
+      var a = btn.getAttribute('data-act');
+      if (a === 'body'){
+        stop();
+        st.body = btn.getAttribute('data-val') || st.body;
+        spec = B[st.body] || spec; ex = exact(spec);
+        st.k = 0; mark(bodyBtns, st.body);
+        if (frame) frame.setAttribute('data-elem', st.body);
+      } else if (a === 'n'){
+        stop();
+        var frac = st.n > 1 ? st.k / (st.n - 1) : 0;
+        st.n = Math.max(2, parseInt(btn.getAttribute('data-val'), 10) || 12);
+        st.k = Math.round(frac * (st.n - 1));
+        mark(nBtns, String(st.n));
+      } else if (a === 'step'){
+        stop();
+        st.k = Math.max(0, Math.min(st.n - 1, st.k + (parseInt(btn.getAttribute('data-val'), 10) || 1)));
+      } else if (a === 'all'){
+        stop(); st.k = st.n - 1;
+      } else if (a === 'reset'){
+        stop(); st.k = 0;
+      } else if (a === 'sweep'){
+        sweep(); return;
+      }
+      render();
+    }
+
+    [].slice.call(root.querySelectorAll('[data-act]')).forEach(function(btn){
+      btn.addEventListener('click', function(){ act(btn); });
+    });
+
+    /* leaving the page stops the sweep — nothing loops on a board the teacher
+       is no longer standing at, and a scene rebuilt on the way back asks for
+       this state rather than starting over */
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'lf-show') stop();
+    });
+    root.__lfElemSync = function(){
+      if (frame && typeof frame.__lfElem === 'function')
+        frame.__lfElem({ body: st.body, n: st.n, k: st.k });
+    };
+
+    mark(bodyBtns, st.body); mark(nBtns, String(st.n));
+    render();
+  }
+})();
+</script>`;
+
 /* -------------------------------------------------------------- assemble -- */
 const html = `<!doctype html>
 <html lang="en">
@@ -1698,6 +2092,9 @@ ${bgSceneFx}
 
 <!-- Screw-gauge instrument (no-op without [data-sim="screw-gauge"]) -->
 ${simFx}
+
+<!-- Element lab (no-op without [data-sim="element"]) -->
+${elemFx}
 
 <!-- Standalone fallback controller (rule 6) — LAST -->
 ${fallback}

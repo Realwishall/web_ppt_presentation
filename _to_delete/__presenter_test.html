@@ -2335,13 +2335,15 @@ for(var i=0;i<cues.length;i++){
 .page.__lf-active{display:block!important}
 .page .step{opacity:0!important;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease}
 .page .step.__lf-on{opacity:1!important;transform:none}`;
-  /* Nothing at all, deliberately. A web page needs none of the page
-     machinery above — and, just as importantly, none of the "a slide is a
-     fixed frame" rules further down, which is why the html,body height rule
-     is switched on `webPage` where it stands rather than being overridden
-     from here. */
+  /* html only, never body. `overflow` on the root element propagates to the
+     VIEWPORT — which is exactly what is wanted, a board that cannot be
+     scrolled — and leaves the root itself visible, so the fit engine can
+     still measure content taller than the board. Setting it on body as well
+     makes body a clipping box of its own: everything past the first screenful
+     is not merely unscrollable but gone, and the fit then "succeeds" on a
+     page it has silently cut in half. */
   const DECK_WEBPAGE_CSS = `
-/* one whole web page — no page machinery */`;
+html{overflow:hidden!important}`;
 
   const deckController = (animOn, webPage) => `
 <style id="__lf-ctl">
@@ -2388,20 +2390,8 @@ html.__lf-inking *,html.__lf-inking *::before,html.__lf-inking *::after{
    present a scrollbar or a scroll offset: the auto-fit engine below is what
    makes the content match the frame, so a scrollbar can only ever mean the
    fit has not run yet. Deck authors keep writing \`overflow:auto\` — this
-   overrides it under the presenter without touching a single deck file.
-
-   A WEB PAGE gets the first half of that and not the second. Pinning html
-   and body to height:100% is right for a deck, whose slides are viewport
-   boxes by construction, and wrong for a document, whose body is as tall as
-   its content: it made body a clipping box one screenful high, so everything
-   below the fold was not merely unscrollable but gone — and the fit engine,
-   measuring a body that now "fitted", left the page at 1:1 with its own
-   content cut off. The root alone is enough: overflow on the root propagates
-   to the VIEWPORT, so the board still cannot be scrolled, while body stays
-   free to be as tall as it needs while the fit engine measures it. */
-${webPage
-  ? "html{overflow:hidden!important}"
-  : "html,body{overflow:hidden!important;height:100%!important;max-height:100%!important}"}
+   overrides it under the presenter without touching a single deck file. */
+html,body{overflow:hidden!important;height:100%!important;max-height:100%!important}
 html,body,.page,.page *{scrollbar-width:none!important;-ms-overflow-style:none!important}
 ::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
 

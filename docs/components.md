@@ -421,6 +421,7 @@ that element becomes visible.
 | `data-three="globe"` / `"stars"` | `<div class="scene-frame">` | slow WebGL scene sized to the box |
 | `data-three="spin-axis"` | `<div class="scene-frame">` | a disc on its axle turning, with `ω` drawn **along the axle** in the right-hand sense — that `ω` stands on the plane rather than lying in it. `data-sense="cw"` reverses both |
 | `data-three="solid-angle"` | `<div class="scene-frame">` | sphere + pyramidal solid angle (Ω = A/r²) |
+| `data-three="element-sweep"` | `<div class="scene-frame">` inside a `.sim` | the body named by `data-elem`, cut into N pieces, with one piece lit, the pieces before it already counted and the rest waiting — plus the true surface as a faint wireframe the staircase visibly fails to reach at small N. Geometry only; every number lives in the panel beside it. See **the element lab** below |
 | `data-three="solid-angle-cone"` | `<div class="scene-frame">` | cone of semi-vertical angle α on a sphere |
 | `data-three="screw-gauge"` | `<div class="scene-frame">` inside a `.sim` | procedural 3D micrometer driven by the sim controls |
 | `data-three="xy-independence"` | `<div class="scene-frame">` | a particle on a curved path with its x-shadow and y-shadow sliding along the two axes |
@@ -597,6 +598,92 @@ reading is its own reveal (rule 17) — the numbers keep updating live once show
 
 Only `.sim-btn` carries `clickable` (rule 3), and the whole control bar sits
 below the instrument so the teacher can write on the scales.
+
+## The element lab — `.sim[data-sim="element"]`
+
+The instrument the integration-on-an-object chapter is about. It is a `.sim`,
+with the same stage / panel / control-bar shape as the screw gauge above, and it
+turns a slide into the three claims hiding inside "take a small element" — each
+of which is arithmetic, and none of which a still figure can make:
+
+- **the element is the same wherever you put it** — step it along and watch;
+- **the body IS the sum of the elements** — the running total climbs, on a bar,
+  to the formula the slide already wrote at the top of the panel;
+- **the element has to be small** — at 6 pieces the sum is visibly wrong and the
+  panel says by how much; at 120 it is not. That is the whole reason the chapter
+  says *small*, and here the room watches it become true rather than being told.
+
+The numbers are a real left-endpoint Riemann sum of the real measure, computed by
+the panel engine in `build-deck.mjs` and **not** by the 3D scene, so they are what
+the room sees with no GPU and what prints when scripts are stripped (rule 11).
+The scene is told only `{ body, n, k }` and draws.
+
+Authors write no JS. `data-elem` on the root picks the body and the same value
+goes on the nested `.scene-frame`. A `.scene-fallback` is still required, and it
+carries the source slide's own figure — that is what prints.
+
+```html
+<div class="sim" data-sim="element" data-elem="sphere-disc">
+  <div class="sim-lab">
+    <div class="sim-stage">
+      <div class="scene-frame" data-three="element-sweep" data-elem="sphere-disc">
+        <div class="scene-fallback"><svg class="dgm" viewBox="…">…</svg></div>
+      </div>
+    </div>
+    <div class="sim-panel">
+      <div class="sim-eqs">            <!-- the source slide's own lines, stepped -->
+        <div class="eq step" data-tex="dV = \pi r^2 \cdot dy"></div>
+      </div>
+      <div class="sim-row"><span class="sim-key">Element taken at</span>
+        <span class="sim-val" data-out="pos">&mdash;</span></div>
+      <div class="sim-row"><span class="sim-key">Its size</span>
+        <span class="sim-val" data-out="size">&mdash;</span></div>
+      <div class="sim-row total"><span class="sim-key">Pieces added so far</span>
+        <span class="sim-val" data-out="sum">&mdash;</span></div>
+      <span class="sim-bar"><span class="sim-fill" data-out="bar"></span></span>
+      <p class="sim-note" data-out="note">&hellip;</p>
+    </div>
+  </div>
+  <div class="sim-controls">…</div>
+</div>
+```
+
+| Button `data-act` | Effect |
+|---|---|
+| `body` | cut a different body; `data-val` is one of the names below. `.is-on` marks the one the page opens on |
+| `n` | how many pieces (`data-val`); `.is-on` marks the start |
+| `step` | `data-val` +1 / −1 — one element at a time |
+| `sweep` | run the element from limit to limit and stop there. Pressing again stops it; so does leaving the page |
+| `all` | count every piece at once |
+| `reset` | back to the first element |
+
+| Read-out `data-out` | Shows |
+|---|---|
+| `pos` | where the element is — `θ = 47°`, `r = 0.35 R`, `y = −0.55 R` |
+| `size` | the measure of that one element |
+| `sum` | the running total, in the body's own units |
+| `bar` | the same total drawn against the exact value |
+| `note` | the payoff: at the far limit, *N pieces add to … · the whole body is … · x % short of it* |
+
+Bodies (`data-elem`), each cut the way the source slide cuts it:
+
+- `rod` · `arc` — the length elements `dx` and `R dθ`
+- `lamina-rect` · `lamina-curve` · `lamina-tri` · `disc-chord` — the strip `y·dx`
+- `disc-ring` · `disc-sector` · `edge-ring` — the ring `2πr·dr`, the sector
+  `½R·R dθ`, and the rings drawn about a point **on** the rim, whose pieces
+  `r·2θ·dr` add to `πR²` in front of the class
+- `sphere-band` · `cone-ring` — the surface elements `2πr·R dθ` and `2πr·dl`
+- `cylinder-slab` · `sphere-shell` · `sphere-disc` · `cone-disc` — the volume
+  elements `A·dx`, `4πr²·dr`, `πr²·dy`, `πr²·dx`
+
+A new body is a design-system change in two places that have to agree: the
+measure in `elemFx` (`build-deck.mjs`) and the geometry in `startElementSweep`
+(`fx-three-runtime.js`). They are deliberately separate — the measure is what
+prints, the geometry is only what is drawn — so neither can quietly become the
+other's opinion.
+
+Only `.sim-btn` carries `clickable` (rule 3), and the control bar sits below the
+stage so the teacher can write on the body.
 
 ## Video — `.video-frame[data-video]` + `.video-fallback`
 
@@ -802,6 +889,12 @@ four to a row (`.two` for 2×2). Each `.option` keeps its `clickable` and its
 answer by letter. Per rule 19 the question and all options are visible at once;
 only the reasoning steps.
 
+`.three` is the same grid at three across. `.col` is for options whose figures
+are **wide** — a wave train, a decay: they stack down the board one per row,
+badge at the left and the figure filling the rest, so the shape is read across
+its full length. "Which of these is sin x" is decided by where the y-axis falls
+on the wave, and a quarter-column figure hides exactly that.
+
 ```html
 <div class="options graphs">
   <div class="option clickable" onclick="this.classList.add('correct')">
@@ -858,6 +951,7 @@ cage, a beaker of liquid, a stick figure — so they are components too.
 | `.cage` + `.floor` | a lift cabin and the surface a body stands on |
 | `.vessel` + `.liquid` | a beaker outline and the column of liquid in it |
 | `.man` + `.limb` (`.b` gold) | a stick figure — runner, climber, passenger |
+| `.elem` / `.elem.hollow` | **the differential element** — the strip `dx`, the slab, the disc slice `dy`; `.hollow` where the element is a line rather than an area (the arc `R dθ`, a ring on a surface, a shell of radius `r`). The body it is cut from stays `.plane` / `.disc` / `.ring`, so on any figure in the integration chapter the one gold thing is the piece being taken and everything indigo is the body — legible from the back row without a caption. Never a `.step`: the element is drawn with the figure |
 
 Arrowheads are drawn as `<path class="arwhead">`, **never** as SVG markers — a
 marker needs an id and a deck is one document with a dozen figures in it.
@@ -919,6 +1013,7 @@ run short enough for its column.
 | `rolling` | the rolling constraint as texture: a ground line low across the board, the cycloid the rim point traces drawn on it at rest with a gold cusp at each touchdown, and a wheel that **rolls** along it — translating exactly `2πR` in the time it turns once, so it never slips. The coupling is the whole chapter (`v = ωR`), so the two CSS animations (`.motif-rolling .roll` / `.spin`) deliberately share one 26 s period; a wheel turning at an unrelated rate would contradict every slide in front of it. No script, flattened in `@media print`. Like `inertia`, this motif also switches on the persistent WebGL backdrop below |
 | `torque` | the cross product as texture: a pivot low-right with an arm **turning** about it, a force across the end of that arm, the sense it turns in creeping the other way, and the axis the answer stands on running through the pivot — plus a balance beam rocking at the bottom left for the rotational-equilibrium half of the chapter. The arm turns by CSS animation (`.motif-torque .lever` / `.turn` / `.beam`, no script, flattened in `@media print`), because a torque is a thing that *turns* something and a still lever is only a stick. Like `inertia`, this motif also switches on the persistent WebGL backdrop below |
 | `solid` | the mechanical-properties-of-solids chapter, and it is one block of matter held at a wall and **pulled**. The lattice low-left is what every modulus in the chapter is an average over — rows and columns of bonds, plus the diagonals, because a solid resists a change of *shape* and not only a change of size, which is the whole reason `η` exists alongside `B`. The block strains along x and springs back, and the `F/A` arrows ride out with the free face on the same beat, so the board carries one event rather than two. Low-right, at rest, is the stress-strain curve the whole chapter is read off: the straight Hooke run, the knee, the plateau and the fracture cross. It deliberately does **not** move — a graph that drifts reads as a measurement changing. CSS only (`.motif-solid .strain` / `.pull`), flattened in `@media print` and under prefers-reduced-motion. Like `inertia`, this motif also switches on the persistent WebGL backdrop below, in its own `solid` body set (a rod under tension, a lattice cell, a twisted shaft, a sagging beam) |
+| `element` | the integration-on-an-object chapter, whose whole claim is that a body **is** the sum of the pieces it is cut into. Low-left, a region drawn already divided into its elements, with the accumulated part sweeping in from the left and the element itself walking at the leading edge of it — on **one** period, because the filled part *is* the strips already counted; two periods would say the element and the total are independent, which is precisely what an integral is not. Low-right, a disc drawn as its rings with one ring growing outward from the centre — the `dA = 2πr·dr` construction the deck spends a slide on, and its unrolled `2πr` beneath. The division into strips and the rings themselves are at rest: they are the geometry, not the event, so the board still says “cut into elements” with every animation off. CSS only (`.motif-element .accum` / `.walk` / `.grow`), flattened in `@media print`. It does **not** switch on the WebGL backdrop below: in this chapter the 3D is an explanation (`data-three="element-sweep"`), and a deck that puts a body on the board to be cut up should not also have bodies drifting behind it |
 
 It is texture, never information (rule 11): it sits behind the writing area at
 a fraction of an opacity, and `@media print` drops it further. Authors do not
@@ -928,11 +1023,26 @@ reference `#bg` — they set `"motif"` in the manifest and nothing else.
 
 A motif may carry a 3D companion: `canvas.bg-scene`, a sibling of `.page`
 inside `#bg` and **behind** the motif SVG, holding slowly turning wireframe
-bodies (ring, disc, rod, shell) drifting in depth. `gravity`, `fluid` and
-`solid` each carry their own body set instead of the default four. `build-deck.mjs` emits it
+bodies (ring, disc, rod, shell) drifting in depth. `gravity`, `fluid`, `solid`
+and `element` each carry their own body set instead of the default four. Only
+`gravity`, `fluid`, `solid` and the rotation motifs turn it on by themselves;
+`element` has one but leaves it off, because that chapter spends its WebGL
+budget on the instrument in front of the class rather than on wallpaper. `build-deck.mjs` emits it
 and inlines three.js for it; the author writes nothing. On by default for the
 `inertia` motif, forced with `"bg_scene": true` (or `--bg-scene <name>`), off
 with `--no-bg-scene`.
+
+`element` carries the four bodies its deck actually cuts up, and it draws each
+one **as the cut**: a sphere as its rings at `R sin θ`, a cone as its discs with
+`r ∝ x`, a cylinder as its slabs, a lamina as its strips — the constructions on
+the slides in front of it. One slice at a time brightens and the bright slice
+walks along the stack, because that walk is what an integral is; the stack is
+complete before the walk starts, so nothing lives only in the motion.
+
+`graph` carries its own body set too, and it is the one set that is not solids:
+the squared-paper sheet, the parabola, the sine train, the `1/x` branch and the
+straight line, each **plotted from the real function** and turning slowly about
+its own axis. A graph-drawing chapter's backdrop should be graphs.
 
 It is decoration in the strictest sense: scripts are stripped for PDF export
 and a room with no GPU never gets it, so the **motif SVG is the real backdrop**

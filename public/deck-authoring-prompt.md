@@ -69,6 +69,20 @@ canvas above it, so the teacher can draw anywhere. Consequences:
   - Everything NOT marked `clickable` stays inkable — so mark only the true controls
     clickable, not whole cards.
 
+**The one escape hatch: interaction mode.** The presenter has a rail button (and
+the `I` key) that hands the pointer to the slide — the ink canvas stops taking
+events and the deck frame starts, so hover, drag, focus, typing and every
+element's own handlers work exactly as they do when the `.html` file is opened
+in a browser. The pen is off while it is on, and `Esc` gives it back.
+
+That is a *teacher's* switch for a slide that is genuinely a thing to use (a
+simulation to drag, a widget to operate), **not a licence to build slides that
+only work in that mode.** Assume the default: a deck must teach completely with
+`.step` reveals and `.clickable` targets alone. Two limits hold even in
+interaction mode, because the frame is still sandboxed with `allow-scripts`
+only: a real `<form>` submit and anything that opens a window or navigates the
+top page will not run.
+
 ### 4. Reveal-on-"Next Step" animations (optional, recommended)
 - Give an element **`class="step"`** to reveal it one at a time: each **Next** press
   fades/slides in the next `.step` (in DOM order); once all are shown, Next turns the

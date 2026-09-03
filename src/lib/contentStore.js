@@ -85,11 +85,26 @@ const partsCol = (code, v) => ucol('content', code, 'versions', String(v), 'part
 
 // ── page counting ───────────────────────────────────────────────────────────
 
-/** How many `<section class="page">` slides this HTML holds. */
+/**
+ * How many slides this HTML holds.
+ *
+ * Normally that is its `<section class="page">` count. A file with none at
+ * all is not a broken deck, though — it is a web page, and the board loads
+ * one of those as a single slide it shows whole (see loadDeckFromText in
+ * presenter.html). Counting it as zero here is what used to make the rest of
+ * the app treat a perfectly good HTML file as empty: nothing to file, nothing
+ * to teach, "0 slides" in every list. So a document with a body that holds
+ * anything counts as one page, and only a file with no content at all — or
+ * one the parser cannot read — is zero.
+ */
 export function countPages(html) {
   if (!html) return 0
   try {
-    return new DOMParser().parseFromString(html, 'text/html').querySelectorAll('.page').length
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const pages = doc.querySelectorAll('.page').length
+    if (pages) return pages
+    const body = doc.body
+    return body && (body.children.length || (body.textContent || '').trim()) ? 1 : 0
   } catch {
     return 0
   }

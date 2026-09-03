@@ -301,6 +301,30 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 @media (prefers-reduced-motion:reduce){
   #bg svg.motif-fluid .swell,#bg svg.motif-fluid .rise circle{animation:none}}
 
+/* Chapter motif "element" — "integration on an object", which is the claim that
+   a body equals the sum of the pieces it is cut into. So the backdrop is that
+   cut, already made, plus the sum being taken across it: the accumulated part
+   sweeps in from the left and the element itself walks at the leading edge of
+   it, on ONE period, because the filled part IS the strips already counted —
+   two periods would say the element and the total are independent, which is
+   exactly what an integral is not. The rings low-right are the 2πr·dr disc,
+   with one ring growing outward from the centre. The strips and the rings are
+   drawn at rest: they are the geometry, not the event, so the board still says
+   "cut into elements" with every animation off. CSS only, no script,
+   flattened in @media print and under prefers-reduced-motion.                */
+#bg svg.motif-element{opacity:.56}
+#bg svg.motif-element .accum,
+#bg svg.motif-element .walk{animation:lf-el-sum 26s linear infinite}
+#bg svg.motif-element .grow{transform-box:fill-box;transform-origin:50% 50%;
+    animation:lf-el-grow 14s ease-in-out infinite}
+@keyframes lf-el-sum{from{transform:translateX(0)}to{transform:translateX(820px)}}
+@keyframes lf-el-grow{0%  {transform:scale(.10);opacity:0}
+                      16% {opacity:.26}
+                      84% {opacity:.09}
+                      100%{transform:scale(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-element .accum,#bg svg.motif-element .walk,
+  #bg svg.motif-element .grow{animation:none}}
 /* The WebGL companion to the "inertia" motif — a persistent canvas of slowly
    turning wireframe bodies (ring, disc, rod, shell) drifting in depth behind
    every slide. It is a sibling of .page (rule 1), it sits *under* the motif
@@ -873,6 +897,20 @@ svg.dgm .man.b  {fill:var(--gold-soft)}
 svg.dgm .limb   {fill:none;stroke:rgba(255,255,255,.9);stroke-width:4;
                  stroke-linecap:round;stroke-linejoin:round}
 svg.dgm .limb.b {stroke:var(--gold-soft)}
+/* Integration-on-an-object additions. Every board in that chapter is one body
+   with one differential piece taken out of it — the strip `dx`, the ring `dr`,
+   the band `R dθ`, the disc `dy` — and the whole lesson is the difference
+   between the two. So the piece gets its own ink and the body keeps `.plane`:
+   on a dark stage the element is gold and solid, the body is the calm indigo
+   everything else in the deck is drawn in, and which is which is legible from
+   the back row without a caption. Pure SVG + CSS, so it prints (rule 11).
+     .elem          the element itself — a strip, a slab, a disc slice
+     .elem.hollow   the same element where it is a line rather than an area:
+                    the arc `R dθ`, a ring on a surface, a shell of radius r  */
+svg.dgm .elem  {fill:rgba(245,197,66,.82);stroke:rgba(255,228,150,.95);
+                stroke-width:1.6;stroke-linejoin:round}
+svg.dgm .elem.hollow{fill:none;stroke:var(--gold);stroke-width:4.4;
+                stroke-linecap:round}
 svg.dgm text    {font-family:var(--font-math);font-size:30px;fill:var(--sub)}
 svg.dgm text.lab{font-family:var(--font-ui);font-size:28px;fill:rgba(255,255,255,.9)}
 svg.dgm text.num{font-size:29px;fill:var(--gold-soft)}
@@ -950,10 +988,21 @@ svg.gph text tspan.sub,svg.dgm text tspan.sub{font-size:.68em}
    class can call an answer by letter without reading a caption.            */
 .options.graphs{display:grid;grid-template-columns:repeat(4,1fr);gap:2vmin}
 .options.graphs.two{grid-template-columns:repeat(2,1fr)}
+.options.graphs.three{grid-template-columns:repeat(3,1fr)}
 .options.graphs .option{flex-direction:column;align-items:stretch;
                         gap:.9vmin;padding:1.6vmin 1.4vmin}
 .options.graphs .option svg{width:100%;height:auto;max-height:30vh}
 .options.graphs .opt-badge{align-self:flex-start}
+/* `.col` -- the same question when each candidate curve is WIDE (a wave train,
+   a decay): the options stack down the board one per row, badge at the left and
+   the figure filling the rest, so the shape is read across its full length
+   instead of being squeezed into a quarter column. Three full-width waves is
+   what the source slide draws, and four narrow ones would hide the phase --
+   which is the whole of a "which one is sin x" question.                    */
+.options.graphs.col{grid-template-columns:1fr;gap:1.1vmin}
+.options.graphs.col .option{flex-direction:row;align-items:center;gap:2vmin;padding:.9vmin 1.4vmin}
+.options.graphs.col .opt-badge{align-self:center;flex:0 0 auto}
+.options.graphs.col .option svg{max-height:11vh}
 .option{position:relative;display:flex;align-items:center;gap:1.4vmin;
         border:.12vmin solid rgba(255,255,255,.16);border-radius:var(--radius);
         padding:1.6vmin 2.2vmin;font-size:clamp(18px,3vmin,34px);cursor:pointer;
@@ -1144,6 +1193,26 @@ svg.gph text tspan.sub,svg.dgm text tspan.sub{font-size:.68em}
   background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
   box-shadow:var(--lip),var(--lift);
   transition:border-color .25s ease,background .25s ease,color .25s ease}
+/* The element lab (`[data-sim="element"]`) reuses the whole .sim vocabulary
+   above, because it IS an instrument — same stage, panel and control bar as
+   the screw gauge. It adds only two pieces of its own: the block of the source
+   slide's own equations that stands above the live readings, and the running
+   total drawn as a bar so "the pieces add up to the body" is a thing the room
+   watches fill rather than a sentence. The bar is decoration over a number
+   that is already printed beside it, so it costs nothing when scripts are
+   stripped for export (rule 11).                                            */
+.sim-eqs{display:flex;flex-direction:column;gap:.7vmin;align-items:flex-start;
+    padding-bottom:1.1vmin;margin-bottom:.7vmin;
+    border-bottom:.12vmin solid rgba(159,180,255,.22)}
+.sim-eqs .eq{font-size:clamp(17px,3vmin,34px);justify-content:flex-start}
+.sim-eqs p{font-size:var(--fs-small)}
+.sim-bar{position:relative;display:block;height:1.5vmin;min-height:9px;
+    margin:1.1vmin 0 .2vmin;border-radius:99px;overflow:hidden;
+    background:rgba(159,180,255,.16);
+    box-shadow:inset 0 .1vmin .4vmin rgba(0,0,0,.45)}
+.sim-fill{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,rgba(245,197,66,.5),var(--gold));
+    transition:width .18s linear}
 .sim-btn.is-on{color:#241a02;border-color:rgba(245,197,66,.9);
   background:linear-gradient(180deg,var(--gold-soft),var(--gold));
   box-shadow:0 .4vmin 2vmin rgba(245,197,66,.32)}
@@ -1196,6 +1265,9 @@ svg.gph text tspan.sub,svg.dgm text tspan.sub{font-size:.68em}
   #bg svg.motif-fluid .swell{animation:none!important}
   #bg svg.motif-fluid .rise circle{animation:none!important;opacity:.5!important}
   #bg svg.motif-solid{opacity:.20!important}
+  #bg svg.motif-element{opacity:.20!important}
+  #bg svg.motif-element .accum,#bg svg.motif-element .walk,
+  #bg svg.motif-element .grow{animation:none!important;transform:none!important}
   #bg svg.motif-solid .strain,#bg svg.motif-solid .pull{
     animation:none!important;transform:none!important}
   /* the translation/rotation pair prints as two identical rods — the caption

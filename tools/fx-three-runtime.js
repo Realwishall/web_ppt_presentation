@@ -279,6 +279,7 @@
       if (kind === 'pressure-depth' || kind === 'curved-projected'){
         startFluid(frame, w, h, kind); return;
       }
+      if (kind === 'element-sweep'){ startElementSweep(frame, w, h); return; }
 
       var renderer = lfOwn(frame, new T.WebGLRenderer({ alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -6262,6 +6263,243 @@
         renderer.render(scene, camera);
       });
     }
+
+    /* ── data-three="element-sweep" ────────────────────────────────────────
+       The whole chapter, made into an instrument: a body cut into N pieces,
+       with one piece lit, everything before it already counted, and the rest
+       waiting. Three things a still figure cannot carry, and this deck is
+       about all three:
+
+         · WHERE the element sits, and that it is the SAME element wherever
+           you put it — the sweep walks it from one limit to the other;
+         · that the body IS the sum of the pieces — the counted part fills in
+           behind the sweep until the body is complete;
+         · WHY the element has to be small — at 6 pieces the stack is a
+           visible staircase standing outside the true surface (drawn as the
+           faint wireframe it never quite reaches), and at 80 it is the body.
+           The panel prints the same fact as a number.
+
+       Geometry only. Every number lives in the [data-sim="element"] panel
+       beside it, because the panel is what survives with no GPU and what
+       prints (rules 7, 11, 20), and the .scene-fallback carries the still
+       figure the source slide drew.
+
+       Driven by frame.__lfElem({ body, n, k }) from that panel; authors write
+       no JS — they write data-three="element-sweep" and data-elem="<body>".  */
+    function startElementSweep(frame, w, h){
+      var GOLD = 0xf5c542, INDIGO = 0x7c8cff, PALE = 0x9fb4ff;
+
+      /* Every body in the chapter, as the one thing it has in common: a
+         parameter that runs from one limit to the other, and a piece drawn at
+         each step of it. `fam` is only how the piece is DRAWN — the measure
+         that gets summed lives in the panel, so the two can never disagree
+         about what is on screen and what is in the number. */
+      var EB = {
+        'rod':           { fam:'strip', a:-1.7, b:1.7, base:'mid', flat:1, reach:3.2,
+                           hgt:function(){ return 0.52; } },
+        'lamina-rect':   { fam:'strip', a:-1.6, b:1.6, base:'bot', flat:1, oy:-0.85, reach:3.7,
+                           hgt:function(){ return 1.7; } },
+        'lamina-curve':  { fam:'strip', a:-1.6, b:1.6, base:'bot', flat:1, oy:-0.85, reach:3.7,
+                           hgt:function(u){ return 1.15 + 0.42*Math.sin(3.4*u + 0.7) + 0.20*Math.sin(1.7*u); } },
+        'lamina-tri':    { fam:'strip', a:-1.6, b:1.6, base:'bot', flat:1, oy:-0.85, reach:3.7,
+                           hgt:function(u){ return 0.02 + 1.9*(u + 1.6)/3.2; } },
+        'disc-chord':    { fam:'strip', a:-1.55, b:1.55, base:'mid', flat:1, reach:4.2,
+                           hgt:function(u){ return 2*Math.sqrt(Math.max(0, 2.4025 - u*u)); }, ring:1.55 },
+        'arc':           { fam:'fan', r0:1.42, r1:1.58, a:0, b:Math.PI*0.62, flat:1,
+                           ox:-0.42, oy:-0.72, reach:3.1 },
+        'disc-sector':   { fam:'fan', r0:0, r1:1.55, a:0, b:Math.PI*2, flat:1, reach:4.2 },
+        'disc-ring':     { fam:'annulus', R:1.55, flat:1, reach:4.2 },
+        'edge-ring':     { fam:'edge', R:1.5, flat:1, reach:4.3 },
+        'sphere-band':   { fam:'band', R:1.5, reach:4.4 },
+        'cone-ring':     { fam:'coneband', R:1.25, H:2.6, cone:1, reach:4.3 },
+        'cylinder-slab': { fam:'slab', R:1.15, H:2.7, reach:4.4, rad:function(){ return 1.15; } },
+        'sphere-disc':   { fam:'slab', R:1.5, H:3.0, sphere:1, reach:4.4,
+                           rad:function(u){ return Math.sqrt(Math.max(0, 2.25 - u*u*2.25)); } },
+        'cone-disc':     { fam:'slab', R:1.25, H:2.6, cone:1, reach:4.3,
+                           rad:function(u){ return 1.25*u; } }
+      };
+      EB['sphere-shell'] = { fam:'shell', R:1.5, reach:4.4,
+                             lo:0.045, mid:0.20, enclosed:1 };
+
+      var renderer = lfOwn(frame, new T.WebGLRenderer({
+        alpha: true, antialias: LF_AA, powerPreference: 'high-performance' }));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h);
+      frame.appendChild(renderer.domElement);
+      frame.classList.add('is-live');
+
+      var scene  = new T.Scene();
+      var camera = new T.PerspectiveCamera(38, w / h, 0.1, 100);
+      var group  = new T.Group();
+      scene.add(group);
+
+      var state = { body: (frame.getAttribute('data-elem') || 'disc-ring').trim(), n: 12, k: 0 };
+      var pieces = [], outline = null, spec = null;
+
+      function mat(color, opacity){
+        return new T.MeshBasicMaterial({ color: color, transparent: true, opacity: opacity,
+          side: T.DoubleSide, depthWrite: false });
+      }
+      function edge(geo, color, opacity){
+        return new T.LineSegments(new T.EdgesGeometry(geo, 24),
+          new T.LineBasicMaterial({ color: color, transparent: true, opacity: opacity }));
+      }
+      function clear(){
+        for (var i = group.children.length - 1; i >= 0; i--){
+          var c = group.children[i];
+          group.remove(c);
+          if (c.geometry) c.geometry.dispose();
+          if (c.material) c.material.dispose();
+        }
+        pieces = []; outline = null;
+      }
+
+      /* One piece of the body, at step i of n. Returns a Mesh whose material
+         this scene owns, so the sweep can recolour it every frame. */
+      function piece(s, i, n){
+        var u0, u1, m, g = null, pos = null, rot = null;
+        if (s.fam === 'strip'){
+          var dx = (s.b - s.a) / n;
+          u0 = s.a + i * dx;
+          var hh = s.hgt(u0);                       /* LEFT endpoint — the sum is honest */
+          g = new T.PlaneGeometry(dx * 0.92, hh);
+          pos = [u0 + dx / 2, s.base === 'bot' ? hh / 2 : 0, 0];
+        } else if (s.fam === 'fan'){
+          var da = (s.b - s.a) / n;
+          u0 = s.a + i * da;
+          g = new T.RingGeometry(s.r0, s.r1, 10, 1, u0, da * 0.94);
+          pos = [0, 0, 0];
+        } else if (s.fam === 'annulus'){
+          var dr = s.R / n;
+          u0 = i * dr;
+          g = new T.RingGeometry(u0, u0 + dr * 0.94, 72, 1, 0, Math.PI * 2);
+          pos = [0, 0, 0];
+        } else if (s.fam === 'edge'){
+          /* rings drawn about a point ON the rim: the chord subtends 2θ with
+             r = 2R cos θ, which is the source slide's own construction */
+          var dR = 2 * s.R / n;
+          u0 = i * dR;
+          var th = Math.acos(Math.min(1, u0 / (2 * s.R)));
+          g = new T.RingGeometry(u0, u0 + dR * 0.94, 64, 1, -th, 2 * th);
+          pos = [-s.R, 0, 0];
+        } else if (s.fam === 'band'){
+          var dt = Math.PI / n;
+          u0 = i * dt; u1 = u0 + dt;
+          g = new T.CylinderGeometry(s.R * Math.sin(u1), s.R * Math.sin(u0),
+                                     s.R * (Math.cos(u0) - Math.cos(u1)), 56, 1, true);
+          pos = [0, s.R * (Math.cos(u0) + Math.cos(u1)) / 2, 0];
+        } else if (s.fam === 'coneband'){
+          var dtc = 1 / n;
+          u0 = i * dtc; u1 = u0 + dtc;
+          g = new T.CylinderGeometry(s.R * u1, s.R * u0, s.H * dtc, 56, 1, true);
+          pos = [0, -s.H / 2 + s.H * (u0 + u1) / 2, 0];
+        } else if (s.fam === 'slab'){
+          var dy = s.H / n;
+          u0 = -s.H / 2 + i * dy;
+          var uu = s.sphere ? (u0 / (s.H / 2)) : (u0 + s.H / 2) / s.H;
+          var rr = Math.max(0.012, s.rad(uu));
+          g = new T.CylinderGeometry(rr, rr, dy * 0.92, 56, 1, false);
+          pos = [0, u0 + dy / 2, 0];
+        } else if (s.fam === 'shell'){
+          var ds = s.R / n;
+          u0 = i * ds;
+          g = new T.SphereGeometry(Math.max(0.02, u0 + ds), 40, 22, 0, Math.PI * 1.42);
+          pos = [0, 0, 0];
+        }
+        if (!g) return null;
+        m = new T.Mesh(g, mat(INDIGO, 0.12));
+        if (s.enclosed) m.userData.enclosed = 1;
+        m.position.set(pos[0], pos[1], pos[2]);
+        if (s.fam === 'edge' || s.fam === 'fan' || s.fam === 'annulus') m.renderOrder = i;
+        return m;
+      }
+
+      /* The true surface the staircase is trying to be. Faint, never filled —
+         at n = 6 the pieces stand visibly outside it, which is the whole
+         argument for making the element small. */
+      function trueShape(s){
+        var g = null;
+        if (s.fam === 'band' || s.fam === 'shell') g = new T.SphereGeometry(s.R, 18, 10);
+        else if (s.fam === 'coneband' || s.cone) g = new T.ConeGeometry(s.R, s.H, 18, 1, true);
+        else if (s.sphere) g = new T.SphereGeometry(s.R, 18, 10);
+        else if (s.fam === 'slab') g = new T.CylinderGeometry(s.R, s.R, s.H, 18, 1, true);
+        else if (s.ring) g = new T.RingGeometry(s.ring - 0.012, s.ring, 90, 1, 0, Math.PI * 2);
+        else if (s.fam === 'annulus' || s.fam === 'edge')
+          g = new T.RingGeometry(s.R - 0.012, s.R, 90, 1, 0, Math.PI * 2);
+        if (!g) return null;
+        var o = new T.LineSegments(new T.WireframeGeometry(g),
+          new T.LineBasicMaterial({ color: PALE, transparent: true, opacity: 0.22 }));
+        if (s.cone || s.fam === 'coneband') o.rotation.x = Math.PI;   /* apex at the small end */
+        return o;
+      }
+
+      function rebuild(){
+        clear();
+        spec = EB[state.body] || EB['disc-ring'];
+        var i, p;
+        for (i = 0; i < state.n; i++){
+          p = piece(spec, i, state.n);
+          if (p){ group.add(p); pieces.push(p); }
+        }
+        outline = trueShape(spec);
+        if (outline) group.add(outline);
+
+        /* A flat construction is read face-on; a solid is read from slightly
+           above, turning, because that is the only way a stack of discs shows
+           itself to be a stack. */
+        group.position.set(spec.ox || 0, spec.oy || 0, 0);
+        group.rotation.set(spec.flat ? 0.07 : 0.28, 0, 0);
+        camera.position.set(0, spec.flat ? 0 : 0.42, spec.reach || 4.2);
+        camera.lookAt(0, 0, 0);
+        paint();
+      }
+
+      function paint(){
+        var lo = spec && spec.lo ? spec.lo : 0.11;
+        var mid = spec && spec.mid ? spec.mid : 0.44;
+        for (var i = 0; i < pieces.length; i++){
+          var m = pieces[i].material, on = i === state.k, done = i < state.k;
+          m.color.setHex(on ? GOLD : INDIGO);
+          m.opacity = on ? 0.95 : (done ? mid : lo);
+          /* the piece being taken is never hidden by the body it came out of */
+          m.depthTest = !(on && pieces[i].userData.enclosed);
+        }
+      }
+
+      /* The panel owns the numbers and the state; this only draws them. */
+      frame.__lfElem = function(o){
+        var re = false;
+        if (o.body && o.body !== state.body){ state.body = o.body; re = true; }
+        if (o.n && o.n !== state.n){ state.n = o.n; re = true; }
+        state.k = Math.max(0, Math.min((o.n || state.n) - 1, o.k | 0));
+        if (re) rebuild(); else paint();
+      };
+
+      function resize(){
+        var nw = frame.clientWidth, nh = frame.clientHeight;
+        if (!nw || !nh) return;
+        camera.aspect = nw / nh; camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      lfOn(frame, 'resize', resize);
+
+      rebuild();
+      /* Ask the panel for the state it already holds, so a scene rebuilt on
+         re-entry comes back exactly where the teacher left it. */
+      try {
+        var root = frame.closest ? frame.closest('[data-sim="element"]') : null;
+        if (root && typeof root.__lfElemSync === 'function') root.__lfElemSync();
+      } catch (e) {}
+
+      lfLoop(frame, function loop(){
+        /* One slow turn, and only on the solids: a flat construction spun
+           about a vertical axis reads as a line. */
+        if (!spec.flat) group.rotation.y += 0.0032;
+        else group.rotation.y = Math.sin(Date.now() / 6400) * 0.075;
+        renderer.render(scene, camera);
+      });
+    }
+
 
   });
 })();

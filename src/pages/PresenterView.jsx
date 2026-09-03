@@ -14,6 +14,7 @@ import {
   saveTeachingSession,
   loadSessionForReview,
 } from '../lib/sessions'
+import { countPages } from '../lib/contentStore'
 import { loadPresenterExportConfig, rememberExportValues } from '../lib/batchSettings'
 import {
   getShortcuts, saveShortcuts, cacheAddPageShortcut, matchesShortcut,
@@ -666,10 +667,12 @@ function LibraryPicker({ onClose, onPickMany, onNote }) {
       for (const file of files) {
         let html = null
         try { html = await file.text() } catch { html = null }
-        // Same contract the board enforces: a deck is <section class="page">s.
-        const ok = html && new DOMParser()
-          .parseFromString(html, 'text/html')
-          .querySelectorAll('.page').length > 0
+        // Same contract the board enforces — and the board's contract has
+        // widened: a file with no <section class="page"> is not a rejected
+        // deck any more but a web page, which loads as one slide shown whole.
+        // countPages says so (1 for a page-less document with content), so
+        // only a file that is genuinely empty or unreadable is turned away.
+        const ok = html && countPages(html) > 0
         if (!ok) { rejected.push(file.name); continue }
 
         // Every HTML page file that enters the system gets a code — including
@@ -687,7 +690,7 @@ function LibraryPicker({ onClose, onPickMany, onNote }) {
         }
       }
       if (rejected.length) {
-        const msg = `Skipped ${rejected.join(', ')} — no <section class="page"> slides found.`
+        const msg = `Skipped ${rejected.join(', ')} — the file is empty or could not be read.`
         // Shown in the picker if it stays open; handed to the host toast when
         // the good decks load and the picker closes underneath it.
         setUploadErr(msg)
