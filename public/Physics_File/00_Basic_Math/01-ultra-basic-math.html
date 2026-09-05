@@ -65,8 +65,10 @@
   .en{font-size:clamp(26px,5.4vmin,62px);font-style:italic;color:#ffc14d;margin-top:1.6vmin}
   .step{opacity:1}
   math,.eqn{font-family:'Cambria Math',Georgia,serif}
-  .eq{font-size:clamp(21px,4.4vmin,50px);color:#fff6e8;display:flex;flex-wrap:wrap;align-items:center;
-      gap:.6vmin 1.2vmin;font-family:'Cambria Math',Georgia,serif}
+  .eq{font-size:clamp(21px,4.4vmin,50px);color:#fff6e8;display:block;line-height:1.35;
+      font-family:'Cambria Math',Georgia,serif}
+  .eq + .eq{margin-top:.7vmin}
+  sup{font-size:.62em;line-height:0;position:relative;top:-.35em}
   .frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.05;vertical-align:middle}
   .frac>span:first-child{border-bottom:.12em solid currentColor;padding:0 .28em .08em}
   .frac>span:last-child{padding:.08em .28em 0}
@@ -677,6 +679,15 @@ function grade(el, ok){
       if (!pages.length) return;
       var i = 0, step = 0;
       var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function applyHash(){
+        var hash = (location.hash || '').replace('#','');
+        if (/^\d+$/.test(hash)) {
+          i = Math.min(pages.length - 1, Math.max(0, parseInt(hash, 10) - 1));
+          step = steps(pages[i]).length;
+        }
+      }
+      applyHash();
+      window.addEventListener('hashchange', function(){ applyHash(); render(); });
       function render(){
         pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
         steps(pages[i]).forEach(function(s,k){
