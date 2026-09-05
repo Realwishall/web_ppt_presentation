@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultra Basic Math — Class 10 toolkit</title>
+<style>
+  html,body{height:100%;margin:0}
+  *{box-sizing:border-box}
+  body{
+    background:#100b08;
+    color:#f4efe4;
+    font-family:Calibri,Candara,'Segoe UI',system-ui,sans-serif;
+  }
+  #bg{position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%}
+  #paper{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(16,11,8,.35),rgba(16,11,8,.72)),
+      repeating-linear-gradient(0deg,transparent 0 27px,rgba(255,193,77,.055) 27px 28px),
+      repeating-linear-gradient(90deg,transparent 0 27px,rgba(255,193,77,.045) 27px 28px);
+    mix-blend-mode:screen;opacity:.55;
+  }
+  #glyphs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  #glyphs span{
+    position:absolute;font-family:'Cambria Math',Georgia,serif;font-weight:700;
+    color:rgba(255,193,77,.14);animation:drift 22s linear infinite;
+    user-select:none;
+  }
+  @keyframes drift{
+    0%{transform:translateY(0) rotate(0deg);opacity:.12}
+    50%{opacity:.28}
+    100%{transform:translateY(-18vmin) rotate(18deg);opacity:.08}
+  }
+  .page{
+    position:relative;z-index:1;height:100%;box-sizing:border-box;color:#f4efe4;
+    font-family:Calibri,Candara,'Segoe UI',system-ui,sans-serif;
+    background:
+      radial-gradient(90vmin 50vmin at 12% -10%,rgba(255,193,77,.16),transparent 55%),
+      radial-gradient(70vmin 46vmin at 92% 110%,rgba(94,224,181,.10),transparent 50%),
+      linear-gradient(180deg,rgba(16,11,8,.55),rgba(16,11,8,.78));
+  }
+  .wrap{height:100%;box-sizing:border-box;overflow:auto;display:flex;flex-direction:column;
+        gap:2.1vmin;padding:5.2vmin 6.4vmin}
+  .wrap.center{align-items:center;justify-content:center;text-align:center}
+  .wrap.tight{gap:1.3vmin;padding:4vmin 5.2vmin}
+  .wrap.dense{gap:1.1vmin;padding:3.4vmin 4.4vmin}
+  .kicker{
+    font-size:clamp(13px,2.2vmin,22px);letter-spacing:.32em;text-transform:uppercase;
+    font-weight:700;color:#ffc14d;margin:0;
+  }
+  h1.title{margin:0;font-size:clamp(34px,8.6vmin,98px);font-weight:800;letter-spacing:-.02em;line-height:1.05;color:#fff6e8}
+  h2.heading{margin:0;font-size:clamp(26px,6.2vmin,66px);font-weight:800;color:#ffc14d;line-height:1.1}
+  .chalk{
+    display:inline-block;position:relative;
+  }
+  .chalk:after{
+    content:"";display:block;height:.55vmin;margin-top:.4vmin;border-radius:9px;
+    background:linear-gradient(90deg,#fff,#f4efe4 40%,rgba(255,255,255,.2));
+    transform:skewX(-12deg);opacity:.9;
+  }
+  .sub{margin:0;font-size:clamp(19px,3.7vmin,42px);line-height:1.45;color:#e8dcc8;max-width:78ch}
+  .lede{margin:0;font-size:clamp(17px,3.1vmin,34px);line-height:1.45;color:#d7cbb8;max-width:70ch}
+  .zh{font-size:clamp(40px,9vmin,110px);font-weight:700;letter-spacing:.08em;color:#fff6e8}
+  .en{font-size:clamp(26px,5.4vmin,62px);font-style:italic;color:#ffc14d;margin-top:1.6vmin}
+  .step{opacity:1}
+  math,.eqn{font-family:'Cambria Math',Georgia,serif}
+  .eq{font-size:clamp(21px,4.4vmin,50px);color:#fff6e8;display:block;line-height:1.35;
+      font-family:'Cambria Math',Georgia,serif}
+  .eq + .eq{margin-top:.7vmin}
+  sup{font-size:.62em;line-height:0;position:relative;top:-.35em}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.05;vertical-align:middle}
+  .frac>span:first-child{border-bottom:.12em solid currentColor;padding:0 .28em .08em}
+  .frac>span:last-child{padding:.08em .28em 0}
+  .gold{color:#ffc14d}
+  .jade{color:#5ee0b5}
+  .coral{color:#ff6b5a}
+  .muted{color:#b7a894}
+  .dim{color:#8a7b68}
+  .card{
+    background:rgba(255,246,232,.05);border:1px solid rgba(255,193,77,.22);
+    border-radius:1.6vmin;padding:2vmin 2.4vmin;
+    box-shadow:0 10px 40px rgba(0,0,0,.22);
+  }
+  .card.warm{border-color:rgba(255,193,77,.4);background:rgba(255,193,77,.08)}
+  .card.cool{border-color:rgba(94,224,181,.35);background:rgba(94,224,181,.07)}
+  .card.hot{border-color:rgba(255,107,90,.38);background:rgba(255,107,90,.07)}
+  .cols{display:flex;gap:2.6vmin;align-items:stretch;flex-wrap:wrap}
+  .col{flex:1 1 28ch;min-width:22ch}
+  .quiz-row{display:flex;flex-wrap:wrap;align-items:center;gap:2.4vmin;margin:1.2vmin 0}
+  .opts{display:flex;gap:1.6vmin;flex-wrap:wrap}
+  .opt{
+    min-height:6.2vmin;min-width:12vmin;padding:1.3vmin 2.4vmin;border-radius:1.2vmin;
+    border:1px solid rgba(255,193,77,.35);background:rgba(255,246,232,.06);
+    color:#fff6e8;font:700 clamp(18px,3.4vmin,36px) Calibri,Candara,'Segoe UI',sans-serif;
+    cursor:pointer;
+  }
+  .opt.ok{background:rgba(94,224,181,.18);border-color:#5ee0b5;color:#5ee0b5}
+  .opt.no{background:rgba(255,107,90,.16);border-color:#ff6b5a;color:#ff6b5a}
+  .stairs{width:100%;max-width:92vmin;height:auto;display:block;margin:0 auto}
+  table.times{border-collapse:collapse;width:100%;font-size:clamp(10px,1.55vmin,18px);text-align:center}
+  table.times th,table.times td{border:1px solid rgba(255,193,77,.2);padding:.35vmin .15vmin;line-height:1.15}
+  table.times th{background:rgba(255,193,77,.16);color:#ffc14d;font-weight:700}
+  table.times td.rh,table.times th.blank{background:rgba(94,224,181,.12);color:#5ee0b5;font-weight:800}
+  table.times tbody tr:nth-child(odd) td:not(.rh){background:rgba(255,246,232,.04)}
+  table.sq{border-collapse:collapse;width:100%;font-size:clamp(13px,2.15vmin,22px)}
+  table.sq th,table.sq td{border:1px solid rgba(255,193,77,.2);padding:.55vmin .8vmin;text-align:center}
+  table.sq th{background:rgba(255,193,77,.16);color:#ffc14d}
+  table.sq td.prop{text-align:left;font-weight:700;color:#fff6e8;background:rgba(255,246,232,.04)}
+  table.sq tbody tr:nth-child(even) td:not(.prop){background:rgba(94,224,181,.05)}
+  table.si{border-collapse:collapse;width:100%;font-size:clamp(12px,1.9vmin,20px)}
+  table.si th,table.si td{border:1px solid rgba(255,193,77,.18);padding:.45vmin 1vmin;text-align:left}
+  table.si th{background:rgba(255,193,77,.14);color:#ffc14d}
+  table.si td.prop{font-weight:700;color:#fff6e8;width:18%}
+  table.si .mono{font-family:ui-monospace,Consolas,monospace;color:#5ee0b5;font-weight:700}
+  table.si .sci{color:#ffc14d;font-family:'Cambria Math',Georgia,serif}
+  .ggrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1.4vmin}
+  .gcell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+         min-height:11vmin;border-radius:1.4vmin;border:1px solid rgba(255,193,77,.2);
+         background:rgba(255,246,232,.04)}
+  .glyph{font-size:clamp(28px,6.4vmin,72px);font-family:'Cambria Math',Georgia,serif;color:#fff6e8;line-height:1}
+  .gname{font-size:clamp(12px,2vmin,20px);color:#ffc14d;margin-top:.6vmin;letter-spacing:.04em}
+  .plist{display:grid;grid-template-columns:auto auto auto 1fr;gap:.35vmin 1.6vmin;align-items:center;
+         font-size:clamp(18px,3.3vmin,36px);width:min(78ch,100%)}
+  .plist .nm{color:#ffc14d;font-weight:700}
+  .plist .sy{color:#5ee0b5;font-family:'Cambria Math',Georgia,serif;font-weight:700}
+  .plist .arr{color:#b7a894}
+  .dash{height:0;border-top:.35vmin dashed rgba(255,246,232,.28);grid-column:1/-1;margin:.6vmin 0}
+  .tchart{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid rgba(255,193,77,.28);
+          border-radius:1.4vmin;overflow:hidden;min-height:0;flex:1}
+  .tchart .hd{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;
+              border-bottom:1px solid rgba(255,193,77,.28);background:rgba(255,193,77,.08)}
+  .tchart .cell{padding:1.5vmin 2.2vmin;font-size:clamp(18px,3.4vmin,38px);
+                font-family:'Cambria Math',Georgia,serif;border-bottom:1px solid rgba(255,193,77,.12)}
+  .tchart .cell:nth-child(odd){border-right:1px solid rgba(255,193,77,.18)}
+  .tchart .L{color:#ffc14d}
+  .tchart .R{color:#fff6e8}
+  .note{
+    display:flex;flex-wrap:wrap;gap:2vmin;align-items:flex-start;
+    border:1px solid rgba(255,193,77,.3);border-radius:1.4vmin;padding:2vmin 2.4vmin;
+    background:rgba(255,193,77,.07)
+  }
+  .pill{display:inline-block;font-size:clamp(14px,2.4vmin,24px);letter-spacing:.14em;text-transform:uppercase;
+        font-weight:800;color:#100b08;background:#ffc14d;border-radius:999px;padding:.4vmin 1.6vmin}
+  .trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2vmin}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:3vmin;align-items:start}
+  .vline{width:1px;background:linear-gradient(#ffc14d,transparent);justify-self:center}
+  .stack{display:flex;flex-direction:column;gap:1.1vmin}
+  .idline{font-size:clamp(20px,4vmin,46px);font-family:'Cambria Math',Georgia,serif;color:#ffc14d}
+  .idline .rest{color:#fff6e8}
+  .para{
+    width:100%;max-width:46vmin;height:22vmin;
+  }
+  .hint{margin-top:auto;font-size:clamp(12px,1.9vmin,18px);color:#6e6256}
+  .btn{border:0;border-radius:12px;padding:1.4vmin 2.6vmin;cursor:pointer;
+       font:700 clamp(16px,2.8vmin,28px) Calibri,Candara,'Segoe UI',sans-serif;
+       color:#100b08;background:linear-gradient(135deg,#ffc14d,#ff6b5a)}
+  @media print{
+    .step{opacity:1!important;transform:none!important}
+    #bg,#paper,#glyphs,.no-print{display:none!important}
+    .page{background:#100b08!important}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="paper"></div>
+<div id="glyphs" aria-hidden="true"></div>
+
+<!-- 1 icebreaker -->
+<section class="page">
+  <div class="wrap center">
+    <p class="kicker">Warm-up</p>
+    <div class="zh">這很容易</div>
+    <div class="en step">This is easy</div>
+    <p class="lede step" style="margin-top:3vmin">Read it aloud. Language is a tool — math is another one.</p>
+  </div>
+</section>
+
+<!-- 2 meme rebuilt as stairs -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Do not skip the stairs</h2>
+    <p class="lede">Wanting the black hole without the algebra.</p>
+    <svg class="stairs step" viewBox="0 0 900 420" role="img" aria-label="Skipping foundational math steps">
+      <defs>
+        <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#24180f"/>
+        </linearGradient>
+      </defs>
+      <rect x="40" y="40" width="820" height="340" rx="18" fill="rgba(255,246,232,.04)" stroke="rgba(255,193,77,.25)"/>
+      <!-- steps -->
+      <g fill="#2a1d14" stroke="#ffc14d" stroke-width="1.2">
+        <rect x="80" y="330" width="160" height="28" rx="4"/>
+        <rect x="200" y="292" width="160" height="28" rx="4"/>
+        <rect x="320" y="254" width="160" height="28" rx="4"/>
+        <rect x="440" y="216" width="160" height="28" rx="4"/>
+        <rect x="560" y="178" width="160" height="28" rx="4"/>
+        <rect x="680" y="140" width="160" height="28" rx="4"/>
+      </g>
+      <text x="160" y="350" text-anchor="middle" fill="#5ee0b5" font-size="16" font-family="Calibri,sans-serif">calculus</text>
+      <text x="400" y="248" text-anchor="middle" fill="#ffc14d" font-size="15" font-family="Calibri,sans-serif">differential equations</text>
+      <text x="520" y="210" text-anchor="middle" fill="#ffc14d" font-size="15" font-family="Calibri,sans-serif">probability &amp; statistics</text>
+      <text x="760" y="128" text-anchor="middle" fill="#ff6b5a" font-size="16" font-family="Calibri,sans-serif">how a black hole works</text>
+      <!-- jumper -->
+      <circle cx="210" cy="300" r="16" fill="#ffc14d"/>
+      <path d="M210 316 L198 360 L222 360 Z" fill="#e8dcc8"/>
+      <path d="M218 320 Q420 80 740 148" fill="none" stroke="#ff6b5a" stroke-width="3" stroke-dasharray="8 7"/>
+      <text x="210" y="288" text-anchor="middle" fill="#fff6e8" font-size="14" font-family="Calibri,sans-serif">me, interested in physics</text>
+    </svg>
+    <p class="sub step">This deck is the missing staircase: class-10 math you actually need.</p>
+  </div>
+</section>
+
+<!-- 3 quiz -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Ultra basic math — can you do this or not</h2>
+    <div class="quiz-row">
+      <div class="eq"><span class="frac"><span>1</span><span>2</span></span>
+        <span>+</span>
+        <span class="frac"><span>1</span><span>3</span></span>
+        <span>=</span>
+      </div>
+      <div class="opts">
+        <button class="opt clickable" onclick="grade(this,false)">
+          <span class="frac"><span>2</span><span>5</span></span>
+        </button>
+        <button class="opt clickable" onclick="grade(this,true)">
+          <span class="frac"><span>5</span><span>6</span></span>
+        </button>
+      </div>
+    </div>
+    <p class="lede step">Common trap: adding numerators and denominators. LCD of 2 and 3 is 6.</p>
+    <div class="quiz-row step">
+      <div class="eq">[(2)<sup>2</sup>]<sup>3</sup> =</div>
+      <div class="opts">
+        <button class="opt clickable" onclick="grade(this,true)">(2)<sup>6</sup></button>
+        <button class="opt clickable" onclick="grade(this,false)">(2)<sup>8</sup></button>
+      </div>
+    </div>
+    <p class="lede step">(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup> so 2 × 3 = 6, not 2 + 3 = 8.</p>
+  </div>
+</section>
+
+<!-- 4 title -->
+<section class="page">
+  <div class="wrap center">
+    <p class="kicker">Chapter 00 · Toolkit</p>
+    <h1 class="title">Basic math up to class 10<sup>th</sup></h1>
+    <p class="sub step">Tables · squares · prefixes · roots · quadratics · identities</p>
+  </div>
+</section>
+
+<!-- 5 times table -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading chalk">Table</h2>
+    <table class="times"><thead><tr><th class="blank"></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th></tr></thead><tbody><tr class="step"><td class="rh">1</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td></tr><tr class="step"><td class="rh">2</td><td>2</td><td>4</td><td>6</td><td>8</td><td>10</td><td>12</td><td>14</td><td>16</td><td>18</td><td>20</td><td>22</td><td>24</td><td>26</td><td>28</td><td>30</td><td>32</td><td>34</td><td>36</td><td>38</td><td>40</td></tr><tr class="step"><td class="rh">3</td><td>3</td><td>6</td><td>9</td><td>12</td><td>15</td><td>18</td><td>21</td><td>24</td><td>27</td><td>30</td><td>33</td><td>36</td><td>39</td><td>42</td><td>45</td><td>48</td><td>51</td><td>54</td><td>57</td><td>60</td></tr><tr class="step"><td class="rh">4</td><td>4</td><td>8</td><td>12</td><td>16</td><td>20</td><td>24</td><td>28</td><td>32</td><td>36</td><td>40</td><td>44</td><td>48</td><td>52</td><td>56</td><td>60</td><td>64</td><td>68</td><td>72</td><td>76</td><td>80</td></tr><tr class="step"><td class="rh">5</td><td>5</td><td>10</td><td>15</td><td>20</td><td>25</td><td>30</td><td>35</td><td>40</td><td>45</td><td>50</td><td>55</td><td>60</td><td>65</td><td>70</td><td>75</td><td>80</td><td>85</td><td>90</td><td>95</td><td>100</td></tr><tr class="step"><td class="rh">6</td><td>6</td><td>12</td><td>18</td><td>24</td><td>30</td><td>36</td><td>42</td><td>48</td><td>54</td><td>60</td><td>66</td><td>72</td><td>78</td><td>84</td><td>90</td><td>96</td><td>102</td><td>108</td><td>114</td><td>120</td></tr><tr class="step"><td class="rh">7</td><td>7</td><td>14</td><td>21</td><td>28</td><td>35</td><td>42</td><td>49</td><td>56</td><td>63</td><td>70</td><td>77</td><td>84</td><td>91</td><td>98</td><td>105</td><td>112</td><td>119</td><td>126</td><td>133</td><td>140</td></tr><tr class="step"><td class="rh">8</td><td>8</td><td>16</td><td>24</td><td>32</td><td>40</td><td>48</td><td>56</td><td>64</td><td>72</td><td>80</td><td>88</td><td>96</td><td>104</td><td>112</td><td>120</td><td>128</td><td>136</td><td>144</td><td>152</td><td>160</td></tr><tr class="step"><td class="rh">9</td><td>9</td><td>18</td><td>27</td><td>36</td><td>45</td><td>54</td><td>63</td><td>72</td><td>81</td><td>90</td><td>99</td><td>108</td><td>117</td><td>126</td><td>135</td><td>144</td><td>153</td><td>162</td><td>171</td><td>180</td></tr><tr class="step"><td class="rh">10</td><td>10</td><td>20</td><td>30</td><td>40</td><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td><td>180</td><td>190</td><td>200</td></tr></tbody></table>
+    <p class="hint no-print">Each row of products appears on Next. First column is the multiplier.</p>
+  </div>
+</section>
+
+<!-- 6 squares cubes -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading chalk">Square / Cube</h2>
+    <div class="cols">
+      <div class="col"><table class="sq"><thead><tr><th>Number</th><th>Square</th><th>Cube</th><th>Root</th></tr></thead><tbody><tr><td class="prop">1</td><td class="step">1</td><td class="step">1</td><td class="step">1</td></tr><tr><td class="prop">2</td><td class="step">4</td><td class="step">8</td><td class="step">1.414</td></tr><tr><td class="prop">3</td><td class="step">9</td><td class="step">27</td><td class="step">1.732</td></tr><tr><td class="prop">4</td><td class="step">16</td><td class="step">64</td><td class="step">2</td></tr><tr><td class="prop">5</td><td class="step">25</td><td class="step">125</td><td class="step">2.23</td></tr><tr><td class="prop">6</td><td class="step">36</td><td class="step">216</td><td class="step">2.45</td></tr><tr><td class="prop">7</td><td class="step">49</td><td class="step">343</td><td class="step">2.64</td></tr><tr><td class="prop">8</td><td class="step">64</td><td class="step">512</td><td></td></tr><tr><td class="prop">9</td><td class="step">81</td><td class="step">729</td><td class="step">3</td></tr><tr><td class="prop">10</td><td class="step">100</td><td class="step">1000</td><td class="step">≈ 3.16 or π</td></tr><tr><td class="prop">11</td><td class="step">121</td><td class="step">1331</td><td></td></tr><tr><td class="prop">12</td><td class="step">144</td><td></td><td></td></tr><tr><td class="prop">13</td><td class="step">169</td><td></td><td></td></tr><tr><td class="prop">14</td><td class="step">196</td><td></td><td></td></tr><tr><td class="prop">15</td><td class="step">215</td><td></td><td></td></tr></tbody></table></div>
+      <div class="col"><table class="sq"><thead><tr><th>Number</th><th>Square</th><th>Cube</th><th>Root</th></tr></thead><tbody><tr><td class="prop">16</td><td class="step">256</td><td></td><td class="step">4</td></tr><tr><td class="prop">17</td><td class="step">289</td><td></td><td></td></tr><tr><td class="prop">18</td><td class="step">324</td><td></td><td></td></tr><tr><td class="prop">19</td><td class="step">361</td><td></td><td></td></tr><tr><td class="prop">20</td><td class="step">400</td><td class="step">8000</td><td></td></tr><tr><td class="prop">21</td><td class="step">441</td><td></td><td></td></tr><tr><td class="prop">22</td><td class="step">484</td><td></td><td></td></tr><tr><td class="prop">23</td><td class="step">529</td><td></td><td></td></tr><tr><td class="prop">24</td><td class="step">576</td><td></td><td></td></tr><tr><td class="prop">25</td><td class="step">625</td><td></td><td class="step">5</td></tr><tr><td class="prop">26</td><td class="step">676</td><td></td><td></td></tr><tr><td class="prop">27</td><td class="step">729</td><td></td><td></td></tr></tbody></table></div>
+    </div>
+    <p class="hint">Root of 10 is written as on the board: ≈ 3.16 or π. 15² is listed as 215 on the source slide.</p>
+  </div>
+</section>
+
+<!-- 7 greek -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Greek Letters</h2>
+    <div class="ggrid">
+      <div class="gcell"><span class="glyph">θ</span><span class="gname step">theta</span></div>
+      <div class="gcell"><span class="glyph">φ</span><span class="gname step">phi</span></div>
+      <div class="gcell"><span class="glyph">η</span><span class="gname step">eta</span></div>
+      <div class="gcell"><span class="glyph">μ</span><span class="gname step">mu</span></div>
+      <div class="gcell"><span class="glyph">ρ</span><span class="gname step">rho</span></div>
+      <div class="gcell"><span class="glyph">Δ</span><span class="gname step">Delta</span></div>
+      <div class="gcell"><span class="glyph">σ</span><span class="gname step">sigma</span></div>
+      <div class="gcell"><span class="glyph">Σ</span><span class="gname step">Sigma</span></div>
+      <div class="gcell"><span class="glyph">π</span><span class="gname step">pi</span></div>
+      <div class="gcell"><span class="glyph">α</span><span class="gname step">alpha</span></div>
+      <div class="gcell"><span class="glyph">β</span><span class="gname step">beta</span></div>
+      <div class="gcell"><span class="glyph">γ</span><span class="gname step">gamma</span></div>
+      <div class="gcell"><span class="glyph">δ</span><span class="gname step">delta</span></div>
+      <div class="gcell"><span class="glyph">λ</span><span class="gname step">lambda</span></div>
+      <div class="gcell"><span class="glyph">ω</span><span class="gname step">omega</span></div>
+      <div class="gcell"><span class="glyph">Ω</span><span class="gname step">Omega</span></div>
+      <div class="gcell"><span class="glyph">υ</span><span class="gname step">upsilon</span></div>
+      <div class="gcell"><span class="glyph">τ</span><span class="gname step">tau</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 prefix divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title chalk">Prefix</h1>
+    <p class="sub step">Names that stretch a unit by powers of ten.</p>
+  </div>
+</section>
+
+<!-- 9 prefix list -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Prefix</h2>
+    <div class="plist">
+      <span class="nm">centi</span><span class="sy">c</span><span class="arr">→</span><span class="step eqn">10<sup>−2</sup></span>
+      <span class="nm">milli</span><span class="sy">m</span><span class="arr">→</span><span class="step eqn">10<sup>−3</sup></span>
+      <span class="nm">micro</span><span class="sy">μ</span><span class="arr">→</span><span class="step eqn">10<sup>−6</sup></span>
+      <span class="nm">nano</span><span class="sy">n</span><span class="arr">→</span><span class="step eqn">10<sup>−9</sup></span>
+      <span class="nm">pico</span><span class="sy">p</span><span class="arr">→</span><span class="step eqn">10<sup>−12</sup></span>
+      <span class="nm">femto</span><span class="sy">f</span><span class="arr">→</span><span class="step eqn">10<sup>−15</sup></span>
+      <span class="dash"></span>
+      <span class="nm">kilo</span><span class="sy">K</span><span class="arr">→</span><span class="step eqn">10<sup>3</sup></span>
+      <span class="nm">mega</span><span class="sy">M</span><span class="arr">→</span><span class="step eqn">10<sup>6</sup></span>
+      <span class="nm">giga</span><span class="sy">G</span><span class="arr">→</span><span class="step eqn">10<sup>9</sup></span>
+    </div>
+    <div class="cols" style="margin-top:2vmin">
+      <div class="card warm"><span class="gold">1 fermi</span> <span class="step">= 10<sup>−15</sup> m</span></div>
+      <div class="card cool"><span class="jade">1 Å (Ångström)</span> <span class="step">= 10<sup>−10</sup> m</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 full SI -->
+<section class="page">
+  <div class="wrap dense">
+    <h2 class="heading chalk">Prefix</h2>
+    <table class="si"><thead><tr><th>Prefix</th><th>Symbol</th><th>Multiplying factor</th></tr></thead><tbody><tr><td class="prop">yotta</td><td class="step mono">Y</td><td class="step">1 000 000 000 000 000 000 000 000 <span class="sci">= 10<sup>24</sup></span></td></tr><tr><td class="prop">zetta</td><td class="step mono">Z</td><td class="step">1 000 000 000 000 000 000 000 <span class="sci">= 10<sup>21</sup></span></td></tr><tr><td class="prop">exa</td><td class="step mono">E</td><td class="step">1 000 000 000 000 000 000 <span class="sci">= 10<sup>18</sup></span></td></tr><tr><td class="prop">peta</td><td class="step mono">P</td><td class="step">1 000 000 000 000 000 <span class="sci">= 10<sup>15</sup></span></td></tr><tr><td class="prop">tera</td><td class="step mono">T</td><td class="step">1 000 000 000 000 <span class="sci">= 10<sup>12</sup></span></td></tr><tr><td class="prop">giga</td><td class="step mono">G</td><td class="step">1 000 000 000 <span class="sci">= 10<sup>9</sup></span></td></tr><tr><td class="prop">mega</td><td class="step mono">M</td><td class="step">1 000 000 <span class="sci">= 10<sup>6</sup></span></td></tr><tr><td class="prop">kilo</td><td class="step mono">k</td><td class="step">1 000 <span class="sci">= 10<sup>3</sup></span></td></tr><tr><td class="prop">hecto</td><td class="step mono">h</td><td class="step">100 <span class="sci">= 10<sup>2</sup></span></td></tr><tr><td class="prop">deka</td><td class="step mono">da</td><td class="step">10 <span class="sci">= 10<sup>1</sup></span></td></tr><tr><td class="prop">deci</td><td class="step mono">d</td><td class="step">0.1 <span class="sci">= 10<sup>-1</sup></span></td></tr><tr><td class="prop">centi</td><td class="step mono">c</td><td class="step">0.01 <span class="sci">= 10<sup>-2</sup></span></td></tr><tr><td class="prop">milli</td><td class="step mono">m</td><td class="step">0.001 <span class="sci">= 10<sup>-3</sup></span></td></tr><tr><td class="prop">micro</td><td class="step mono">μ</td><td class="step">0.000 001 <span class="sci">= 10<sup>-6</sup></span></td></tr><tr><td class="prop">nano</td><td class="step mono">n</td><td class="step">0.000 000 001 <span class="sci">= 10<sup>-9</sup></span></td></tr><tr><td class="prop">pico</td><td class="step mono">p</td><td class="step">0.000 000 000 001 <span class="sci">= 10<sup>-12</sup></span></td></tr><tr><td class="prop">femto</td><td class="step mono">f</td><td class="step">0.000 000 000 000 001 <span class="sci">= 10<sup>-15</sup></span></td></tr><tr><td class="prop">atto</td><td class="step mono">a</td><td class="step">0.000 000 000 000 000 001 <span class="sci">= 10<sup>-18</sup></span></td></tr><tr><td class="prop">zepto</td><td class="step mono">z</td><td class="step">0.000 000 000 000 000 000 001 <span class="sci">= 10<sup>-21</sup></span></td></tr><tr><td class="prop">yocto</td><td class="step mono">y</td><td class="step">0.000 000 000 000 000 000 000 001 <span class="sci">= 10<sup>-24</sup></span></td></tr></tbody></table>
+  </div>
+</section>
+
+<!-- 11 root section -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title chalk">What is Root of question</h1>
+    <p class="sub step">A root is a value of the unknown that makes the equation true.</p>
+  </div>
+</section>
+
+<!-- 12 T chart -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">ROOT of equation</h2>
+    <div class="tchart">
+      <div class="hd">
+        <div class="cell L">Equation</div>
+        <div class="cell R">ROOT of equation</div>
+      </div>
+      <div class="cell L">x − 4 = 0</div>
+      <div class="cell R step">x = 4</div>
+      <div class="cell L">(x − 1)(x − 2)(x − 3)(x − 4) = 0</div>
+      <div class="cell R step">x = 1, 2, 3, 4</div>
+      <div class="cell L">(x − 5)(x − 9)(x − 11) = 0</div>
+      <div class="cell R step">x = 5, 9, 11</div>
+      <div class="cell L">(x − 11)(x − 13) = 0</div>
+      <div class="cell R step">x = 11, 13</div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 hidden in PPT — teaching note kept -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">ROOT of equation</h2>
+    <div class="note">
+      <span class="pill">NOTE</span>
+      <div class="stack" style="flex:1">
+        <div class="eq">For (x − 11)(x − 13) = 0</div>
+        <div class="eq step">x<sup>2</sup> − 24x + 143 = 0</div>
+        <div class="eq"><span class="gold">Sum of root’s</span></div>
+        <div class="eq step">11 + 13 = 24 = −b / a</div>
+        <div class="eq"><span class="gold">Product of root</span></div>
+        <div class="eq step">11 × 13 = 143 = c / a</div>
+        <div class="eq step">If ax<sup>2</sup> + bx + c = 0</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 quadratic divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title chalk">Quadratic equation</h1>
+    <p class="sub step">Degree 2. At most two real roots.</p>
+  </div>
+</section>
+
+<!-- 15 discriminant -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Quadratic equation</h2>
+    <div class="eq">ax<sup>2</sup> + bx + c = 0</div>
+    <div class="eq step">x = (−b ± √(b<sup>2</sup> − 4ac)) / (2a)</div>
+    <svg class="para step" viewBox="0 0 320 120" aria-hidden="true">
+      <line x1="10" y1="90" x2="310" y2="90" stroke="rgba(255,246,232,.35)" stroke-width="2"/>
+      <line x1="160" y1="10" x2="160" y2="110" stroke="rgba(255,246,232,.25)" stroke-width="2"/>
+      <path d="M30 100 Q160 -10 290 100" fill="none" stroke="#ffc14d" stroke-width="3"/>
+    </svg>
+    <div class="trio">
+      <div class="card cool">
+        <div class="eq">b<sup>2</sup> − 4ac &gt; 0</div>
+        <p class="lede step">It will have 2 solution</p>
+      </div>
+      <div class="card warm">
+        <div class="eq">b<sup>2</sup> − 4ac = 0</div>
+        <p class="lede step">It will have 1 solution</p>
+      </div>
+      <div class="card hot">
+        <div class="eq">b<sup>2</sup> − 4ac &lt; 0</div>
+        <p class="lede step">It will have NO solution</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 how to solve divider -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title chalk">How to solve equation</h1>
+    <p class="sub step">Isolate the unknown. Do the same to both sides.</p>
+  </div>
+</section>
+
+<!-- 17 single variable -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">How to solve equation</h2>
+    <div class="split">
+      <p class="lede">When solving equation if it is single variable equation then we are simply solving it.</p>
+      <div class="stack">
+        <div class="eq gold">→ x<sup>2</sup> = 9</div>
+        <div class="eq step">x = ± 3</div>
+        <div class="eq gold step">→ x<sup>2</sup> = 9x</div>
+        <div class="eq step">x<sup>2</sup> − 9x = 0</div>
+        <div class="eq step">x(x − 9) = 0</div>
+        <div class="eq step">x = 0 , x = 9</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 C and omega -->
+<section class="page">
+  <div class="wrap tight">
+    <div class="split">
+      <div class="stack">
+        <div class="eq gold">→ Solve for C</div>
+        <div class="eq">1/(ωC) − ωL = R</div>
+        <div class="eq step">1/(ωC) = R + ωL</div>
+        <div class="eq step">1/C = ω [R + ωL]</div>
+        <div class="eq step">C = 1 / (ω [R + ωL])</div>
+      </div>
+      <div class="stack">
+        <div class="eq gold">→ Solve for ω</div>
+        <div class="eq">1/(ωC) − ωL = R</div>
+        <div class="eq step">(1 − ω<sup>2</sup>LC) / (ωC) = R</div>
+        <div class="eq step">1 − ω<sup>2</sup>LC = ωCR</div>
+        <div class="eq step">0 = ω<sup>2</sup>LC + ωCR − 1</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 eliminate y / SHM -->
+<section class="page">
+  <div class="wrap">
+    <div class="split">
+      <div class="stack">
+        <div class="eq gold">→ Solve for x</div>
+        <div class="eq">3x = 4y − 7</div>
+        <div class="eq">4x = 2y − 17</div>
+        <p class="lede step">Here my first aim is to eliminate y</p>
+      </div>
+      <div class="stack">
+        <div class="eq gold">→ Solve for ω</div>
+        <p class="lede">assume v<sub>1</sub>, v<sub>2</sub>, x<sub>1</sub>, x<sub>2</sub> are known</p>
+        <div class="eq step">v<sub>1</sub> = ω √(A<sup>2</sup> − x<sub>1</sub><sup>2</sup>)</div>
+        <div class="eq step">v<sub>2</sub> = ω √(A<sup>2</sup> − x<sub>2</sub><sup>2</sup>)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 20 times relation -->
+<section class="page">
+  <div class="wrap">
+    <div class="split">
+      <div class="stack">
+        <div class="eq gold">→ Solve for relation between t<sub>1</sub>, t<sub>2</sub>, t</div>
+        <div class="eq step">t<sub>1</sub> = d / (v + u)</div>
+        <div class="eq step">t<sub>2</sub> = d / (v − u)</div>
+        <div class="eq step">t = d / v</div>
+      </div>
+      <div class="stack">
+        <div class="eq gold">→ Solve for relation between t<sub>1</sub>, t<sub>2</sub>, t</div>
+        <div class="eq step">t<sub>1</sub> = d / (v + u)</div>
+        <div class="eq step">t<sub>2</sub> = d / (v − u)</div>
+        <div class="eq step">t = d / u</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 21 identities left -->
+<section class="page">
+  <div class="wrap center">
+    <h1 class="title chalk">Basic Identity</h1>
+    <div class="stack" style="margin-top:3vmin;text-align:left">
+      <div class="idline step">(a + b)<sup>2</sup></div>
+      <div class="idline step">(a − b)<sup>2</sup></div>
+      <div class="idline step">a<sup>2</sup> − b<sup>2</sup></div>
+      <div class="idline step" style="margin-top:2vmin">(a + b)<sup>3</sup></div>
+      <div class="idline step">(a − b)<sup>3</sup></div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 identities expanded -->
+<section class="page">
+  <div class="wrap">
+    <h2 class="heading chalk">Basic Identity</h2>
+    <div class="stack">
+      <div class="idline">(a + b)<sup>2</sup> <span class="rest step">= a<sup>2</sup> + b<sup>2</sup> + 2ab</span></div>
+      <div class="idline">(a − b)<sup>2</sup> <span class="rest step">= a<sup>2</sup> + b<sup>2</sup> − 2ab</span></div>
+      <div class="idline">a<sup>2</sup> − b<sup>2</sup> <span class="rest step">= (a − b)(a + b)</span></div>
+      <div class="idline" style="margin-top:2vmin">(a + b)<sup>3</sup> <span class="rest step">= a<sup>3</sup> + b<sup>3</sup> + 3a<sup>2</sup>b + 3ab<sup>2</sup></span></div>
+      <div class="idline">(a − b)<sup>3</sup> <span class="rest step">= a<sup>3</sup> − b<sup>3</sup> − 3a<sup>2</sup>b + 3ab<sup>2</sup></span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+function grade(el, ok){
+  el.classList.add(ok ? 'ok' : 'no');
+}
+</script>
+
+<script>
+(function(){
+  try{
+    var box=document.getElementById('glyphs');
+    if(!box) return;
+    var set=['0','1','2','3','4','5','6','7','8','9','+','−','×','÷','√','π','Σ','θ','x²','a³','='];
+    var html='';
+    for(var i=0;i<28;i++){
+      var g=set[i%set.length];
+      var x=(Math.random()*100).toFixed(1), y=(Math.random()*100).toFixed(1);
+      var s=(2.4+Math.random()*5.5).toFixed(1);
+      var d=(16+Math.random()*18).toFixed(1), dl=(-Math.random()*20).toFixed(1);
+      html+='<span style="left:'+x+'%;top:'+y+'%;font-size:'+s+'vmin;animation-duration:'+d+'s;animation-delay:'+dl+'s">'+g+'</span>';
+    }
+    box.innerHTML=html;
+  }catch(e){}
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var renderer, scene, camera, grid, cubes=[], nums=[], raf, mode=0;
+  function haveWebGL(){
+    try{var c=document.createElement('canvas');
+      return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));
+    }catch(e){return false;}
+  }
+  function init(){
+    if(typeof THREE==='undefined'||!haveWebGL()) return;
+    var canvas=document.getElementById('bg');
+    if(!canvas) return;
+    function sizeOk(){return canvas.clientWidth>0 && canvas.clientHeight>0;}
+    function boot(){
+      if(!sizeOk()){requestAnimationFrame(boot);return;}
+      try{
+        renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+        renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);
+        renderer.setClearColor(0x000000,0);
+        scene=new THREE.Scene();
+        camera=new THREE.PerspectiveCamera(48, canvas.clientWidth/canvas.clientHeight, 0.1, 80);
+        camera.position.set(0,3.2,7.4);
+        var amb=new THREE.AmbientLight(0xffe6b8,0.55); scene.add(amb);
+        var d=new THREE.DirectionalLight(0xffc14d,0.85); d.position.set(4,8,2); scene.add(d);
+        var d2=new THREE.PointLight(0x5ee0b5,0.7,40); d2.position.set(-6,2,-4); scene.add(d2);
+        grid=new THREE.GridHelper(28,28,0xffc14d,0x5a4030);
+        grid.material.transparent=true; grid.material.opacity=0.28;
+        scene.add(grid);
+        var geo=new THREE.BoxGeometry(1,1,1);
+        for(var i=0;i<12;i++){
+          var mat=new THREE.MeshStandardMaterial({
+            color: i%2?0xffc14d:0x5ee0b5, metalness:0.35, roughness:0.4,
+            transparent:true, opacity:0.55, emissive:i%2?0x4a3208:0x0a3a2c, emissiveIntensity:0.35
+          });
+          var m=new THREE.Mesh(geo,mat);
+          var s=0.18+Math.random()*0.42;
+          m.scale.set(s,s,s);
+          m.position.set((Math.random()-0.5)*12, 0.4+Math.random()*4.5, (Math.random()-0.5)*10);
+          m.userData.spin=(Math.random()-0.5)*0.01;
+          scene.add(m); cubes.push(m);
+        }
+        // number sprites
+        var digits='0123456789+−π√';
+        for(var k=0;k<18;k++){
+          var cnv=document.createElement('canvas'); cnv.width=128; cnv.height=128;
+          var ctx=cnv.getContext('2d');
+          ctx.fillStyle='rgba(0,0,0,0)'; ctx.fillRect(0,0,128,128);
+          ctx.font='bold 86px Georgia'; ctx.fillStyle=k%3===0?'#ffc14d':'#fff6e8';
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(digits[k%digits.length],64,70);
+          var tex=new THREE.CanvasTexture(cnv);
+          var sm=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.55});
+          var sp=new THREE.Sprite(sm);
+          sp.scale.set(0.55,0.55,0.55);
+          sp.position.set((Math.random()-0.5)*14, Math.random()*5, (Math.random()-0.5)*12);
+          sp.userData.vy=0.002+Math.random()*0.004;
+          scene.add(sp); nums.push(sp);
+        }
+        running=true;
+        loop();
+      }catch(e){}
+    }
+    var running=false;
+    function loop(){
+      raf=requestAnimationFrame(loop);
+      var t=performance.now()*0.001;
+      camera.position.x=Math.sin(t*0.08)*1.4;
+      camera.lookAt(0,1.2,0);
+      grid.rotation.y=t*0.02;
+      for(var i=0;i<cubes.length;i++){
+        cubes[i].rotation.x+=cubes[i].userData.spin;
+        cubes[i].rotation.y+=0.006;
+        cubes[i].position.y+=Math.sin(t+i)*0.002;
+      }
+      for(var j=0;j<nums.length;j++){
+        nums[j].position.y+=nums[j].userData.vy;
+        if(nums[j].position.y>6) nums[j].position.y=0.2;
+      }
+      renderer.render(scene,camera);
+    }
+    window.addEventListener('resize',function(){
+      if(!renderer) return;
+      var w=canvas.clientWidth,h=canvas.clientHeight;
+      if(!w||!h) return;
+      camera.aspect=w/h; camera.updateProjectionMatrix();
+      renderer.setSize(w,h,false);
+    });
+    window.addEventListener('message',function(e){
+      if(!e.data||e.data.type!=='lf-show') return;
+      mode=e.data.index||0;
+      if(!grid) return;
+      var hues=[0xffc14d,0x5ee0b5,0xff6b5a,0xd4a574];
+      grid.material.color.setHex(hues[mode%hues.length]);
+    });
+    var started=false;
+    function start(){ if(started) return; started=true; setTimeout(boot,0); }
+    if(document.readyState==='complete') start();
+    else window.addEventListener('load', start);
+  }
+  init();
+})();
+</script>
+
+<script>
+(function(){
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if (document.getElementById('__lf-ctl')) return;
+      var pages = [].slice.call(document.querySelectorAll('.page'));
+      if (!pages.length) return;
+      var i = 0, step = 0;
+      var steps = function(p){ return [].slice.call(p.querySelectorAll('.step')); };
+      function applyHash(){
+        var hash = (location.hash || '').replace('#','');
+        if (/^\d+$/.test(hash)) {
+          i = Math.min(pages.length - 1, Math.max(0, parseInt(hash, 10) - 1));
+          step = steps(pages[i]).length;
+        }
+      }
+      applyHash();
+      window.addEventListener('hashchange', function(){ applyHash(); render(); });
+      function render(){
+        pages.forEach(function(p,k){ p.style.display = k===i ? '' : 'none'; });
+        steps(pages[i]).forEach(function(s,k){
+          s.style.transition = 'opacity .4s, transform .4s';
+          s.style.opacity = k < step ? '1' : '0';
+          s.style.transform = k < step ? 'none' : 'translateY(14px)';
+        });
+      }
+      function next(){ var n = steps(pages[i]).length;
+        if (step < n) step++; else if (i < pages.length-1){ i++; step = 0; } render(); }
+      function prev(){ if (step > 0) step--; else if (i > 0){ i--; step = steps(pages[i]).length; } render(); }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ') next();
+        else if (e.key === 'ArrowLeft') prev();
+      });
+      document.addEventListener('click', function(e){ if (!e.target.closest('.clickable')) next(); });
+      render();
+    }, 250);
+  });
+})();
+</script>
+</body>
+</html>
