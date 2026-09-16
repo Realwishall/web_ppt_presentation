@@ -1,0 +1,1514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Module 04 · v–u Graphs for Lenses &amp; Mirrors</title>
+<script>document.documentElement.className += ' js';</script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.min.js" defer></script>
+<style>
+/* ============================================================
+   MODULE 04 — v–u GRAPHS FOR LENSES AND MIRRORS
+   Dark board theme · vmin/clamp typography · zero build step
+   NOTE: no display/opacity/visibility rules are ever applied
+         to `.page` elements here — the host panel owns that.
+   ============================================================ */
+:root{
+  --bg:#05070f; --bg2:#0a0f1c;
+  --ink:#eaf0ff; --muted:#94a3c8; --dim:#6d7ba0;
+  --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.055);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --cy:#3fe0ff; --am:#ffc247; --mg:#ff62a8; --gr:#54e08a; --vi:#a98bff; --rd:#ff6b6b;
+  --r:clamp(12px,1.6vmin,20px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Inter','Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+  font-size:clamp(17px,2.95vmin,34px); line-height:1.5;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+h1,h2,h3,h4{margin:0;line-height:1.08;font-weight:800;letter-spacing:-.02em}
+h1{font-size:clamp(34px,8.6vmin,98px)}
+h2{font-size:clamp(26px,6.2vmin,66px)}
+h3{font-size:clamp(19px,3.7vmin,42px)}
+p{margin:0}
+small{font-size:clamp(12px,1.9vmin,21px)}
+b,strong{font-weight:800}
+em{font-style:italic;color:var(--am)}
+
+/* ---------- persistent layers (siblings of .page, never toggled) ---------- */
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bgfx .dots{position:absolute;inset:-10%;
+  background-image:radial-gradient(rgba(255,255,255,.10) 1px, transparent 1px);
+  background-size:clamp(22px,3vmin,40px) clamp(22px,3vmin,40px);
+  mask-image:radial-gradient(ellipse 90% 70% at 50% 45%, #000 25%, transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 45%, #000 25%, transparent 78%);
+  opacity:.5}
+.orb{position:absolute;border-radius:50%;filter:blur(clamp(50px,9vmin,130px));opacity:.20}
+.orb.a{width:52vmax;height:52vmax;left:-16vmax;top:-18vmax;background:radial-gradient(circle,#1d6cff,transparent 62%);animation:drift1 46s ease-in-out infinite}
+.orb.b{width:44vmax;height:44vmax;right:-14vmax;bottom:-16vmax;background:radial-gradient(circle,#7a2bff,transparent 62%);animation:drift2 58s ease-in-out infinite}
+.orb.c{width:34vmax;height:34vmax;left:38%;top:44%;background:radial-gradient(circle,#00d0ff,transparent 64%);opacity:.10;animation:drift3 70s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(7vmax,5vmax,0)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-6vmax,-4vmax,0)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-5vmax,4vmax,0) scale(1.18)}}
+
+#prog{position:fixed;left:0;top:0;height:4px;width:100%;z-index:60;background:rgba(255,255,255,.07)}
+#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--vi) 60%,var(--mg));
+  box-shadow:0 0 14px rgba(63,224,255,.7);transition:width .45s cubic-bezier(.2,.8,.2,1)}
+#tag{position:fixed;left:clamp(10px,1.6vw,22px);bottom:clamp(10px,1.6vh,20px);z-index:60;
+  font-size:clamp(10px,1.5vmin,16px);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+  pointer-events:none;font-weight:700}
+#pager{position:fixed;right:clamp(10px,1.8vw,26px);bottom:clamp(10px,1.8vh,22px);z-index:61;
+  display:flex;align-items:center;gap:.5em;font-size:clamp(12px,1.9vmin,20px)}
+body.hosted #pager{display:none}
+#pager button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  width:2.1em;height:2.1em;border-radius:999px;cursor:pointer;display:grid;place-items:center;
+  transition:.2s;font-size:1em}
+#pager button:hover{background:rgba(63,224,255,.22);border-color:var(--cy);transform:translateY(-2px)}
+#pcount{color:var(--muted);min-width:4.4em;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+#toast{position:fixed;left:50%;bottom:clamp(60px,10vh,110px);transform:translate(-50%,20px);z-index:70;
+  background:rgba(10,16,30,.94);border:1px solid var(--line);border-left:3px solid var(--cy);
+  padding:.6em 1.1em;border-radius:12px;opacity:0;pointer-events:none;transition:.35s;
+  font-size:clamp(13px,2.1vmin,24px);box-shadow:0 18px 50px rgba(0,0,0,.6);max-width:80vw}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- deck & sheets ---------- */
+#deck{position:relative;z-index:1}
+.page{position:relative;padding:clamp(26px,5.6vh,74px) clamp(20px,6.4vw,110px) clamp(46px,8vh,90px);
+  min-height:100vh}
+.sheet{max-width:min(1720px,96vw);margin:0 auto;min-height:calc(100vh - clamp(72px,13.6vh,164px));
+  display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2.2vh,30px)}
+.sheet.top{justify-content:flex-start}
+
+.kicker{display:inline-flex;align-items:center;gap:.55em;font-size:clamp(11px,1.8vmin,20px);
+  letter-spacing:.2em;text-transform:uppercase;color:var(--cy);font-weight:800}
+.kicker::before{content:'';width:2.2em;height:2px;background:currentColor;opacity:.7}
+.lead{color:var(--muted);font-size:clamp(16px,2.9vmin,34px);max-width:56ch}
+.muted{color:var(--muted)}
+.hl-cy{color:var(--cy)} .hl-am{color:var(--am)} .hl-mg{color:var(--mg)} .hl-gr{color:var(--gr)} .hl-vi{color:var(--vi)} .hl-rd{color:var(--rd)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:clamp(14px,2.4vmin,34px);backdrop-filter:blur(6px)}
+.card.glow{box-shadow:0 0 0 1px rgba(63,224,255,.14),0 22px 60px -30px rgba(63,224,255,.5)}
+.grid{display:grid;gap:clamp(12px,2vmin,28px)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1000px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- CSS math (no KaTeX dependency — never fails to render) ---------- */
+.eq{font-family:'Cambria Math','Latin Modern Math',Georgia,serif;font-style:italic;
+  font-size:clamp(21px,4.4vmin,50px);letter-spacing:.01em;display:inline-flex;align-items:center;
+  flex-wrap:wrap;gap:.12em}
+.eq .rm{font-style:normal}
+.frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:-.55em;
+  margin:0 .16em;font-size:.86em;line-height:1.18}
+.frac>span{padding:0 .22em}
+.frac>span:first-child{border-bottom:.075em solid currentColor}
+.big{font-size:clamp(26px,5.6vmin,64px)}
+.var{font-family:'Cambria Math',Georgia,serif;font-style:italic}
+
+/* ---------- recipe / stages ---------- */
+.recipe{counter-reset:rc;list-style:none;margin:0;padding:0;display:grid;gap:clamp(10px,1.8vmin,22px)}
+.recipe li{counter-increment:rc;position:relative;padding-left:clamp(52px,7.6vmin,96px);
+  background:linear-gradient(90deg,rgba(63,224,255,.07),rgba(255,255,255,.012));
+  border:1px solid var(--line);border-radius:var(--r);padding-top:clamp(12px,2vmin,26px);
+  padding-bottom:clamp(12px,2vmin,26px);padding-right:clamp(12px,2vmin,26px)}
+.recipe li::before{content:counter(rc);position:absolute;left:clamp(12px,1.9vmin,26px);top:50%;
+  transform:translateY(-50%);width:2.1em;height:2.1em;border-radius:999px;display:grid;place-items:center;
+  background:radial-gradient(circle at 32% 28%,#5ce8ff,#1170ff);color:#02060f;font-weight:900;
+  font-size:clamp(14px,2.4vmin,28px);box-shadow:0 0 22px rgba(63,224,255,.55)}
+.recipe li b{font-size:clamp(17px,3.1vmin,36px)}
+.recipe li p{color:var(--muted);font-size:clamp(14px,2.5vmin,29px);margin-top:.2em}
+
+/* ---------- controls ---------- */
+.seg{display:flex;flex-wrap:wrap;gap:.4em;background:rgba(0,0,0,.35);padding:.35em;
+  border-radius:999px;border:1px solid var(--line)}
+.seg button{flex:1 1 auto;border:0;background:transparent;color:var(--muted);cursor:pointer;
+  padding:.5em .9em;border-radius:999px;font:inherit;font-size:clamp(12px,2vmin,23px);font-weight:700;
+  transition:.25s;white-space:nowrap}
+.seg button:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+.seg button[aria-pressed="true"]{color:#04070f;background:linear-gradient(180deg,#7deaff,#25b6ff);
+  box-shadow:0 6px 22px -8px rgba(63,224,255,.9)}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;
+  font:inherit;font-size:clamp(13px,2.1vmin,24px);font-weight:700;padding:.55em 1em;border-radius:12px;
+  transition:.22s;display:inline-flex;align-items:center;gap:.5em}
+.btn:hover{border-color:var(--cy);background:rgba(63,224,255,.16);transform:translateY(-2px)}
+.btn.pri{background:linear-gradient(180deg,#7deaff,#1fa8ff);color:#04070f;border-color:transparent}
+.btn.pri:hover{filter:brightness(1.12)}
+.btn.gh{background:transparent}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.sw{display:inline-flex;align-items:center;gap:.55em;cursor:pointer;font-size:clamp(13px,2.1vmin,24px);
+  color:var(--muted);user-select:none}
+.sw input{appearance:none;width:2.4em;height:1.3em;border-radius:999px;background:rgba(255,255,255,.14);
+  position:relative;cursor:pointer;transition:.25s;border:1px solid var(--line);margin:0}
+.sw input::after{content:'';position:absolute;top:50%;left:.14em;transform:translateY(-50%);
+  width:.92em;height:.92em;border-radius:50%;background:var(--muted);transition:.25s}
+.sw input:checked{background:rgba(63,224,255,.35);border-color:var(--cy)}
+.sw input:checked::after{left:1.22em;background:var(--cy);box-shadow:0 0 12px var(--cy)}
+.sw:has(input:checked){color:var(--ink)}
+input[type=range]{appearance:none;width:100%;height:.42em;border-radius:999px;background:
+  linear-gradient(90deg,var(--vi),rgba(255,255,255,.14));outline:none;cursor:pointer;margin:.6em 0}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:1.5em;height:1.5em;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff,#7deaff);border:2px solid #0a0f1c;
+  box-shadow:0 0 16px rgba(63,224,255,.85);cursor:grab}
+input[type=range]::-moz-range-thumb{width:1.4em;height:1.4em;border-radius:50%;border:2px solid #0a0f1c;
+  background:#7deaff;box-shadow:0 0 16px rgba(63,224,255,.85);cursor:grab}
+.lab{font-size:clamp(11px,1.8vmin,20px);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);font-weight:800}
+.row{display:flex;align-items:center;gap:.8em;flex-wrap:wrap}
+.spread{justify-content:space-between}
+
+/* ---------- readouts ---------- */
+.ro{display:grid;grid-template-columns:repeat(auto-fit,minmax(clamp(96px,13vmin,170px),1fr));
+  gap:clamp(8px,1.3vmin,16px)}
+.ro div{background:rgba(0,0,0,.34);border:1px solid var(--line);border-radius:12px;
+  padding:.5em .7em;min-width:0}
+.ro .k{font-size:clamp(10px,1.6vmin,17px);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:800}
+.ro .v{font-size:clamp(15px,2.7vmin,32px);font-weight:800;font-variant-numeric:tabular-nums;
+  font-family:'Cambria Math',Georgia,serif;overflow-wrap:anywhere}
+
+/* ---------- plot shell ---------- */
+.plotbox{position:relative;min-height:0;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 120% 90% at 50% 40%,rgba(30,60,130,.20),rgba(2,4,10,.55));
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.plotbox svg.plot{display:block;width:100%;height:auto;max-height:min(64vh,760px);touch-action:none;cursor:crosshair}
+.tilebox svg.plot{max-height:none;cursor:pointer}
+.cap{font-size:clamp(12px,2vmin,23px);color:var(--muted);padding:.5em .9em;border-top:1px solid var(--line2);
+  background:rgba(0,0,0,.28)}
+
+/* svg plot styling */
+.g-grid line{stroke:rgba(255,255,255,.055);stroke-width:1}
+.g-grid line.maj{stroke:rgba(255,255,255,.11)}
+.g-ax{stroke:rgba(230,240,255,.62);stroke-width:2.4}
+.g-tk{fill:var(--dim);font-size:15px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.g-axlab{fill:#cfe0ff;font-size:22px;font-style:italic;font-family:'Cambria Math',Georgia,serif}
+.asy{stroke-width:3;fill:none}
+.asy.v{stroke:var(--am);stroke-dasharray:13 9;opacity:.95}
+.asy.h{stroke:var(--cy);stroke-dasharray:13 9;opacity:.95}
+.asy-lab{font-size:20px;font-weight:800;font-family:'Cambria Math',Georgia,serif}
+.quad line{stroke:rgba(255,255,255,.42);stroke-width:2;stroke-dasharray:6 8}
+.quad text{fill:rgba(255,255,255,.5);font-size:17px;font-family:ui-monospace,Menlo,monospace}
+.branch{fill:none;stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 0 8px rgba(255,98,168,.55))}
+.branch.lens{stroke:url(#bg-lens)} .branch.mir{stroke:url(#bg-mir)}
+.ovl{fill:none;stroke:var(--vi);stroke-width:3.6;stroke-dasharray:9 8;opacity:.9}
+.odo{fill:#fff;stroke:#04070f;stroke-width:3}
+.kp{fill:none;stroke:var(--gr);stroke-width:3.4}
+.mk line{stroke:rgba(255,255,255,.5);stroke-width:2;stroke-dasharray:5 6}
+.mk circle{fill:var(--am);stroke:#04070f;stroke-width:3;filter:drop-shadow(0 0 12px rgba(255,194,71,.9))}
+.mk text{fill:var(--am);font-size:19px;font-weight:800;font-family:ui-monospace,Menlo,monospace}
+.reg text{font-size:17px;font-weight:800;font-family:ui-sans-serif,system-ui,sans-serif}
+
+/* ---------- tiles ---------- */
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  cursor:pointer;transition:.3s cubic-bezier(.2,.8,.2,1);position:relative}
+.tile:hover{transform:translateY(-6px);border-color:rgba(63,224,255,.6);
+  box-shadow:0 26px 60px -30px rgba(63,224,255,.75)}
+.tile .th{display:flex;justify-content:space-between;align-items:baseline;gap:.6em;
+  padding:.55em .9em;border-bottom:1px solid var(--line2)}
+.tile .th b{font-size:clamp(14px,2.4vmin,28px)}
+.tile .th span{font-size:clamp(11px,1.8vmin,20px);color:var(--dim);font-family:ui-monospace,Menlo,monospace}
+.tile .tf{padding:.5em .9em;font-size:clamp(11px,1.85vmin,21px);color:var(--muted);
+  border-top:1px solid var(--line2);display:flex;justify-content:space-between;gap:.5em}
+.tile .go{color:var(--cy);font-weight:800;opacity:0;transition:.3s}
+.tile:hover .go{opacity:1}
+
+/* ---------- callouts ---------- */
+.trap{border-left:4px solid var(--rd);background:linear-gradient(90deg,rgba(255,107,107,.13),rgba(255,255,255,.015));
+  border-radius:0 var(--r) var(--r) 0;padding:clamp(12px,2vmin,26px);
+  border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tip{border-left:4px solid var(--gr);background:linear-gradient(90deg,rgba(84,224,138,.12),rgba(255,255,255,.015));
+  border-radius:0 var(--r) var(--r) 0;padding:clamp(12px,2vmin,26px);
+  border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.trap h4,.tip h4{font-size:clamp(15px,2.7vmin,31px);margin-bottom:.25em;display:flex;align-items:center;gap:.5em}
+.trap h4{color:#ff9d9d}.tip h4{color:#8ff0b4}
+.trap p,.tip p{font-size:clamp(14px,2.4vmin,28px);color:var(--muted)}
+.trap p b,.tip p b{color:var(--ink)}
+
+/* ---------- tables ---------- */
+.tw{overflow:auto;max-height:64vh;border:1px solid var(--line);border-radius:var(--r);background:rgba(0,0,0,.28)}
+table{border-collapse:collapse;width:100%;font-size:clamp(13px,2.25vmin,26px)}
+th,td{padding:.55em .8em;text-align:left;border-bottom:1px solid var(--line2);vertical-align:middle}
+th{background:rgba(63,224,255,.10);color:#bfeeff;font-size:clamp(11px,1.9vmin,21px);
+  letter-spacing:.1em;text-transform:uppercase;position:sticky;top:0;z-index:2;backdrop-filter:blur(4px)}
+tbody tr:hover{background:rgba(255,255,255,.045)}
+td.mono,.mono{font-family:'Cambria Math',Georgia,serif;font-style:italic;white-space:nowrap}
+
+/* ---------- quiz ---------- */
+.qwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(14px,2.4vmin,34px);align-items:start}
+@media(max-width:1000px){.qwrap{grid-template-columns:minmax(0,1fr)}}
+.opts{display:grid;gap:.6em}
+.opt{text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;
+  font:inherit;font-size:clamp(14px,2.5vmin,29px);font-weight:700;padding:.6em .9em;border-radius:12px;transition:.2s;
+  display:flex;align-items:center;gap:.7em}
+.opt .bdg{width:1.7em;height:1.7em;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.1);
+  font-size:.8em;flex:0 0 auto}
+.opt:hover:not(:disabled){border-color:var(--cy);background:rgba(63,224,255,.14);transform:translateX(4px)}
+.opt.ok{border-color:var(--gr);background:rgba(84,224,138,.2)}
+.opt.ok .bdg{background:var(--gr);color:#04140b}
+.opt.no{border-color:var(--rd);background:rgba(255,107,107,.18)}
+.opt.no .bdg{background:var(--rd);color:#1a0404}
+.opt:disabled{cursor:default}
+.expl{border-top:1px solid var(--line2);margin-top:.8em;padding-top:.8em;color:var(--muted);
+  font-size:clamp(13px,2.3vmin,26px)}
+.pips{display:flex;gap:.4em}
+.pip{width:2.2em;height:.42em;border-radius:99px;background:rgba(255,255,255,.14)}
+.pip.ok{background:var(--gr);box-shadow:0 0 10px rgba(84,224,138,.8)}
+.pip.no{background:var(--rd)}
+.pip.cur{background:var(--cy)}
+
+/* ---------- stage chips ---------- */
+.stages{display:grid;gap:.5em;counter-reset:st}
+.stchip{counter-increment:st;display:flex;gap:.7em;align-items:flex-start;text-align:left;width:100%;
+  background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;padding:.55em .8em;cursor:pointer;
+  color:var(--muted);font:inherit;font-size:clamp(13px,2.2vmin,25px);transition:.25s}
+.stchip::before{content:counter(st);width:1.7em;height:1.7em;flex:0 0 auto;border-radius:8px;display:grid;
+  place-items:center;background:rgba(255,255,255,.1);font-weight:900;font-size:.82em}
+.stchip:hover{color:var(--ink);border-color:rgba(63,224,255,.5)}
+.stchip.on{color:#04070f;background:linear-gradient(90deg,#7deaff,#25b6ff);border-color:transparent;font-weight:800}
+.stchip.on::before{background:rgba(0,0,0,.28);color:#eaf9ff}
+.scrub{height:clamp(150px,30vh,340px);overflow:auto;border:1px solid var(--line);border-radius:12px;
+  background:rgba(0,0,0,.3);scrollbar-width:thin}
+.scrub .filler{height:520%;pointer-events:none}
+.scrubhint{position:sticky;top:.4em;left:0;text-align:center;font-size:clamp(11px,1.7vmin,18px);
+  color:var(--dim);letter-spacing:.12em;text-transform:uppercase;font-weight:800;pointer-events:none}
+
+/* ---------- reveal system (inner elements only, never .page) ---------- */
+.js [data-rv]{opacity:0;transform:translateY(22px);
+  transition:opacity .75s cubic-bezier(.2,.75,.2,1),transform .75s cubic-bezier(.2,.75,.2,1);
+  transition-delay:calc(var(--d,0) * 85ms);will-change:opacity,transform}
+.js [data-rv="l"]{transform:translateX(-26px)}
+.js [data-rv="r"]{transform:translateX(26px)}
+.js [data-rv="z"]{transform:scale(.94)}
+.js [data-rv].rv-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js [data-rv]{opacity:1!important;transform:none!important;transition:none!important}
+  .orb{animation:none}
+}
+.pulse{animation:pls 2.6s ease-in-out infinite}
+@keyframes pls{0%,100%{opacity:.35}50%{opacity:1}}
+.scroll-hint{display:inline-flex;flex-direction:column;align-items:center;gap:.3em;color:var(--dim);
+  font-size:clamp(11px,1.7vmin,18px);letter-spacing:.18em;text-transform:uppercase}
+.scroll-hint i{display:block;width:1px;height:2.6em;background:linear-gradient(180deg,var(--cy),transparent);
+  animation:sh 2.2s ease-in-out infinite}
+@keyframes sh{0%{transform:scaleY(.2);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}
+  51%{transform-origin:bottom}100%{transform:scaleY(.2);transform-origin:bottom}}
+.foot{margin-top:auto;padding-top:clamp(10px,1.6vh,20px);border-top:1px solid var(--line2);
+  display:flex;justify-content:space-between;gap:1em;color:var(--dim);
+  font-size:clamp(10px,1.6vmin,17px);letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ==================== PERSISTENT LAYERS (outside every .page) ==================== -->
+<div class="bgfx" aria-hidden="true">
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="dots"></div>
+</div>
+<div id="prog" aria-hidden="true"><i></i></div>
+<div id="tag">Module 04 · Ray Optics · v–u Graphs</div>
+<nav id="pager" aria-label="Slide navigation">
+  <button id="pv" title="Previous (←)" aria-label="Previous slide">‹</button>
+  <span id="pcount">1 / 12</span>
+  <button id="pn" title="Next (→)" aria-label="Next slide">›</button>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<main id="deck">
+
+<!-- ========== 1 · COVER ========== -->
+<section class="page" data-title="Title" id="s-cover">
+  <div class="sheet">
+    <div class="grid g2" style="align-items:center;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)">
+      <div>
+        <p class="kicker" data-rv>Module 04 · Ray Optics · JEE Main + Advanced</p>
+        <h1 data-rv style="--d:1;margin:.25em 0 .3em">
+          <span class="var">v</span>–<span class="var">u</span> Graphs<br>
+          <span style="background:linear-gradient(90deg,var(--cy),var(--vi),var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent">Lenses &amp; Mirrors</span>
+        </h1>
+        <p class="lead" data-rv style="--d:2">Every <span class="var">v</span>–<span class="var">u</span> graph in ray optics is the
+          <b class="hl-cy">same rectangular hyperbola</b> — only its asymptotes move. Learn the
+          4-step recipe once, and all four cases become a 10-second question.</p>
+        <div class="row" data-rv style="--d:3;margin-top:1em">
+          <span class="btn gh" style="pointer-events:none">Slides 9 · 10 · 11</span>
+          <span class="btn gh" style="pointer-events:none">Interactive builder</span>
+          <span class="btn gh" style="pointer-events:none">4-Q identification quiz</span>
+        </div>
+        <div class="scroll-hint" data-rv style="--d:4;margin-top:1.4em"><i></i>scroll / →</div>
+      </div>
+      <div class="plotbox glow" data-rv="z" style="--d:2">
+        <div id="hero-plot"></div>
+        <div class="cap">Convex lens, <span class="var">f</span> = +20 cm — the curve draws itself: asymptotes first, then the two branches.</div>
+      </div>
+    </div>
+    <div class="foot"><span>Cartesian sign convention throughout</span><span>01 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 2 · SIGN CONVENTION ========== -->
+<section class="page" data-title="Sign convention" id="s-conv">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Before any graph</p>
+    <h2 data-rv style="--d:1">The sign convention — stated <span class="hl-am">once</span></h2>
+    <div class="grid g2" style="margin-top:.4em;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)">
+      <div class="card" data-rv="l" style="--d:2">
+        <h3 style="color:var(--cy)">Cartesian rules</h3>
+        <ol style="margin:.6em 0 0;padding-left:1.2em;color:var(--muted);font-size:clamp(14px,2.5vmin,29px);display:grid;gap:.5em">
+          <li>Incident light travels <b class="hl-cy">left → right</b> (+<span class="var">x</span>).</li>
+          <li>All distances are measured from the <b>pole</b> (mirror) or <b>optical centre</b> (lens).</li>
+          <li>Along the incident-light direction → <b class="hl-gr">positive</b>; opposite → <b class="hl-rd">negative</b>.</li>
+          <li>Heights above the axis → +ve; below → −ve.</li>
+        </ol>
+        <div class="tip" style="margin-top:.9em"><h4>⟹ The payoff</h4>
+          <p>A <b>real object always has u &lt; 0</b>. That single fact fixes which half of the
+          hyperbola your answer must live on.</p></div>
+      </div>
+      <div class="grid" style="gap:clamp(10px,1.8vmin,22px)" data-rv="r" style="--d:3">
+        <div class="card glow">
+          <p class="lab">Lens formula</p>
+          <p class="eq big" style="margin:.15em 0">
+            <span class="frac"><span>1</span><span class="var">v</span></span>
+            <span class="rm">−</span>
+            <span class="frac"><span>1</span><span class="var">u</span></span>
+            <span class="rm">=</span>
+            <span class="frac"><span>1</span><span class="var">f</span></span>
+            <span class="rm" style="margin-left:.7em;color:var(--dim)">,</span>
+            <span class="rm" style="margin-left:.35em"><span class="var">m</span> =
+            <span class="frac"><span class="var">v</span><span class="var">u</span></span></span>
+          </p>
+        </div>
+        <div class="card glow">
+          <p class="lab">Mirror formula</p>
+          <p class="eq big" style="margin:.15em 0">
+            <span class="frac"><span>1</span><span class="var">v</span></span>
+            <span class="rm">+</span>
+            <span class="frac"><span>1</span><span class="var">u</span></span>
+            <span class="rm">=</span>
+            <span class="frac"><span>1</span><span class="var">f</span></span>
+            <span class="rm" style="margin-left:.7em;color:var(--dim)">,</span>
+            <span class="rm" style="margin-left:.35em"><span class="var">m</span> = −
+            <span class="frac"><span class="var">v</span><span class="var">u</span></span></span>
+          </p>
+        </div>
+        <div class="card">
+          <p class="lab">Sign of <span class="var">f</span> — the whole syllabus in one line</p>
+          <div class="ro" style="margin-top:.5em">
+            <div><p class="k">Convex lens</p><p class="v hl-gr">+ve</p></div>
+            <div><p class="k">Concave lens</p><p class="v hl-rd">−ve</p></div>
+            <div><p class="k">Concave mirror</p><p class="v hl-rd">−ve</p></div>
+            <div><p class="k">Convex mirror</p><p class="v hl-gr">+ve</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Converging ⟹ f &gt; 0 · Diverging ⟹ f &lt; 0</span><span>02 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 3 · THE 4-STEP RECIPE ========== -->
+<section class="page" data-title="4-step recipe" id="s-recipe">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Slide 9 · The method</p>
+    <h2 data-rv style="--d:1">The 4-step recipe for <em>any</em> v–u graph</h2>
+    <p class="lead" data-rv style="--d:2">Both asymptotes come from one trick: <b class="hl-cy">make a quantity blow up</b>.</p>
+    <ol class="recipe" style="margin-top:.5em">
+      <li data-rv style="--d:3"><b>Put <span class="var">v</span> = ∞, solve for <span class="var">u</span></b>
+        <p>The image is at infinity ⟹ the object sits at the focus. This gives the <b class="hl-am">vertical asymptote</b>.</p></li>
+      <li data-rv style="--d:4"><b>Put <span class="var">u</span> = ∞, solve for <span class="var">v</span></b>
+        <p>Object at infinity ⟹ image forms at the focus. This gives the <b class="hl-cy">horizontal asymptote</b>.</p></li>
+      <li data-rv style="--d:5"><b>Shift the origin to where the two asymptotes cross</b>
+        <p>That crossing point <b>(u₀ , v₀)</b> is the <b class="hl-vi">new origin</b>. Draw the four new quadrant lines through it.</p></li>
+      <li data-rv style="--d:6"><b>Draw the rectangular hyperbola through (0, 0) and the diagonally opposite zone</b>
+        <p>The curve always passes through the <b>true</b> origin, and its two branches occupy
+        <b>diagonally opposite</b> quadrants of the new origin.</p></li>
+    </ol>
+    <div class="grid g2" style="margin-top:.4em">
+      <div class="tip" data-rv="l" style="--d:7"><h4>Which two opposite zones?</h4>
+        <p>Lens: <span class="mono">(u+f)(v−f) = −f²</span> ⟹ zones <b>II &amp; IV</b> of the new origin, branches <b class="hl-gr">rising</b>.<br>
+        Mirror: <span class="mono">(u−f)(v−f) = +f²</span> ⟹ zones <b>I &amp; III</b>, branches <b class="hl-rd">falling</b>.</p></div>
+      <div class="trap" data-rv="r" style="--d:8"><h4>⚠ Step 4 is where marks are lost</h4>
+        <p>Students draw the hyperbola <b>missing the origin</b>. Object at the pole/optical centre
+        gives image at the pole/optical centre — so <b>(0, 0) is always on the curve</b>, for all four cases.</p></div>
+    </div>
+    <div class="foot"><span>Asymptotes ⟹ shift ⟹ hyperbola</span><span>03 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 4 · WHY THE ASYMPTOTES ========== -->
+<section class="page" data-title="Derivation" id="s-why">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Slide 10 · The algebra behind the picture</p>
+    <h2 data-rv style="--d:1">Why the asymptotes land exactly there</h2>
+    <div class="grid g2" style="margin-top:.4em">
+      <div class="card" data-rv="l" style="--d:2">
+        <h3 class="hl-cy">Lens</h3>
+        <p class="eq" style="margin:.5em 0"><span class="var">v</span> <span class="rm">=</span>
+          <span class="frac"><span class="var">f u</span><span class="var">u + f</span></span></p>
+        <ul style="margin:0;padding-left:1.1em;color:var(--muted);font-size:clamp(14px,2.4vmin,28px);display:grid;gap:.45em">
+          <li><span class="var">u</span> → ∞ ⟹ <span class="var">v</span> → <b class="hl-cy">+f</b> &nbsp;(horizontal asymptote)</li>
+          <li><span class="var">u</span> → <b class="hl-am">−f</b> ⟹ denominator → 0 ⟹ <span class="var">v</span> → ±∞ &nbsp;(vertical asymptote)</li>
+          <li><span class="var">u</span> = 0 ⟹ <span class="var">v</span> = 0 ✓ passes through the origin</li>
+        </ul>
+        <p class="eq" style="margin-top:.8em;color:var(--vi)"><span class="rm">(</span><span class="var">u+f</span><span class="rm">)(</span><span class="var">v−f</span><span class="rm">) = −</span><span class="var">f</span><span class="rm">²</span></p>
+        <p class="muted" style="font-size:clamp(13px,2.2vmin,25px)">Rectangular hyperbola, new origin <b>(−f, +f)</b>, symmetric about the line <span class="mono">v = −u</span>.</p>
+        <p class="eq" style="margin-top:.6em;font-size:clamp(17px,3.2vmin,36px)"><span class="frac"><span class="rm">d</span><span class="var">v</span></span><span class="rm">/</span><span class="frac"><span class="rm">d</span><span class="var">u</span></span> <span class="rm">=</span>
+          <span class="frac"><span class="var">f</span><span class="rm">²</span></span><span class="rm">/</span><span class="rm">(</span><span class="var">u+f</span><span class="rm">)²</span>
+          <span class="rm" class="hl-gr"> &gt; 0</span></p>
+        <p class="hl-gr" style="font-size:clamp(13px,2.2vmin,25px);font-weight:700">⟹ every branch of a LENS curve RISES left-to-right.</p>
+      </div>
+      <div class="card" data-rv="r" style="--d:3">
+        <h3 class="hl-mg">Mirror</h3>
+        <p class="eq" style="margin:.5em 0"><span class="var">v</span> <span class="rm">=</span>
+          <span class="frac"><span class="var">f u</span><span class="var">u − f</span></span></p>
+        <ul style="margin:0;padding-left:1.1em;color:var(--muted);font-size:clamp(14px,2.4vmin,28px);display:grid;gap:.45em">
+          <li><span class="var">u</span> → ∞ ⟹ <span class="var">v</span> → <b class="hl-cy">f</b> &nbsp;(horizontal asymptote)</li>
+          <li><span class="var">u</span> → <b class="hl-am">f</b> ⟹ <span class="var">v</span> → ±∞ &nbsp;(vertical asymptote)</li>
+          <li><span class="var">u</span> = 0 ⟹ <span class="var">v</span> = 0 ✓ passes through the origin</li>
+        </ul>
+        <p class="eq" style="margin-top:.8em;color:var(--vi)"><span class="rm">(</span><span class="var">u−f</span><span class="rm">)(</span><span class="var">v−f</span><span class="rm">) = +</span><span class="var">f</span><span class="rm">²</span></p>
+        <p class="muted" style="font-size:clamp(13px,2.2vmin,25px)">Rectangular hyperbola, new origin <b>(f, f)</b>, symmetric about the line <span class="mono">v = u</span>.</p>
+        <p class="eq" style="margin-top:.6em;font-size:clamp(17px,3.2vmin,36px)"><span class="frac"><span class="rm">d</span><span class="var">v</span></span><span class="rm">/</span><span class="frac"><span class="rm">d</span><span class="var">u</span></span> <span class="rm">= −</span>
+          <span class="frac"><span class="var">f</span><span class="rm">²</span></span><span class="rm">/</span><span class="rm">(</span><span class="var">u−f</span><span class="rm">)²</span>
+          <span class="rm"> &lt; 0</span></p>
+        <p class="hl-rd" style="font-size:clamp(13px,2.2vmin,25px);font-weight:700">⟹ every branch of a MIRROR curve FALLS left-to-right.</p>
+      </div>
+    </div>
+    <div class="card" data-rv style="--d:4;background:linear-gradient(90deg,rgba(169,139,255,.14),rgba(255,255,255,.02))">
+      <h3 class="hl-vi">One-line symmetry that kills the whole topic</h3>
+      <p class="muted" style="font-size:clamp(14px,2.5vmin,28px)">Replace <span class="var">u</span> → −<span class="var">u</span> in the lens equation and you get the mirror equation exactly.
+      <b class="hl-vi">The mirror's v–u graph is the lens's v–u graph reflected in the v-axis</b> — same |<span class="var">f</span>|.
+      Use the <b>Overlay</b> switch in the builder to see it.</p>
+    </div>
+    <div class="foot"><span>Asymptote intersection = the “new origin”</span><span>04 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 5 · HYPERBOLA BUILDER ========== -->
+<section class="page" data-title="Hyperbola builder" id="s-builder">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Interactive · drag the amber point</p>
+    <h2 data-rv style="--d:1" id="b-title">Hyperbola Builder</h2>
+    <div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);flex:1;min-height:0" id="b-grid">
+      <div class="plotbox" data-rv="z" style="--d:2">
+        <div id="b-plot" style="min-height:0"></div>
+        <div class="cap" id="b-cap">—</div>
+      </div>
+      <div class="grid" style="gap:clamp(10px,1.6vmin,20px);align-content:start;min-height:0" data-rv="r" style="--d:3">
+        <div class="card" style="padding:clamp(11px,1.8vmin,24px)">
+          <p class="lab">Element</p>
+          <div class="seg" id="b-seg" style="margin-top:.5em">
+            <button type="button" data-fam="lens" data-sgn="1">Convex lens</button>
+            <button type="button" data-fam="lens" data-sgn="-1">Concave lens</button>
+            <button type="button" data-fam="mirror" data-sgn="-1">Concave mirror</button>
+            <button type="button" data-fam="mirror" data-sgn="1">Convex mirror</button>
+          </div>
+          <div class="row spread" style="margin-top:.9em">
+            <p class="lab">Focal length <span class="var">f</span> (cm)</p>
+            <p class="v" id="b-fval" style="font-weight:800;font-size:clamp(15px,2.6vmin,30px)">+20</p>
+          </div>
+          <input type="range" id="b-f" min="-40" max="40" step="1" value="20" aria-label="Focal length f in cm">
+          <p style="font-size:clamp(11px,1.75vmin,19px);color:var(--dim);margin-top:-.4em">
+            −40 … +40 (0 excluded). Crossing zero flips convex ⇄ concave — that <em>is</em> the sign convention.</p>
+          <div class="row spread" style="margin-top:.8em">
+            <p class="lab">Object distance <span class="var">u</span> (cm)</p>
+            <p class="v" id="b-uval" style="font-weight:800;font-size:clamp(15px,2.6vmin,30px)">−30</p>
+          </div>
+          <input type="range" id="b-u" min="-60" max="-2" step="0.5" value="-30" aria-label="Object distance u in cm">
+        </div>
+        <div class="card" style="padding:clamp(11px,1.8vmin,24px)">
+          <p class="lab">Live read-out</p>
+          <div class="ro" id="b-ro" style="margin-top:.5em" aria-live="polite"></div>
+          <div id="b-desc" style="margin-top:.6em;font-size:clamp(13px,2.2vmin,26px);color:var(--muted)"></div>
+        </div>
+        <div class="card" style="padding:clamp(11px,1.8vmin,24px);display:grid;gap:.6em">
+          <p class="lab">Overlays</p>
+          <label class="sw"><input type="checkbox" id="b-ovl"><span>Mirror ⇄ lens reflection (<span class="var">u</span> → −<span class="var">u</span>)</span></label>
+          <label class="sw"><input type="checkbox" id="b-quad" checked><span>New quadrant + region signs</span></label>
+          <label class="sw"><input type="checkbox" id="b-key" checked><span>Key point <span class="mono">m = −1</span></span></label>
+          <label class="sw"><input type="checkbox" id="b-ray" checked><span>Synced mini ray diagram</span></label>
+        </div>
+        <div class="plotbox" id="b-raybox" style="padding:0">
+          <div id="b-ray"></div>
+          <div class="cap" id="b-raycap">Ray diagram</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Sampled in two open intervals — never one path across the asymptote</span><span>05 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 6 · BUILD IT STEP BY STEP ========== -->
+<section class="page" data-title="Step-by-step build" id="s-stages">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Scrub the timeline · scroll inside the panel on the right</p>
+    <h2 data-rv style="--d:1">Build it step by step</h2>
+    <div class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);flex:1;min-height:0" id="st-grid">
+      <div class="plotbox" data-rv="z" style="--d:2">
+        <div id="st-plot" style="min-height:0"></div>
+        <div class="cap" id="st-cap">Stage 0 — blank board.</div>
+      </div>
+      <div class="grid" style="gap:clamp(10px,1.6vmin,20px);align-content:start;min-height:0" data-rv="r" style="--d:3">
+        <div class="seg" id="st-seg">
+          <button type="button" data-fam="lens" data-sgn="1">Convex lens</button>
+          <button type="button" data-fam="lens" data-sgn="-1">Concave lens</button>
+          <button type="button" data-fam="mirror" data-sgn="-1">Concave mirror</button>
+          <button type="button" data-fam="mirror" data-sgn="1">Convex mirror</button>
+        </div>
+        <div class="stages" id="st-chips">
+          <button type="button" class="stchip" data-t="0.07">Axes + grid appear</button>
+          <button type="button" class="stchip" data-t="0.25">Vertical asymptote sweeps in — <span class="mono">u = u₀</span></button>
+          <button type="button" class="stchip" data-t="0.45">Horizontal asymptote sweeps in — <span class="mono">v = v₀</span></button>
+          <button type="button" class="stchip" data-t="0.62">New quadrant lines dash in through (u₀ , v₀)</button>
+          <button type="button" class="stchip" data-t="0.99">Both branches draw themselves through (0, 0)</button>
+        </div>
+        <div class="row">
+          <button type="button" class="btn pri" id="st-play">▶ Play build</button>
+          <button type="button" class="btn" id="st-reset">↺ Reset</button>
+        </div>
+        <div>
+          <div class="row spread"><p class="lab">Timeline</p><p class="lab" id="st-pct">0%</p></div>
+          <input type="range" id="st-range" min="0" max="1000" value="0" aria-label="Animation timeline">
+        </div>
+        <div class="scrub" id="st-scrub"><p class="scrubhint">↕ scroll here to scrub</p><div class="filler"></div></div>
+      </div>
+    </div>
+    <div class="foot"><span>stroke-dashoffset draw-on · growing clip-rect sweeps</span><span>06 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 7 · GALLERY ========== -->
+<section class="page" data-title="The four cases" id="s-gallery">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Slide 11 · Hard-coded asymptotes</p>
+    <h2 data-rv style="--d:1">The four cases — click a tile to load it into the builder</h2>
+    <div class="grid g2" id="gal" style="margin-top:.4em"></div>
+    <div class="foot"><span>|f| = 20 cm shown · asymptotes labelled on every tile</span><span>07 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 8 · READ THE GRAPH ========== -->
+<section class="page" data-title="Reading the graph" id="s-read">
+  <div class="sheet top">
+    <p class="kicker" data-rv>What the curve is telling you</p>
+    <h2 data-rv style="--d:1">Read the graph like a topper</h2>
+    <div class="grid g2" style="margin-top:.4em">
+      <div class="plotbox" data-rv="l" style="--d:2"><div id="rd-lens"></div>
+        <div class="cap">Convex lens — the part of the curve left of <span class="mono">u = −f</span> is a <b>real, inverted</b> image; right of it is <b>virtual, erect</b>.</div></div>
+      <div class="plotbox" data-rv="r" style="--d:3"><div id="rd-mir"></div>
+        <div class="cap">Concave mirror — same story, but the branches <b>fall</b> and both asymptotes sit at <span class="mono">f</span> (negative).</div></div>
+    </div>
+    <div class="grid g3">
+      <div class="card" data-rv style="--d:4"><h3 class="hl-am">Object inside focus</h3>
+        <p class="muted" style="font-size:clamp(13px,2.3vmin,26px)">The branch on the <b>opposite side</b> of the vertical asymptote from the
+        “usual” one — i.e. between <span class="mono">u = −f</span> and <span class="mono">0</span> for a convex lens — is the
+        <b class="hl-mg">virtual, erect, magnified</b> branch. Its <span class="var">v</span> is negative and runs off to −∞ as <span class="var">u</span> → −f.</p></div>
+      <div class="card" data-rv style="--d:5"><h3 class="hl-gr">Where |m| = 1</h3>
+        <p class="muted" style="font-size:clamp(13px,2.3vmin,26px)">The curve crosses the line <span class="mono">v = −u</span> (lens) or
+        <span class="mono">v = u</span> (mirror) at <b>u = 2f, v = 2f</b>. That point is <b>m = −1</b>: real, inverted, same size.
+        It is the fastest way to read <span class="var">f</span> off an unlabelled graph.</p></div>
+      <div class="card" data-rv style="--d:6"><h3 class="hl-cy">Sign of v = nature</h3>
+        <p class="muted" style="font-size:clamp(13px,2.3vmin,26px)">Lens: <b>v &gt; 0 ⟹ real</b> (other side), <b>v &lt; 0 ⟹ virtual</b>.
+        Mirror: <b>v &lt; 0 ⟹ real</b> (in front), <b>v &gt; 0 ⟹ virtual</b> (behind). Sign of <span class="var">m</span> gives erect/inverted.</p></div>
+    </div>
+    <div class="foot"><span>Region bands are drawn in u-space</span><span>08 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 9 · COMPANION GRAPHS ========== -->
+<section class="page" data-title="1/v–1/u and m–u" id="s-comp">
+  <div class="sheet top">
+    <p class="kicker" data-rv>The other two graphs JEE asks for</p>
+    <h2 data-rv style="--d:1">Companion graphs: <span class="mono" style="font-size:.72em">1/v vs 1/u</span> and <span class="mono" style="font-size:.72em">m vs u</span></h2>
+    <div class="grid g2" style="margin-top:.4em">
+      <div class="plotbox" data-rv="l" style="--d:2"><div id="cp-inv"></div>
+        <div class="cap"><b class="hl-cy">1/v vs 1/u</b> — a <b>straight line</b>. Lens: slope <b>+1</b>, intercept <b>1/f</b>. Mirror: slope <b>−1</b>, intercept <b>1/f</b>. Read <span class="var">f</span> straight off the intercept.</div></div>
+      <div class="plotbox" data-rv="r" style="--d:3"><div id="cp-m"></div>
+        <div class="cap"><b class="hl-am">m vs u</b> — lens: <span class="mono">m = f/(u+f)</span>, mirror: <span class="mono">m = f/(f−u)</span>. Vertical asymptote at the focus, horizontal asymptote <span class="mono">m = 0</span>, and <b>m = +1 at u = 0</b>, <b>m = −1 at u = 2f</b>.</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card" data-rv style="--d:4">
+        <p class="lab">Why the straight line is the exam favourite</p>
+        <p class="muted" style="font-size:clamp(13px,2.4vmin,27px)">
+          Lens: <span class="mono">1/v = 1/u + 1/f</span> ⟹ <span class="mono">y = x + c</span>, slope <b class="hl-gr">+1</b>, y-intercept <b class="hl-cy">1/f</b>, x-intercept <b class="hl-rd">−1/f</b>.<br>
+          Mirror: <span class="mono">1/v = −1/u + 1/f</span> ⟹ slope <b class="hl-rd">−1</b>, same y-intercept <b class="hl-cy">1/f</b>.<br>
+          <b>A slope of +1 vs −1 instantly tells you lens vs mirror</b> — no curve-reading needed.</p>
+      </div>
+      <div class="card" data-rv style="--d:5">
+        <p class="lab">m–u graph landmarks (convex lens, f &gt; 0)</p>
+        <ul style="margin:.3em 0 0;padding-left:1.1em;color:var(--muted);font-size:clamp(13px,2.4vmin,27px);display:grid;gap:.35em">
+          <li><span class="mono">u → −∞</span> ⟹ <span class="mono">m → 0⁻</span> (highly diminished, inverted)</li>
+          <li><span class="mono">u = −2f</span> ⟹ <span class="mono">m = −1</span></li>
+          <li><span class="mono">u → −f⁻</span> ⟹ <span class="mono">m → −∞</span>; &nbsp;<span class="mono">u → −f⁺</span> ⟹ <span class="mono">m → +∞</span> (sign flips!)</li>
+          <li><span class="mono">u = 0</span> ⟹ <span class="mono">m = +1</span></li>
+          <li><span class="mono">|m| &gt; 1</span> region ⟹ magnified; between −f and 0 it is <b>virtual + magnified</b></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><span>Same physics, three different linear/hyperbolic disguises</span><span>09 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 10 · TRAPS ========== -->
+<section class="page" data-title="Traps" id="s-traps">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Where the marks go</p>
+    <h2 data-rv style="--d:1">Seven traps — <span class="hl-rd">all of them have appeared in JEE</span></h2>
+    <div class="grid g2" style="margin-top:.4em" id="traplist">
+      <div class="trap" data-rv style="--d:2"><h4>⚠ 1 · Missing the origin</h4><p>The curve <b>passes through (0, 0)</b> — object at the pole/optical centre gives the image at the pole/optical centre. Most students draw the hyperbola skipping it.</p></div>
+      <div class="trap" data-rv style="--d:3"><h4>⚠ 2 · Wrong slope on the branches</h4><p>Lens branches <b class="hl-gr">rise</b> (<span class="mono">(u+f)(v−f) = −f²</span>). Mirror branches <b class="hl-rd">fall</b> (<span class="mono">(u−f)(v−f) = +f²</span>). Drawing a lens curve with falling branches is the #1 sketch error.</p></div>
+      <div class="trap" data-rv style="--d:4"><h4>⚠ 3 · Swapping the asymptotes</h4><p>Lens: vertical at <b>u = −f</b>, horizontal at <b>v = +f</b>. Mirror: <b>both</b> at <b>f</b>. The lens new-origin is (−f, f); the mirror's is (f, f).</p></div>
+      <div class="trap" data-rv style="--d:5"><h4>⚠ 4 · Concave lens “escape”</h4><p>For a concave lens the horizontal asymptote is <b>v = −|f|</b>: the image <b>can never be farther than F</b> from the lens, and is always virtual, erect, diminished.</p></div>
+      <div class="trap" data-rv style="--d:6"><h4>⚠ 5 · The magnification sign</h4><p><b>m = v/u</b> for lenses but <b>m = −v/u</b> for mirrors. Forgetting the minus flips erect/inverted in every mirror answer.</p></div>
+      <div class="trap" data-rv style="--d:7"><h4>⚠ 6 · Mis-reading 1/v–1/u</h4><p>Intercept = <b>1/f</b>, not <b>f</b>. Slope <b>+1 = lens</b>, <b>−1 = mirror</b>. Students quote the intercept as f directly and lose the sign too.</p></div>
+      <div class="trap" data-rv style="--d:8;grid-column:1/-1"><h4>⚠ 7 · Marking (f, f) on a lens curve</h4><p>The point <b>(f, f) is the mirror's new origin</b>, not a point on the lens curve. On a <b>lens</b> curve the special point is <b>(−2f, +2f)</b> where m = −1. Also: <b>v–u is NOT a straight line</b> — only <b>1/v–1/u</b> is.</p></div>
+    </div>
+    <div class="foot"><span>Sketch from the asymptotes, never from memory</span><span>10 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 11 · QUIZ ========== -->
+<section class="page" data-title="Identify the curve" id="s-quiz">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Graph-identification drill</p>
+    <h2 data-rv style="--d:1">Which element made this curve?</h2>
+    <div class="qwrap" style="margin-top:.4em">
+      <div class="plotbox" data-rv="l" style="--d:2"><div id="q-plot"></div>
+        <div class="cap" id="q-cap">Read the grid: where do the dashed asymptotes sit?</div></div>
+      <div class="card" data-rv="r" style="--d:3">
+        <div class="row spread" style="margin-bottom:.8em">
+          <p class="lab" id="q-num">Question 1 of 4</p>
+          <div class="pips" id="q-pips"></div>
+        </div>
+        <div class="opts" id="q-opts"></div>
+        <div class="expl" id="q-expl" style="display:none"></div>
+        <div class="row" style="margin-top:1em" id="q-nav">
+          <button type="button" class="btn pri" id="q-next" disabled>Next question →</button>
+          <button type="button" class="btn gh" id="q-retry" style="display:none">↺ Retry drill</button>
+          <span id="q-score" class="muted" style="font-size:clamp(13px,2.2vmin,25px)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Clean sweep triggers the confetti</span><span>11 / 12</span></div>
+  </div>
+</section>
+
+<!-- ========== 12 · CHEAT SHEET ========== -->
+<section class="page" data-title="Cheat sheet" id="s-sheet">
+  <div class="sheet top">
+    <p class="kicker" data-rv>Revise in 60 seconds</p>
+    <h2 data-rv style="--d:1">The one table you must memorise</h2>
+    <div class="tw" data-rv style="--d:2;margin-top:.4em">
+      <table>
+        <thead><tr>
+          <th>Element</th><th>Formula</th><th>f</th><th>u = ∞ ⟹ v</th><th>v = ∞ ⟹ u</th>
+          <th>Vertical asym.</th><th>Horizontal asym.</th><th>New origin</th><th>Branch slope</th><th>m = −1 point</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><b class="hl-gr">Convex lens</b></td><td class="mono">1/v − 1/u = 1/f</td><td class="mono">+</td>
+            <td class="mono">+f</td><td class="mono">−f</td><td class="mono">u = −f</td><td class="mono">v = +f</td>
+            <td class="mono">(−f, +f)</td><td class="hl-gr">rising</td><td class="mono">(−2f, +2f)</td></tr>
+          <tr><td><b class="hl-rd">Concave lens</b></td><td class="mono">1/v − 1/u = 1/f</td><td class="mono">−</td>
+            <td class="mono">−|f|</td><td class="mono">+|f|</td><td class="mono">u = +|f|</td><td class="mono">v = −|f|</td>
+            <td class="mono">(+|f|, −|f|)</td><td class="hl-gr">rising</td><td class="mono">(−2f, +2f)</td></tr>
+          <tr><td><b class="hl-rd">Concave mirror</b></td><td class="mono">1/v + 1/u = 1/f</td><td class="mono">−</td>
+            <td class="mono">f</td><td class="mono">f</td><td class="mono">u = f</td><td class="mono">v = f</td>
+            <td class="mono">(f, f)</td><td class="hl-rd">falling</td><td class="mono">(2f, 2f)</td></tr>
+          <tr><td><b class="hl-gr">Convex mirror</b></td><td class="mono">1/v + 1/u = 1/f</td><td class="mono">+</td>
+            <td class="mono">f</td><td class="mono">f</td><td class="mono">u = f</td><td class="mono">v = f</td>
+            <td class="mono">(f, f)</td><td class="hl-rd">falling</td><td class="mono">(2f, 2f)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g3" style="margin-top:.2em">
+      <div class="tip" data-rv style="--d:3"><h4>Universal truths</h4><p>All four curves are <b>rectangular hyperbolas</b> passing through <b>(0, 0)</b>, with asymptotes parallel to the axes. The asymptote crossing is the <b>new origin</b>.</p></div>
+      <div class="tip" data-rv style="--d:4"><h4>Fastest identification</h4><p>Branches <b>rising</b> ⟹ lens. Branches <b>falling</b> ⟹ mirror. Then read the sign of the new origin to get the sign of <span class="var">f</span>.</p></div>
+      <div class="tip" data-rv style="--d:5"><h4>Companion graphs</h4><p><b>1/v–1/u</b>: straight line, slope +1 (lens) / −1 (mirror), intercept 1/f.<br><b>m–u</b>: hyperbola, m = +1 at u = 0, m = −1 at u = 2f.</p></div>
+    </div>
+    <div class="row" data-rv style="--d:6;margin-top:.2em">
+      <button type="button" class="btn" id="to-builder">↖ Back to the Hyperbola Builder</button>
+      <button type="button" class="btn" id="to-quiz">↖ Replay the identification drill</button>
+    </div>
+    <div class="foot"><span>Module 04 · complete</span><span>12 / 12</span></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+"use strict";
+/* =====================================================================
+   0 · UTILITIES
+   ===================================================================== */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(n,d)=>{d=d===undefined?1:d;const v=Number(n);if(!isFinite(v))return '∞';
+  let s=(Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);
+  s=s.replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1');
+  return (v>0?'+':'')+s.replace('-','−');};
+const sgn=n=>n>0?'+':'−';
+let _uid=0; const uid=()=>'u'+(++_uid);
+function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),ms||2200);}
+/* tween helper — uses GSAP when present, rAF otherwise (never a hard dependency) */
+function anim(dur,onUpdate,onDone){
+  const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+  if(window.gsap){const o={t:0};return gsap.to(o,{t:1,duration:dur/1000,ease:'power2.inOut',
+    onUpdate:()=>onUpdate(o.t),onComplete:()=>onDone&&onDone(),overwrite:true});}
+  const t0=performance.now();let raf;
+  const loop=now=>{const p=Math.min(1,(now-t0)/dur);onUpdate(ease(p));
+    if(p<1)raf=requestAnimationFrame(loop);else onDone&&onDone();};
+  raf=requestAnimationFrame(loop);
+  return {kill(){cancelAnimationFrame(raf);},paused(){return false;}};
+}
+const easeOut=x=>1-Math.pow(1-x,3);
+function seg01(t,a,b){return clamp((t-a)/(b-a),0,1);}
+
+/* =====================================================================
+   1 · PHYSICS  (Cartesian sign convention; light travels +x)
+   ===================================================================== */
+const isLens=fam=>fam==='lens';
+function typeName(fam,f){
+  if(isLens(fam)) return f>0?'Convex lens':'Concave lens';
+  return f<0?'Concave mirror':'Convex mirror';
+}
+function vOf(fam,f,u){const d=isLens(fam)?(u+f):(u-f);return Math.abs(d)<1e-9?NaN:f*u/d;}
+function mOf(fam,f,u){const v=vOf(fam,f,u);return isFinite(v)&&u!==0?(isLens(fam)?v/u:-v/u):NaN;}
+function asym(fam,f){return isLens(fam)?{u:-f,v:f}:{u:f,v:f};}
+/* m = −1 point: lens (−2f, +2f) · mirror (2f, 2f) */
+function keyPt(fam,f){return isLens(fam)?[-2*f,2*f]:[2*f,2*f];}
+/* PURE function — samples the two open intervals around the singularity.
+   Returns two separate point arrays; never one path crossing the asymptote. */
+function curvePoints(fam,f,range,N){
+  N=N||700;
+  const ua=isLens(fam)?-f:f, eps=0.12, lo=range[0], hi=range[1], out=[];
+  const segs=[[lo,ua-eps],[ua+eps,hi]];
+  for(const s of segs){
+    const a=s[0],b=s[1]; if(b<=a) continue;
+    const pts=[];
+    for(let i=0;i<=N;i++){
+      const u=a+(b-a)*i/N, v=vOf(fam,f,u);
+      if(!isFinite(v)) continue;
+      pts.push([u,clamp(v,-4*DOM,4*DOM)]);
+    }
+    if(pts.length>1) out.push(pts);
+  }
+  return out;
+}
+function describe(fam,f,u){
+  const v=vOf(fam,f,u), m=mOf(fam,f,u), F=Math.abs(f), x=-u;
+  if(!isFinite(v)) return {v:v,m:m,inf:true,txt:'Object exactly at the focus ⟹ <b>image at infinity</b> (v → ±∞).'};
+  const real=isLens(fam)?v>0:v<0, erect=m>0;
+  const size=Math.abs(Math.abs(m)-1)<1e-6?'same size':(Math.abs(m)>1?'magnified':'diminished');
+  let pos;
+  if(isLens(fam)&&f>0){
+    if(Math.abs(x-2*F)<1e-6) pos='at 2F on the other side';
+    else if(x>2*F) pos='between F and 2F on the other side';
+    else if(x>F) pos='beyond 2F on the other side';
+    else pos="on the object's own side, beyond F";
+  } else if(isLens(fam)&&f<0){ pos="between O and F on the object's side"; }
+  else if(!isLens(fam)&&f<0){
+    if(Math.abs(x-2*F)<1e-6) pos='at C (centre of curvature)';
+    else if(x>2*F) pos='between F and C, in front of the mirror';
+    else if(x>F) pos='beyond C, in front of the mirror';
+    else pos='behind the mirror, beyond F';
+  } else { pos='behind the mirror, between P and F'; }
+  return {v,m,inf:false,
+    txt:'<b class="'+(real?'hl-gr':'hl-mg')+'">'+(real?'Real':'Virtual')+'</b>, '+
+        '<b class="'+(erect?'hl-cy':'hl-am')+'">'+(erect?'erect':'inverted')+'</b>, '+
+        '<b>'+size+'</b> — '+pos+'.'};
+}
+
+/* =====================================================================
+   2 · PLOT RENDERER (hand-rolled SVG — no D3/Chart.js dependency)
+   ===================================================================== */
+const DOM=70, VW=1000, VH=660;
+const MM={l:82,r:36,t:28,b:58};
+const PX0=MM.l,PX1=VW-MM.r,PY0=VH-MM.b,PY1=MM.t;
+const sx=u=>PX0+(u+DOM)/(2*DOM)*(PX1-PX0);
+const sy=v=>PY0-(v+DOM)/(2*DOM)*(PY0-PY1);
+const ux=px=>(px-PX0)/(PX1-PX0)*2*DOM-DOM;
+const vy=py=>(PY0-py)/(PY0-PY1)*2*DOM-DOM;
+const pathFrom=pts=>{let d='',on=false;for(const p of pts){
+  d+=(on?'L':'M')+sx(p[0]).toFixed(2)+' '+sy(p[1]).toFixed(2)+' ';on=true;}return d.trim();};
+
+function defsSVG(id){return `<defs>
+  <clipPath id="cl-${id}"><rect x="${PX0}" y="${PY1}" width="${PX1-PX0}" height="${PY0-PY1}"/></clipPath>
+  <linearGradient id="bg-lens" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0" stop-color="#3fe0ff"/><stop offset=".5" stop-color="#7deaff"/><stop offset="1" stop-color="#54e08a"/></linearGradient>
+  <linearGradient id="bg-mir" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ff62a8"/><stop offset=".55" stop-color="#ffc247"/><stop offset="1" stop-color="#ff8f6b"/></linearGradient>
+  <marker id="ar-${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z" fill="rgba(230,240,255,.7)"/></marker>
+</defs>`;}
+
+function gridSVG(compact){
+  let g='<g class="g-grid">';
+  for(let k=-60;k<=60;k+=10){
+    const maj=k%20===0;
+    g+=`<line class="${maj?'maj':''}" x1="${sx(k)}" y1="${PY1}" x2="${sx(k)}" y2="${PY0}"/>`;
+    g+=`<line class="${maj?'maj':''}" x1="${PX0}" y1="${sy(k)}" x2="${PX1}" y2="${sy(k)}"/>`;
+  }
+  g+='</g>';
+  if(compact) return g;
+  let t='';
+  for(let k=-60;k<=60;k+=20){ if(k===0)continue;
+    t+=`<text class="g-tk" x="${sx(k)}" y="${sy(0)+26}" text-anchor="middle">${k<0?'−':''}${Math.abs(k)}</text>`;
+    t+=`<text class="g-tk" x="${sx(0)-12}" y="${sy(k)+6}" text-anchor="end">${k<0?'−':''}${Math.abs(k)}</text>`;}
+  return g+t;
+}
+function axesSVG(compact){
+  return `<g class="g-axes">
+    <line class="g-ax" x1="${PX0}" y1="${sy(0)}" x2="${PX1}" y2="${sy(0)}" marker-end="url(#ar)"/>
+    <line class="g-ax" x1="${sx(0)}" y1="${PY0}" x2="${sx(0)}" y2="${PY1}" marker-end="url(#ar)"/>
+    <text class="g-axlab" x="${PX1-4}" y="${sy(0)-14}" text-anchor="end">u (cm)</text>
+    <text class="g-axlab" x="${sx(0)+14}" y="${PY1+20}">v (cm)</text>
+    <text class="g-tk" x="${sx(0)-12}" y="${sy(0)+26}" text-anchor="end">O</text></g>`;
+}
+function asymSVG(fam,f,compact){
+  const a=asym(fam,f), lbl=isLens(fam)?['u = −f','v = +f']:['u = f','v = f'];
+  const val=isLens(fam)?[fmt(a.u,0),fmt(a.v,0)]:[fmt(a.u,0),fmt(a.v,0)];
+  let s=`<g class="g-asym">
+    <line class="asy v" x1="${sx(a.u)}" y1="${PY1}" x2="${sx(a.u)}" y2="${PY0}"/>
+    <line class="asy h" x1="${PX0}" y1="${sy(a.v)}" x2="${PX1}" y2="${sy(a.v)}"/></g>`;
+  if(!compact) s+=`<text class="asy-lab" x="${sx(a.u)+8}" y="${PY1+22}" fill="#ffc247">${lbl[0]} = ${val[0]}</text>
+    <text class="asy-lab" x="${PX1-6}" y="${sy(a.v)-10}" text-anchor="end" fill="#3fe0ff">${lbl[1]} = ${val[1]}</text>`;
+  return s;
+}
+function quadSVG(fam,f){
+  const a=asym(fam,f), cx=sx(a.u), cy=sy(a.v);
+  /* which regions hold the curve: lens → II & IV of the new origin, mirror → I & III */
+  const lens=isLens(fam);
+  const tint=(du,dv)=>{
+    const x0=du<0?PX0:cx, x1=du<0?cx:PX1, y0=dv>0?PY1:cy, y1=dv>0?cy:PY0;
+    return `<rect x="${Math.min(x0,x1)}" y="${Math.min(y0,y1)}" width="${Math.abs(x1-x0)}" height="${Math.abs(y1-y0)}"
+      fill="${lens?'rgba(84,224,138,.07)':'rgba(255,194,71,.07)'}"/>`;
+  };
+  let s=`<g class="quad">${lens?tint(-1,1)+tint(1,-1):tint(1,1)+tint(-1,-1)}
+    <line x1="${cx}" y1="${PY1}" x2="${cx}" y2="${PY0}"/>
+    <line x1="${PX0}" y1="${cy}" x2="${PX1}" y2="${cy}"/>`;
+  const spots=[[-1,1,'(− , +)'],[1,1,'(+ , +)'],[-1,-1,'(− , −)'],[1,-1,'(+ , −)']];
+  spots.forEach(sp=>{
+    const px=cx+sp[0]*(PX1-PX0)/4, py=cy-sp[1]*(PY0-PY1)/4;
+    if(px>PX0+10&&px<PX1-10&&py>PY1+14&&py<PY0-10)
+      s+=`<text x="${px}" y="${py}" text-anchor="middle">${sp[2]}</text>`;});
+  s+=`<circle cx="${cx}" cy="${cy}" r="7" fill="none" stroke="#a98bff" stroke-width="3"/>
+      <text x="${cx+14}" y="${cy-14}" fill="#a98bff" style="font-size:19px;font-weight:800">new origin (${fmt(a.u,0)}, ${fmt(a.v,0)})</text></g>`;
+  return s;
+}
+function branchesSVG(fam,f,cls){
+  const br=curvePoints(fam,f,[-DOM,DOM]);
+  return br.map((p,i)=>`<path class="branch ${cls||''}" data-branch="${i}" clip-path="url(#CLIP)" d="${pathFrom(p)}"/>`).join('');
+}
+function keySVG(fam,f){
+  const k=keyPt(fam,f);
+  if(Math.abs(k[0])>DOM||Math.abs(k[1])>DOM) return '';
+  return `<g><circle class="kp" cx="${sx(k[0])}" cy="${sy(k[1])}" r="9"/>
+    <text x="${sx(k[0])+16}" y="${sy(k[1])-12}" fill="#54e08a" style="font-size:19px;font-weight:800">m = −1</text></g>`;
+}
+function originSVG(){
+  return `<g><circle class="odo pulse" cx="${sx(0)}" cy="${sy(0)}" r="8"/>
+    <text x="${sx(0)+16}" y="${sy(0)+30}" fill="#fff" style="font-size:19px;font-weight:800">(0, 0) always on the curve</text></g>`;
+}
+function regionSVG(regs){
+  let s='<g class="reg">';
+  regs.forEach(r=>{
+    const x0=sx(clamp(r.a,-DOM,DOM)),x1=sx(clamp(r.b,-DOM,DOM));
+    s+=`<rect x="${Math.min(x0,x1)}" y="${PY1}" width="${Math.abs(x1-x0)}" height="${PY0-PY1}" fill="${r.fill}"/>`;
+    if(r.lab) s+=`<text x="${(x0+x1)/2}" y="${PY1+22}" text-anchor="middle" fill="${r.col||'#fff'}">${r.lab}</text>`;
+  });
+  return s+'</g>';
+}
+function markerSVG(fam,f,u){
+  const v=vOf(fam,f,u); if(!isFinite(v)) return '';
+  const vc=clamp(v,-DOM,DOM), off=Math.abs(v)>DOM;
+  return `<g class="mk" clip-path="url(#CLIP)">
+    <line x1="${sx(u)}" y1="${sy(vc)}" x2="${sx(u)}" y2="${sy(0)}"/>
+    <line x1="${sx(u)}" y1="${sy(vc)}" x2="${sx(0)}" y2="${sy(vc)}"/>
+    <circle cx="${sx(u)}" cy="${sy(vc)}" r="${off?7:10}" ${off?'opacity=".45"':''}/>
+    <text x="${sx(u)+16}" y="${sy(vc)-14}">u = ${fmt(u)}, v = ${off?(sgn(v)+'∞ off-scale'):fmt(v)}</text></g>`;
+}
+function plotSVG(cfg){
+  const c=Object.assign({fam:'lens',f:20,compact:false,grid:true,asym:true,curve:true,
+    quad:false,key:true,origin:true,overlay:null,regions:null,marker:null},cfg||{});
+  const id=uid();
+  let inner=defsSVG(id);
+  if(c.grid) inner+=gridSVG(c.compact);
+  if(c.regions) inner+=regionSVG(c.regions).replace(/CLIP/g,'cl-'+id);
+  if(c.quad) inner+=quadSVG(c.fam,c.f);
+  if(!c.compact) inner+=axesSVG();
+  if(c.asym) inner+=asymSVG(c.fam,c.f,c.compact);
+  inner+='<g clip-path="url(#cl-'+id+')">';
+  if(c.curve) inner+=branchesSVG(c.fam,c.f,isLens(c.fam)?'lens':'mir');
+  if(c.overlay) inner+=`<path class="ovl" d="${pathFrom(curvePoints(c.overlay.fam,c.overlay.f,[-DOM,DOM])[0]||[])}"/>`+
+    `<path class="ovl" d="${pathFrom(curvePoints(c.overlay.fam,c.overlay.f,[-DOM,DOM])[1]||[])}"/>`;
+  inner+='</g>';
+  if(c.key&&!c.compact) inner+=keySVG(c.fam,c.f);
+  if(c.origin&&!c.compact) inner+=originSVG();
+  if(c.marker!=null) inner+=markerSVG(c.fam,c.f,c.marker).replace(/CLIP/g,'cl-'+id);
+  if(c.compact){ /* tidy: axes on top for small tiles */ inner+=axesSVG(true); }
+  return `<svg class="plot" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img">${inner.replace(/url\(#CLIP\)/g,'url(#cl-'+id+')').replace(/url\(#ar\)/g,'url(#ar-'+id+')')}</svg>`;
+}
+
+/* =====================================================================
+   3 · MINI RAY DIAGRAM  (synced with the builder)
+   slope of the "focus ray" = −h/f for BOTH lenses and mirrors;
+   lens rays travel +x after the element, mirror rays travel −x.
+   ===================================================================== */
+function raySVG(fam,f,u){
+  const RW=480,RH=280,AY=170,CX=240,H=10;
+  if(u>=-0.5) return `<svg class="plot" viewBox="0 0 ${RW} ${RH}" preserveAspectRatio="xMidYMid meet"
+     style="max-height:220px"><text x="${RW/2}" y="${RH/2}" text-anchor="middle" fill="#94a3c8"
+     style="font-size:19px">u &gt; 0 → <tspan font-weight="800">virtual object</tspan> (the other branch).
+     <tspan x="${RW/2}" dy="26" font-size="16">Not a standard JEE case, but the branch is real mathematics.</tspan></text></svg>`;
+  const v=vOf(fam,f,u), m=mOf(fam,f,u);
+  const lens=isLens(fam), dirx=lens?1:-1;
+  const F=Math.abs(f);
+  const far=isFinite(v)?Math.abs(v):8*F;
+  const maxU=Math.max(Math.abs(u),Math.min(far,7*F),2*F,10);
+  let s=(CX-46)/maxU;
+  const mag=isFinite(m)?Math.abs(m):3;
+  s=Math.min(s,88/(H*Math.max(mag,1)*0.9));
+  const X=uu=>CX+uu*s, Y=hh=>AY-hh*s;
+  const edgeL=14,edgeR=RW-14;
+  let o='';
+  /* axis */
+  o+=`<line x1="${edgeL}" y1="${AY}" x2="${edgeR}" y2="${AY}" stroke="rgba(230,240,255,.45)" stroke-width="2"/>`;
+  /* element symbol */
+  if(lens){
+    const cv=f>0;
+    o+=`<path d="M ${CX} ${AY-84} Q ${CX+(cv?20:-20)} ${AY} ${CX} ${AY+84}" fill="none" stroke="#eaf0ff" stroke-width="3"/>`;
+    o+=`<path d="M ${CX-8} ${AY-84} L ${CX+8} ${AY-76} M ${CX+8} ${AY-84} L ${CX-8} ${AY-76}" stroke="#eaf0ff" stroke-width="3"/>`;
+    o+=`<path d="M ${CX-8} ${AY+84} L ${CX+8} ${AY+76} M ${CX+8} ${AY+84} L ${CX-8} ${AY+76}" stroke="#eaf0ff" stroke-width="3"/>`;
+  }else{
+    const cv=f<0;
+    o+=`<path d="M ${CX} ${AY-84} Q ${CX+(cv?22:-22)} ${AY} ${CX} ${AY+84}" fill="none" stroke="#eaf0ff" stroke-width="4"/>`;
+    for(let i=-3;i<=3;i++) o+=`<line x1="${CX+ (cv?20:-20)*0.55 +6}" y1="${AY+i*22}" x2="${CX+(cv?20:-20)*0.55+16}" y2="${AY+i*22-9}" stroke="rgba(234,240,255,.55)" stroke-width="2"/>`;
+  }
+  /* F / 2F ticks */
+  [[f,'F'],[2*f,lens?'2F':'C']].forEach(t=>{
+    const px=X(t[0]); if(px>edgeL&&px<edgeR)
+      o+=`<line x1="${px}" y1="${AY-7}" x2="${px}" y2="${AY+7}" stroke="#ffc247" stroke-width="3"/>
+          <text x="${px}" y="${AY+28}" text-anchor="middle" fill="#ffc247" style="font-size:15px;font-weight:800">${t[1]}</text>`;});
+  o+=`<text x="${CX}" y="${AY+28}" text-anchor="middle" fill="#94a3c8" style="font-size:15px;font-weight:800">${lens?'O':'P'}</text>`;
+  /* helper: extend a ray from a point with a slope until it leaves the box */
+  const ext=(x0,y0,sl,dx)=>{
+    const xEnd=dx>0?edgeR:edgeL; let xe=xEnd, ye=y0+sl*(xEnd-x0);
+    if(ye<10){ye=10;xe=x0+(10-y0)/sl;} if(ye>RH-10){ye=RH-10;xe=x0+(RH-10-y0)/sl;}
+    return [xe,ye];
+  };
+  const slope1=-H/f, slope2=lens?H/u:-H/u;
+  /* ray 1 : parallel to axis then through/toward focus */
+  o+=`<line x1="${X(u)}" y1="${Y(H)}" x2="${CX}" y2="${Y(H)}" stroke="rgba(255,194,71,.95)" stroke-width="2.6"/>`;
+  let e=ext(CX,Y(H),slope1,dirx);
+  o+=`<line x1="${CX}" y1="${Y(H)}" x2="${e[0]}" y2="${e[1]}" stroke="rgba(255,194,71,.95)" stroke-width="2.6"/>`;
+  e=ext(CX,Y(H),slope1,-dirx);
+  o+=`<line x1="${CX}" y1="${Y(H)}" x2="${e[0]}" y2="${e[1]}" stroke="rgba(255,194,71,.45)" stroke-width="2" stroke-dasharray="6 6"/>`;
+  /* ray 2 : through optical centre / pole */
+  o+=`<line x1="${X(u)}" y1="${Y(H)}" x2="${CX}" y2="${AY}" stroke="rgba(125,234,255,.95)" stroke-width="2.6"/>`;
+  e=ext(CX,AY,slope2,dirx);
+  o+=`<line x1="${CX}" y1="${AY}" x2="${e[0]}" y2="${e[1]}" stroke="rgba(125,234,255,.95)" stroke-width="2.6"/>`;
+  e=ext(CX,AY,slope2,-dirx);
+  o+=`<line x1="${CX}" y1="${AY}" x2="${e[0]}" y2="${e[1]}" stroke="rgba(125,234,255,.4)" stroke-width="2" stroke-dasharray="6 6"/>`;
+  /* object arrow */
+  const arrow=(px,hgt,col,dash,lab)=>{
+    const hh=clamp(hgt,-128,128);
+    o+=`<line x1="${px}" y1="${AY}" x2="${px}" y2="${AY-hh}" stroke="${col}" stroke-width="3.4" ${dash?'stroke-dasharray="7 6"':''}/>`;
+    const d=hh>0?-1:1;
+    o+=`<path d="M ${px} ${AY-hh} L ${px-6} ${AY-hh+d*13} L ${px+6} ${AY-hh+d*13} Z" fill="${col}"/>`;
+    if(lab) o+=`<text x="${px}" y="${AY-hh+d*28}" text-anchor="middle" fill="${col}" style="font-size:15px;font-weight:800">${lab}</text>`;
+  };
+  arrow(X(u),H*s,'#3fe0ff',false,'object');
+  if(isFinite(v)&&Math.abs(v)<8*F) arrow(X(v),m*H*s,(isLens(fam)?v>0:v<0)?'#54e08a':'#ff62a8',
+      !(isLens(fam)?v>0:v<0),'image');
+  else o+=`<text x="${CX+(lens?90:-90)}" y="34" fill="#54e08a" style="font-size:16px;font-weight:800">image at ∞ →</text>`;
+  return `<svg class="plot" viewBox="0 0 ${RW} ${RH}" preserveAspectRatio="xMidYMid meet" style="max-height:230px">${o}</svg>`;
+}
+
+/* =====================================================================
+   4 · BUILDER
+   ===================================================================== */
+const B={fam:'lens',f:20,u:-30,ovl:false,quad:true,key:true,ray:true};
+function bRender(){
+  const host=$('#b-plot'); if(!host) return;
+  const ov=B.ovl?{fam:isLens(B.fam)?'mirror':'lens',f:B.f}:null;
+  host.innerHTML=plotSVG({fam:B.fam,f:B.f,quad:B.quad,key:B.key,overlay:ov,marker:B.u});
+  $('#b-title').textContent='Hyperbola Builder — '+typeName(B.fam,B.f);
+  $('#b-fval').textContent=fmt(B.f,0);
+  $('#b-uval').textContent=fmt(B.u,1);
+  const a=asym(B.fam,B.f);
+  $('#b-cap').innerHTML=`<b>${typeName(B.fam,B.f)}</b>, f = ${fmt(B.f,0)} cm · asymptotes <span class="mono hl-am">u = ${fmt(a.u,0)}</span>, <span class="mono hl-cy">v = ${fmt(a.v,0)}</span> · new origin <span class="mono hl-vi">(${fmt(a.u,0)}, ${fmt(a.v,0)})</span> · <span class="mono">${isLens(B.fam)?'(u+f)(v−f) = −f²  → rising branches':'(u−f)(v−f) = +f²  → falling branches'}</span>`;
+  const d=describe(B.fam,B.f,B.u), v=d.v, m=d.m;
+  $('#b-ro').innerHTML=
+    `<div><p class="k">u</p><p class="v hl-cy">${fmt(B.u)}</p></div>
+     <div><p class="k">v</p><p class="v hl-am">${d.inf?sgn(v||1)+'∞':fmt(v)}</p></div>
+     <div><p class="k">m = ${isLens(B.fam)?'v/u':'−v/u'}</p><p class="v hl-mg">${d.inf?'±∞':fmt(m,2)}</p></div>
+     <div><p class="k">nature</p><p class="v" style="font-size:clamp(13px,2.2vmin,26px)">${d.inf?'at ∞':((isLens(B.fam)?v>0:v<0)?'Real':'Virtual')}</p></div>
+     <div><p class="k">orient.</p><p class="v" style="font-size:clamp(13px,2.2vmin,26px)">${d.inf?'—':(m>0?'Erect':'Inverted')}</p></div>
+     <div><p class="k">size</p><p class="v" style="font-size:clamp(13px,2.2vmin,26px)">${d.inf?'—':(Math.abs(m)>.999&&Math.abs(m)<1.001?'Same':(Math.abs(m)>1?'Magnified':'Diminished'))}</p></div>`;
+  $('#b-desc').innerHTML=d.txt;
+  const rb=$('#b-raybox');
+  if(B.ray){ rb.style.display=''; $('#b-ray').innerHTML=raySVG(B.fam,B.f,B.u);
+    $('#b-raycap').innerHTML=`Ray diagram · <b>${typeName(B.fam,B.f)}</b> · object at u = ${fmt(B.u,1)} cm`; }
+  else rb.style.display='none';
+  $$('#b-seg button').forEach(b=>b.setAttribute('aria-pressed',
+    String(b.dataset.fam===B.fam&&Math.sign(B.f)===Number(b.dataset.sgn))));
+  const ur=$('#b-u'); ur.value=clamp(B.u,-60,-2);
+}
+function bSetF(val){
+  let v=Number(val);
+  if(v===0) v=(B.f>0?1:-1);
+  B.f=v; B.u=clamp(B.u,-60,-2);
+  bRender();
+}
+$('#b-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  B.fam=b.dataset.fam; const s=Number(b.dataset.sgn);
+  B.f=s*Math.abs(B.f||20); bRender();
+  toast(typeName(B.fam,B.f)+' · f = '+fmt(B.f,0)+' cm');
+});
+$('#b-f').addEventListener('input',e=>{
+  let v=Number(e.target.value); if(v===0){v=(B.f>0?1:-1);e.target.value=v;}
+  /* keep the family label honest when the sign flips */
+  B.f=v; bRender();
+});
+$('#b-u').addEventListener('input',e=>{B.u=Number(e.target.value);bRender();});
+$('#b-ovl').addEventListener('change',e=>{B.ovl=e.target.checked;bRender();
+  if(B.ovl) toast('Dashed violet = the '+(isLens(B.fam)?'mirror':'lens')+' curve with the same f — a mirror image in the v-axis.');});
+$('#b-quad').addEventListener('change',e=>{B.quad=e.target.checked;bRender();});
+$('#b-key').addEventListener('change',e=>{B.key=e.target.checked;bRender();});
+$('#b-ray').addEventListener('change',e=>{B.ray=e.target.checked;bRender();});
+/* drag the amber marker directly on the plot */
+(function(){
+  let dragging=false;
+  const box=$('#b-plot');
+  const toLocal=ev=>{
+    const svg=box.querySelector('svg'); if(!svg) return null;
+    const p=svg.createSVGPoint(); p.x=ev.clientX; p.y=ev.clientY;
+    const ctm=svg.getScreenCTM(); if(!ctm) return null;
+    return p.matrixTransform(ctm.inverse());
+  };
+  const apply=ev=>{
+    const p=toLocal(ev); if(!p) return;
+    let u=ux(p.x);
+    const aU=isLens(B.fam)?-B.f:B.f;
+    /* keep off the singularity; stay on the side the pointer is on */
+    const side=(u<aU)?-1:1;
+    const gap=Math.max(0.8,Math.abs(B.f)*0.02);
+    u=clamp(u,-DOM+1,DOM-1);
+    if(side<0) u=Math.min(u,aU-gap); else u=Math.max(u,aU+gap);
+    if(u>=-0.5&&u<=DOM-1){/* allow virtual-object side but flag it */}
+    B.u=Math.abs(u)<0.6?(u<0?-0.6:0.6):u;
+    bRender();
+  };
+  box.addEventListener('pointerdown',e=>{dragging=true;box.setPointerCapture&&box.setPointerCapture(e.pointerId);apply(e);e.preventDefault();});
+  box.addEventListener('pointermove',e=>{if(dragging)apply(e);});
+  window.addEventListener('pointerup',()=>{dragging=false;});
+})();
+
+/* =====================================================================
+   5 · STEP-BY-STEP BUILD (timeline with 5 stages)
+   ===================================================================== */
+const S={fam:'lens',f:20,t:0,playing:null};
+function stBuild(){
+  const host=$('#st-plot');
+  host.innerHTML=plotSVG({fam:S.fam,f:S.f,quad:true,key:false,origin:true,marker:null});
+  const svg=host.querySelector('svg'), id=svg.innerHTML.match(/cl-(u\d+)/);
+  /* growing clip rects for the sweep-in of asymptotes & quadrant lines */
+  const defs=svg.querySelector('defs');
+  const mk=(name,x,y,w,h)=>{const cp=document.createElementNS('http://www.w3.org/2000/svg','clipPath');
+    cp.setAttribute('id',name);const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);
+    cp.appendChild(r);defs.appendChild(cp);return r;};
+  const a=asym(S.fam,S.f);
+  const rv=mk('sw-v',sx(a.u)-6,PY1,12,0);
+  const rh=mk('sw-h',PX0,sy(a.v)-6,0,12);
+  const rq=mk('sw-q',PX0,PY1,0,PY0-PY1);
+  const gA=svg.querySelector('.g-asym'), gQ=svg.querySelector('.quad');
+  const vLine=gA.querySelector('.asy.v'), hLine=gA.querySelector('.asy.h');
+  vLine.setAttribute('clip-path','url(#sw-v)'); hLine.setAttribute('clip-path','url(#sw-h)');
+  if(gQ) gQ.setAttribute('clip-path','url(#sw-q)');
+  const labs=gA.querySelectorAll('.asy-lab');
+  const branches=svg.querySelectorAll('.branch'), odo=svg.querySelector('.odo');
+  const parts=svg.querySelectorAll('.g-grid,.g-tk,.g-axes');
+  const BR=Array.from(branches).map(p=>{const L=p.getTotalLength();
+    p.style.strokeDasharray=L;p.style.strokeDashoffset=L;return {p,L};});
+  const FULLH=PY0-PY1, FULLW=PX1-PX0;
+  const STAGES=[
+    'Stage 1/5 — axes and grid fade in.',
+    'Stage 2/5 — vertical asymptote sweeps down: the object sits at the focus, so v → ∞.',
+    'Stage 3/5 — horizontal asymptote sweeps across: object at ∞, so v = f.',
+    'Stage 4/5 — shift the origin: the new quadrant lines dash in through (u₀ , v₀).',
+    'Stage 5/5 — both branches draw themselves, and they pass exactly through (0, 0).'];
+  function apply(t){
+    S.t=t;
+    const t1=easeOut(seg01(t,0,.15)), t2=easeOut(seg01(t,.15,.35)),
+          t3=easeOut(seg01(t,.35,.55)), t4=easeOut(seg01(t,.55,.70)),
+          t5=easeOut(seg01(t,.70,1));
+    parts.forEach(p=>p.setAttribute('opacity',t1));
+    rv.setAttribute('height',FULLH*t2);
+    labs[0]&&labs[0].setAttribute('opacity',seg01(t2,.6,1));
+    rh.setAttribute('width',FULLW*t3);
+    labs[1]&&labs[1].setAttribute('opacity',seg01(t3,.6,1));
+    rq.setAttribute('width',FULLW*t4);
+    if(gQ) gQ.setAttribute('opacity',Math.max(t4,.0));
+    BR.forEach((b,i)=>{const tt=clamp(t5*1.18-i*0.16,0,1);b.p.style.strokeDashoffset=b.L*(1-tt);});
+    if(odo){odo.setAttribute('opacity',seg01(t5,.82,1));
+      odo.setAttribute('r',lerp(3,8,seg01(t5,.82,1)));}
+    $('#st-range').value=Math.round(t*1000);
+    $('#st-pct').textContent=Math.round(t*100)+'%';
+    const idx=t<=0?-1:t<.15?0:t<.35?1:t<.55?2:t<.70?3:4;
+    $('#st-cap').textContent=idx<0?'Stage 0 — blank board. Press ▶ Play build.':STAGES[idx];
+    $$('#st-chips .stchip').forEach((c,i)=>c.classList.toggle('on',i===idx));
+  }
+  S.apply=apply; apply(S.t);
+}
+$('#st-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  S.fam=b.dataset.fam; S.f=Number(b.dataset.sgn)*Math.abs(S.f||20);
+  $$('#st-seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  stBuild(); toast('Rebuilt for '+typeName(S.fam,S.f));
+});
+$$('#st-seg button')[0].setAttribute('aria-pressed','true');
+$('#st-play').addEventListener('click',()=>{
+  if(S.playing){S.playing.kill&&S.playing.kill();S.playing=null;$('#st-play').textContent='▶ Play build';return;}
+  $('#st-play').textContent='⏸ Pause';
+  const from=S.t>=1?0:S.t;
+  S.apply(from);
+  S.playing=anim((1-from)*3600,t=>S.apply(from+(1-from)*t),()=>{
+    S.playing=null;$('#st-play').textContent='▶ Play build';
+    toast('Both branches pass through (0, 0) — the most-missed detail in JEE sketches.');});
+});
+$('#st-reset').addEventListener('click',()=>{S.playing&&S.playing.kill&&S.playing.kill();S.playing=null;
+  $('#st-play').textContent='▶ Play build';S.apply(0);});
+$('#st-range').addEventListener('input',e=>{S.playing&&S.playing.kill&&S.playing.kill();
+  S.playing=null;$('#st-play').textContent='▶ Play build';S.apply(Number(e.target.value)/1000);});
+$$('#st-chips .stchip').forEach(c=>c.addEventListener('click',()=>{
+  const target=Number(c.dataset.t);
+  S.playing&&S.playing.kill&&S.playing.kill();S.playing=null;$('#st-play').textContent='▶ Play build';
+  const from=S.t; anim(700,t=>S.apply(lerp(from,target,t)));}));
+$('#st-scrub').addEventListener('scroll',e=>{
+  const el=e.target, max=el.scrollHeight-el.clientHeight; if(max<=0)return;
+  S.playing&&S.playing.kill&&S.playing.kill();S.playing=null;$('#st-play').textContent='▶ Play build';
+  S.apply(el.scrollTop/max);
+},{passive:true});
+
+/* =====================================================================
+   6 · GALLERY
+   ===================================================================== */
+const CASES=[
+  {fam:'lens',  f: 20, note:'Real object ⟹ left branch. Right branch = virtual object.'},
+  {fam:'lens',  f:-20, note:'v never exceeds −|f|: image always between O and F.'},
+  {fam:'mirror',f:-20, note:'Symmetric about v = u. New origin in the third quadrant.'},
+  {fam:'mirror',f: 20, note:'Only the lower-left branch is used by real objects.'}
+];
+function buildGallery(){
+  const g=$('#gal'); if(!g) return;
+  g.innerHTML=CASES.map((c,i)=>{
+    const a=asym(c.fam,c.f);
+    return `<figure class="tile tilebox" data-i="${i}" data-rv="z" style="--d:${2+i};margin:0" tabindex="0" role="button"
+      aria-label="Load ${typeName(c.fam,c.f)} into the builder">
+      <div class="th"><b>${typeName(c.fam,c.f)}</b><span>f = ${fmt(c.f,0)} cm</span></div>
+      ${plotSVG({fam:c.fam,f:c.f,compact:true,quad:false,key:false,origin:false})}
+      <div class="tf"><span>asym: <b class="hl-am">u = ${fmt(a.u,0)}</b>, <b class="hl-cy">v = ${fmt(a.v,0)}</b></span><span class="go">load ↗</span></div>
+      <div class="tf" style="border-top:0;padding-top:0;color:var(--dim)">${c.note}</div></figure>`;
+  }).join('');
+  const load=i=>{
+    const c=CASES[i]; B.fam=c.fam; B.f=c.f; B.u=c.fam==='lens'?(c.f>0?-3*c.f:-2*Math.abs(c.f)):-3*c.f;
+    B.u=clamp(B.u,-60,-2); bRender();
+    stBuild(); S.fam=c.fam; S.f=c.f; stBuild();
+    reveal($('#s-builder'));
+    const el=$('#s-builder');
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!hosted) go(PAGES.indexOf($('#s-builder')));
+    toast(typeName(c.fam,c.f)+' loaded into the builder');
+  };
+  g.addEventListener('click',e=>{const t=e.target.closest('.tile'); if(t) load(Number(t.dataset.i));});
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=e.target.closest('.tile');
+    if(t){e.preventDefault();load(Number(t.dataset.i));}}});
+}
+
+/* =====================================================================
+   7 · READ-THE-GRAPH + COMPANION GRAPHS
+   ===================================================================== */
+function buildRead(){
+  const F=20;
+  $('#rd-lens').innerHTML=plotSVG({fam:'lens',f:F,quad:false,key:true,regions:[
+    {a:-DOM,b:-2*F,fill:'rgba(63,224,255,.10)',lab:'u < −2f',col:'#9fe9ff'},
+    {a:-2*F,b:-F,fill:'rgba(84,224,138,.13)',lab:'−2f < u < −f',col:'#a9f0c4'},
+    {a:-F,b:0,fill:'rgba(255,98,168,.14)',lab:'−f < u < 0 · virtual',col:'#ffb0d2'},
+    {a:0,b:DOM,fill:'rgba(169,139,255,.08)',lab:'u > 0 · virtual object',col:'#cdbcff'}]});
+  $('#rd-mir').innerHTML=plotSVG({fam:'mirror',f:-F,quad:false,key:true,regions:[
+    {a:-DOM,b:-2*F,fill:'rgba(63,224,255,.10)',lab:'beyond C',col:'#9fe9ff'},
+    {a:-2*F,b:-F,fill:'rgba(84,224,138,.13)',lab:'C → F',col:'#a9f0c4'},
+    {a:-F,b:0,fill:'rgba(255,98,168,.14)',lab:'inside F · virtual',col:'#ffb0d2'},
+    {a:0,b:DOM,fill:'rgba(169,139,255,.08)',lab:'u > 0',col:'#cdbdff'}]});
+}
+/* generic small-plot for the companion graphs */
+function linePlot(cfg){
+  const id=uid(), W=1000,H=620,L=90,R=40,T=28,B=56;
+  const x0=L,x1=W-R,y0=H-B,y1=T;
+  const X=v=>x0+(v-cfg.xd[0])/(cfg.xd[1]-cfg.xd[0])*(x1-x0);
+  const Y=v=>y0-(v-cfg.yd[0])/(cfg.yd[1]-cfg.yd[0])*(y0-y1);
+  let s=`<svg class="plot" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">
+    <defs><clipPath id="c-${id}"><rect x="${x0}" y="${y1}" width="${x1-x0}" height="${y0-y1}"/></clipPath></defs>
+    <g class="g-grid">`;
+  cfg.xticks.forEach(k=>{s+=`<line x1="${X(k)}" y1="${y1}" x2="${X(k)}" y2="${y0}"/>`;});
+  cfg.yticks.forEach(k=>{s+=`<line x1="${x0}" y1="${Y(k)}" x2="${x1}" y2="${Y(k)}"/>`;});
+  s+=`</g>
+    <line class="g-ax" x1="${x0}" y1="${Y(0)}" x2="${x1}" y2="${Y(0)}"/>
+    <line class="g-ax" x1="${X(0)}" y1="${y0}" x2="${X(0)}" y2="${y1}"/>`;
+  cfg.xticks.forEach(k=>{if(k===0)return;s+=`<text class="g-tk" x="${X(k)}" y="${Y(0)+26}" text-anchor="middle">${cfg.xfmt(k)}</text>`;});
+  cfg.yticks.forEach(k=>{if(k===0)return;s+=`<text class="g-tk" x="${X(0)-12}" y="${Y(k)+6}" text-anchor="end">${cfg.yfmt(k)}</text>`;});
+  s+=`<text class="g-axlab" x="${x1-6}" y="${Y(0)-14}" text-anchor="end">${cfg.xlab}</text>
+      <text class="g-axlab" x="${X(0)+14}" y="${y1+20}">${cfg.ylab}</text>
+      <g clip-path="url(#c-${id})">${cfg.body(X,Y)}</g></svg>`;
+  return s;
+}
+function buildCompanions(){
+  const F=20;
+  /* 1/v vs 1/u : lens slope +1, mirror slope -1, both intercept 1/f */
+  const inv=k=>k===0?'0':(k>0?'':'−')+'1/'+Math.abs(Math.round(1/k*1000)/1000===0?1:Math.round(1/Math.abs(k)));
+  $('#cp-inv').innerHTML=linePlot({
+    xd:[-0.14,0.14],yd:[-0.14,0.14],
+    xticks:[-0.1,-0.05,0.05,0.1],yticks:[-0.1,-0.05,0.05,0.1],
+    xfmt:k=>(k<0?'−':'')+'1/'+Math.abs(Math.round(1/k)),
+    yfmt:k=>(k<0?'−':'')+'1/'+Math.abs(Math.round(1/k)),
+    xlab:'1/u',ylab:'1/v',
+    body:(X,Y)=>{
+      const L=v=>`<line x1="${X(-0.14)}" y1="${Y(-0.14+v)}" x2="${X(0.14)}" y2="${Y(0.14+v)}" stroke="#3fe0ff" stroke-width="5"/>`;
+      const M=v=>`<line x1="${X(-0.14)}" y1="${Y(0.14+v)}" x2="${X(0.14)}" y2="${Y(-0.14+v)}" stroke="#ff62a8" stroke-width="5" stroke-dasharray="14 10"/>`;
+      const c=1/F;
+      return L(c)+M(c)+
+        `<circle cx="${X(0)}" cy="${Y(c)}" r="9" fill="#ffc247"/>
+         <text x="${X(0)+16}" y="${Y(c)-10}" fill="#ffc247" style="font-size:21px;font-weight:800">intercept = 1/f</text>
+         <text x="${X(0.085)}" y="${Y(0.085+c)-14}" fill="#3fe0ff" style="font-size:21px;font-weight:800">lens · slope +1</text>
+         <text x="${X(0.085)}" y="${Y(-0.085+c)+30}" fill="#ff62a8" style="font-size:21px;font-weight:800">mirror · slope −1</text>
+         <circle cx="${X(-c)}" cy="${Y(0)}" r="7" fill="none" stroke="#54e08a" stroke-width="3"/>
+         <text x="${X(-c)-14}" y="${Y(0)+30}" fill="#54e08a" text-anchor="end" style="font-size:19px;font-weight:800">x-int = −1/f</text>`;
+    }});
+  /* m vs u for a convex lens */
+  $('#cp-m').innerHTML=linePlot({
+    xd:[-70,70],yd:-1?[ -6,6]:[-6,6],
+    xticks:[-60,-40,-20,20,40,60],yticks:[-4,-2,2,4],
+    xfmt:k=>(k<0?'−':'')+Math.abs(k),yfmt:k=>(k<0?'−':'')+Math.abs(k),
+    xlab:'u (cm)',ylab:'m',
+    body:(X,Y)=>{
+      const f=F, pts1=[],pts2=[];
+      for(let u=-70;u<=-f-0.25;u+=0.25){pts1.push([u,f/(u+f)]);}
+      for(let u=-f+0.25;u<=70;u+=0.25){pts2.push([u,f/(u+f)]);}
+      const mk=arr=>{let d='',on=false;for(const p of arr){const y=clamp(p[1],-8,8);
+        d+=(on?'L':'M')+X(p[0]).toFixed(1)+' '+Y(y).toFixed(1)+' ';on=true;}return d;};
+      return `<line class="asy v" x1="${X(-f)}" y1="${Y(-6)}" x2="${X(-f)}" y2="${Y(6)}"/>
+        <line x1="${X(-70)}" y1="${Y(0)}" x2="${X(70)}" y2="${Y(0)}" stroke="rgba(255,255,255,.25)" stroke-width="2" stroke-dasharray="6 8"/>
+        <path d="${mk(pts1)}" fill="none" stroke="#ffc247" stroke-width="5" stroke-linecap="round"/>
+        <path d="${mk(pts2)}" fill="none" stroke="#ffc247" stroke-width="5" stroke-linecap="round"/>
+        <text x="${X(-f)+10}" y="${Y(5.4)}" fill="#ffc247" style="font-size:20px;font-weight:800">u = −f</text>
+        <circle cx="${X(-2*f)}" cy="${Y(-1)}" r="9" fill="#54e08a"/>
+        <text x="${X(-2*f)-14}" y="${Y(-1)+8}" text-anchor="end" fill="#54e08a" style="font-size:20px;font-weight:800">m = −1 at u = −2f</text>
+        <circle cx="${X(0)}" cy="${Y(1)}" r="9" fill="#3fe0ff"/>
+        <text x="${X(0)+14}" y="${Y(1)-10}" fill="#3fe0ff" style="font-size:20px;font-weight:800">m = +1 at u = 0</text>`;
+    }});
+}
+
+/* =====================================================================
+   8 · IDENTIFICATION QUIZ
+   ===================================================================== */
+const QPOOL=[
+  {fam:'lens',f:20},{fam:'lens',f:-25},{fam:'mirror',f:-15},{fam:'mirror',f:30}
+];
+const QOPTS=[{fam:'lens',f:1},{fam:'lens',f:-1},{fam:'mirror',f:-1},{fam:'mirror',f:1}];
+const Q={list:[],i:0,score:0,locked:false,marks:[]};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function qRender(){
+  const q=Q.list[Q.i], a=asym(q.fam,q.f);
+  $('#q-plot').innerHTML=plotSVG({fam:q.fam,f:q.f,compact:false,quad:false,key:false,origin:false});
+  $('#q-num').textContent='Question '+(Q.i+1)+' of '+Q.list.length;
+  $('#q-cap').textContent='Dashed lines are the asymptotes. Grid squares = 10 cm.';
+  $('#q-expl').style.display='none'; $('#q-expl').innerHTML='';
+  $('#q-next').disabled=true;
+  $('#q-next').textContent=Q.i===Q.list.length-1?'See result →':'Next question →';
+  $('#q-retry').style.display='none';
+  $('#q-score').textContent='Score '+Q.score+' / '+Q.list.length;
+  $('#q-pips').innerHTML=Q.list.map((_,i)=>`<span class="pip ${i<Q.marks.length?(Q.marks[i]?'ok':'no'):(i===Q.i?'cur':'')}"></span>`).join('');
+  const opts=$('#q-opts');
+  opts.innerHTML=shuffle(QOPTS.slice()).map((o,i)=>
+    `<button type="button" class="opt" data-fam="${o.fam}" data-sgn="${o.f>0?1:-1}">
+      <span class="bdg">${'ABCD'[i]}</span>${typeName(o.fam,o.f>0?1:-1)}</button>`).join('');
+  Q.locked=false;
+  $$('#q-opts .opt').forEach(b=>b.addEventListener('click',()=>qAnswer(b,q,a)));
+}
+function qAnswer(btn,q,a){
+  if(Q.locked)return; Q.locked=true;
+  const pick={fam:btn.dataset.fam,sgn:Number(btn.dataset.sgn)};
+  const correct=pick.fam===q.fam&&Math.sign(q.f)===pick.sgn;
+  $$('#q-opts .opt').forEach(b=>{
+    b.disabled=true;
+    const ok=b.dataset.fam===q.fam&&Number(b.dataset.sgn)===Math.sign(q.f);
+    if(ok)b.classList.add('ok'); else if(b===btn)b.classList.add('no');
+  });
+  Q.marks[Q.i]=correct; if(correct)Q.score++;
+  $('#q-score').textContent='Score '+Q.score+' / '+Q.list.length;
+  $('#q-pips').innerHTML=Q.list.map((_,i)=>`<span class="pip ${i<Q.marks.length?(Q.marks[i]?'ok':'no'):(i===Q.i?'cur':'')}"></span>`).join('');
+  const slopeTxt=isLens(q.fam)?'rising branches ⟹ lens':'falling branches ⟹ mirror';
+  $('#q-expl').style.display='';
+  $('#q-expl').innerHTML=`<b class="${correct?'hl-gr':'hl-rd'}">${correct?'Correct ✓':'Not quite ✗'}</b> —
+    it is a <b>${typeName(q.fam,q.f)}</b> with <b>f = ${fmt(q.f,0)} cm</b>.<br>
+    Asymptotes at <span class="mono hl-am">u = ${fmt(a.u,0)}</span> and <span class="mono hl-cy">v = ${fmt(a.v,0)}</span>
+    ⟹ new origin <span class="mono">(${fmt(a.u,0)}, ${fmt(a.v,0)})</span>. ${slopeTxt}.
+    ${isLens(q.fam)?'Lens asymptotes are always (−f, +f).':'Mirror asymptotes are always (f, f) — both on the same side.'}`;
+  $('#q-next').disabled=false;
+  if(correct){
+    const r=btn.getBoundingClientRect();
+    burst((r.left+r.width/2)/innerWidth,(r.top+r.height/2)/innerHeight,42);
+  }
+}
+$('#q-next').addEventListener('click',()=>{
+  if(Q.i<Q.list.length-1){Q.i++;qRender();}
+  else{
+    const perfect=Q.score===Q.list.length;
+    $('#q-opts').innerHTML=`<div class="card" style="text-align:center">
+      <h3 style="font-size:clamp(24px,5vmin,54px)" class="${perfect?'hl-gr':'hl-am'}">${Q.score} / ${Q.list.length}</h3>
+      <p class="muted" style="font-size:clamp(14px,2.5vmin,28px)">${perfect
+        ? 'Clean sweep 🎯 — you can now identify any v–u curve in under ten seconds.'
+        : 'Revise the asymptote table, then run it again. Remember: rising ⟹ lens, falling ⟹ mirror.'}</p></div>`;
+    $('#q-expl').style.display='none'; $('#q-next').style.display='none';
+    $('#q-retry').style.display='';
+    if(perfect){ bigConfetti(); toast('Clean sweep! 🎉'); }
+  }});
+$('#q-retry').addEventListener('click',()=>{
+  Q.i=0;Q.score=0;Q.marks=[];Q.locked=false;
+  Q.list=shuffle(QPOOL.slice()).map(c=>({fam:c.fam,f:c.f}));
+  $('#q-next').style.display=''; qRender();});
+function burst(x,y,n){ if(window.confetti) confetti({particleCount:n||60,spread:64,origin:{x,y},
+  scalar:.9,colors:['#3fe0ff','#ffc247','#ff62a8','#54e08a','#a98bff']}); }
+function bigConfetti(){ if(!window.confetti) return;
+  const end=Date.now()+900;
+  (function frame(){ confetti({particleCount:6,angle:60,spread:60,origin:{x:0},
+      colors:['#3fe0ff','#ffc247','#ff62a8','#54e08a','#a98bff']});
+    confetti({particleCount:6,angle:120,spread:60,origin:{x:1},
+      colors:['#3fe0ff','#ffc247','#ff62a8','#54e08a','#a98bff']});
+    if(Date.now()<end) requestAnimationFrame(frame); })(); }
+
+/* =====================================================================
+   9 · HERO ANIMATION
+   ===================================================================== */
+function buildHero(){
+  $('#hero-plot').innerHTML=plotSVG({fam:'lens',f:20,quad:true,key:true});
+  const svg=$('#hero-plot svg'), a=asym('lens',20);
+  const defs=svg.querySelector('defs');
+  const cp=document.createElementNS('http://www.w3.org/2000/svg','clipPath');cp.setAttribute('id','hero-sw');
+  const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  r.setAttribute('x',PX0);r.setAttribute('y',PY1);r.setAttribute('width',0);r.setAttribute('height',PY0-PY1);
+  cp.appendChild(r);defs.appendChild(cp);
+  const gA=svg.querySelector('.g-asym'); gA.setAttribute('clip-path','url(#hero-sw)');
+  const gQ=svg.querySelector('.quad'); if(gQ)gQ.setAttribute('opacity','0');
+  const br=Array.from(svg.querySelectorAll('.branch')).map(p=>{const L=p.getTotalLength();
+    p.style.strokeDasharray=L;p.style.strokeDashoffset=L;return{p,L};});
+  const odo=svg.querySelector('.odo'); if(odo)odo.setAttribute('opacity','0');
+  let done=false;
+  function run(){ if(done)return; done=true;
+    anim(3400,t=>{
+      r.setAttribute('width',(PX1-PX0)*easeOut(seg01(t,0,.42)));
+      if(gQ)gQ.setAttribute('opacity',seg01(t,.42,.6));
+      br.forEach((b,i)=>{b.p.style.strokeDashoffset=b.L*(1-clamp(seg01(t,.55,1)*1.2-i*.14,0,1));});
+      if(odo)odo.setAttribute('opacity',seg01(t,.9,1));
+    });
+  }
+  return run;
+}
+
+/* =====================================================================
+   10 · DECK CONTROLLER  (fallback only — never hides .page via CSS)
+   ===================================================================== */
+const PAGES=$$('section.page');
+let hosted=false, cur=0, heroRun=null;
+function detectHost(){
+  if(window.__slidePanel||window.__SLIDE_HOST__||document.documentElement.hasAttribute('data-slide-panel')) return true;
+  try{ return PAGES.some(p=>getComputedStyle(p).display==='none'); }catch(e){ return false; }
+}
+function reveal(page){ if(!page)return; $$('[data-rv]',page).forEach(el=>el.classList.add('rv-in')); }
+function paint(){
+  const i=clamp(cur,0,PAGES.length-1);
+  $('#pcount').textContent=(i+1)+' / '+PAGES.length;
+  $('#prog i').style.width=((i+1)/PAGES.length*100)+'%';
+  $('#pv').disabled=i===0; $('#pn').disabled=i===PAGES.length-1;
+}
+function go(i){
+  cur=clamp(i,0,PAGES.length-1);
+  PAGES.forEach((p,k)=>p.style.setProperty('display',k===cur?'block':'none','important'));
+  reveal(PAGES[cur]); paint();
+  if(PAGES[cur].id==='s-cover'&&heroRun) heroRun();
+}
+function fallbackOn(){
+  hosted=false; document.body.classList.remove('hosted');
+  const vis=PAGES.findIndex(p=>getComputedStyle(p).display!=='none');
+  go(vis>=0?vis:cur);
+}
+function fallbackOff(){
+  hosted=true; document.body.classList.add('hosted');
+  PAGES.forEach(p=>p.style.removeProperty('display'));
+  $('#prog i').style.width='100%';
+}
+$('#pn').addEventListener('click',()=>go(cur+1));
+$('#pv').addEventListener('click',()=>go(cur-1));
+window.addEventListener('keydown',e=>{
+  if(hosted) return;
+  if(/input|textarea|select/i.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home'){e.preventDefault();go(0);}
+  else if(e.key==='End'){e.preventDefault();go(PAGES.length-1);}
+});
+/* reveal-on-enter works in BOTH modes (host shows one page at a time) */
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ reveal(e.target);
+    if(e.target.id==='s-cover'&&heroRun) heroRun(); }});
+},{threshold:.12});
+PAGES.forEach(p=>io.observe(p));
+/* active-page tracking for the progress bar (host mode included) */
+const io2=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting&&e.intersectionRatio>.5){
+    cur=PAGES.indexOf(e.target); paint(); }});
+},{threshold:[.5,.75]});
+PAGES.forEach(p=>io2.observe(p));
+/* watch for the host injecting its own !important rules */
+const mo=new MutationObserver(()=>{const h=detectHost(); if(h!==hosted)(h?fallbackOff:fallbackOn)();});
+mo.observe(document.head,{childList:true,subtree:true,attributes:true});
+mo.observe(document.documentElement,{attributes:true});
+
+/* =====================================================================
+   11 · BOOT
+   ===================================================================== */
+function boot(){
+  buildGallery(); buildRead(); buildCompanions();
+  Q.list=shuffle(QPOOL.slice()).map(c=>({fam:c.fam,f:c.f})); qRender();
+  stBuild(); bRender(); heroRun=buildHero();
+  if($('#s-cover').getBoundingClientRect().top<innerHeight) heroRun();
+  setTimeout(()=>{ if(detectHost()) fallbackOff(); else fallbackOn(); },60);
+  setTimeout(()=>{ /* safety net: nothing may stay invisible if IO never fires */
+    if(!hosted&&!$$('[data-rv].rv-in').length) reveal(PAGES[0]);
+  },1400);
+  paint();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+/* extra jumps */
+$('#to-builder').addEventListener('click',()=>{const el=$('#s-builder');
+  if(!hosted) go(PAGES.indexOf(el)); el.scrollIntoView({behavior:'smooth',block:'start'});});
+$('#to-quiz').addEventListener('click',()=>{const el=$('#s-quiz');
+  if(!hosted) go(PAGES.indexOf(el)); el.scrollIntoView({behavior:'smooth',block:'start'});
+  $('#q-retry').click();});
+/* responsive: keep the two-column builder usable */
+function fitGrids(){
+  const narrow=innerWidth<1000;
+  [['#b-grid','minmax(0,1.6fr) minmax(0,1fr)'],['#st-grid','minmax(0,1.55fr) minmax(0,1fr)']].forEach(g=>{
+    const el=$(g[0]); if(el) el.style.gridTemplateColumns=narrow?'minmax(0,1fr)':g[1];});
+}
+fitGrids(); window.addEventListener('resize',fitGrids);
+</script>
+</body>
+</html>

@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mechanics-01-BasicTerms</title>
+<style>
+:root{
+  --bg:#0b0f17; --ink:#e8eef7; --mut:#9fb0c8; --dim:#7c8db0; --line:#1d2940;
+  --blue:#3b82f6; --green:#22c55e; --amber:#eab308; --rose:#f43f5e;
+  --cyan:#22d3ee; --violet:#a78bfa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;user-select:none;-webkit-font-smoothing:antialiased}
+body.nocur,body.nocur *{cursor:none!important}
+#wrap{position:fixed;inset:0;overflow:hidden;background:radial-gradient(1300px 900px at 50% -12%,#101c33 0%,var(--bg) 58%)}
+#stage{position:absolute;top:0;left:0;transform-origin:0 0}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;padding:26px 46px 24px;overflow:hidden;
+  opacity:0;visibility:hidden;transform:translateX(26px);
+  transition:opacity .3s ease,transform .3s ease,visibility .3s}
+.slide.act{opacity:1;visibility:visible;transform:none}
+.sfit{width:100%;height:100%;transform-origin:50% 0;display:flex;flex-direction:column}
+.sh{display:flex;align-items:baseline;gap:16px;margin:0 0 14px;flex:none}
+.chip{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);
+  border:1px solid #155e75;padding:4px 12px;border-radius:999px;background:rgba(34,211,238,.07);white-space:nowrap}
+h2{font-size:33px;margin:0;font-weight:750;letter-spacing:.2px}
+h3{font-size:20px;margin:0 0 6px;color:#dbe7f6}
+p{margin:7px 0;font-size:18.5px;line-height:1.5;color:#d7e1ef}
+b{color:#f1f6fd}
+.row{display:flex;gap:24px;align-items:flex-start}
+.row.grow{flex:1;min-height:0}
+.col{flex:1;min-width:0}
+.small p{font-size:16.5px}
+
+/* ---------- cards ---------- */
+.card{position:relative;border-radius:13px;padding:15px 20px 13px;border:1.5px solid;margin:12px 0}
+.ctag{position:absolute;top:-11px;left:16px;font-size:11.5px;font-weight:800;letter-spacing:.18em;
+  text-transform:uppercase;padding:2px 11px;border-radius:999px;background:var(--bg)}
+.card.q{border-color:var(--blue);background:linear-gradient(180deg,rgba(59,130,246,.13),rgba(59,130,246,.04))}
+.card.q .ctag{color:#93c5fd;border:1px solid #1e40af}
+.card.s{border-color:var(--green);background:linear-gradient(180deg,rgba(34,197,94,.12),rgba(34,197,94,.04))}
+.card.s .ctag{color:#86efac;border:1px solid #14532d}
+.card.f{border-color:var(--amber);background:linear-gradient(180deg,rgba(234,179,8,.12),rgba(234,179,8,.04))}
+.card.f .ctag{color:#fde047;border:1px solid #713f12}
+.card.note{border-color:#64748b;background:rgba(100,116,139,.08)}
+.card.note .ctag{color:#cbd5e1;border:1px solid #334155}
+.def{background:rgba(148,163,184,.07);border:1px solid var(--line);border-left:4px solid var(--cyan);
+  border-radius:10px;padding:11px 16px;margin:10px 0}
+.idea{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.35);border-left:4px solid var(--violet);
+  border-radius:10px;padding:11px 16px;margin:10px 0}
+.steps{margin:6px 0 2px;padding-left:22px}
+.steps li{margin:5px 0;font-size:17.5px;line-height:1.45;color:#d7e1ef}
+
+/* ---------- fragments ---------- */
+[data-f]{opacity:0;transform:translateY(10px);transition:opacity .35s ease,transform .35s ease}
+[data-f].on{opacity:1;transform:none}
+
+/* ---------- figures / tables / options ---------- */
+.figbox{background:rgba(13,20,35,.55);border:1px solid var(--line);border-radius:14px;padding:10px;
+  display:flex;align-items:center;justify-content:center}
+.figsvg{width:100%;height:auto;display:block}
+.tbl{width:100%;border-collapse:collapse;font-size:17px;margin-top:6px}
+.tbl th{color:var(--mut);font-weight:600;text-align:left;padding:7px 12px;border-bottom:1.5px solid var(--line);
+  font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+.tbl td{padding:8px 12px;border-bottom:1px solid rgba(29,41,64,.7)}
+.pill{display:inline-block;padding:2px 12px;border-radius:999px;font-weight:700;font-size:15px}
+.pill.ok{color:#86efac;background:rgba(34,197,94,.14);border:1px solid #14532d}
+.pill.no{color:#fda4af;background:rgba(244,63,94,.12);border:1px solid #881337}
+.opt{display:flex;gap:12px;align-items:center;padding:8px 14px;border:1.5px solid var(--line);border-radius:10px;
+  margin:7px 0;font-size:18px;background:rgba(148,163,184,.05)}
+.opt .key{width:26px;height:26px;border-radius:8px;background:#1f2b44;color:#93c5fd;font-weight:800;
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+.opt.win{border-color:var(--green);background:rgba(34,197,94,.10)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kbd-row{margin-top:8px;font-size:16px;color:var(--mut)}
+kbd{border:1px solid #2b3a58;border-bottom-width:2.5px;border-radius:6px;padding:1.5px 8px;background:#131c2e;
+  color:#9fb0c8;font-family:inherit;font-size:14px;margin:0 2px}
+
+/* ---------- title slide ---------- */
+.title .sfit{justify-content:center;align-items:center;text-align:center}
+.title .sub{font-size:24px;color:var(--cyan);font-weight:700;letter-spacing:.3em;text-transform:uppercase}
+.title h1{font-size:66px;margin:12px 0 6px;letter-spacing:.5px}
+.title .tag{font-size:19px;color:var(--mut);max-width:820px;line-height:1.55}
+.topics{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:28px}
+.topics span{border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:15.5px;color:var(--mut);
+  background:rgba(148,163,184,.06)}
+.keys{margin-top:36px;color:#5d6f8f;font-size:15px;letter-spacing:.04em}
+
+/* ---------- OSD ---------- */
+#osd{position:fixed;top:14px;right:16px;z-index:50;background:rgba(10,15,26,.92);border:1px solid #22304d;
+  color:#cfe0f5;font-size:14px;font-weight:600;padding:6px 14px;border-radius:999px;opacity:0;
+  transform:translateY(-6px);transition:opacity .25s,transform .25s;pointer-events:none;letter-spacing:.06em}
+#osd.show{opacity:1;transform:none}
+
+/* ---------- micro math ---------- */
+.mx{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",Georgia,"Times New Roman",serif;
+  font-style:normal;line-height:1.4}
+.mx i{font-style:italic;padding:0 .02em}
+.mx .mn,.mx .mtxt{font-style:normal}
+.mx .mo{padding:0 .12em}
+.mx .msp{display:inline-block;width:.28em}
+.mx .mq{display:inline-block;width:1em}
+.mx sup{font-size:.68em}.mx sub{font-size:.68em}
+.mscr sup{vertical-align:.62em}.mscr sub{vertical-align:-.28em}
+.mfrac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;
+  margin:0 .15em;font-size:.94em;line-height:1.25}
+.mfrac .mnum{padding:0 .3em .05em}
+.mfrac .mden{border-top:.085em solid currentColor;padding:.05em .3em 0}
+.msqrt{display:inline-flex;align-items:flex-start;margin:0 .1em}
+.msqrt .mrad{line-height:1.05}
+.msqrt .mroot{border-top:.085em solid currentColor;padding:.1em .18em 0 .12em;margin-left:-.08em}
+.mvec{position:relative;display:inline-block;padding-top:.34em;margin:0 .1em}
+.mvec::after{content:"";position:absolute;left:2%;right:14%;top:.16em;border-top:.095em solid currentColor}
+.mvec::before{content:"";position:absolute;right:0;top:.16em;transform:translateY(-46%);
+  border-left:.4em solid currentColor;border-top:.17em solid transparent;border-bottom:.17em solid transparent}
+.mhat{position:relative;display:inline-block;padding-top:.24em}
+.mhat::after{content:"^";position:absolute;top:-.34em;left:50%;transform:translateX(-50%) scaleX(1.25);
+  font-size:.8em;font-style:normal}
+.mbar{display:inline-block;border-top:.09em solid currentColor;padding-top:.1em}
+.mbig{font-size:1.2em}
+.mxb{display:block;text-align:center;font-size:1.28em;margin:.5em 0;
+  font-family:"Cambria Math","STIX Two Math","Latin Modern Math",Georgia,serif}
+</style>
+</head>
+<body>
+<div id="osd"></div>
+<div id="wrap"><div id="stage">
+
+<!-- ============ 1 · TITLE ============ -->
+<section class="slide title"><div class="sfit">
+  <div class="sub">Mechanics · Part 1</div>
+  <h1>Basic Terms</h1>
+  <p class="tag">The vocabulary of kinematics — before we derive a single equation of motion,
+  we must be precise about <b>where</b>, <b>how far</b>, <b>how fast</b> and <b>with respect to whom</b>.</p>
+  <div class="topics">
+    <span>Reference frames</span><span>Position</span><span>Distance &amp; Displacement</span>
+    <span>Velocity &amp; Speed</span><span>Averages</span><span>Acceleration</span>
+    <span>Retardation</span><span>Relative motion</span>
+  </div>
+  <div class="keys"><kbd>→</kbd><kbd>←</kbd> step &nbsp;·&nbsp; <kbd>Home</kbd><kbd>End</kbd> jump
+    &nbsp;·&nbsp; <kbd>1</kbd>–<kbd>7</kbd> board size &nbsp;·&nbsp; <kbd>F</kbd> fullscreen</div>
+</div></section>
+
+<!-- ============ 2 · REFERENCE FRAME ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Starting point</span><h2>Reference frame &amp; reference point</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p><b>Reference frame</b> — a coordinate system (a set of axes) with respect to which
+        observations are made.</p></div>
+      <div class="def"><p><b>Reference point</b> — the fixed point (origin) of the frame from which positions
+        are measured.</p></div>
+      <div class="idea" data-f="1"><p>Every quantity in mechanics — position, velocity, displacement — is
+        meaningless until the frame is declared first.</p></div>
+      <div class="card note" data-f="2"><span class="ctag">Example</span>
+        <p>“A particle is at \((3,4,5)\)” means: 3 m along \(x\), 4 m along \(y\), 5 m along \(z\) —
+        measured from the origin <b>O</b> of the chosen frame.</p></div>
+    </div>
+    <div class="col figbox" data-fig="frame"></div>
+  </div>
+</div></section>
+
+<!-- ============ 3 · POSITION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Starting point</span><h2>Position — vector and polar form</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p><b>Position</b> of a particle = its location relative to the reference point,
+        written as a vector.</p></div>
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>Vector form: \(\vec r = x\hat i + y\hat j + z\hat k\)</p>
+        <p>Magnitude: \(|\vec r| = \sqrt{x^{2}+y^{2}+z^{2}}\)</p>
+        <p>2-D polar form: \((r,\theta)\) with \(r=\sqrt{x^{2}+y^{2}},\ \theta=\tan^{-1}\left(\frac{y}{x}\right)\)</p>
+      </div>
+      <div class="card s" data-f="1"><span class="ctag">Example</span>
+        <p>Particle at \((3,4,5)\):</p>
+        <p>\(|\vec r|=\sqrt{3^{2}+4^{2}+5^{2}}=\sqrt{50}\approx 7.07\ \mathrm{m}\)</p>
+      </div>
+      <div class="idea" data-f="2"><p>Position needs <b>both</b> magnitude and direction — it is a vector.
+        The same point has different coordinates in a different frame.</p></div>
+    </div>
+    <div class="col figbox" data-fig="position"></div>
+  </div>
+</div></section>
+
+<!-- ============ 4 · REST & MOTION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Starting point</span><h2>Rest and motion are relative</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p>A body is <b>at rest</b> if its position does not change with time relative to the
+        reference point; it is <b>in motion</b> if the position changes.</p></div>
+      <div class="idea" data-f="1"><p><b>Rest and motion are relative terms.</b> The same body can be at rest
+        in one frame and in motion in another.</p></div>
+      <div class="card note" data-f="2"><span class="ctag">Example</span>
+        <p>A passenger in a moving bus: <b>at rest</b> w.r.t. the bus, <b>in motion</b> w.r.t. the road.</p></div>
+      <div class="card note" data-f="3"><span class="ctag">Note</span>
+        <p>Even a “stationary” building moves with the Earth around the Sun — there is no absolute state of rest.</p></div>
+    </div>
+    <div class="col figbox" data-fig="bus"></div>
+  </div>
+</div></section>
+
+<!-- ============ 5 · DISTANCE ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Distance — length of the actual path</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p><b>Distance</b> = total length of the actual path travelled. It is a <b>scalar</b>,
+        depends on the path, and can never decrease as time passes. SI unit: metre.</p></div>
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A boy travels 4 m north, then 3 m east. Find the distance travelled.</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>Distance = length of path actually walked:</p>
+        <p>\(s = 4 + 3 = 7\ \mathrm{m}\)</p></div>
+      <div class="idea" data-f="2"><p><b>Warning:</b> the answer is <b>not</b> 5 m. That straight-line value is the
+        <b>displacement</b> — the next idea.</p></div>
+    </div>
+    <div class="col figbox" data-fig="dist1"></div>
+  </div>
+</div></section>
+
+<!-- ============ 6 · DISTANCE ON CURVES ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Distance on a curved path</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A body moves on a quarter-circle arc of radius \(R\). What distance does it cover?</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>Distance = arc length: \(s = \frac{1}{4}(2\pi R) = \frac{\pi R}{2}\)</p></div>
+      <div class="card q" data-f="2"><span class="ctag">Question</span>
+        <p>And along a half-circle of radius \(R\)?</p></div>
+      <div class="card s" data-f="3"><span class="ctag">Solution</span>
+        <p>\(s = \frac{1}{2}(2\pi R) = \pi R\)</p></div>
+      <div class="idea" data-f="4"><p>On a curved path, distance (the arc) is always <b>longer</b> than the
+        straight chord joining the ends.</p></div>
+    </div>
+    <div class="col figbox" data-fig="curve"></div>
+  </div>
+</div></section>
+
+<!-- ============ 7 · DISPLACEMENT DEFINITION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Displacement — change in position</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>\[\Delta\vec r = \vec r_{f} - \vec r_{i}\]</p>
+        <p>Displacement is the <b>change in position</b>: a straight vector from the initial point to the final point.</p>
+      </div>
+      <div class="def" data-f="1"><p>It is a <b>vector</b>. It depends only on the endpoints — never on the path taken.</p></div>
+      <div class="idea" data-f="2"><p>For any journey: \(|\Delta\vec r| \le\) distance. They are equal only for
+        straight-line motion without turning back.</p></div>
+      <div class="card note" data-f="3"><span class="ctag">Note</span>
+        <p>A long journey can end with <b>zero displacement</b> — return to the start and \(\Delta\vec r = 0\).</p></div>
+    </div>
+    <div class="col figbox" data-fig="disp"></div>
+  </div>
+</div></section>
+
+<!-- ============ 8 · DISPLACEMENT WORKED ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Displacement — worked examples</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A body moves from \((3,4)\) to \((8,8)\). Find its displacement.</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>\(\Delta x = 8-3 = 5,\quad \Delta y = 8-4 = 4\)</p>
+        <p>\(|\Delta\vec r| = \sqrt{5^{2}+4^{2}} = \sqrt{41} \approx 6.40\ \mathrm{m}\),
+           at \(\tan^{-1}\left(\frac{4}{5}\right) \approx 38.7\degree\) to the \(x\)-axis.</p></div>
+      <div class="card q" data-f="2"><span class="ctag">Question</span>
+        <p>A particle goes 3 m east, then 4 m west. Displacement?</p></div>
+      <div class="card s" data-f="3"><span class="ctag">Solution</span>
+        <p>Take east as positive: \(\Delta x = +3 - 4 = -1\ \mathrm{m}\) → <b>1 m west</b>.
+        Distance was 7 m; displacement is only 1 m.</p></div>
+    </div>
+    <div class="col figbox" data-fig="grid1"></div>
+  </div>
+</div></section>
+
+<!-- ============ 9 · PYTHAGORAS FAMILY ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Displacement — the 3-4-5 family</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A particle goes 3 m east, then 4 m north. Find displacement.</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>\(|\Delta\vec r| = \sqrt{3^{2}+4^{2}} = 5\ \mathrm{m}\), at \(\tan^{-1}\left(\frac{4}{3}\right) \approx 53\degree\) north of east.</p></div>
+      <div class="card q" data-f="2"><span class="ctag">Question</span>
+        <p>Now 3 m east, 4 m north, then 5 m up. Displacement?</p></div>
+      <div class="card s" data-f="3"><span class="ctag">Solution</span>
+        <p>\(|\Delta\vec r| = \sqrt{3^{2}+4^{2}+5^{2}} = \sqrt{50} = 5\sqrt{2} \approx 7.07\ \mathrm{m}\)</p></div>
+    </div>
+    <div class="col">
+      <div class="figbox" data-fig="tri"></div>
+      <div class="figbox" data-f="2" data-fig="box3d" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 10 · WHEEL ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Path lengths</span><h2>Displacement — the rolling wheel</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A wheel of radius \(R\) rolls forward half a rotation. Find the displacement of the marked point
+        (initially touching the ground).</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <ul class="steps">
+          <li>Horizontal shift of the point = half the circumference = \(\pi R\)</li>
+          <li>Vertical shift = one diameter = \(2R\) (bottom → top)</li>
+          <li>\(|\Delta\vec r| = \sqrt{(\pi R)^{2} + (2R)^{2}} = R\sqrt{\pi^{2}+4} \approx 3.72\,R\)</li>
+        </ul></div>
+      <div class="idea" data-f="2"><p><b>Bonus:</b> the distance the point travels is the cycloid arc
+        \(= 4R\), while its displacement is only \(\approx 3.72\,R\). Path ≥ straight line, as always.</p></div>
+    </div>
+    <div class="col figbox" data-fig="wheel"></div>
+  </div>
+</div></section>
+
+<!-- ============ 11 · VELOCITY & SPEED ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Rates</span><h2>Velocity and speed</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>Velocity = rate of change of position: \(\vec v = \frac{d\vec r}{dt}\) — a <b>vector</b>.</p>
+        <p>Speed = magnitude of velocity: \(v = |\vec v| = \frac{ds}{dt}\) — a <b>scalar</b>, always \(\ge 0\).</p>
+      </div>
+      <div class="def" data-f="1"><p><b>Instantaneous velocity</b> = velocity at a single instant
+        (\(\Delta t \to 0\)). What a speedometer reads is the instantaneous <b>speed</b>.</p></div>
+      <div class="card f" data-f="2"><span class="ctag">Constant velocity</span>
+        <p>Equal displacements in equal time intervals:</p>
+        <p>\[\vec r(t) = \vec r_{0} + \vec v\,t \qquad\text{(1-D: } x = x_{0} + vt\text{)}\]</p>
+      </div>
+      <div class="idea" data-f="3"><p>Velocity can be negative (direction); speed can never be negative.</p></div>
+    </div>
+    <div class="col figbox" data-fig="motion"></div>
+  </div>
+</div></section>
+
+<!-- ============ 12 · AVERAGES ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Rates</span><h2>Average velocity vs. average speed</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>Average velocity: \(\vec v_{av} = \frac{\Delta\vec r}{\Delta t}\) &nbsp;(vector)</p>
+        <p>Average speed: \(= \frac{\text{total distance}}{\text{total time}}\) &nbsp;(scalar)</p>
+      </div>
+      <div class="idea" data-f="1"><p>\(|\vec v_{av}| \le\) average speed — always.
+        They are equal <b>only</b> for straight-line motion without turning back.</p></div>
+      <div class="card note" data-f="2"><span class="ctag">Example</span>
+        <p>Round trip A → B → A in time \(t\): displacement = 0 ⇒ \(\vec v_{av} = 0\),
+        but average speed \(= \frac{2\cdot AB}{t} > 0\).</p></div>
+    </div>
+    <div class="col figbox" data-fig="avg"></div>
+  </div>
+</div></section>
+
+<!-- ============ 13 · SAME TIME / SAME DISTANCE ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Rates</span><h2>Two classic averages: same time, same distance</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Same time</span>
+        <p>Speeds \(v_{1}\) and \(v_{2}\), each for time \(t\):</p>
+        <p>\[v_{av} = \frac{v_{1}t + v_{2}t}{2t} = \frac{v_{1}+v_{2}}{2}\]</p>
+        <p style="color:var(--mut);font-size:16px">the arithmetic mean</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card f" data-f="1"><span class="ctag">Same distance</span>
+        <p>Speeds \(v_{1}\) and \(v_{2}\), each for distance \(d\):</p>
+        <p>\[v_{av} = \frac{2d}{\frac{d}{v_{1}}+\frac{d}{v_{2}}} = \frac{2v_{1}v_{2}}{v_{1}+v_{2}}\]</p>
+        <p style="color:var(--mut);font-size:16px">the harmonic mean — smaller than the arithmetic mean</p>
+      </div>
+    </div>
+  </div>
+  <div class="row" data-f="2">
+    <div class="col"><div class="card note"><span class="ctag">Quick check</span>
+      <p>With \(v_{1}=30,\ v_{2}=60\): same time → \(45\ \mathrm{m/s}\); same distance → \(40\ \mathrm{m/s}\).
+      The slower half <i>costs more time</i>, so it drags the average down.</p></div></div>
+  </div>
+</div></section>
+
+<!-- ============ 14 · MIXED AVG I ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Rates</span><h2>Practice — mixed average speed I</h2></header>
+  <div class="card q"><span class="ctag">Question</span>
+    <p>A body travels with speed \(90\ \mathrm{m/s}\) for half the distance. In the remaining half distance,
+    it moves at \(20\ \mathrm{m/s}\) for half the time and at \(40\ \mathrm{m/s}\) for the other half of the time.
+    Find its average speed.</p></div>
+  <div class="card s" data-f="1"><span class="ctag">Solution</span>
+    <ul class="steps">
+      <li data-f="2">Second half, equal <b>times</b>: average \(= \frac{20+40}{2} = 30\ \mathrm{m/s}\).</li>
+      <li data-f="3">Let total distance be \(D\): \(t_{1} = \frac{D/2}{90} = \frac{D}{180}\), 
+          \(t_{2} = \frac{D/2}{30} = \frac{D}{60}\).</li>
+      <li data-f="4">Total time \(= \frac{D}{180} + \frac{D}{60} = \frac{4D}{180} = \frac{D}{45}\).</li>
+      <li data-f="5">\(v_{av} = \frac{D}{D/45} = 45\ \mathrm{m/s}\).</li>
+    </ul></div>
+  <div class="idea" data-f="6"><p>Strategy: collapse each part into <i>one distance and one time</i>, then use
+    \(\frac{\text{total distance}}{\text{total time}}\). Never average speeds blindly.</p></div>
+</div></section>
+
+<!-- ============ 15 · MIXED AVG II ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Rates</span><h2>Practice — mixed average speed II</h2></header>
+  <div class="card q"><span class="ctag">Question</span>
+    <p>A body travels with speed \(80\ \mathrm{m/s}\) for half the total time. During the remaining half of the
+    time, it covers half of that distance at \(30\ \mathrm{m/s}\) and the remaining half distance at
+    \(60\ \mathrm{m/s}\). Find its average speed.</p></div>
+  <div class="card s" data-f="1"><span class="ctag">Solution</span>
+    <ul class="steps">
+      <li data-f="2">Second interval, equal <b>distances</b>: average \(= \frac{2 \times 30 \times 60}{30+60} = 40\ \mathrm{m/s}\).</li>
+      <li data-f="3">Now the whole journey is two equal-<b>time</b> parts: \(80\ \mathrm{m/s}\) and \(40\ \mathrm{m/s}\).</li>
+      <li data-f="4">\(v_{av} = \frac{80+40}{2} = 60\ \mathrm{m/s}\).</li>
+    </ul></div>
+  <div class="idea" data-f="5"><p>Two different tools, chained: harmonic mean inside, arithmetic mean outside.
+    Identify <i>what is equal</i> (time or distance) at each stage.</p></div>
+</div></section>
+
+<!-- ============ 16 · ACCELERATION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Changing velocity</span><h2>Acceleration</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>Acceleration = rate of change of velocity:</p>
+        <p>\[\vec a = \frac{d\vec v}{dt} \qquad \vec a_{av} = \frac{\Delta\vec v}{\Delta t}\]</p>
+        <p>Unit: \(\mathrm{m/s^{2}}\). It is a <b>vector</b>.</p>
+      </div>
+      <div class="card note" data-f="1"><span class="ctag">Example</span>
+        <p>Velocity changes from \(10\) to \(30\ \mathrm{m/s}\) in \(4\ \mathrm{s}\):
+        \(a = \frac{30-10}{4} = 5\ \mathrm{m/s^{2}}\) (uniform).</p></div>
+      <div class="card note" data-f="2"><span class="ctag">Example</span>
+        <p>From \(20\) to \(5\ \mathrm{m/s}\) in \(3\ \mathrm{s}\):
+        \(a = \frac{5-20}{3} = -5\ \mathrm{m/s^{2}}\) — the speed is dropping.</p></div>
+      <div class="idea" data-f="3"><p>Acceleration tells how <b>velocity changes</b> — not which way the body moves.</p></div>
+    </div>
+    <div class="col figbox" data-fig="accbasic"></div>
+  </div>
+</div></section>
+
+<!-- ============ 17 · AVG ACC VECTOR I ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Changing velocity</span><h2>Average acceleration is a vector</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A particle moves at \(3\ \mathrm{m/s}\) east. After \(3\ \mathrm{s}\), its velocity is
+        \(4\ \mathrm{m/s}\) north. Find the average acceleration.</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>\(\Delta\vec v = \vec v_{f} - \vec v_{i}\): components \((-3\) east, \(+4\) north\()\), so
+        \(|\Delta\vec v| = \sqrt{3^{2}+4^{2}} = 5\ \mathrm{m/s}\).</p>
+        <p>Direction: \(53\degree\) north of west. Hence</p>
+        <p>\(\vec a_{av} = \frac{\Delta\vec v}{\Delta t} = \frac{5}{3} \approx 1.67\ \mathrm{m/s^{2}}\), along \(\Delta\vec v\).</p></div>
+      <div class="idea" data-f="2"><p>Subtract the <b>vectors</b>, not the speeds:
+        \(|\Delta\vec v| = 5\), not \(4-3 = 1\).</p></div>
+    </div>
+    <div class="col figbox" data-fig="acc1"></div>
+  </div>
+</div></section>
+
+<!-- ============ 18 · AVG ACC DIRECTION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Changing velocity</span><h2>Direction of average acceleration</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A particle’s velocity changes from \(4\ \mathrm{m/s}\) east to \(4\ \mathrm{m/s}\) north.
+        Find the <b>direction</b> of the average acceleration.</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <p>\(\Delta\vec v = \vec v_{f} - \vec v_{i} = (-4,\ +4)\) — it points <b>north-west</b>,
+        \(45\degree\) north of west.</p>
+        <p>\(\vec a_{av}\) is along \(\Delta\vec v\) ⇒ direction is north-west.
+        Magnitude: \(|\Delta\vec v| = 4\sqrt{2} \approx 5.66\ \mathrm{m/s}\).</p></div>
+      <div class="idea" data-f="2"><p>Equal speeds do <b>not</b> mean zero acceleration — the direction changed,
+        so the velocity changed.</p></div>
+    </div>
+    <div class="col figbox" data-fig="acc2"></div>
+  </div>
+</div></section>
+
+<!-- ============ 19 · RETARDATION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Changing velocity</span><h2>Retardation vs. negative acceleration</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p><b>Retardation</b> (deceleration): the <b>speed is decreasing</b> — velocity and
+        acceleration point in <b>opposite</b> directions.</p></div>
+      <div class="def"><p><b>Negative acceleration</b>: simply acceleration along the chosen negative axis.
+        The speed may be increasing <i>or</i> decreasing!</p></div>
+      <div class="idea" data-f="1"><p>The sign of \(a\) alone tells you nothing about speeding up or slowing down.
+        Compare the <b>directions</b> of \(\vec v\) and \(\vec a\).</p></div>
+    </div>
+    <div class="col">
+      <table class="tbl">
+        <tr><th>velocity</th><th>acceleration</th><th>speed…</th><th>retardation?</th></tr>
+        <tr data-f="1"><td>\(+\)</td><td>\(+\)</td><td>increases</td><td><span class="pill no">No</span></td></tr>
+        <tr data-f="2"><td>\(+\)</td><td>\(-\)</td><td>decreases</td><td><span class="pill ok">Yes</span></td></tr>
+        <tr data-f="3"><td>\(-\)</td><td>\(-\)</td><td>increases</td><td><span class="pill no">No</span></td></tr>
+        <tr data-f="4"><td>\(-\)</td><td>\(+\)</td><td>decreases</td><td><span class="pill ok">Yes</span></td></tr>
+      </table>
+      <div class="card note" data-f="5"><span class="ctag">Rule</span>
+        <p>Retardation ⇔ \(\vec v\) and \(\vec a\) opposite. Rows 2 and 4 — one of them has
+        <b>negative acceleration with increasing speed</b>… no: rows 3 shows negative \(a\) with increasing speed.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 20 · LANGUAGE OF MOTION ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Vocabulary</span><h2>Types of motion &amp; the language of time</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="def"><p><b>Uniform motion</b> — velocity is constant.</p></div>
+      <div class="def"><p><b>Non-uniform motion</b> — velocity is changing.</p></div>
+      <div class="def"><p><b>Uniformly accelerated motion</b> — acceleration is constant.</p></div>
+      <div class="card note" data-f="1"><span class="ctag">English matters</span>
+        <p>“in 3 s” → interval \(0 \to 3\ \mathrm{s}\) &nbsp;·&nbsp; “in the 3rd second” → interval \(2 \to 3\ \mathrm{s}\)<br>
+        “at \(t = 3\ \mathrm{s}\)” → an instant &nbsp;·&nbsp; “in the 3rd half second” → interval \(1.0 \to 1.5\ \mathrm{s}\)</p></div>
+      <div class="idea" data-f="2"><p>An <b>interval</b> has duration; an <b>instant</b> does not.
+        “Distance in the nth second” means the distance between \(t = n-1\) and \(t = n\).</p></div>
+    </div>
+    <div class="col figbox" data-fig="phrases"></div>
+  </div>
+</div></section>
+
+<!-- ============ 21 · THREE TERMS ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Vocabulary</span><h2>Terminal velocity · reaction time · sign convention</h2></header>
+  <div class="def" data-f="0"><p><b>Terminal velocity</b> — the final constant velocity reached when the
+    acceleration becomes zero (e.g. a falling body when air drag balances weight).</p></div>
+  <div class="def" data-f="1"><p><b>Reaction time</b> — the delay between seeing a situation and acting on it.
+    During this time the system can make <b>no change</b>: a car at speed \(v\) still travels \(v\,t_{r}\).
+    Typical human value \(\approx 0.2\ \mathrm{s}\).</p></div>
+  <div class="def" data-f="2"><p><b>Sign convention</b> — choose one direction as positive; the opposite direction
+    is negative. With “up” positive, gravity is \(g = -9.8\ \mathrm{m/s^{2}}\).</p></div>
+  <div class="card note" data-f="3"><span class="ctag">Why it matters</span>
+    <p>In every problem: fix the sign convention <b>first</b>, then substitute \(u, v, a, g\) with signs.
+    Most “wrong answers” in kinematics are sign errors.</p></div>
+</div></section>
+
+<!-- ============ 22 · CONCEPT CHECK ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Vocabulary</span><h2>Concept check</h2></header>
+  <div class="card q"><span class="ctag">Question</span>
+    <p>The <b>speed</b> of a particle is increasing. Which of the following must be true?</p></div>
+  <div class="opt"><span class="key">A</span><span>The velocity is positive.</span></div>
+  <div class="opt"><span class="key">B</span><span>The acceleration is positive.</span></div>
+  <div class="opt" data-f="2"><span class="key">C</span><span>The velocity and acceleration are in the <b>same direction</b>.</span></div>
+  <div class="opt"><span class="key">D</span><span>The acceleration is constant.</span></div>
+  <div class="card s" data-f="2"><span class="ctag">Answer — C</span>
+    <p>Speed rises only when \(\vec a\) points along \(\vec v\). “Positive” depends on which axis we chose;
+    <b>same direction</b> does not. If the speed were decreasing, they would be opposite.</p></div>
+</div></section>
+
+<!-- ============ 23 · RELATIVE VELOCITY ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Relative motion</span><h2>Relative velocity in 1-D</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card f"><span class="ctag">Formula</span>
+        <p>\[\vec v_{AB} = \vec v_{A} - \vec v_{B}\]</p>
+        <p>Velocity of A <b>as seen by</b> B.</p>
+      </div>
+      <div class="def" data-f="1"><p>Same direction → relative speed \(= |v_{A} - v_{B}|\)<br>
+        Opposite directions → relative speed \(= v_{A} + v_{B}\)</p></div>
+      <div class="idea" data-f="2"><p>Time to meet \(= \frac{\text{separation}}{\text{relative speed of approach}}\).
+        In the frame of B, only \(\vec v_{AB}\) exists.</p></div>
+    </div>
+    <div class="col figbox" data-fig="rel1d"></div>
+  </div>
+</div></section>
+
+<!-- ============ 24 · MEETING PROBLEMS ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Relative motion</span><h2>When will they meet? (60 m apart)</h2></header>
+  <div class="card q"><span class="ctag">Case A — opposite directions</span>
+    <p>A and B are 60 m apart. A moves toward B at \(10\ \mathrm{m/s}\), B toward A at \(20\ \mathrm{m/s}\).
+    When do they meet?</p></div>
+  <div class="card s" data-f="1"><span class="ctag">Solution</span>
+    <p>Approach speed \(= 10 + 20 = 30\ \mathrm{m/s}\) ⇒ \(t = \frac{60}{30} = 2\ \mathrm{s}\)
+    (20 m from A).</p></div>
+  <div class="card q" data-f="2"><span class="ctag">Case B — same direction</span>
+    <p>A chases B from 60 m behind: A at \(15\ \mathrm{m/s}\), B at \(5\ \mathrm{m/s}\). When does A catch B?</p></div>
+  <div class="card s" data-f="3"><span class="ctag">Solution</span>
+    <p>Approach speed \(= 15 - 5 = 10\ \mathrm{m/s}\) ⇒ \(t = \frac{60}{10} = 6\ \mathrm{s}\).</p></div>
+</div></section>
+
+<!-- ============ 25 · STONES ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Relative motion</span><h2>Two stones — when do they collide?</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>A stone is thrown vertically up from the ground at \(40\ \mathrm{m/s}\). At the same instant, another
+        stone is dropped from the top of an \(80\ \mathrm{m}\) tower. When and where do they meet?
+        \((g = 10\ \mathrm{m/s^{2}})\)</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Solution</span>
+        <ul class="steps">
+          <li data-f="2">Both have the same acceleration \(g\) ⇒ the relative velocity stays constant
+            \(= 40\ \mathrm{m/s}\) (approach).</li>
+          <li data-f="3">Separation \(80\ \mathrm{m}\) ⇒ \(t = \frac{80}{40} = 2\ \mathrm{s}\).</li>
+          <li data-f="4">Height: \(y = 40(2) - \frac{1}{2}(10)(2^{2}) = 80 - 20 = 60\ \mathrm{m}\) above ground.</li>
+        </ul></div>
+      <div class="idea" data-f="5"><p>Gravity <b>cancels</b> in relative motion — solve it as uniform motion
+        of one stone relative to the other.</p></div>
+    </div>
+    <div class="col figbox" data-fig="tower"></div>
+  </div>
+</div></section>
+
+<!-- ============ 26 · FEEL FOR TERMS A ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Getting a feel</span><h2>Feel for the terms — comparisons</h2></header>
+  <div class="card q"><span class="ctag">Question</span>
+    <p>Compare distance and displacement. When can they be equal?</p></div>
+  <div class="card s" data-f="1"><span class="ctag">Answer</span>
+    <p>Distance = actual path length (scalar, only grows). Displacement = change in position (vector, can shrink
+    or be zero). Equal in magnitude only for <b>straight-line motion without turning back</b>.</p></div>
+  <div class="card q" data-f="2"><span class="ctag">Question</span>
+    <p>Compare average speed and average velocity. When can they be equal?</p></div>
+  <div class="card s" data-f="3"><span class="ctag">Answer</span>
+    <p>Average speed \(=\) total distance / time; average velocity \(=\) displacement / time.
+    Average speed \(\ge |\vec v_{av}|\) always — equal under the <b>same condition</b>: straight path, no reversal.</p></div>
+</div></section>
+
+<!-- ============ 27 · FEEL FOR TERMS B ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Getting a feel</span><h2>Feel for the terms — possible or not?</h2></header>
+  <div class="row grow">
+    <div class="col">
+      <div class="card q"><span class="ctag">Question</span>
+        <p>Velocity never zero, yet displacement zero?</p></div>
+      <div class="card s" data-f="1"><span class="ctag">Yes</span>
+        <p>One full round of uniform circular motion: \(v \ne 0\) throughout, but you return to the start.</p></div>
+      <div class="card q" data-f="2"><span class="ctag">Question</span>
+        <p>Velocity never zero, yet average velocity zero?</p></div>
+      <div class="card s" data-f="3"><span class="ctag">Yes</span>
+        <p>Any closed-loop trip: \(\Delta\vec r = 0\) ⇒ \(\vec v_{av} = 0\).</p></div>
+      <div class="card q" data-f="4"><span class="ctag">Question</span>
+        <p>Velocity zero, yet acceleration non-zero?</p></div>
+      <div class="card s" data-f="5"><span class="ctag">Yes</span>
+        <p>At the top of a vertical throw: \(v = 0\) for an instant, but \(a = g\) downward all along.</p></div>
+    </div>
+    <div class="col figbox" data-fig="loop"></div>
+  </div>
+</div></section>
+
+<!-- ============ 28 · SUMMARY ============ -->
+<section class="slide"><div class="sfit">
+  <header class="sh"><span class="chip">Summary</span><h2>The basic-terms wall</h2></header>
+  <div class="grid">
+    <div class="card f"><span class="ctag">Position</span><p>\(\vec r = x\hat i + y\hat j + z\hat k,\quad |\vec r| = \sqrt{x^{2}+y^{2}+z^{2}}\)</p></div>
+    <div class="card f"><span class="ctag">Path vs position change</span><p>distance \(\ge |\Delta\vec r|\), &nbsp;\(\Delta\vec r = \vec r_{f} - \vec r_{i}\)</p></div>
+    <div class="card f"><span class="ctag">Velocity &amp; speed</span><p>\(\vec v = \frac{d\vec r}{dt},\quad \text{speed} = |\vec v|\)</p></div>
+    <div class="card f"><span class="ctag">Averages</span><p>\(\vec v_{av} = \frac{\Delta\vec r}{\Delta t}\); same time: \(\frac{v_{1}+v_{2}}{2}\); same distance: \(\frac{2v_{1}v_{2}}{v_{1}+v_{2}}\)</p></div>
+    <div class="card f"><span class="ctag">Acceleration</span><p>\(\vec a = \frac{d\vec v}{dt}\); retardation ⇔ \(\vec v\), \(\vec a\) opposite</p></div>
+    <div class="card f"><span class="ctag">Relative motion</span><p>\(\vec v_{AB} = \vec v_{A} - \vec v_{B}\); same acceleration ⇒ constant relative velocity</p></div>
+  </div>
+  <div class="idea" data-f="1" style="text-align:center"><p><b>Next →</b> equations of uniformly accelerated motion:
+  \(v = u + at,\quad s = ut + \frac{1}{2}at^{2},\quad v^{2} = u^{2} + 2as\)</p></div>
+</div></section>
+
+</div></div>
+
+<script>
+"use strict";
+/* ================================================================
+   1. MICRO-TeX  — offline renderer for \( ... \) and \[ ... \]
+   ================================================================ */
+function texToHtml(src){
+  var i=0;
+  var SYM={Delta:'Δ',theta:'θ',alpha:'α',beta:'β',gamma:'γ',omega:'ω',phi:'φ',lambda:'λ',mu:'μ',
+    pi:'π',rho:'ρ',sigma:'σ',tau:'τ',infty:'∞',cdot:'·',times:'×',div:'÷',pm:'±',mp:'∓',
+    ne:'≠',neq:'≠',le:'≤',leq:'≤',ge:'≥',geq:'≥',approx:'≈',simeq:'≃',equiv:'≡',propto:'∝',
+    rightarrow:'→',to:'→',leftarrow:'←',Rightarrow:'⇒',circ:'°',degree:'°',angle:'∠',perp:'⊥'};
+  var FN=['sin','cos','tan','log','ln','exp','min','max'];
+  function esc(c){return c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':c;}
+  function seq(end){
+    var out='';
+    while(i<src.length){
+      var c=src[i];
+      if(end&&c===end){i++;break;}
+      var atom=one(),sup='',sub='';
+      while(i<src.length&&(src[i]==='^'||src[i]==='_')){
+        var w=src[i++],a=arg();
+        if(w==='^')sup+=a;else sub+=a;
+      }
+      if(sup||sub)atom+='<span class="mscr">'+(sub?'<sub>'+sub+'</sub>':'')+(sup?'<sup>'+sup+'</sup>':'')+'</span>';
+      out+=atom;
+    }
+    return out;
+  }
+  function one(){
+    var c=src[i];
+    if(c==='\\')return cmd();
+    if(c==='{'){i++;return seq('}');}
+    if(c===' '){i++;return ' ';}
+    if(/[0-9]/.test(c)||c==='.'){var n='';while(i<src.length&&/[0-9.]/.test(src[i]))n+=src[i++];return '<span class="mn">'+n+'</span>';}
+    if(/[A-Za-z]/.test(c)){i++;return '<i>'+c+'</i>';}
+    i++;
+    if(c==='-')return '<span class="mo">−</span>';
+    return '<span class="mo">'+esc(c)+'</span>';
+  }
+  function arg(){
+    if(src[i]==='{'){i++;return seq('}');}
+    if(src[i]==='\\')return cmd();
+    var c=src[i++];
+    if(/[A-Za-z]/.test(c))return '<i>'+c+'</i>';
+    if(c==='-')return '−';
+    return esc(c);
+  }
+  function cmd(){
+    i++;
+    if(!/[A-Za-z]/.test(src[i]||'')){var ch=src[i++]||'';
+      if(ch===','||ch===';'||ch===':')return '<span class="msp"></span>';
+      if(ch===' ')return ' ';return esc(ch);}
+    var name='';while(i<src.length&&/[A-Za-z]/.test(src[i]))name+=src[i++];
+    if(name==='frac'){var a=arg(),b=arg();return '<span class="mfrac"><span class="mnum">'+a+'</span><span class="mden">'+b+'</span></span>';}
+    if(name==='sqrt'){return '<span class="msqrt"><span class="mrad">√</span><span class="mroot">'+arg()+'</span></span>';}
+    if(name==='vec'){return '<span class="mvec">'+arg()+'</span>';}
+    if(name==='hat'){return '<span class="mhat">'+arg()+'</span>';}
+    if(name==='bar'||name==='overline'){return '<span class="mbar">'+arg()+'</span>';}
+    if(name==='text'||name==='mathrm'||name==='operatorname'){
+      var raw='';
+      if(src[i]==='{'){i++;var d=1;while(i<src.length){var ch2=src[i++];
+        if(ch2==='{')d++;else if(ch2==='}'){d--;if(!d)break;}raw+=ch2;}}
+      return '<span class="mtxt">'+esc(raw)+'</span>';}
+    if(name==='left'||name==='right'){var dl=src[i++];return dl==='.'?'':'<span class="mbig">'+esc(dl)+'</span>';}
+    if(FN.indexOf(name)>=0)return '<span class="mtxt">'+name+'</span>';
+    if(SYM[name]!==undefined)return '<span class="mo">'+SYM[name]+'</span>';
+    if(name==='quad')return '<span class="mq"></span>';
+    return '<span class="mtxt">'+esc(name)+'</span>';
+  }
+  return seq(null);
+}
+function processMath(root){
+  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+    var p=n.parentElement;
+    if(!p)return NodeFilter.FILTER_REJECT;
+    if(p.closest('svg,script,style'))return NodeFilter.FILTER_REJECT;
+    return /\\[\(\[]/.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
+  var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(function(n){
+    var s=n.nodeValue,re=/\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]/g,m,idx=0,frag=document.createDocumentFragment();
+    while((m=re.exec(s))){
+      if(m.index>idx)frag.appendChild(document.createTextNode(s.slice(idx,m.index)));
+      var el;
+      if(m[1]!=null){el=document.createElement('span');el.className='mx';el.innerHTML=texToHtml(m[1]);}
+      else{el=document.createElement('span');el.className='mx mxb';el.innerHTML=texToHtml(m[2]);}
+      frag.appendChild(el);idx=re.lastIndex;
+    }
+    if(idx<s.length)frag.appendChild(document.createTextNode(s.slice(idx)));
+    n.parentNode.replaceChild(frag,n);
+  });
+}
+
+/* ================================================================
+   2. SVG FIGURE ENGINE (all graphics generated here — zero rasters)
+   ================================================================ */
+var C={grid:'#233047',ax:'#5b6b83',tx:'#cbd5e1',dim:'#8fa3bd',blue:'#60a5fa',green:'#4ade80',
+       amber:'#fbbf24',rose:'#fb7185',violet:'#a78bfa',cyan:'#22d3ee'};
+var MID=0;
+function Fig(w,h){
+  this.w=w;this.h=h;this.id='f'+(++MID);this.b='';
+  var cols=[[C.ax,'ax'],[C.blue,'bl'],[C.green,'gr'],[C.amber,'am'],[C.rose,'ro'],[C.violet,'vi'],[C.cyan,'cy'],[C.tx,'tx']];
+  this.map={};var defs='<defs>';
+  for(var k=0;k<cols.length;k++){this.map[cols[k][0]]=cols[k][1];
+    defs+='<marker id="'+this.id+cols[k][1]+'" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="'+cols[k][0]+'"/></marker>';}
+  this.b+=defs+'</defs>';
+}
+Fig.prototype.arr=function(x1,y1,x2,y2,c,w){
+  this.b+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+(w||2.6)+'" marker-end="url(#'+this.id+(this.map[c]||'tx')+')"/>';return this;};
+Fig.prototype.ln=function(x1,y1,x2,y2,c,w,dk){
+  this.b+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+(w||2)+'"'+(dk?' stroke-dasharray="'+dk+'"':'')+'/>';return this;};
+Fig.prototype.ci=function(x,y,r,c,w,fill,dk){
+  this.b+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+(fill||'none')+'" stroke="'+c+'" stroke-width="'+(w||2)+'"'+(dk?' stroke-dasharray="'+dk+'"':'')+'/>';return this;};
+Fig.prototype.dot=function(x,y,r,c){this.b+='<circle cx="'+x+'" cy="'+y+'" r="'+(r||4.5)+'" fill="'+(c||C.tx)+'"/>';return this;};
+Fig.prototype.txt=function(x,y,s,o){o=o||{};
+  this.b+='<text x="'+x+'" y="'+y+'" font-size="'+(o.size||16)+'" fill="'+(o.fill||C.tx)+'" text-anchor="'+(o.anchor||'start')+'" font-weight="'+(o.weight||'normal')+'"'+(o.it?' font-style="italic"':'')+' font-family="Segoe UI,system-ui,sans-serif">'+s+'</text>';return this;};
+Fig.prototype.path=function(d,c,w,dk,fill){
+  this.b+='<path d="'+d+'" fill="'+(fill||'none')+'" stroke="'+c+'" stroke-width="'+(w||2.6)+'"'+(dk?' stroke-dasharray="'+dk+'"':'')+' stroke-linecap="round"/>';return this;};
+Fig.prototype.rect=function(x,y,w,h,c,fill,rx){
+  this.b+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(rx||8)+'" fill="'+(fill||'none')+'" stroke="'+c+'" stroke-width="2"/>';return this;};
+Fig.prototype.out=function(){return '<svg class="figsvg" viewBox="0 0 '+this.w+' '+this.h+'" xmlns="http://www.w3.org/2000/svg">'+this.b+'</svg>';};
+function iso(x,y,z,s,ox,oy){return [ox+(x-y)*0.866*s, oy+(x+y)*0.5*s - z*s];}
+
+var FIGS={
+/* reference frame grid + axes */
+frame:function(){var f=new Fig(560,380),ox=250,oy=300,s=26,i,a,b,c,d,X,Y,Z;
+  for(i=0;i<=5;i++){a=iso(i,0,0,s,ox,oy);b=iso(i,5,0,s,ox,oy);f.ln(a[0],a[1],b[0],b[1],C.grid,1.4);
+    c=iso(0,i,0,s,ox,oy);d=iso(5,i,0,s,ox,oy);f.ln(c[0],c[1],d[0],d[1],C.grid,1.4);}
+  X=iso(6.6,0,0,s,ox,oy);Y=iso(0,6.6,0,s,ox,oy);Z=iso(0,0,5.6,s,ox,oy);
+  f.arr(ox,oy,X[0],X[1],C.ax,2.2).txt(X[0]+8,X[1]+5,'x',{fill:C.ax,size:17,it:1});
+  f.arr(ox,oy,Y[0],Y[1],C.ax,2.2).txt(Y[0]-18,Y[1]+5,'y',{fill:C.ax,size:17,it:1});
+  f.arr(ox,oy,Z[0],Z[1],C.ax,2.2).txt(Z[0]+10,Z[1]+2,'z',{fill:C.ax,size:17,it:1});
+  f.dot(ox,oy,5,C.amber).txt(ox-28,oy+20,'O',{size:18,fill:C.amber,weight:'700'});
+  f.txt(ox-24,oy+42,'reference point',{size:13.5,fill:C.dim});
+  f.txt(330,120,'axes + grid',{size:14,fill:C.dim});
+  f.txt(330,140,'= the frame',{size:14,fill:C.dim});
+  return f.out();},
+/* position vector (3,4,5) iso */
+position:function(){var f=new Fig(560,430),ox=240,oy=320,
+  P=[ox+24*3-17*4, oy+11*3+15*4-30*5],Pxy=[P[0],oy+11*3+15*4],
+  fx=[ox+24*3,oy+11*3],fy=[ox-17*4,oy+15*4],
+  X=[ox+24*7,oy+11*7],Y=[ox-17*6.5,oy+15*6.5],Z=[ox,oy-30*6.5];
+  f.arr(ox,oy,X[0],X[1],C.ax,2).txt(X[0]+8,X[1]+4,'x',{fill:C.ax,it:1,size:16});
+  f.arr(ox,oy,Y[0],Y[1],C.ax,2).txt(Y[0]-18,Y[1]+8,'y',{fill:C.ax,it:1,size:16});
+  f.arr(ox,oy,Z[0],Z[1],C.ax,2).txt(Z[0]+10,Z[1]+4,'z',{fill:C.ax,it:1,size:16});
+  f.ln(P[0],P[1],Pxy[0],Pxy[1],C.dim,1.6,'5 5');
+  f.ln(Pxy[0],Pxy[1],fx[0],fx[1],C.dim,1.4,'4 4');
+  f.ln(Pxy[0],Pxy[1],fy[0],fy[1],C.dim,1.4,'4 4');
+  f.arr(ox,oy,P[0],P[1],C.blue,3);
+  f.dot(ox,oy,4,C.ax).dot(P[0],P[1],5,C.blue);
+  f.txt(P[0]+12,P[1],'P (3, 4, 5)',{size:15,fill:C.blue});
+  f.txt(fx[0]+8,fx[1]+16,'x = 3',{size:13.5,fill:C.dim});
+  f.txt(fy[0]-52,fy[1]+16,'y = 4',{size:13.5,fill:C.dim});
+  f.txt(P[0]+10,(P[1]+Pxy[1])/2,'z = 5',{size:13.5,fill:C.dim});
+  f.txt(ox+40,oy-40,'r',{size:19,fill:C.blue,it:1,weight:'700'});
+  return f.out();},
+/* bus + observers */
+bus:function(){var f=new Fig(560,250);
+  f.ln(20,206,540,206,C.ax,2.5);
+  f.rect(110,116,240,86,C.blue,'rgba(96,165,250,.08)',14);
+  f.ci(160,206,16,C.ax,2.5,'#0b0f17');f.ci(300,206,16,C.ax,2.5,'#0b0f17');
+  f.dot(250,160,7,C.amber);f.txt(262,154,'P',{size:14,fill:C.amber,weight:'700'});
+  f.arr(352,150,452,150,C.green,3);f.txt(356,136,'v (bus)',{size:14,fill:C.green});
+  f.ci(470,166,8,C.tx,2);f.ln(470,174,470,194,C.tx,2);
+  f.ln(470,194,462,206,C.tx,2);f.ln(470,194,478,206,C.tx,2);
+  f.txt(470,228,'observer on road',{size:12.5,fill:C.dim,anchor:'middle'});
+  f.txt(24,236,'frame = bus  →  passenger at rest',{size:13.5,fill:C.cyan});
+  f.txt(536,236,'frame = road  →  passenger moves',{size:13.5,fill:C.green,anchor:'end'});
+  return f.out();},
+/* L-shaped distance */
+dist1:function(){var f=new Fig(460,330);
+  f.arr(398,96,398,52,C.ax,2);f.txt(404,60,'N',{size:15,fill:C.ax});
+  f.arr(398,96,442,96,C.ax,2);f.txt(430,116,'E',{size:15,fill:C.ax});
+  f.path('M150 270 L150 110 L270 110',C.amber,3.5);
+  f.ln(150,270,270,110,C.green,2.2,'7 6');
+  f.dot(150,270,5,C.tx);f.dot(270,110,5,C.tx);
+  f.txt(132,286,'start',{size:13.5,fill:C.dim,anchor:'middle'});
+  f.txt(282,104,'end',{size:13.5,fill:C.dim});
+  f.txt(126,196,'4 m',{size:16,fill:C.amber,anchor:'end'});
+  f.txt(200,98,'3 m',{size:16,fill:C.amber});
+  f.txt(232,206,'5 m (displacement)',{size:14.5,fill:C.green});
+  return f.out();},
+/* quarter circle */
+curve:function(){var f=new Fig(470,310),cx=150,cy=250,R=130;
+  f.ln(cx,cy,cx+R,cy,C.dim,1.6,'5 5');f.ln(cx,cy,cx,cy-R,C.dim,1.6,'5 5');
+  f.txt(cx+58,cy+22,'R',{size:15,fill:C.dim,it:1});f.txt(cx-22,cy-60,'R',{size:15,fill:C.dim,it:1});
+  f.path('M'+(cx+R)+' '+cy+' A'+R+' '+R+' 0 0 0 '+cx+' '+(cy-R),C.amber,3.5);
+  f.ln(cx+R,cy,cx,cy-R,C.green,2.2,'7 6');
+  f.dot(cx+R,cy,5,C.tx);f.dot(cx,cy-R,5,C.tx);f.dot(cx,cy,3.5,C.dim);
+  f.txt(258,148,'arc = distance',{size:14.5,fill:C.amber});
+  f.txt(218,200,'chord = displacement',{size:14.5,fill:C.green});
+  return f.out();},
+/* r1 r2 delta r */
+disp:function(){var f=new Fig(470,320);
+  f.arr(70,280,440,280,C.ax,2);f.arr(70,280,70,36,C.ax,2);
+  f.arr(70,280,190,190,C.blue,2.8);f.arr(70,280,390,80,C.green,2.8);
+  f.arr(190,190,390,80,C.rose,3);
+  f.dot(190,190,4.5,C.blue);f.dot(390,80,4.5,C.green);
+  f.txt(108,214,'r₁',{size:18,fill:C.blue,it:1});
+  f.txt(200,140,'r₂',{size:18,fill:C.green,it:1});
+  f.txt(266,110,'Δr = r₂ − r₁',{size:15.5,fill:C.rose});
+  return f.out();},
+/* grid (3,4)->(8,8) */
+grid1:function(){var f=new Fig(500,350),ox=60,oy=310,st=32,i;
+  for(i=0;i<=10;i++){f.ln(ox+i*st,oy,ox+i*st,oy-9*st,C.grid,1.2);f.ln(ox,oy-i*st,ox+10*st,oy-i*st,C.grid,1.2);}
+  f.arr(ox,oy,ox+10.4*st,oy,C.ax,1.8);f.arr(ox,oy,ox,oy-9.4*st,C.ax,1.8);
+  f.txt(ox+10.4*st+6,oy+5,'x',{fill:C.ax,it:1,size:15});f.txt(ox-16,oy-9.4*st,'y',{fill:C.ax,it:1,size:15});
+  var ax=ox+3*st,ay=oy-4*st,bx=ox+8*st,by=oy-8*st;
+  f.ln(ax,ay,bx,ay,C.cyan,1.8,'6 5');f.ln(bx,ay,bx,by,C.cyan,1.8,'6 5');
+  f.arr(ax,ay,bx,by,C.rose,3);
+  f.dot(ax,ay,5,C.blue);f.dot(bx,by,5,C.green);
+  f.txt(ax-58,ay+5,'A (3,4)',{size:14.5,fill:C.blue});
+  f.txt(bx+10,by+4,'B (8,8)',{size:14.5,fill:C.green});
+  f.txt((ax+bx)/2-22,ay+24,'Δx = 5',{size:14.5,fill:C.cyan});
+  f.txt(bx+10,(ay+by)/2,'Δy = 4',{size:14.5,fill:C.cyan});
+  f.txt((ax+bx)/2+14,(ay+by)/2-8,'Δr',{size:17,fill:C.rose,it:1,weight:'700'});
+  return f.out();},
+/* 3-4-5 triangle */
+tri:function(){var f=new Fig(430,310);
+  f.path('M80 260 L200 260 L200 100',C.amber,3.5);
+  f.arr(80,260,200,100,C.green,3);
+  f.path('M114 260 A34 34 0 0 0 100.5 232.8',C.dim,1.8);
+  f.txt(126,246,'53°',{size:13.5,fill:C.dim});
+  f.txt(126,286,'3 m',{size:15.5,fill:C.amber});
+  f.txt(212,186,'4 m',{size:15.5,fill:C.amber});
+  f.txt(96,164,'5 m',{size:16,fill:C.green,weight:'700'});
+  return f.out();},
+/* 3D displacement box */
+box3d:function(){var f=new Fig(470,360),ox=210,oy=260,
+  p2=function(x,y,z){return [ox+22*x-16*y, oy+10*x+14*y-26*z];},
+  P=p2(3,4,5),Pxy=p2(3,4,0),fx=p2(3,0,0),fy=p2(0,4,0),
+  X=p2(6.5,0,0),Y=p2(0,6,0),Z=p2(0,0,6);
+  f.arr(ox,oy,X[0],X[1],C.ax,1.8);f.arr(ox,oy,Y[0],Y[1],C.ax,1.8);f.arr(ox,oy,Z[0],Z[1],C.ax,1.8);
+  f.ln(P[0],P[1],Pxy[0],Pxy[1],C.dim,1.5,'5 5');
+  f.ln(Pxy[0],Pxy[1],fx[0],fx[1],C.dim,1.3,'4 4');
+  f.ln(Pxy[0],Pxy[1],fy[0],fy[1],C.dim,1.3,'4 4');
+  f.arr(ox,oy,P[0],P[1],C.green,3);
+  f.dot(P[0],P[1],5,C.green);
+  f.txt(fx[0]+10,fx[1]+18,'3',{size:14,fill:C.dim});
+  f.txt(fy[0]-26,fy[1]+16,'4',{size:14,fill:C.dim});
+  f.txt(P[0]+10,(P[1]+Pxy[1])/2,'5',{size:14,fill:C.dim});
+  f.txt(P[0]+14,P[1]-10,'√50 ≈ 7.07 m',{size:15,fill:C.green,weight:'700'});
+  return f.out();},
+/* rolling wheel */
+wheel:function(){var f=new Fig(640,310),R=46,c1x=95,gy=262,c2x=95+Math.PI*R,t,pts=[],x,y;
+  f.ln(20,gy,620,gy,C.ax,2.2);
+  f.ci(c1x,gy-R,R,C.ax,2);f.ci(c2x,gy-R,R,C.ax,2,'','6 6');
+  f.dot(c1x,gy-R,3.5,C.dim);f.dot(c2x,gy-R,3.5,C.dim);
+  for(t=0;t<=Math.PI+0.001;t+=Math.PI/36){
+    x=c1x+R*(t-Math.sin(t));y=gy-R*(1-Math.cos(t));
+    pts.push((t===0?'M':'L')+x.toFixed(1)+' '+y.toFixed(1));}
+  f.path(pts.join(' '),C.violet,2.4);
+  f.ln(c1x,gy,c2x,gy,C.amber,1.8,'6 5');
+  f.ln(c2x,gy,c2x,gy-2*R,C.amber,1.8,'6 5');
+  f.arr(c1x,gy,c2x,gy-2*R,C.rose,3);
+  f.dot(c1x,gy,5,C.amber);f.dot(c2x,gy-2*R,5,C.amber);
+  f.txt((c1x+c2x)/2-16,gy+26,'πR',{size:15,fill:C.amber});
+  f.txt(c2x+10,gy-R,'2R',{size:15,fill:C.amber});
+  f.txt(c1x-30,gy-96,'R√(π²+4)',{size:15.5,fill:C.rose,weight:'700'});
+  f.txt(c1x,gy+48,'start',{size:13,fill:C.dim,anchor:'middle'});
+  f.txt(c2x,gy+48,'after ½ turn',{size:13,fill:C.dim,anchor:'middle'});
+  return f.out();},
+/* instantaneous velocity curve */
+motion:function(){var f=new Fig(470,220);
+  f.path('M30 180 Q200 -10 430 150',C.dim,2,'7 6');
+  f.arr(156,90,250,57,C.blue,3);
+  f.ln(156,90,340,100,C.rose,1.8,'6 5');
+  f.arr(320,99,340,100,C.rose,2.4);
+  f.dot(156,90,5,C.tx);f.dot(340,100,5,C.tx);
+  f.txt(120,74,'v (tangent)',{size:14.5,fill:C.blue});
+  f.txt(236,124,'Δr',{size:15,fill:C.rose,it:1});
+  f.txt(120,110,'r(t)',{size:13.5,fill:C.dim});
+  f.txt(348,96,'r(t+Δt)',{size:13.5,fill:C.dim});
+  return f.out();},
+/* average: path vs chord */
+avg:function(){var f=new Fig(470,250);
+  f.path('M60 200 C120 80 200 240 260 140 S 380 40 410 70',C.amber,3);
+  f.ln(60,200,410,70,C.green,2.2,'8 6');
+  f.dot(60,200,5,C.tx);f.dot(410,70,5,C.tx);
+  f.txt(36,216,'A',{size:16,fill:C.tx});f.txt(420,66,'B',{size:16,fill:C.tx});
+  f.txt(120,232,'winding path → distance',{size:14.5,fill:C.amber});
+  f.txt(180,110,'straight → displacement',{size:14.5,fill:C.green});
+  return f.out();},
+/* acceleration basic: v growing arrows */
+accbasic:function(){var f=new Fig(470,300);
+  f.ln(40,150,430,150,C.grid,1.5);
+  f.arr(60,150,150,150,C.blue,3);f.txt(80,132,'v = 10',{size:14.5,fill:C.blue});
+  f.arr(60,150,240,150,C.blue,3);f.txt(200,132,'v = 30',{size:14.5,fill:C.blue});
+  f.arr(240,150,330,90,C.rose,3);
+  f.txt(268,96,'Δv = 20 (in 4 s)',{size:14.5,fill:C.rose});
+  f.txt(60,196,'a = Δv / Δt = 20/4 = 5 m/s²',{size:16,fill:C.green,weight:'700'});
+  f.txt(60,232,'velocity grows by equal amounts in equal times → uniform acceleration',{size:13.5,fill:C.dim});
+  return f.out();},
+/* avg acceleration 3E -> 4N */
+acc1:function(){var f=new Fig(500,310),ox=170,oy=250,sc=36,
+  vx=ox+3*sc,vy=oy-4*sc;
+  f.arr(ox,oy,vx,oy,C.blue,3);f.arr(ox,oy,ox,vy,C.green,3);
+  f.ln(vx,oy,ox,oy,C.dim,1.5,'6 5');f.ln(ox,oy,ox,vy,C.dim,1.5,'6 5');
+  f.arr(vx,oy,ox,vy,C.rose,3);
+  f.path('M'+(vx-18)+' '+(oy-24)+' A30 30 0 0 0 '+(vx-30)+' '+oy,C.dim,1.8);
+  f.txt(vx-64,oy-16,'53°',{size:13.5,fill:C.dim});
+  f.txt(ox+40,oy+30,'vᵢ = 3 m/s east',{size:14.5,fill:C.blue});
+  f.txt(ox+12,vy-4,'v_f = 4 m/s north'.replace('v_f','v').replace('_',''),{size:14.5,fill:C.green});
+  f.txt(214,158,'Δv = 5 m/s',{size:15.5,fill:C.rose,weight:'700'});
+  f.dot(ox,oy,4,C.tx);f.dot(vx,oy,4,C.blue);f.dot(ox,vy,4,C.green);
+  return f.out();},
+/* avg acceleration 4E -> 4N direction */
+acc2:function(){var f=new Fig(500,310),ox=180,oy=250,sc=36,
+  vx=ox+4*sc,vy=oy-4*sc;
+  f.arr(ox,oy,vx,oy,C.blue,3);f.arr(ox,oy,ox,vy,C.green,3);
+  f.ln(vx,oy,ox,oy,C.dim,1.5,'6 5');f.ln(ox,oy,ox,vy,C.dim,1.5,'6 5');
+  f.ln(vx,oy,120,oy,C.dim,1.2,'4 5');
+  f.arr(vx,oy,ox,vy,C.rose,3);
+  f.path('M'+(vx-24)+' '+(oy-24)+' A34 34 0 0 0 '+(vx-34)+' '+oy,C.dim,1.8);
+  f.txt(vx-84,oy-26,'45°',{size:13.5,fill:C.dim});
+  f.txt(ox+56,oy+30,'vᵢ = 4 east',{size:14.5,fill:C.blue});
+  f.txt(ox+12,vy-6,'v_f = 4 north'.replace('_',''),{size:14.5,fill:C.green});
+  f.txt(268,150,'Δv → north-west',{size:15.5,fill:C.rose,weight:'700'});
+  f.dot(ox,oy,4,C.tx);
+  return f.out();},
+/* relative velocity rows */
+rel1d:function(){var f=new Fig(560,250);
+  f.txt(20,42,'same direction → subtract',{size:15,fill:C.dim});
+  f.arr(150,64,330,64,C.blue,3);f.txt(216,50,'vA',{size:14,fill:C.blue,it:1});
+  f.arr(150,92,270,92,C.green,3);f.txt(196,116,'vB',{size:14,fill:C.green,it:1});
+  f.arr(390,78,470,78,C.amber,3);f.txt(386,64,'|vA − vB|',{size:14,fill:C.amber});
+  f.ln(20,140,540,140,C.grid,1.4);
+  f.txt(20,170,'opposite directions → add',{size:15,fill:C.dim});
+  f.arr(140,192,300,192,C.blue,3);f.txt(200,178,'vA',{size:14,fill:C.blue,it:1});
+  f.arr(480,192,340,192,C.green,3);f.txt(420,178,'vB',{size:14,fill:C.green,it:1});
+  f.arr(150,228,390,228,C.amber,3);f.txt(150,214,'approach speed = vA + vB',{size:14,fill:C.amber});
+  return f.out();},
+/* tower + two stones */
+tower:function(){var f=new Fig(480,340);
+  f.ln(20,310,460,310,C.ax,2.2);
+  f.rect(350,70,44,240,C.dim,'rgba(148,163,184,.07)',3);
+  f.ln(30,310,38,310,C.dim,1.5);f.ln(30,130,38,130,C.dim,1.5);f.ln(30,70,38,70,C.dim,1.5);
+  f.txt(26,314,'0',{size:12.5,fill:C.dim,anchor:'end'});
+  f.txt(26,134,'60 m',{size:12.5,fill:C.dim,anchor:'end'});
+  f.txt(26,74,'80 m',{size:12.5,fill:C.dim,anchor:'end'});
+  f.arr(110,300,110,146,C.blue,3);f.dot(110,304,5,C.blue);
+  f.txt(122,236,'u = 40 m/s',{size:14.5,fill:C.blue});
+  f.dot(372,78,5,C.green);f.arr(372,84,372,124,C.green,2.6);
+  f.txt(384,104,'dropped (u = 0)',{size:13.5,fill:C.green});
+  f.ln(110,130,372,130,C.amber,1.8,'7 6');
+  f.dot(110,130,4.5,C.amber);f.dot(372,130,4.5,C.amber);
+  f.txt(240,116,'meet at h = 60 m after t = 2 s',{size:14.5,fill:C.amber,anchor:'middle'});
+  f.txt(372,58,'80 m tower',{size:13,fill:C.dim,anchor:'middle'});
+  return f.out();},
+/* timeline phrases */
+phrases:function(){var f=new Fig(600,240),x=function(t){return 60+t*160;},t;
+  f.ln(40,200,560,200,C.ax,2);f.arr(548,200,562,200,C.ax,2);
+  for(t=0;t<=3;t++){f.ln(x(t),194,x(t),206,C.ax,2);
+    f.txt(x(t),226,t===3?'3 s':''+t,{size:14,fill:C.dim,anchor:'middle'});}
+  f.rect(x(0),36,480,13,C.blue,'rgba(59,130,246,.55)',6);
+  f.txt(x(0),28,'in 3 s   [0 → 3 s]',{size:14,fill:C.blue});
+  f.rect(x(2),72,160,13,C.green,'rgba(34,197,94,.55)',6);
+  f.txt(x(2),64,'in the 3rd second   [2 → 3 s]',{size:14,fill:C.green});
+  f.rect(x(1),108,80,13,C.amber,'rgba(234,179,8,.55)',6);
+  f.txt(x(1),100,'in the 3rd half-second   [1.0 → 1.5 s]',{size:14,fill:C.amber});
+  f.ln(x(3),142,x(3),192,C.rose,1.8,'5 5');f.dot(x(3),200,6,C.rose);
+  f.txt(x(3),132,'at t = 3 s (an instant)',{size:14,fill:C.rose,anchor:'middle'});
+  return f.out();},
+/* closed loop */
+loop:function(){var f=new Fig(320,230);
+  f.path('M160 40 A75 75 0 1 1 122.5 50',C.ax,2.4);
+  f.arr(128,46,122.5,50,C.green,2.4);
+  f.dot(160,40,5,C.amber);f.txt(170,34,'start = end',{size:13.5,fill:C.amber});
+  f.txt(160,216,'round trip: Δr = 0, distance = 2πR',{size:13.5,fill:C.dim,anchor:'middle'});
+  return f.out();}
+};
+
+/* ================================================================
+   3. DECK ENGINE
+   ================================================================ */
+var stage=document.getElementById('stage');
+var slides=Array.prototype.slice.call(stage.querySelectorAll('.slide'));
+var level=parseInt(localStorage.getItem('deckSize'),10);
+if(!(level>=1&&level<=7))level=5;
+var cur=0,step=0;
+
+function dims(L){var w=Math.round((1600-(L-1)*(560/6))/2)*2;return{w:w,h:Math.round(w*9/16)};}
+
+var osdT=null;
+function osd(t){var o=document.getElementById('osd');o.textContent=t;o.classList.add('show');
+  clearTimeout(osdT);osdT=setTimeout(function(){o.classList.remove('show');},1200);}
+
+function fragGroups(sec){var els=sec.querySelectorAll('[data-f]'),g={},i,k;
+  for(i=0;i<els.length;i++){k=+els[i].getAttribute('data-f');if(!g[k])g[k]=[];}
+  return Object.keys(g).map(Number).sort(function(a,b){return a-b;});}
+
+function applyFrags(){var sec=slides[cur],g=fragGroups(sec),gi;
+  for(gi=0;gi<g.length;gi++){
+    var els=sec.querySelectorAll('[data-f="'+g[gi]+'"]'),on=gi<step,j;
+    for(j=0;j<els.length;j++)els[j].classList.toggle('on',on);}}
+
+function show(i,full){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  for(var k=0;k<slides.length;k++)slides[k].classList.toggle('act',k===cur);
+  var g=fragGroups(slides[cur]);
+  step=full?g.length:0;
+  applyFrags();
+  osd((cur+1)+' / '+slides.length);}
+
+function next(){var g=fragGroups(slides[cur]);
+  if(step<g.length){step++;applyFrags();}
+  else if(cur<slides.length-1)show(cur+1,false);}
+function prev(){if(step>0){step--;applyFrags();}
+  else if(cur>0)show(cur-1,true);}
+
+function fitAll(){var d=dims(level),padX=92,padY=50;
+  for(var i=0;i<slides.length;i++){
+    var fit=slides[i].querySelector('.sfit');
+    fit.style.transform='none';
+    var k=Math.min(1,(d.h-padY)/fit.scrollHeight,(d.w-padX)/fit.scrollWidth);
+    if(k<0.999)fit.style.transform='scale('+k.toFixed(4)+')';}}
+
+function layout(){var d=dims(level);
+  stage.style.width=d.w+'px';stage.style.height=d.h+'px';
+  var s=Math.min(innerWidth/d.w,innerHeight/d.h);
+  stage.style.transform='translate('+((innerWidth-d.w*s)/2)+'px,0) scale('+s+')';
+  fitAll();}
+
+function setLevel(L){level=L;localStorage.setItem('deckSize',String(L));layout();osd('Board size '+L);}
+
+/* keys */
+addEventListener('keydown',function(e){var k=e.key;
+  if(k==='ArrowRight'||k===' '||k==='PageDown'||k==='Enter'){next();e.preventDefault();}
+  else if(k==='ArrowLeft'||k==='PageUp'||k==='Backspace'){prev();e.preventDefault();}
+  else if(k==='Home'){show(0,false);e.preventDefault();}
+  else if(k==='End'){show(slides.length-1,true);e.preventDefault();}
+  else if(/^[1-7]$/.test(k)){setLevel(+k);e.preventDefault();}
+  else if(k==='f'||k==='F'){
+    if(document.fullscreenElement)document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(function(){});
+    e.preventDefault();}});
+
+/* auto-hide cursor */
+var ct=null;
+function poke(){document.body.classList.remove('nocur');clearTimeout(ct);
+  ct=setTimeout(function(){document.body.classList.add('nocur');},2600);}
+addEventListener('mousemove',poke);poke();
+
+/* resize */
+var rt=null;
+addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(layout,80);});
+
+/* ================================================================
+   4. INIT — figures → math → layout → first slide
+   ================================================================ */
+(function(){
+  var ph=document.querySelectorAll('[data-fig]');
+  for(var i=0;i<ph.length;i++){var fn=FIGS[ph[i].getAttribute('data-fig')];
+    if(fn)ph[i].innerHTML=fn();}
+  processMath(stage);
+  layout();
+  show(0,false);
+})();
+</script>
+</body>
+</html>

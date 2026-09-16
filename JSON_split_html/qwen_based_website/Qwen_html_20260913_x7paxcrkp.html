@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 08 · The Displacement Method — Ray Optics Lab</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --ink0:#070c16; --ink1:#0c1424; --ink2:#111c31; --ink3:#17253f;
+  --line:#223250; --line2:#2e4368;
+  --tx:#e9eff9; --mut:#96a7c2; --dim:#5d7292;
+  --amber:#ffb02e; --amber2:#ff7a1a; --cyan:#5ad8e6; --green:#3fe0a0; --red:#ff5d5d; --violet:#a48bfa;
+  --disp:"Bricolage Grotesque",serif; --body:"Instrument Sans",sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink0); color:var(--tx); font-family:var(--body);
+  font-size:16.5px; line-height:1.6; overflow-x:hidden;
+}
+::selection{background:var(--amber); color:#141005}
+:focus-visible{outline:2px solid var(--amber); outline-offset:3px; border-radius:4px}
+
+/* layered ambient background: graph-paper grid + two drifting lamp glows */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(122,150,200,.045) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, rgba(122,150,200,.045) 0 1px, transparent 1px 44px),
+    radial-gradient(1100px 520px at 12% -6%, rgba(255,122,26,.10), transparent 60%),
+    radial-gradient(900px 600px at 96% 22%, rgba(90,216,230,.07), transparent 60%),
+    var(--ink0);
+}
+body::after{
+  content:""; position:fixed; inset:-20%; z-index:-1; pointer-events:none; opacity:.5;
+  background:radial-gradient(600px 420px at 70% 60%, rgba(255,176,46,.06), transparent 70%);
+  animation:drift 26s ease-in-out infinite alternate;
+}
+@keyframes drift{from{transform:translate(-3%,-2%)}to{transform:translate(3%,3%)}}
+@media (prefers-reduced-motion:reduce){ body::after{animation:none} }
+
+.wrap{max-width:1180px; margin:0 auto; padding:0 26px}
+.mono{font-family:var(--mono)}
+a{color:inherit}
+
+/* ============ HEADER ============ */
+header{
+  position:sticky; top:0; z-index:60; background:rgba(7,12,22,.86);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+}
+.hdr{display:flex; align-items:center; gap:20px; height:58px}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase}
+.brand svg{width:17px;height:17px;color:var(--amber)}
+.brand b{color:var(--amber); font-weight:600}
+nav{margin-left:auto; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--mut); text-decoration:none; padding:7px 10px; border-radius:8px; white-space:nowrap;
+  transition:color .2s, background .2s;
+}
+nav a:hover{color:var(--amber); background:rgba(255,176,46,.08)}
+#pbar{position:absolute; left:0; bottom:-1px; height:2px; width:100%; background:var(--amber); transform-origin:0 50%; transform:scaleX(0)}
+
+/* ============ HERO ============ */
+#hero{padding:64px 0 30px; position:relative}
+.kicker{
+  font-family:var(--mono); font-size:12px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--amber); display:flex; align-items:center; gap:12px; margin-bottom:18px;
+}
+.kicker::before{content:""; width:34px; height:1px; background:var(--amber)}
+h1{
+  font-family:var(--disp); font-weight:800; font-size:clamp(2.6rem,6.2vw,4.9rem);
+  line-height:1.02; letter-spacing:-.015em; max-width:15ch;
+}
+h1 .thin{font-weight:300; color:var(--mut)}
+.hero-sub{max-width:56ch; color:var(--mut); margin-top:20px; font-size:1.06rem}
+.hero-sub em{color:var(--tx); font-style:normal; border-bottom:2px solid var(--amber)}
+.stat-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px}
+.stat{
+  font-family:var(--mono); font-size:12.5px; padding:8px 13px; border:1px solid var(--line2);
+  border-radius:10px; background:var(--ink1); color:var(--mut); transition:transform .25s,border-color .25s,color .25s;
+}
+.stat b{color:var(--tx); font-weight:600}
+.stat:hover{transform:translateY(-3px); border-color:var(--amber); color:var(--tx)}
+.stat.hot{border-color:rgba(255,176,46,.5); color:var(--amber)}
+
+.hero-bench{
+  margin-top:38px; border:1px solid var(--line); border-radius:16px; background:
+    radial-gradient(700px 220px at 15% 88%, rgba(255,140,40,.10), transparent 70%),
+    linear-gradient(180deg,var(--ink1),var(--ink0));
+  overflow:hidden; position:relative;
+}
+.hero-bench svg{display:block; width:100%; height:auto}
+.hphase{
+  position:absolute; top:16px; right:18px; font-family:var(--mono); font-size:11.5px; letter-spacing:.1em;
+  padding:7px 12px; border:1px solid var(--line2); border-radius:999px; background:rgba(12,20,36,.85); color:var(--cyan);
+}
+.hero-caption{display:flex; justify-content:space-between; gap:14px; padding:12px 18px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:11.5px; color:var(--dim); letter-spacing:.06em; flex-wrap:wrap}
+.scroll-cue{display:flex; justify-content:center; margin-top:26px; color:var(--dim); animation:cue 2s ease-in-out infinite}
+@keyframes cue{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.scroll-cue{animation:none}}
+.flame-anim{transform-origin:90px 236px; animation:flick .9s ease-in-out infinite alternate}
+@keyframes flick{from{transform:scale(1,1)}to{transform:scale(1.06,.94)}}
+@media (prefers-reduced-motion:reduce){.flame-anim{animation:none}}
+
+/* ============ SECTIONS ============ */
+section{padding:96px 0 30px; position:relative}
+.sec-head{position:relative; margin-bottom:44px}
+.ghost{
+  position:absolute; top:-58px; right:-8px; font-family:var(--disp); font-weight:800;
+  font-size:clamp(6rem,14vw,11rem); line-height:1; color:transparent;
+  -webkit-text-stroke:1px rgba(122,150,200,.16); pointer-events:none; user-select:none;
+}
+h2{font-family:var(--disp); font-weight:700; font-size:clamp(1.9rem,3.6vw,2.9rem); letter-spacing:-.01em; line-height:1.08}
+.lede{color:var(--mut); max-width:64ch; margin-top:14px}
+
+.card{
+  background:linear-gradient(180deg,var(--ink2),var(--ink1)); border:1px solid var(--line);
+  border-radius:14px; padding:22px; transition:transform .25s, border-color .25s, box-shadow .25s;
+}
+.card:hover{transform:translateY(-3px); border-color:var(--line2); box-shadow:0 14px 34px rgba(0,0,0,.35)}
+
+.btn{
+  font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  padding:10px 16px; border-radius:10px; border:1px solid var(--line2); background:var(--ink2);
+  color:var(--tx); cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px;
+}
+.btn svg{width:15px;height:15px}
+.btn:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-2px)}
+.btn:disabled{opacity:.35; cursor:not-allowed; transform:none}
+.btn.solid{background:var(--amber); border-color:var(--amber); color:#161005; font-weight:600}
+.btn.solid:hover{background:#ffc55e; color:#161005}
+
+.chip{
+  font-family:var(--mono); font-size:11.5px; padding:5px 11px; border-radius:999px;
+  border:1px solid var(--line2); color:var(--mut); display:inline-flex; align-items:center; gap:7px;
+}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.chip.ok .dot{background:var(--green); box-shadow:0 0 10px var(--green)}
+.chip.warn .dot{background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.chip.bad .dot{background:var(--red); box-shadow:0 0 10px var(--red)}
+
+.trap-callout{
+  border:1px solid rgba(255,93,93,.4); border-left:4px solid var(--red); border-radius:12px;
+  padding:18px 20px 18px 54px; position:relative; margin:34px 0;
+  background:repeating-linear-gradient(-45deg, rgba(255,93,93,.05) 0 10px, transparent 10px 20px), var(--ink1);
+}
+.trap-callout svg{position:absolute; left:18px; top:19px; width:22px; height:22px; color:var(--red)}
+.trap-callout b{color:var(--red); font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; display:block; margin-bottom:6px}
+
+.ktx{font-size:1.02em}
+.ktx.blk{display:block; margin:14px 0; overflow-x:auto; overflow-y:hidden}
+
+/* ---- setup geometry ---- */
+.setup-grid{display:grid; grid-template-columns:1.5fr .9fr; gap:26px; align-items:start}
+.svg-panel{border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,var(--ink1),var(--ink0)); padding:10px; perspective:900px}
+.svg-panel svg{display:block; width:100%; height:auto; transform:rotateX(1.2deg); transition:transform .5s}
+.svg-panel:hover svg{transform:rotateX(0)}
+.link-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.lchip{
+  font-family:var(--mono); font-size:12px; padding:6px 12px; border-radius:8px; cursor:default;
+  border:1px solid var(--line2); background:var(--ink2); color:var(--mut); transition:all .18s;
+}
+.lchip:hover{color:#0e1320; background:var(--amber); border-color:var(--amber); transform:translateY(-2px)}
+.note-list{display:grid; gap:12px}
+.note-list .card{padding:16px 18px; font-size:.95rem}
+.note-list .card b{color:var(--cyan); font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; display:block; margin-bottom:4px}
+.hl{stroke:var(--amber)!important; stroke-width:2.6!important; filter:drop-shadow(0 0 5px rgba(255,176,46,.8))}
+
+/* ---- derivation (scroll-scrubbed) ---- */
+.der-grid{display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:start}
+.der-stage-wrap{position:sticky; top:86px}
+.der-stage{border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,var(--ink2),var(--ink1)); overflow:hidden}
+.der-stage svg{display:block; width:100%; height:auto}
+.st-f{
+  border-top:1px solid var(--line); padding:16px 20px; min-height:76px; display:none;
+  font-size:1.05rem; background:rgba(7,12,22,.5);
+}
+.st-f.on{display:block; animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0; transform:translateY(10px)}to{opacity:1;transform:none}}
+.st-cap{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); padding:10px 20px 0}
+.der-step{min-height:64vh; display:flex; flex-direction:column; justify-content:center; opacity:.32; transition:opacity .4s}
+.der-step.live{opacity:1}
+.step-num{
+  font-family:var(--mono); font-size:12px; color:var(--amber); letter-spacing:.2em; margin-bottom:10px;
+  display:flex; align-items:center; gap:10px;
+}
+.step-num::after{content:""; flex:0 0 40px; height:1px; background:var(--amber); opacity:.5}
+.der-step h3{font-family:var(--disp); font-size:1.55rem; font-weight:700; margin-bottom:10px}
+.der-step p{color:var(--mut); max-width:46ch}
+@media (max-width:920px){
+  .der-grid{grid-template-columns:1fr}
+  .der-stage-wrap{position:relative; top:0}
+  .der-step{min-height:0; padding:34px 0}
+}
+
+/* ---- condition ---- */
+.cond-grid{display:grid; grid-template-columns:.95fr 1.25fr; gap:26px; align-items:stretch}
+.lamp{
+  display:flex; align-items:center; gap:14px; border:1px solid var(--line); border-radius:14px;
+  padding:18px 20px; background:var(--ink1); margin-top:18px; transition:border-color .3s;
+}
+.lamp .big-dot{width:16px;height:16px;border-radius:50%;flex:0 0 auto; background:var(--green); box-shadow:0 0 16px var(--green); transition:all .3s}
+.lamp.warn .big-dot{background:var(--amber); box-shadow:0 0 16px var(--amber)}
+.lamp.bad .big-dot{background:var(--red); box-shadow:0 0 16px var(--red)}
+.lamp b{font-family:var(--mono); font-size:13px; letter-spacing:.06em; display:block}
+.lamp span{font-size:.86rem; color:var(--mut)}
+.sl-row{display:flex; align-items:center; gap:14px; margin:14px 0}
+.sl-row label{font-family:var(--mono); font-size:12px; color:var(--mut); width:120px; flex:0 0 auto}
+.sl-row output{font-family:var(--mono); font-size:13px; color:var(--amber); width:78px; text-align:right}
+input[type=range]{flex:1; accent-color:var(--amber); height:4px; cursor:pointer}
+.quad-note{font-size:.92rem; color:var(--mut); margin-top:8px}
+.quad-note .ktx{color:var(--tx)}
+
+/* ---- THE LAB ---- */
+.lab-shell{border:1px solid var(--line); border-radius:18px; overflow:hidden;
+  background:linear-gradient(180deg,var(--ink1), #0a1120); box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.lab-top{display:flex; align-items:center; gap:14px; padding:16px 22px; border-bottom:1px solid var(--line); flex-wrap:wrap}
+.lab-top .ttl{font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber)}
+.lab-top .hint{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--dim); letter-spacing:.05em}
+#benchWarn{
+  display:none; margin:14px 22px 0; border:1px solid rgba(255,93,93,.5); border-radius:10px; padding:11px 16px;
+  font-family:var(--mono); font-size:12.5px; color:#ffb4b4; align-items:center; gap:10px;
+  background:repeating-linear-gradient(-45deg, rgba(255,93,93,.08) 0 12px, rgba(255,93,93,.02) 12px 24px);
+}
+#benchWarn.on{display:flex}
+#benchWarn svg{width:17px;height:17px;color:var(--red); flex:0 0 auto}
+.bench-cv-wrap{position:relative; padding:8px 10px}
+#benchCanvas{width:100%; height:440px; display:block; border-radius:10px; touch-action:none; cursor:crosshair}
+#benchCanvas:focus-visible{outline:2px solid var(--amber); outline-offset:-2px}
+.lab-controls{display:flex; flex-wrap:wrap; gap:22px; padding:14px 22px 20px; border-top:1px solid var(--line); align-items:center}
+.lab-controls .sl-row{margin:0; min-width:250px; flex:1}
+.lab-controls label{width:150px}
+.snap-group{display:flex; gap:10px; flex-wrap:wrap}
+.readouts{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:1px; background:var(--line);
+  border-top:1px solid var(--line);
+}
+.ro{background:var(--ink1); padding:12px 16px}
+.ro .k{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim)}
+.ro .v{font-family:var(--mono); font-size:16px; color:var(--tx); margin-top:3px; transition:color .2s}
+.ro .v.good{color:var(--green)}
+.ro .v.bad{color:var(--red)}
+#verifyStrip{
+  display:none; padding:14px 22px; border-top:1px solid var(--line); gap:16px; align-items:center; flex-wrap:wrap;
+  background:rgba(63,224,160,.05); font-family:var(--mono); font-size:13px;
+}
+#verifyStrip.on{display:flex}
+#verifyStrip b{color:var(--green)}
+.lab-lower{display:grid; grid-template-columns:1.35fr 1fr; gap:22px; margin-top:24px}
+.chart-card,.side-card{border:1px solid var(--line); border-radius:14px; background:var(--ink1); padding:18px 20px}
+.chart-card h4,.side-card h4{font-family:var(--mono); font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--cyan); margin-bottom:6px}
+.chart-card p,.side-card p{font-size:.88rem; color:var(--mut)}
+#fxChart{max-height:270px; margin-top:10px}
+.side-card ul{margin:12px 0 0 18px; font-size:.9rem; color:var(--mut)}
+.side-card li{margin:7px 0}
+.side-card li b{color:var(--tx)}
+
+/* ---- magnification ---- */
+.mag-grid{display:grid; grid-template-columns:1.25fr .95fr; gap:26px; align-items:stretch}
+.mag-stage{border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,var(--ink1),var(--ink0)); padding:22px 22px 14px; position:relative; overflow:hidden}
+.bars{display:flex; justify-content:space-around; align-items:flex-end; height:270px; border-bottom:2px solid var(--line2); position:relative}
+.bars::before{content:""; position:absolute; left:0; right:0; bottom:70px; border-top:1px dashed rgba(122,150,200,.3)}
+.lane{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; width:30%}
+.bar{width:26px; transition:height .35s cubic-bezier(.3,1.4,.5,1); position:relative; border-radius:4px 4px 0 0}
+.bar::after{content:""; position:absolute; left:50%; transform:translateX(-50%); border-left:11px solid transparent; border-right:11px solid transparent}
+.bar.up{border-radius:0 0 4px 4px}
+.bar.up::after{top:-9px; border-bottom:12px solid inherit; border-bottom-color:inherit}
+.bar.down::after{bottom:-9px; border-top:12px solid inherit; border-top-color:inherit}
+#barO{background:#cfd9ea; color:#cfd9ea}
+#barI1{background:var(--amber); color:var(--amber)}
+#barI2{background:var(--cyan); color:var(--cyan)}
+.lane .lbl{font-family:var(--mono); font-size:11.5px; color:var(--mut); margin-top:22px; text-align:center}
+.lane .lbl b{display:block; font-size:14px; color:var(--tx)}
+.mag-side .prod{
+  margin-top:16px; border:1px dashed var(--line2); border-radius:12px; padding:14px 16px; text-align:center;
+}
+.prod .ktx{font-size:1.25rem}
+.prod small{display:block; color:var(--dim); font-family:var(--mono); font-size:11px; margin-top:6px; letter-spacing:.1em}
+.osq{margin-top:16px}
+.osq .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px}
+.osq input{
+  width:86px; background:var(--ink0); border:1px solid var(--line2); color:var(--tx);
+  font-family:var(--mono); font-size:14px; padding:8px 10px; border-radius:8px;
+}
+.osq input:focus{border-color:var(--amber); outline:none}
+.osq .out{font-family:var(--mono); font-size:15px; color:var(--green)}
+
+/* ---- formula wall ---- */
+.fgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px}
+.fcard{position:relative; overflow:hidden}
+.fcard .idx{font-family:var(--mono); font-size:11px; color:var(--amber); letter-spacing:.2em}
+.fcard h5{font-family:var(--disp); font-size:1.05rem; margin:6px 0 10px; font-weight:600}
+.fcard .fx{padding:12px; background:rgba(7,12,22,.6); border:1px solid var(--line); border-radius:10px; overflow-x:auto}
+.fcard p{font-size:.85rem; color:var(--mut); margin-top:10px}
+.reconcile{
+  margin-top:22px; border:1px solid rgba(90,216,230,.4); border-left:4px solid var(--cyan); border-radius:12px;
+  background:rgba(90,216,230,.05); padding:20px 22px;
+}
+.reconcile b{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan); display:block; margin-bottom:8px}
+
+/* ---- drill ---- */
+.drill-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px}
+.dr-step{opacity:0; transform:translateX(-12px); transition:all .4s ease; border-left:2px solid var(--line2); padding:6px 0 6px 16px; margin:10px 0; color:var(--mut)}
+.dr-step.show{opacity:1; transform:none; color:var(--tx); border-color:var(--amber)}
+.dr-step .ktx{color:var(--tx)}
+.calc-mini{margin-top:18px; border-top:1px dashed var(--line2); padding-top:16px}
+.calc-mini .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-family:var(--mono); font-size:13px}
+.calc-mini input{width:84px; background:var(--ink0); border:1px solid var(--line2); color:var(--tx); font-family:var(--mono); font-size:13px; padding:7px 9px; border-radius:8px}
+.calc-mini input:focus{border-color:var(--amber); outline:none}
+.calc-out{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap}
+.err-card .ktx.blk{font-size:.95rem}
+.mcq-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; margin-top:26px}
+.mcq{display:flex; flex-direction:column}
+.mcq .q{font-size:.97rem; margin-bottom:14px}
+.mcq .q .n{font-family:var(--mono); color:var(--amber); margin-right:8px}
+.opt{
+  text-align:left; width:100%; font-family:var(--mono); font-size:13px; padding:10px 13px; margin:5px 0;
+  background:var(--ink0); color:var(--tx); border:1px solid var(--line2); border-radius:9px; cursor:pointer; transition:all .18s;
+}
+.opt:hover:not(:disabled){border-color:var(--cyan); transform:translateX(4px)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--green); background:rgba(63,224,160,.12); color:var(--green)}
+.opt.wrong{border-color:var(--red); background:rgba(255,93,93,.10); color:#ffb4b4}
+.mcq .why{display:none; margin-top:12px; font-size:.85rem; color:var(--mut); border-top:1px dashed var(--line2); padding-top:10px}
+.mcq.answered .why{display:block; animation:fadeUp .4s ease both}
+.score-chip{margin-left:auto}
+
+footer{border-top:1px solid var(--line); margin-top:90px; padding:34px 0 44px}
+footer .wrap{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;
+  font-family:var(--mono); font-size:11.5px; color:var(--dim); letter-spacing:.1em}
+footer b{color:var(--amber)}
+
+@media (max-width:920px){
+  .setup-grid,.cond-grid,.lab-lower,.mag-grid,.drill-grid{grid-template-columns:1fr}
+  #benchCanvas{height:360px}
+  .ghost{font-size:5.4rem; top:-30px}
+  section{padding-top:70px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="wrap hdr">
+    <div class="brand"><i data-lucide="crosshair"></i>RAY LAB · <b>MODULE 08</b></div>
+    <nav>
+      <a href="#setup">Geometry</a><a href="#derivation">Derivation</a><a href="#condition">D ≥ 4f</a>
+      <a href="#lab">The Bench</a><a href="#magnification">Sizes</a><a href="#formula-list">Formulas</a><a href="#drill">Drill</a>
+    </nav>
+  </div>
+  <div id="pbar"></div>
+</header>
+
+<!-- ================= HERO ================= -->
+<div id="hero">
+  <div class="wrap">
+    <div class="kicker">Ray Optics · Practical Series · JEE</div>
+    <h1>The Displacement <span class="thin">Method</span></h1>
+    <p class="hero-sub">Pin the object. Pin the screen. Slide the lens — it finds <em>two homes</em> that both
+      throw a sharp image, and the gap between those homes <em>is</em> the focal length.</p>
+    <div class="stat-row">
+      <div class="stat">D = <b>100 cm</b> fixed</div>
+      <div class="stat">two lens stations, gap <b>x = 40 cm</b></div>
+      <div class="stat hot">f = (D² − x²)/4D = <b>21 cm</b></div>
+      <div class="stat">m₁ · m₂ = <b>1, exactly</b></div>
+    </div>
+
+    <div class="hero-bench">
+      <svg id="heroSvg" viewBox="0 0 1000 340" aria-label="Optical bench: candle, sliding lens, screen">
+        <defs>
+          <linearGradient id="railG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3a4a68"/><stop offset=".5" stop-color="#1b2740"/><stop offset="1" stop-color="#0d1526"/>
+          </linearGradient>
+          <linearGradient id="lensG" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="rgba(90,216,230,.10)"/><stop offset=".5" stop-color="rgba(90,216,230,.42)"/><stop offset="1" stop-color="rgba(90,216,230,.10)"/>
+          </linearGradient>
+          <radialGradient id="flameG" cx=".5" cy=".65" r=".65">
+            <stop offset="0" stop-color="#fff6d8"/><stop offset=".45" stop-color="#ffc23e"/><stop offset="1" stop-color="rgba(255,110,20,0)"/>
+          </radialGradient>
+          <linearGradient id="scrG" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#eef2f7"/><stop offset="1" stop-color="#b9c4d2"/>
+          </linearGradient>
+        </defs>
+        <line x1="40" y1="230" x2="960" y2="230" stroke="rgba(150,170,200,.18)" stroke-dasharray="3 7"/>
+        <!-- D dimension -->
+        <g stroke="#5d7292" stroke-width="1">
+          <line x1="90" y1="42" x2="910" y2="42"/><line x1="90" y1="34" x2="90" y2="50"/><line x1="910" y1="34" x2="910" y2="50"/>
+        </g>
+        <text x="500" y="32" text-anchor="middle" fill="#96a7c2" font-family="IBM Plex Mono" font-size="12">D = 100 cm (fixed)</text>
+        <rect x="40" y="252" width="920" height="11" rx="3" fill="url(#railG)" stroke="#2e4368" stroke-width=".7"/>
+        <g id="hTicks"></g>
+        <!-- object candle -->
+        <g id="hObj">
+          <rect x="78" y="244" width="24" height="10" rx="2" fill="#22304a"/>
+          <rect x="84" y="216" width="12" height="30" rx="2" fill="#e9d9b5" stroke="#c9b283" stroke-width=".8"/>
+          <line x1="90" y1="216" x2="90" y2="212" stroke="#3c3428" stroke-width="1.6"/>
+          <path class="flame-anim" d="M90 200 C 96 208, 96 214, 90 216 C 84 214, 84 208, 90 200 Z" fill="url(#flameG)"/>
+          <text x="60" y="206" fill="#96a7c2" font-family="IBM Plex Mono" font-size="11">O</text>
+        </g>
+        <!-- screen -->
+        <g id="hScreen">
+          <rect x="899" y="244" width="22" height="10" rx="2" fill="#22304a"/>
+          <rect x="905" y="150" width="9" height="96" rx="2" fill="url(#scrG)" stroke="#8fa0b5" stroke-width=".8"/>
+        </g>
+        <!-- image on screen (inverted, scaled about axis) -->
+        <g id="hImgG" transform="translate(909.5,230)">
+          <g id="hImg">
+            <rect x="-3.5" y="8" width="7" height="52" rx="2" fill="#c8a86a" opacity=".9"/>
+            <path d="M0 84 C 7 72, 7 64, 0 60 C -7 64, -7 72, 0 84 Z" fill="url(#flameG)"/>
+          </g>
+        </g>
+        <g id="hRays2" fill="none" stroke="rgba(255,176,46,.34)" stroke-width="1.3"></g>
+        <g id="hRays" fill="none" stroke="#5ad8e6" stroke-width="1.6" style="filter:drop-shadow(0 0 4px rgba(90,216,230,.7))"></g>
+        <!-- ghost lens at other position -->
+        <g id="hGhost" opacity="0">
+          <path d="M336 172 Q 352 230 336 288 Q 320 230 336 172 Z" fill="none" stroke="#5ad8e6" stroke-dasharray="4 4" stroke-width="1.2"/>
+          <text x="336" y="304" text-anchor="middle" fill="#5ad8e6" font-family="IBM Plex Mono" font-size="10">L₂</text>
+        </g>
+        <!-- movable lens -->
+        <g id="hLens">
+          <rect x="-12" y="292" width="24" height="9" rx="2" fill="#22304a" transform="translate(664,0)"/>
+          <path d="M664 172 Q 681 230 664 288 Q 647 230 664 172 Z" fill="url(#lensG)" stroke="#8ceef7" stroke-width="1.4"/>
+          <text id="hLensLbl" x="664" y="318" text-anchor="middle" fill="#96a7c2" font-family="IBM Plex Mono" font-size="10">L₁</text>
+        </g>
+        <!-- x dimension -->
+        <g id="hDimX" opacity="0">
+          <line x1="336" y1="330" x2="664" y2="330" stroke="#ffb02e" stroke-width="1.2"/>
+          <line x1="336" y1="323" x2="336" y2="337" stroke="#ffb02e" stroke-width="1.2"/>
+          <line x1="664" y1="323" x2="664" y2="337" stroke="#ffb02e" stroke-width="1.2"/>
+          <text x="500" y="326" text-anchor="middle" fill="#ffb02e" font-family="IBM Plex Mono" font-size="12">x = 40 cm</text>
+        </g>
+      </svg>
+      <div class="hphase" id="hPhase">POSITION 1 · DIMINISHED · m = 3/7</div>
+      <div class="hero-caption">
+        <span>DEMO LOOP · D AND SCREEN LOCKED — ONLY THE LENS MOVES</span>
+        <span>watch the image stay sharp but swap size: small ⇄ large</span>
+      </div>
+    </div>
+    <div class="scroll-cue"><i data-lucide="chevron-down"></i></div>
+  </div>
+</div>
+
+<!-- ================= SETUP ================= -->
+<section id="setup">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">01</div>
+      <div class="kicker">01 · Geometry</div>
+      <h2>Two homes for one lens.</h2>
+      <p class="lede">Object and screen sit a fixed distance <b>D</b> apart. Somewhere between them a convex lens
+      focuses — and, remarkably, it focuses at a <b>second</b> station too. The two stations are <b>x</b> apart,
+      and they simply <b>swap u and v</b>.</p>
+    </div>
+
+    <div class="setup-grid">
+      <div>
+        <div class="svg-panel">
+          <svg viewBox="0 0 760 330" aria-label="Geometry of the two lens positions">
+            <line x1="30" y1="185" x2="730" y2="185" stroke="rgba(150,170,200,.2)" stroke-dasharray="3 7"/>
+            <rect x="30" y="205" width="700" height="10" rx="3" fill="#1b2740" stroke="#2e4368" stroke-width=".7"/>
+            <!-- D -->
+            <g id="sg-D" stroke="#5d7292"><line x1="70" y1="34" x2="690" y2="34"/><line x1="70" y1="26" x2="70" y2="42"/><line x1="690" y1="26" x2="690" y2="42"/></g>
+            <text x="380" y="26" text-anchor="middle" fill="#96a7c2" font-family="IBM Plex Mono" font-size="12" id="sg-Dt">D</text>
+            <!-- object -->
+            <g><rect x="62" y="198" width="16" height="8" fill="#22304a"/><rect x="66" y="160" width="8" height="40" fill="#e9d9b5"/>
+            <path d="M70 146 C 74 152,74 157,70 159 C 66 157,66 152,70 146 Z" fill="#ffc23e"/>
+            <text x="52" y="150" fill="#96a7c2" font-family="IBM Plex Mono" font-size="11">O</text></g>
+            <!-- screen -->
+            <g><rect x="682" y="198" width="16" height="8" fill="#22304a"/><rect x="687" y="130" width="7" height="72" fill="#dfe6ee" stroke="#8fa0b5" stroke-width=".7"/></g>
+            <!-- lens positions -->
+            <g id="sg-L1"><path d="M256 140 Q 270 185 256 230 Q 242 185 256 140 Z" fill="rgba(90,216,230,.30)" stroke="#8ceef7" stroke-width="1.3"/>
+            <text x="256" y="248" text-anchor="middle" fill="#8ceef7" font-family="IBM Plex Mono" font-size="11">L₁ (m &gt; 1)</text></g>
+            <g id="sg-L2"><path d="M504 140 Q 518 185 504 230 Q 490 185 504 140 Z" fill="rgba(255,176,46,.22)" stroke="#ffb02e" stroke-width="1.3"/>
+            <text x="504" y="248" text-anchor="middle" fill="#ffb02e" font-family="IBM Plex Mono" font-size="11">L₂ (m &lt; 1)</text></g>
+            <!-- x -->
+            <g id="sg-x" stroke="#ffb02e" stroke-width="1.2"><line x1="256" y1="272" x2="504" y2="272"/><line x1="256" y1="265" x2="256" y2="279"/><line x1="504" y1="265" x2="504" y2="279"/></g>
+            <text x="380" y="290" text-anchor="middle" fill="#ffb02e" font-family="IBM Plex Mono" font-size="12">x = L₁L₂</text>
+            <!-- u1 / v1 -->
+            <g id="sg-u1" stroke="#3fe0a0" stroke-width="1.2"><line x1="70" y1="116" x2="256" y2="116"/><line x1="70" y1="110" x2="70" y2="122"/><line x1="256" y1="110" x2="256" y2="122"/></g>
+            <text x="163" y="110" text-anchor="middle" fill="#3fe0a0" font-family="IBM Plex Mono" font-size="11">u₁</text>
+            <g id="sg-v1" stroke="#a48bfa" stroke-width="1.2"><line x1="256" y1="116" x2="690" y2="116"/><line x1="690" y1="110" x2="690" y2="122"/></g>
+            <text x="473" y="110" text-anchor="middle" fill="#a48bfa" font-family="IBM Plex Mono" font-size="11">v₁</text>
+            <!-- u2 / v2 (swapped) -->
+            <g id="sg-v2" stroke="#3fe0a0" stroke-width="1.2" opacity=".55" stroke-dasharray="5 4"><line x1="70" y1="96" x2="504" y2="96"/><line x1="70" y1="90" x2="70" y2="102"/><line x1="504" y1="90" x2="504" y2="102"/></g>
+            <text x="287" y="90" text-anchor="middle" fill="#3fe0a0" font-family="IBM Plex Mono" font-size="11" opacity=".8">u₂ = v₁</text>
+            <g id="sg-u2" stroke="#a48bfa" stroke-width="1.2" opacity=".55" stroke-dasharray="5 4"><line x1="504" y1="96" x2="690" y2="96"/><line x1="690" y1="90" x2="690" y2="102"/></g>
+            <text x="597" y="90" text-anchor="middle" fill="#a48bfa" font-family="IBM Plex Mono" font-size="11" opacity=".8">v₂ = u₁</text>
+          </svg>
+        </div>
+        <div class="link-chips">
+          <span class="lchip" data-t="sg-u1">u₁ = (D−x)/2</span>
+          <span class="lchip" data-t="sg-v1">v₁ = (D+x)/2</span>
+          <span class="lchip" data-t="sg-x">x</span>
+          <span class="lchip" data-t="sg-D">D</span>
+          <span class="lchip" data-t="sg-L1">L₁ · magnified</span>
+          <span class="lchip" data-t="sg-L2">L₂ · diminished</span>
+        </div>
+      </div>
+
+      <div class="note-list">
+        <div class="card rv"><b>Reversibility does the work</b>
+          Light paths run both ways. If (u, v) images O onto the screen, then a lens placed so that
+          object-distance = old v and image-distance = old u images it just as well. Hence <b>u and v swap</b> between L₁ and L₂.</div>
+        <div class="card rv"><b>Magnitudes, real-is-positive</b>
+          All u, v, x, D here are positive lengths. From v − u = x and u + v = D:
+          <span class="ktx blk" data-tex="u_1=\frac{D-x}{2},\quad v_1=\frac{D+x}{2}\qquad u_2=\frac{D+x}{2},\quad v_2=\frac{D-x}{2}"></span></div>
+        <div class="card rv"><b>Who is where</b>
+          L₁ sits <b>near the object</b> → u small, v big → <b>magnified</b> image (m₁ &gt; 1).
+          L₂ sits <b>near the screen</b> → <b>diminished</b> image (m₂ &lt; 1). Both perfectly sharp.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DERIVATION ================= -->
+<section id="derivation">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">02</div>
+      <div class="kicker">02 · Derivation</div>
+      <h2>Four lines to the working formula.</h2>
+      <p class="lede">Scroll — the bench on the left redraws itself as each line of algebra lands.</p>
+    </div>
+
+    <div class="der-grid">
+      <div class="der-stage-wrap">
+        <div class="der-stage">
+          <div class="st-cap" id="stCap">STEP 1 / 4 — THE TWO STATIONS</div>
+          <svg viewBox="0 0 520 260" aria-label="Derivation stage">
+            <line x1="20" y1="150" x2="500" y2="150" stroke="rgba(150,170,200,.2)" stroke-dasharray="3 6"/>
+            <rect x="20" y="166" width="480" height="8" rx="3" fill="#1b2740" stroke="#2e4368" stroke-width=".6"/>
+            <g id="stDimD" stroke="#5d7292"><line x1="60" y1="30" x2="460" y2="30"/><line x1="60" y1="23" x2="60" y2="37"/><line x1="460" y1="23" x2="460" y2="37"/></g>
+            <text x="260" y="22" text-anchor="middle" fill="#96a7c2" font-family="IBM Plex Mono" font-size="11">D</text>
+            <g><rect x="53" y="160" width="14" height="7" fill="#22304a"/><rect x="57" y="126" width="7" height="35" fill="#e9d9b5"/>
+            <path d="M60.5 114 C 64 119,64 123,60.5 125 C 57 123,57 119,60.5 114 Z" fill="#ffc23e"/></g>
+            <g><rect x="453" y="160" width="14" height="7" fill="#22304a"/><rect x="457" y="104" width="6" height="58" fill="#dfe6ee"/></g>
+            <g id="stBrU" opacity="0" stroke="#3fe0a0"><line x1="60" y1="96" x2="180" y2="96"/><line x1="60" y1="90" x2="60" y2="102"/><line x1="180" y1="90" x2="180" y2="102"/></g>
+            <text id="stBrUt" x="120" y="89" text-anchor="middle" fill="#3fe0a0" font-family="IBM Plex Mono" font-size="10.5" opacity="0">u₁</text>
+            <g id="stBrV" opacity="0" stroke="#a48bfa"><line x1="180" y1="96" x2="460" y2="96"/><line x1="460" y1="90" x2="460" y2="102"/></g>
+            <text id="stBrVt" x="320" y="89" text-anchor="middle" fill="#a48bfa" font-family="IBM Plex Mono" font-size="10.5" opacity="0">v₁</text>
+            <g id="stL1"><path d="M180 112 Q 192 150 180 188 Q 168 150 180 112 Z" fill="rgba(90,216,230,.3)" stroke="#8ceef7" stroke-width="1.2"/></g>
+            <g id="stL2"><path d="M340 112 Q 352 150 340 188 Q 328 150 340 112 Z" fill="rgba(255,176,46,.22)" stroke="#ffb02e" stroke-width="1.2"/></g>
+            <g id="stDimX" opacity="0" stroke="#ffb02e"><line x1="180" y1="206" x2="340" y2="206"/><line x1="180" y1="200" x2="180" y2="212"/><line x1="340" y1="200" x2="340" y2="212"/></g>
+            <text id="stDimXt" x="260" y="224" text-anchor="middle" fill="#ffb02e" font-family="IBM Plex Mono" font-size="11" opacity="0">x</text>
+            <g id="stLamp" opacity="0">
+              <rect x="150" y="234" width="220" height="20" rx="10" fill="rgba(63,224,160,.12)" stroke="#3fe0a0" stroke-width=".8"/>
+              <text x="260" y="248" text-anchor="middle" fill="#3fe0a0" font-family="IBM Plex Mono" font-size="11">x → 0 ⟹ D ≥ 4f</text>
+            </g>
+          </svg>
+          <div class="st-f on" id="stF1"><span class="ktx" data-tex="u_1=\tfrac{D-x}{2},\; v_1=\tfrac{D+x}{2} \qquad u_2=v_1,\; v_2=u_1"></span></div>
+          <div class="st-f" id="stF2"><span class="ktx" data-tex="\tfrac{1}{f}=\tfrac{1}{v}+\tfrac{1}{u} \;\;\Longrightarrow\;\; f=\tfrac{uv}{u+v}"></span></div>
+          <div class="st-f" id="stF3"><span class="ktx" data-tex="uv=\tfrac{(D-x)(D+x)}{4}=\tfrac{D^2-x^2}{4},\;\; u+v=D \;\;\Longrightarrow\;\; \boxed{\,f=\tfrac{D^2-x^2}{4D}\,}"></span></div>
+          <div class="st-f" id="stF4"><span class="ktx" data-tex="x=0 \;\Longrightarrow\; f=\tfrac{D}{4} \;\;\text{(positions merge)} \quad\Longrightarrow\quad D_{min}=4f"></span></div>
+        </div>
+      </div>
+
+      <div class="der-steps">
+        <div class="der-step" data-step="1">
+          <div class="step-num">STEP 1 · GEOMETRY</div>
+          <h3>Two stations, one swap.</h3>
+          <p>With O and the screen locked D apart, the lens sharpens at L₁ and again at L₂, separated by x.
+          By reversibility, the conjugate distances simply exchange: subtract v − u = x from u + v = D and both positions fall out.</p>
+        </div>
+        <div class="der-step" data-step="2">
+          <div class="step-num">STEP 2 · THE LENS LAW</div>
+          <h3>Apply it at either station.</h3>
+          <p>Real-is-positive convention: at a sharp position 1/f = 1/v + 1/u, i.e. f = uv/(u+v).
+          It doesn't matter which station you pick — the product and the sum are identical for both.</p>
+        </div>
+        <div class="der-step" data-step="3">
+          <div class="step-num">STEP 3 · SUBSTITUTE</div>
+          <h3>D and x do all the talking.</h3>
+          <p>The sum u+v is D by construction; the product uv = (D−x)(D+x)/4 by difference of squares.
+          Two measurable bench lengths — no u, no v left in the answer.</p>
+        </div>
+        <div class="der-step" data-step="4">
+          <div class="step-num">STEP 4 · THE LIMIT</div>
+          <h3>Squeeze x to zero.</h3>
+          <p>As the two stations slide together, x → 0 and f → D/4. That is the limiting case: the two
+          positions coincide at the midpoint, and <b>D = 4f is the smallest separation that forms a real image at all</b>.
+          Below it, the bench goes dark.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="trap-callout rv">
+      <i data-lucide="alert-triangle"></i>
+      <b>Trap · the classic slip</b>
+      x is the distance between the two <b>lens positions</b> — not between object and lens. Mixing these up
+      is the single most common error in this derivation (and in JEE's version of it).
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONDITION ================= -->
+<section id="condition">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">03</div>
+      <div class="kicker">03 · The threshold</div>
+      <h2>Why D must clear 4f.</h2>
+      <p class="lede">Write the lens law with s = distance of the lens from the object (so v = D − s). A sharp image
+      needs a <b>real root</b> of a quadratic — and the discriminant sets the gate.</p>
+    </div>
+
+    <div class="cond-grid">
+      <div class="card rv">
+        <p class="quad-note">With v = D − s, the thin-lens law becomes</p>
+        <span class="ktx blk" data-tex="s^2 - Ds + fD = 0"></span>
+        <p class="quad-note">Real lens positions exist only when the discriminant survives:</p>
+        <span class="ktx blk" data-tex="\Delta = D^2 - 4fD = D\,(D-4f) \ge 0 \;\;\Longleftrightarrow\;\; D \ge 4f"></span>
+        <p class="quad-note" style="margin-top:14px">Drag the sliders — the parabola's roots <b style="color:var(--green)">are</b> the two lens stations on the rail.</p>
+        <div class="sl-row"><label>D — separation</label><input type="range" id="cD" min="40" max="250" step="1" value="100"><output id="cDv">100 cm</output></div>
+        <div class="sl-row"><label>f — focal length</label><input type="range" id="cf" min="4" max="60" step="0.5" value="21"><output id="cfv">21 cm</output></div>
+        <div class="lamp" id="lamp">
+          <div class="big-dot" id="lampDot"></div>
+          <div><b id="lampT">TWO SHARP POSITIONS</b><span id="lampS">The quadratic has two distinct real roots — the displacement method works.</span></div>
+        </div>
+        <div style="margin-top:12px"><span class="chip" id="discChip"><span class="dot"></span>Δ = D(D−4f) = <span id="discV" class="mono"></span></span></div>
+      </div>
+      <div class="card rv" style="display:flex; flex-direction:column">
+        <h4 style="font-family:var(--mono); font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--cyan); margin-bottom:10px">g(s) = s² − Ds + fD — roots = lens stations</h4>
+        <canvas id="condCanvas" style="width:100%; flex:1; min-height:280px"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE LAB ================= -->
+<section id="lab">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">04</div>
+      <div class="kicker">04 · The bench</div>
+      <h2>Hunt the two sharp positions.</h2>
+      <p class="lede">The candle and screen are bolted down — only the lens moves. Drag it and watch the screen:
+      the image blooms and blurs, and crisps up <b>twice</b>. Snap both stations, and the bench computes f for you.</p>
+    </div>
+
+    <div class="lab-shell rv">
+      <div class="lab-top">
+        <span class="ttl">OPTICAL BENCH · LIVE RAY TRACE</span>
+        <span class="chip"><span class="dot"></span>ray engine running</span>
+        <span class="hint">drag the lens · ← → keys (⇧ = fine) · touch OK</span>
+      </div>
+      <div id="benchWarn"><i data-lucide="alert-triangle"></i><span id="benchWarnTxt"></span></div>
+      <div class="bench-cv-wrap"><canvas id="benchCanvas" tabindex="0" aria-label="Draggable optical bench. Arrow keys move the lens."></canvas></div>
+      <div class="lab-controls">
+        <div class="sl-row"><label>D — object↔screen</label><input type="range" id="lD" min="40" max="250" step="1" value="100"><output id="lDv">100 cm</output></div>
+        <div class="sl-row"><label>f — lens</label><input type="range" id="lf" min="4" max="60" step="0.5" value="21"><output id="lfv">21 cm</output></div>
+        <div class="snap-group">
+          <button class="btn" id="btnDim"><i data-lucide="shrink"></i>Snap · diminished (m&lt;1)</button>
+          <button class="btn" id="btnMag"><i data-lucide="expand"></i>Snap · magnified (m&gt;1)</button>
+          <button class="btn" id="btnReset"><i data-lucide="rotate-ccw"></i>Reset marks</button>
+        </div>
+      </div>
+      <div class="readouts">
+        <div class="ro"><div class="k">lens s</div><div class="v" id="r-s">—</div></div>
+        <div class="ro"><div class="k">u</div><div class="v" id="r-u">—</div></div>
+        <div class="ro"><div class="k">v (true image)</div><div class="v" id="r-v">—</div></div>
+        <div class="ro"><div class="k">m = v/u</div><div class="v" id="r-m">—</div></div>
+        <div class="ro"><div class="k">image height</div><div class="v" id="r-h">—</div></div>
+        <div class="ro"><div class="k">defocus at screen</div><div class="v" id="r-def">—</div></div>
+      </div>
+      <div id="verifyStrip">
+        <i data-lucide="badge-check" style="width:18px;height:18px;color:var(--green)"></i>
+        <span>x measured = <b id="vX">—</b></span>
+        <span>f by displacement = (D²−x²)/4D = <b id="vF">—</b></span>
+        <span>lens's true f = <b id="vT">—</b></span>
+        <span id="vNote" style="color:var(--green)">✓ verified — the method recovers f</span>
+      </div>
+    </div>
+
+    <div class="lab-lower">
+      <div class="chart-card rv">
+        <h4>f versus x · the operating curve</h4>
+        <p>For the current D, every possible lens-gap x implies a focal length f = (D²−x²)/4D.
+        The curve peaks at <b style="color:var(--amber)">f = D/4 when x = 0</b> — the merged-position limit.
+        Your snapped measurement drops onto the curve as the amber point.</p>
+        <canvas id="fxChart"></canvas>
+      </div>
+      <div class="side-card rv">
+        <h4>How to run the real experiment</h4>
+        <ul>
+          <li><b>Rough f first:</b> focus a distant window on a wall — that image distance ≈ f. You need it to set D &gt; 4f.</li>
+          <li><b>Fix D generously</b> (say 4.5–5× the rough f) so the two positions are well separated and x is measurable.</li>
+          <li><b>Hunt both stations</b> by sliding the lens; remove parallax-style hunting by approaching each sharp point from the same side.</li>
+          <li><b>Measure x</b> between the two lens-holder marks, then f = (D²−x²)/4D.</li>
+          <li><b>Repeat</b> for 2–3 values of D; the f values should agree within error.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAGNIFICATION ================= -->
+<section id="magnification">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">05</div>
+      <div class="kicker">05 · Sizes</div>
+      <h2>One big, one small — product exactly 1.</h2>
+      <p class="lede">Since u and v swap between the stations, m₁ = v₁/u₁ and m₂ = v₂/u₂ = u₁/v₁ are reciprocals.
+      Multiply the two image sizes and the object reappears: <span class="ktx" data-tex="O=\sqrt{I_1 I_2}"></span>.</p>
+    </div>
+
+    <div class="mag-grid">
+      <div class="mag-stage rv">
+        <div class="sl-row" style="margin-top:0"><label>x — lens gap</label><input type="range" id="xMag" min="0" max="95" step="0.5" value="40"><output id="xMagV">40 cm</output></div>
+        <div class="bars">
+          <div class="lane"><div class="bar up" id="barO" style="height:70px"></div><div class="lbl">object O<b id="lblO">2.00 cm</b></div></div>
+          <div class="lane"><div class="bar down" id="barI1" style="height:160px"></div><div class="lbl">I₁ at L₁ (magnified)<b id="lblI1">4.67 cm</b></div></div>
+          <div class="lane"><div class="bar down" id="barI2" style="height:30px"></div><div class="lbl">I₂ at L₂ (diminished)<b id="lblI2">0.86 cm</b></div></div>
+        </div>
+        <p style="font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:14px; letter-spacing:.08em">
+          DRAWN TO SCALE · DASHED LINE = AXIS · IMAGES INVERTED (drawn hanging below it)</p>
+      </div>
+
+      <div class="mag-side">
+        <div class="card rv">
+          <span class="ktx blk" data-tex="m_1=\frac{v_1}{u_1}=\frac{D+x}{D-x},\qquad m_2=\frac{v_2}{u_2}=\frac{D-x}{D+x}"></span>
+          <div class="prod">
+            <span class="ktx" data-tex="m_1\times m_2 = \frac{D+x}{D-x}\cdot\frac{D-x}{D+x} = 1"></span>
+            <small id="prodLive">live check · m₁ = 2.333 × m₂ = 0.429 → 1.000</small>
+          </div>
+          <p style="margin-top:12px; font-size:.9rem; color:var(--mut)">And since I₁ = m₁O, I₂ = m₂O:
+          <span class="ktx" data-tex="I_1 I_2 = m_1 m_2 O^2 = O^2"></span> — so
+          <span class="ktx" data-tex="\left(\tfrac{I_1}{O}\right)\!\left(\tfrac{I_2}{O}\right)=1"></span>.</p>
+        </div>
+        <div class="card osq rv">
+          <b style="font-family:var(--mono); font-size:11.5px; letter-spacing:.18em; color:var(--green)">OBJECT-SIZE FINDER (lab use)</b>
+          <div class="row">
+            I₁ <input id="iI1" type="number" value="4.67" step="0.01" min="0.01"> cm ·
+            I₂ <input id="iI2" type="number" value="0.86" step="0.01" min="0.01"> cm
+            → <span class="out">O = √(I₁I₂) = <b id="oOut">2.00</b> cm</span>
+          </div>
+        </div>
+        <div class="trap-callout rv" style="margin:18px 0 0">
+          <i data-lucide="alert-triangle"></i>
+          <b>Trap · scope of m₁m₂ = 1</b>
+          m₁m₂ = 1 holds <b>only in the displacement method</b>, where the same fixed D makes u and v swap.
+          The general two-position result is <span class="ktx" data-tex="f=\frac{x\,m_1m_2}{m_1-m_2}"></span>
+          (from m = f/(f+u) ⇒ u = f/m − f ⇒ x = u₂−u₁). You need that heavier formula whenever D is not the conjugate-pair separation.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FORMULA WALL ================= -->
+<section id="formula-list">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">06</div>
+      <div class="kicker">06 · Cheat sheet</div>
+      <h2>The formula wall.</h2>
+      <p class="lede">Everything slide 31 expects you to recall, in one place.</p>
+    </div>
+    <div class="fgrid">
+      <div class="card fcard rv"><div class="idx">F·01</div><h5>Working formula</h5>
+        <div class="fx"><span class="ktx blk" data-tex="f=\frac{D^2-x^2}{4D}"></span></div>
+        <p>The whole experiment. D = object↔screen gap, x = gap between the two lens stations.</p></div>
+      <div class="card fcard rv"><div class="idx">F·02</div><h5>The two positions</h5>
+        <div class="fx"><span class="ktx blk" data-tex="u=\frac{D\mp x}{2},\;\; v=\frac{D\pm x}{2}"></span></div>
+        <p>u and v swap between stations (distances from the lens, magnitudes).</p></div>
+      <div class="card fcard rv"><div class="idx">F·03</div><h5>Magnifications</h5>
+        <div class="fx"><span class="ktx blk" data-tex="m_1=\frac{D+x}{D-x},\; m_2=\frac{D-x}{D+x},\; m_1m_2=1"></span></div>
+        <p>One image magnified, one diminished; product pinned to 1.</p></div>
+      <div class="card fcard rv"><div class="idx">F·04</div><h5>Object size</h5>
+        <div class="fx"><span class="ktx blk" data-tex="O=\sqrt{I_1 I_2}"></span></div>
+        <p>The object is the geometric mean of its two images.</p></div>
+      <div class="card fcard rv"><div class="idx">F·05</div><h5>f from magnifications</h5>
+        <div class="fx"><span class="ktx blk" data-tex="f=\frac{x\,m_1m_2}{m_1-m_2}\equiv\frac{x}{m_1-m_2}"></span></div>
+        <p>The two forms are identical here — see the reconciliation below.</p></div>
+      <div class="card fcard rv"><div class="idx">F·06</div><h5>Existence condition</h5>
+        <div class="fx"><span class="ktx blk" data-tex="D\ge 4f,\qquad D_{min}=4f\;(x=0)"></span></div>
+        <p>D &gt; 4f → two positions · D = 4f → one merged position · D &lt; 4f → none.</p></div>
+    </div>
+
+    <div class="reconcile rv">
+      <b>Reconciling the two f-formulas (the deck shows both and never explains)</b>
+      <p style="color:var(--mut); font-size:.95rem">One slide quotes the general two-position result
+      <span class="ktx" data-tex="f=\tfrac{x\,m_1m_2}{m_1-m_2}"></span>; another quotes
+      <span class="ktx" data-tex="f=\tfrac{x}{m_1-m_2}"></span>. They look contradictory — they aren't.
+      <b style="color:var(--tx)">In the displacement method m₁m₂ = 1</b> (fixed D ⇒ u,v swap), so the numerator
+      x·m₁m₂ collapses to x. Both slides state the same physics; the first is the formula you keep when D is <i>not</i> fixed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DRILL ================= -->
+<section id="drill">
+  <div class="wrap">
+    <div class="sec-head"><div class="ghost">07</div>
+      <div class="kicker">07 · JEE drill</div>
+      <h2>Numbers, errors and three MCQs.</h2>
+    </div>
+
+    <div class="drill-grid">
+      <div class="card rv">
+        <h4 style="font-family:var(--mono); font-size:11.5px; letter-spacing:.2em; color:var(--amber)">NUMERICAL · THE STANDARD DRILL</h4>
+        <p style="color:var(--mut); margin:8px 0 4px">D = 100 cm, distance between lens positions x = 40 cm. Find f.</p>
+        <button class="btn solid" id="drillBtn" style="margin:8px 0 6px"><i data-lucide="list-checks"></i>Reveal the solution</button>
+        <div class="dr-step">Given: D = 100 cm, x = 40 cm.</div>
+        <div class="dr-step"><span class="ktx" data-tex="f=\frac{D^2-x^2}{4D}"></span></div>
+        <div class="dr-step"><span class="ktx" data-tex="f=\frac{100^2-40^2}{4\times100}=\frac{10000-1600}{400}"></span></div>
+        <div class="dr-step"><span class="ktx" data-tex="f=\frac{8400}{400}=21\ \text{cm}"></span> ✓</div>
+        <div class="dr-step">Sanity: m₁ = (D+x)/(D−x) = 140/60 = 7/3, m₂ = 3/7, product = 1 ✓</div>
+        <div class="calc-mini">
+          <div style="font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--dim); margin-bottom:8px">YOUR TURN — LIVE SOLVER</div>
+          <div class="row">D <input id="dcD" type="number" value="120" step="1"> cm &nbsp; x <input id="dcX" type="number" value="60" step="1"> cm
+          <button class="btn" id="dcGo">Solve</button></div>
+          <div class="calc-out">
+            <span class="chip">f = <b id="dcF" style="color:var(--amber)">—</b></span>
+            <span class="chip">m₁ = <b id="dcM1">—</b></span>
+            <span class="chip">m₂ = <b id="dcM2">—</b></span>
+            <span class="chip" id="dcWarn" style="display:none; color:var(--red)">x must be &lt; D</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card err-card rv">
+        <h4 style="font-family:var(--mono); font-size:11.5px; letter-spacing:.2em; color:var(--cyan)">ERROR ANALYSIS · JEE MAIN FAVOURITE</h4>
+        <p style="color:var(--mut); font-size:.92rem; margin-top:6px">Take ln f = ln(D²−x²) − ln(4D) and differentiate — each measured length contributes its own coefficient:</p>
+        <span class="ktx blk" data-tex="\frac{\Delta f}{f}=\left[\frac{2D}{D^2-x^2}-\frac{1}{D}\right]\Delta D+\frac{2x}{D^2-x^2}\,\Delta x"></span>
+        <p style="color:var(--mut); font-size:.92rem">Equivalently <span class="ktx" data-tex="\tfrac{\Delta f}{f}=\tfrac{D^2+x^2}{D(D^2-x^2)}\Delta D+\tfrac{2x}{D^2-x^2}\Delta x"></span>.
+        At the drill values (D=100, x=40) the coefficients are <b class="mono" style="color:var(--tx)">1.38×10⁻² /cm</b> on ΔD and
+        <b class="mono" style="color:var(--tx)">9.52×10⁻³ /cm</b> on Δx — so with ΔD = Δx = 0.1 cm, Δf ≈ 2.3×10⁻³ cm.
+        Notice the D-coefficient dominates when x is small: <b style="color:var(--tx)">a larger x (bigger D relative to f) means a better measurement.</b></p>
+      </div>
+    </div>
+
+    <div class="mcq-row" id="mcqs"></div>
+    <div style="margin-top:14px; display:flex"><span class="chip score-chip">score <b id="mcqScore" style="color:var(--amber)">0 / 3</b></span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>RAY OPTICS PRACTICAL SERIES · <b>MODULE 08</b> — DISPLACEMENT METHOD</span>
+    <span>f = (D² − x²) / 4D · slides 26–31, reconciled</span>
+    <span>built for JEE Main + Advanced revision</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- math core : pure solver ---------- */
+function solveBench(D,f){
+  const disc = D*(D-4*f);
+  if(disc < 0) return {feasible:false, D, f, x:NaN, s1:NaN, s2:NaN, u1:NaN, v1:NaN, u2:NaN, v2:NaN, m1:NaN, m2:NaN};
+  const x = Math.sqrt(disc);
+  const s1 = (D-x)/2, s2 = (D+x)/2;              // lens distances from object
+  const u1=s1, v1=D-s1, u2=s2, v2=D-s2;
+  return {feasible:true, D, f, x, s1, s2, u1, v1, u2, v2, m1:v1/u1, m2:v2/u2};
+}
+const store = {D:100, f:21};
+
+/* ---------- KaTeX ---------- */
+function renderMath(){
+  if(!window.katex) return;
+  $$('.ktx').forEach(el=>{ try{ katex.render(el.dataset.tex, el, {displayMode:el.classList.contains('blk'), throwOnError:false}); }catch(e){} });
+}
+renderMath();
+if(window.lucide) lucide.createIcons();
+
+/* ================= HERO ================= */
+const HS = {O:90, S:910, axis:230, scale:8.2, f:21, Dcm:100, Opx:16.4};
+(function buildHeroTicks(){
+  const g=$('#hTicks'); let s='';
+  for(let cm=0; cm<=100; cm+=10){
+    const x=HS.O+cm*HS.scale;
+    s+=`<line x1="${x}" y1="252" x2="${x}" y2="${cm%50===0?245:249}" stroke="#4a5f85" stroke-width="1"/>`;
+    if(cm%50===0) s+=`<text x="${x}" y="275" text-anchor="middle" fill="#5d7292" font-family="IBM Plex Mono" font-size="9">${cm}</text>`;
+  }
+  g.innerHTML=s;
+})();
+function heroRays(lx, group){
+  const fpx=HS.f*HS.scale, tipY=HS.axis-HS.Opx;
+  const sl1=HS.Opx/fpx;
+  const y1=HS.axis+sl1*(HS.S-(lx+fpx));
+  const sl2=HS.Opx/(lx-HS.O);
+  const y2=tipY+sl2*(HS.S-HS.O);
+  group.innerHTML =
+    `<path d="M${HS.O} ${tipY} L${lx} ${tipY} L${HS.S} ${y1.toFixed(1)}"/>`+
+    `<path d="M${HS.O} ${tipY} L${HS.S} ${y2.toFixed(1)}"/>`;
+}
+heroRays(664, $('#hRays'));
+heroRays(336, $('#hRays2'));
+const heroState={lx:664};
+function heroUpdate(){
+  const lx=heroState.lx;
+  const lens=$('#hLens');
+  lens.children[0].setAttribute('transform',`translate(${lx},0)`);
+  lens.children[1].setAttribute('d',`M${lx} 172 Q ${lx+17} 230 ${lx} 288 Q ${lx-17} 230 ${lx} 172 Z`);
+  $('#hLensLbl').setAttribute('x',lx);
+  heroRays(lx, $('#hRays'));
+  const s=(lx-HS.O)/HS.scale, v=s*HS.f/(s-HS.f), m=(HS.Dcm-s)/s;
+  const defocus=Math.abs(v-(HS.Dcm-s));
+  const hpx=HS.Opx*Math.abs(m);
+  const img=$('#hImg');
+  img.setAttribute('transform',`scale(${(hpx/84).toFixed(4)})`);
+  $('#hImgG').style.filter = defocus<0.2 ? 'none' : `blur(${Math.min(5,defocus*0.45).toFixed(1)}px)`;
+  $('#hImgG').style.opacity = defocus<0.2 ? 1 : 0.8;
+  const ph=$('#hPhase');
+  if(Math.abs(s-70)<2) ph.textContent='POSITION 1 · DIMINISHED · m = 3/7';
+  else if(Math.abs(s-30)<2) ph.textContent='POSITION 2 · MAGNIFIED · m = 7/3';
+  else ph.textContent='SLIDING · IMAGE SOFT · |defocus| = '+defocus.toFixed(1)+' cm';
+}
+heroUpdate();
+if(window.gsap && !RM){
+  gsap.set('#hRays path',{strokeDasharray:(i,el)=>el.getTotalLength(), strokeDashoffset:(i,el)=>el.getTotalLength()});
+  const tl=gsap.timeline({repeat:-1, repeatDelay:1.3, defaults:{ease:'power2.inOut'}});
+  tl.to('#hRays path',{strokeDashoffset:0, duration:1.1, stagger:.18, ease:'power1.out'})
+    .to('#hGhost',{opacity:1, duration:.5},'<.3')
+    .to(heroState,{lx:336, duration:2.8, onUpdate:heroUpdate},'+=.9')
+    .to('#hDimX',{opacity:1, duration:.6},'>-.5')
+    .to('#hRays2',{opacity:1, duration:.01})
+    .to({},{duration:2.2})
+    .to('#hRays2',{opacity:0, duration:.01}).to('#hDimX',{opacity:0,duration:.01}).to('#hGhost',{opacity:0,duration:.01})
+    .set('#hRays path',{strokeDasharray:(i,el)=>el.getTotalLength(), strokeDashoffset:(i,el)=>el.getTotalLength()})
+    .set(heroState,{lx:664, onUpdate:heroUpdate});
+  gsap.from('#hero .kicker, #hero h1, #hero .hero-sub, #hero .stat-row',{y:26,opacity:0,duration:.9,stagger:.12,ease:'power3.out'});
+  gsap.from('.hero-bench',{y:40,opacity:0,duration:1.1,delay:.3,ease:'power3.out'});
+}
+
+/* ================= SETUP hover chips ================= */
+$$('.lchip').forEach(ch=>{
+  const t=document.getElementById(ch.dataset.t); if(!t) return;
+  const paths=Array.from(t.querySelectorAll('line,path,text')).concat([t]);
+  ch.addEventListener('mouseenter',()=>paths.forEach(p=>p.classList.add('hl')));
+  ch.addEventListener('mouseleave',()=>paths.forEach(p=>p.classList.remove('hl')));
+});
+
+/* ================= DERIVATION scrub ================= */
+const capTxt={1:'STEP 1 / 4 — THE TWO STATIONS',2:'STEP 2 / 4 — LENS LAW AT L₁',3:'STEP 3 / 4 — SUBSTITUTE',4:'STEP 4 / 4 — THE x → 0 LIMIT'};
+let stageI=1;
+function setStage(i){
+  if(i===stageI) return; stageI=i;
+  $('#stCap').textContent=capTxt[i];
+  [1,2,3,4].forEach(k=>$('#stF'+k).classList.toggle('on',k===i));
+  if(!window.gsap){return;}
+  const g=gsap;
+  g.to('#stL1, #stL2, #stDimX, #stDimXt',{opacity:i>=1?1:0, duration:.5});
+  g.to(['#stBrU','#stBrV','#stBrUt','#stBrVt'],{opacity:i===2?1:0, duration:.5});
+  g.to('#stL1 path',{stroke:i===2?'#fff':'#8ceef7', duration:.4});
+  const merge=i===4;
+  g.to('#stL2',{x:merge?-160:0, duration:1.1, ease:'power3.inOut'});
+  g.to('#stDimX, #stDimXt',{opacity:merge?0:(i>=1?1:0), duration:.5});
+  g.to('#stLamp',{opacity:merge?1:0, y:merge?0:8, duration:.6});
+}
+$$('.der-step').forEach(st=>{
+  if(window.ScrollTrigger){
+    ScrollTrigger.create({trigger:st, start:'top 60%', end:'bottom 60%',
+      onToggle:self=>{ if(self.isActive){ st.classList.add('live'); setStage(+st.dataset.step);} else st.classList.remove('live'); }});
+  }
+});
+
+/* ================= shared slider sync ================= */
+function bindSlider(id,outId,key,unit,cb){
+  const el=$(id), out=$(outId);
+  el.addEventListener('input',()=>{ store[key]=parseFloat(el.value); out.textContent=el.value+' '+unit; syncAll(id); if(cb)cb(); });
+}
+function syncAll(src){
+  [['#lD','#lDv','D'],['#cD','#cDv','D'],['#lf','#lfv','f'],['#cf','#cfv','f']].forEach(([a,b,k])=>{
+    if(a!==src){ $(a).value=store[k]; $(b).textContent=store[k]+' cm'; }
+  });
+  onStoreChange();
+}
+bindSlider('#lD','#lDv','D','cm'); bindSlider('#lf','#lfv','f','cm');
+bindSlider('#cD','#cDv','D','cm'); bindSlider('#cf','#cfv','f','cm');
+
+/* ================= CONDITION panel ================= */
+const condCv=$('#condCanvas'), cctx=condCv.getContext('2d');
+function sizeCanvas(cv){
+  const dpr=devicePixelRatio||1, r=cv.getBoundingClientRect();
+  cv.width=r.width*dpr; cv.height=r.height*dpr;
+  cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+  return {w:r.width,h:r.height};
+}
+function drawCondition(){
+  const {w,h}=sizeCanvas(condCv), ctx=cctx;
+  const {D,f}=store, sol=solveBench(D,f);
+  const padL=34,padR=14,padT=16,padB=30, pw=w-padL-padR, ph=h-padT-padB;
+  ctx.clearRect(0,0,w,h);
+  const g=s=>s*s-D*s+f*D;
+  const gmin=g(D/2), gmax=Math.max(g(0),g(D)), span=(gmax-gmin)||1;
+  const X=s=>padL+s/D*pw, Y=v=>padT+(gmax-v)/span*ph;
+  // grid
+  ctx.strokeStyle='rgba(122,150,200,.12)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const x=padL+pw*i/4; ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+ph);ctx.stroke();}
+  // zero line
+  ctx.strokeStyle='rgba(233,239,249,.4)'; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(padL,Y(0)); ctx.lineTo(padL+pw,Y(0)); ctx.stroke(); ctx.setLineDash([]);
+  // parabola
+  ctx.strokeStyle = sol.feasible ? (sol.x<0.5?'#ffb02e':'#5ad8e6') : '#ff5d5d';
+  ctx.lineWidth=2.2; ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=8; ctx.beginPath();
+  for(let i=0;i<=120;i++){const s=D*i/120; const px=X(s),py=Y(g(s)); i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+  ctx.stroke(); ctx.shadowBlur=0;
+  // roots
+  if(sol.feasible){
+    [[sol.s1,'s₁'],[sol.s2,'s₂']].forEach(([s,lb])=>{
+      ctx.fillStyle='#3fe0a0'; ctx.beginPath(); ctx.arc(X(s),Y(0),5,0,7); ctx.fill();
+      ctx.fillStyle='#c9f7e4'; ctx.font='11px "IBM Plex Mono"'; ctx.textAlign='center';
+      ctx.fillText(lb, X(s), Y(0)+18);
+    });
+  } else {
+    ctx.fillStyle='#ff5d5d'; ctx.font='12px "IBM Plex Mono"'; ctx.textAlign='center';
+    ctx.fillText('Δ < 0 — no real roots, no sharp image', w/2, padT+18);
+  }
+  ctx.fillStyle='#5d7292'; ctx.font='10.5px "IBM Plex Mono"'; ctx.textAlign='left';
+  ctx.fillText('s (lens distance from object) →', padL, h-8);
+  // lamp
+  const lamp=$('#lamp'), t=$('#lampT'), sp=$('#lampS');
+  lamp.classList.remove('warn','bad');
+  if(!sol.feasible){ lamp.classList.add('bad'); t.textContent='NO REAL IMAGE POSSIBLE';
+    sp.textContent=`D = ${D} cm < 4f = ${(4*f).toFixed(0)} cm. Increase D or use a shorter lens.`; }
+  else if(sol.x<0.5){ lamp.classList.add('warn'); t.textContent='ONE MERGED POSITION (x = 0)';
+    sp.textContent='D = 4f exactly: the quadratic has a double root at s = D/2. This is the minimum usable separation.'; }
+  else { t.textContent='TWO SHARP POSITIONS';
+    sp.textContent=`Roots at s = ${sol.s1.toFixed(1)} and ${sol.s2.toFixed(1)} cm — the method works, x = ${sol.x.toFixed(1)} cm.`; }
+  $('#discV').textContent=(D*(D-4*f)).toFixed(0)+' cm²';
+}
+
+/* ================= THE LAB (canvas bench) ================= */
+const cv=$('#benchCanvas'), ctx=cv.getContext('2d');
+const lab={s:50, marks:{dim:null,mag:null}, dragging:false, hovering:false};
+const anim={x:{cur:0},D:{cur:100}};
+const filterOK=(()=>{const c=document.createElement('canvas').getContext('2d'); c.filter='blur(2px)'; return /blur/.test(c.filter);})();
+// offscreen inverted-image sprite
+const sprite=(()=>{const c=document.createElement('canvas');c.width=64;c.height=128;const x=c.getContext('2d');
+  x.fillStyle='#c8a86a'; x.fillRect(26,6,12,74);
+  const g=x.createRadialGradient(32,106,4,32,102,26); g.addColorStop(0,'#fff3c8');g.addColorStop(.5,'#ffc23e');g.addColorStop(1,'rgba(255,110,20,0)');
+  x.fillStyle=g; x.beginPath(); x.moveTo(32,82); x.bezierCurveTo(48,98,46,116,32,124); x.bezierCurveTo(18,116,16,98,32,82); x.fill();
+  return c;})();
+
+let benchGeom=null;
+function benchLayout(){
+  const r=cv.getBoundingClientRect();
+  const W=r.width,H=r.height, padL=Math.max(64,W*.075), padR=Math.max(64,W*.075);
+  const D=store.D, sc=(W-padL-padR)/D, axisY=H*0.58, railY=axisY+52;
+  const X=cm=>padL+cm*sc;
+  const Opx=clamp(2*sc*2.7,15,66);
+  benchGeom={W,H,padL,padR,D,sc,axisY,railY,X,Opx};
+}
+function dimLine(x1,x2,y,label,col,alpha=1){
+  ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.1;
+  ctx.font='11px "IBM Plex Mono"'; ctx.textAlign='center';
+  ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y);
+  ctx.moveTo(x1,y-5); ctx.lineTo(x1,y+5); ctx.moveTo(x2,y-5); ctx.lineTo(x2,y+5); ctx.stroke();
+  ctx.fillText(label,(x1+x2)/2,y-6); ctx.restore();
+}
+function drawBlurredImg(cx,cy,hpx,sigma,alpha,upright){
+  const w=hpx*0.5;
+  ctx.save(); ctx.globalAlpha=alpha;
+  if(filterOK && sigma>0.3) ctx.filter=`blur(${sigma.toFixed(1)}px)`;
+  if(filterOK || sigma<=0.3){
+    if(upright){ ctx.translate(cx,cy); ctx.scale(1,-1); ctx.drawImage(sprite,-w/2,-hpx/2,w,hpx); }
+    else ctx.drawImage(sprite,cx-w/2,cy-hpx/2,w,hpx);
+  } else { // fallback: layered soft draws
+    for(let i=0;i<6;i++){ ctx.globalAlpha=alpha*0.18; const g=sigma*i*0.45;
+      const fn=upright?()=>{ctx.save();ctx.translate(cx,cy);ctx.scale(1,-1);ctx.drawImage(sprite,-w/2-g,-hpx/2-g,w+2*g,hpx+2*g);ctx.restore();}
+                       :()=>ctx.drawImage(sprite,cx-w/2-g,cy-hpx/2-g,w+2*g,hpx+2*g);
+      fn(); }
+  }
+  ctx.restore();
+}
+function benchDraw(t){
+  const G=benchGeom; if(!G) return;
+  const {W,H,axisY,railY,X,D,sc,Opx}=G;
+  ctx.clearRect(0,0,W,H);
+  // vignette
+  const vg=ctx.createRadialGradient(W*.14,axisY,20,W*.14,axisY,W*.8);
+  vg.addColorStop(0,'rgba(255,130,30,.07)'); vg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  // rail
+  const rg=ctx.createLinearGradient(0,railY,0,railY+12);
+  rg.addColorStop(0,'#3d4f70'); rg.addColorStop(.5,'#1c2942'); rg.addColorStop(1,'#0e1628');
+  ctx.fillStyle=rg; ctx.fillRect(G.padL-24,railY,W-G.padL-G.padR+48,12);
+  ctx.strokeStyle='#2e4368'; ctx.strokeRect(G.padL-24,railY,W-G.padL-G.padR+48,12);
+  ctx.font='9px "IBM Plex Mono"'; ctx.fillStyle='#5d7292'; ctx.textAlign='center';
+  for(let cm=0;cm<=D;cm+=Math.max(5,Math.round(D/24))){
+    const x=X(cm); ctx.beginPath(); ctx.moveTo(x,railY); ctx.lineTo(x,railY+(cm%(Math.round(D/12)||10)===0?8:5)); ctx.strokeStyle='#4a5f85'; ctx.stroke();
+  }
+  for(let cm=0;cm<=D;cm+=Math.max(25,Math.round(D/6))){ ctx.fillText(cm, X(cm), railY+24); }
+  const sol=solveBench(D,store.f);
+  // D dimension (animated extent)
+  anim.D.cur+=(D-anim.D.cur)*.18;
+  dimLine(X(0),X(anim.D.cur),26,'D = '+D+' cm','#96a7c2');
+  // screen
+  ctx.fillStyle='#22304a'; ctx.fillRect(X(D)-14,railY-8,28,8);
+  const scrG=ctx.createLinearGradient(X(D)-6,0,X(D)+8,0); scrG.addColorStop(0,'#f0f4f8'); scrG.addColorStop(1,'#aeb9c8');
+  ctx.fillStyle=scrG; ctx.fillRect(X(D)-6,axisY-118,12,236);
+  ctx.strokeStyle='#8fa0b5'; ctx.strokeRect(X(D)-6,axisY-118,12,236);
+  // candle object
+  const fl=RM?1:1+0.09*Math.sin(t*0.006)+0.05*Math.sin(t*0.013+2);
+  const flameH=Opx*0.36*fl, bodyH=Opx-flameH, cx0=X(0);
+  ctx.fillStyle='#22304a'; ctx.fillRect(cx0-16,railY-9,32,9);
+  ctx.fillStyle='#e9d9b5'; ctx.strokeStyle='#c9b283';
+  ctx.beginPath(); ctx.roundRect(cx0-7,axisY-bodyH,14,bodyH,3); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle='#3c3428'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(cx0,axisY-bodyH); ctx.lineTo(cx0,axisY-bodyH-4); ctx.stroke();
+  const fg=ctx.createRadialGradient(cx0,axisY-Opx+flameH*.6,1,cx0,axisY-Opx+flameH*.5,flameH);
+  fg.addColorStop(0,'#fff6d8'); fg.addColorStop(.5,'#ffc23e'); fg.addColorStop(1,'rgba(255,110,20,0)');
+  ctx.fillStyle=fg; ctx.beginPath();
+  ctx.moveTo(cx0,axisY-Opx);
+  ctx.bezierCurveTo(cx0+6*fl,axisY-Opx+flameH*.55,cx0+5*fl,axisY-Opx+flameH*.9,cx0,axisY-Opx+flameH);
+  ctx.bezierCurveTo(cx0-5*fl,axisY-Opx+flameH*.9,cx0-6*fl,axisY-Opx+flameH*.55,cx0,axisY-Opx);
+  ctx.fill();
+  ctx.font='11px "IBM Plex Mono"'; ctx.fillStyle='#96a7c2'; ctx.textAlign='right'; ctx.fillText('O = 2 cm', cx0-20, axisY-Opx-4);
+  // ---- ray trace ----
+  const s=lab.s, u=s, lensX=X(s), tipY=axisY-Opx, scrX=X(D);
+  const real=u>store.f;
+  let v=null, sigma=0, imgY=axisY, imgH=Opx*(D-s)/s, defocusTxt='virtual';
+  if(real){
+    v=u*store.f/(u-store.f);
+    const fX=X(s+store.f);
+    const mA=(axisY-tipY)/(fX-lensX), yA=axisY+mA*(scrX-fX);
+    const mB=(axisY-tipY)/(lensX-cx0), yB=tipY+mB*(scrX-cx0);
+    const spread=Math.abs(yA-yB);
+    sigma=clamp(spread*0.30,0,16); imgY=(yA+yB)/2;
+    defocusTxt=Math.abs(v-(D-s)).toFixed(1)+' cm';
+    ctx.strokeStyle='rgba(90,216,230,.95)'; ctx.lineWidth=1.5;
+    ctx.shadowColor='rgba(90,216,230,.8)'; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.moveTo(cx0,tipY); ctx.lineTo(lensX,tipY); ctx.lineTo(scrX,yA); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx0,tipY); ctx.lineTo(scrX,yB); ctx.stroke();
+    ctx.shadowBlur=0;
+    // true-image ghost
+    if(s+v<=D+0.2){
+      const gx=X(s+v), gh=Opx*v/u;
+      ctx.strokeStyle='rgba(63,224,160,.7)'; ctx.setLineDash([3,4]);
+      ctx.beginPath(); ctx.moveTo(gx,axisY-gh/2-8); ctx.lineTo(gx,axisY+gh/2+8); ctx.stroke(); ctx.setLineDash([]);
+      drawBlurredImg(gx,axisY,Math.min(gh,H*.42),0,.85,false);
+      ctx.fillStyle='#3fe0a0'; ctx.font='10px "IBM Plex Mono"'; ctx.textAlign='center';
+      ctx.fillText('true image plane (v = '+v.toFixed(1)+')',gx,axisY+gh/2+22);
+    }
+  } else {
+    // virtual image: diverging rays + dashed back-projection
+    const vx=u*store.f/(store.f-u); // distance left of lens
+    const vgX=X(s-vx), vgh=Opx*(D-s)/s;
+    ctx.strokeStyle='rgba(90,216,230,.9)'; ctx.lineWidth=1.5; ctx.shadowColor='rgba(90,216,230,.7)'; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.moveTo(cx0,tipY); ctx.lineTo(lensX,tipY); ctx.lineTo(scrX,tipY-(axisY-tipY)*((scrX-lensX)/store.f/sc*(store.f))); ctx.stroke();
+    const mB=(axisY-tipY)/(lensX-cx0);
+    ctx.beginPath(); ctx.moveTo(cx0,tipY); ctx.lineTo(scrX,tipY+mB*(scrX-cx0)); ctx.stroke(); ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(164,139,250,.5)'; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(lensX,tipY); ctx.lineTo(vgX,axisY-vgh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lensX,axisY); ctx.lineTo(vgX,axisY-vgh); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#a48bfa'; ctx.font='10px "IBM Plex Mono"'; ctx.textAlign='center';
+    ctx.fillText('virtual image (u < f)',vgX,axisY-vgh-8);
+    sigma=14; imgY=axisY-Opx*(D-s)/s/2; imgH=Opx*(D-s)/s;
+  }
+  // image on the screen (defocus blur — the thing you hunt)
+  const nearSharp=real&&Math.abs(v-(D-s))<0.4;
+  drawBlurredImg(X(D)-1,imgY,clamp(imgH,4,H*.42),sigma,real?0.95:0.4,!real);
+  if(nearSharp){
+    ctx.fillStyle='rgba(63,224,160,.14)'; ctx.strokeStyle='#3fe0a0';
+    ctx.beginPath(); ctx.roundRect(X(D)-34,axisY-136,68,20,6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#3fe0a0'; ctx.font='600 10.5px "IBM Plex Mono"'; ctx.textAlign='center';
+    ctx.fillText('◈ SHARP',X(D),axisY-122);
+  }
+  // markers
+  const mk=(cm,lb,col)=>{ if(cm==null)return; const x=X(cm);
+    ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,railY+12); ctx.lineTo(x-7,railY+26); ctx.lineTo(x+7,railY+26); ctx.closePath(); ctx.fill();
+    ctx.font='10px "IBM Plex Mono"'; ctx.textAlign='center'; ctx.fillText(lb,x,railY+38); };
+  mk(lab.marks.dim,'L (m<1)','#ffb02e'); mk(lab.marks.mag,'L (m>1)','#5ad8e6');
+  // x dimension when both marks
+  if(lab.marks.dim!=null&&lab.marks.mag!=null){
+    anim.x.cur+=(Math.abs(lab.marks.dim-lab.marks.mag)-anim.x.cur)*.2;
+    const mid=(lab.marks.dim+lab.marks.mag)/2;
+    dimLine(X(mid-anim.x.cur/2),X(mid+anim.x.cur/2),railY+58,'x = '+anim.x.cur.toFixed(1)+' cm','#ffb02e');
+  }
+  // lens
+  const lw=clamp(16*sc*1.6,10,26), lh=clamp(Opx*2.2,80,150);
+  ctx.save();
+  if(lab.dragging||lab.hovering){ ctx.shadowColor='rgba(255,176,46,.9)'; ctx.shadowBlur=14; }
+  const lg=ctx.createLinearGradient(lensX-lw,0,lensX+lw,0);
+  lg.addColorStop(0,'rgba(90,216,230,.08)'); lg.addColorStop(.5,'rgba(90,216,230,.45)'); lg.addColorStop(1,'rgba(90,216,230,.08)');
+  ctx.fillStyle=lg; ctx.strokeStyle=lab.dragging?'#ffd07a':'#8ceef7'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(lensX,axisY-lh/2); ctx.quadraticCurveTo(lensX+lw,axisY,lensX,axisY+lh/2);
+  ctx.quadraticCurveTo(lensX-lw,axisY,lensX,axisY-lh/2); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#22304a'; ctx.fillRect(lensX-13,railY-8,26,8);
+  // grip handle
+  ctx.strokeStyle=lab.hovering||lab.dragging?'#ffb02e':'#5d7292'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.arc(lensX,railY+30,9,0,7); ctx.stroke();
+  ctx.font='10px "IBM Plex Mono"'; ctx.fillStyle=lab.hovering||lab.dragging?'#ffb02e':'#5d7292'; ctx.textAlign='center';
+  ctx.fillText('‹ ›',lensX,railY+34);
+  ctx.fillStyle='#96a7c2'; ctx.fillText('s = '+s.toFixed(1),lensX,axisY-lh/2-10);
+  // readouts
+  $('#r-s').textContent=s.toFixed(1)+' cm';
+  $('#r-u').textContent=u.toFixed(1)+' cm';
+  $('#r-v').textContent=real?v.toFixed(1)+' cm':'virtual';
+  $('#r-m').textContent=real?((D-s)/s).toFixed(2):'—';
+  $('#r-h').textContent=real?(2*(D-s)/s).toFixed(2)+' cm':'—';
+  const dEl=$('#r-def'); dEl.textContent=real?defocusTxt:'∞ (virtual)';
+  dEl.className='v '+(nearSharp?'good':(real?'':'bad'));
+}
+let rafOn=false;
+function loop(t){ if(!rafOn) return; benchDraw(t); requestAnimationFrame(loop); }
+new IntersectionObserver(en=>{ const on=en[0].isIntersecting;
+  if(on&&!rafOn){rafOn=true; requestAnimationFrame(loop);} if(!on) rafOn=false;
+},{threshold:.05}).observe(cv);
+new ResizeObserver(()=>benchLayout()).observe(cv);
+benchLayout();
+
+// pointer + keyboard drag
+const evtS=e=>{ const r=cv.getBoundingClientRect(); return clamp((e.clientX-r.left-benchGeom.padL)/benchGeom.sc,1,store.D-1); };
+const hitLens=e=>{ const r=cv.getBoundingClientRect(); return Math.abs(e.clientX-r.left-benchGeom.X(lab.s))<26; };
+cv.addEventListener('pointerdown',e=>{ cv.focus();
+  if(hitLens(e)){ lab.dragging=true; cv.setPointerCapture(e.pointerId); cv.style.cursor='grabbing'; }
+  else gsap.to(lab,{s:evtS(e),duration:.5,ease:'power2.out'});
+});
+cv.addEventListener('pointermove',e=>{
+  if(lab.dragging){ lab.s=evtS(e); } else { lab.hovering=hitLens(e); cv.style.cursor=lab.hovering?'grab':'crosshair'; }
+});
+const endDrag=e=>{ lab.dragging=false; cv.style.cursor=lab.hovering?'grab':'crosshair'; };
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('keydown',e=>{
+  const step=e.shiftKey?0.1:1;
+  if(e.key==='ArrowLeft'){lab.s=clamp(lab.s-step,1,store.D-1); e.preventDefault();}
+  if(e.key==='ArrowRight'){lab.s=clamp(lab.s+step,1,store.D-1); e.preventDefault();}
+});
+
+// snap / reset / warn
+function snap(target,key){
+  if(!isFinite(target)) return;
+  gsap.to(lab,{s:target,duration:.9,ease:'power2.inOut',onComplete:()=>{
+    lab.marks[key]=target; updateVerify(); updateChartPoint();
+  }});
+}
+$('#btnDim').addEventListener('click',()=>{const s=solveBench(store.D,store.f); snap(s.s2,'dim');});
+$('#btnMag').addEventListener('click',()=>{const s=solveBench(store.D,store.f); snap(s.s1,'mag');});
+$('#btnReset').addEventListener('click',()=>{lab.marks={dim:null,mag:null}; anim.x.cur=0; updateVerify(); updateChartPoint();});
+function updateVerify(){
+  const strip=$('#verifyStrip'), {dim,mag}=lab.marks;
+  if(dim!=null&&mag!=null){
+    const x=Math.abs(dim-mag), fCalc=(store.D*store.D-x*x)/(4*store.D);
+    $('#vX').textContent=x.toFixed(2)+' cm'; $('#vF').textContent=fCalc.toFixed(2)+' cm'; $('#vT').textContent=store.f.toFixed(2)+' cm';
+    strip.classList.add('on');
+  } else strip.classList.remove('on');
+}
+
+/* ---- f vs x chart ---- */
+let chart=null, chartPt=[];
+function buildCurve(){
+  const D=store.D, pts=[];
+  for(let i=0;i<=60;i++){const x=D*i/60; pts.push({x:+x.toFixed(2), y:+((D*D-x*x)/(4*D)).toFixed(3)});}
+  return pts;
+}
+function initChart(){
+  if(!window.Chart) return;
+  Chart.defaults.color='#96a7c2'; Chart.defaults.borderColor='rgba(122,150,200,.12)';
+  Chart.defaults.font.family='"IBM Plex Mono"'; Chart.defaults.font.size=10.5;
+  chart=new Chart($('#fxChart'),{type:'line',
+    data:{datasets:[
+      {label:'f(x)',data:buildCurve(),borderColor:'#5ad8e6',backgroundColor:'rgba(90,216,230,.08)',fill:true,pointRadius:0,borderWidth:2,tension:.15},
+      {label:'D/4',data:[{x:0,y:store.D/4},{x:store.D,y:store.D/4}],borderColor:'rgba(255,176,46,.55)',borderDash:[6,5],pointRadius:0,borderWidth:1.4},
+      {label:'your x',data:[],pointRadius:6,pointHoverRadius:8,pointBackgroundColor:'#ffb02e',pointBorderColor:'#fff',showLine:false,type:'scatter'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:RM?0:500},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`x = ${c.parsed.x} cm → f = ${c.parsed.y.toFixed(2)} cm`}}},
+      scales:{x:{type:'linear',min:0,max:store.D,title:{display:true,text:'x — lens-gap (cm)'}},
+              y:{min:0,suggestedMax:store.D/4*1.15,title:{display:true,text:'f (cm)'}}}}});
+}
+function updateChartPoint(){
+  if(!chart) return;
+  const {dim,mag}=lab.marks;
+  chartPt=(dim!=null&&mag!=null)?[{x:+Math.abs(dim-mag).toFixed(2),y:+((store.D**2-(dim-mag)**2)/(4*store.D)).toFixed(2)}]:[];
+  chart.data.datasets[2].data=chartPt; chart.update('none');
+}
+function refreshChart(){
+  if(!chart) return;
+  chart.data.datasets[0].data=buildCurve();
+  chart.data.datasets[1].data=[{x:0,y:store.D/4},{x:store.D,y:store.D/4}];
+  chart.options.scales.x.max=store.D; chart.options.scales.y.suggestedMax=store.D/4*1.15;
+  updateChartPoint();
+}
+initChart();
+
+/* ---- store-driven refresh ---- */
+function onStoreChange(){
+  const sol=solveBench(store.D,store.f);
+  lab.s=clamp(lab.s,1,store.D-1);
+  lab.marks={dim:null,mag:null}; anim.x.cur=0; updateVerify();
+  const warn=$('#benchWarn');
+  if(!sol.feasible){
+    warn.classList.add('on');
+    $('#benchWarnTxt').textContent=`No sharp image possible — D = ${store.D} cm < 4f = ${(4*store.f).toFixed(0)} cm. Increase D or use a shorter f.`;
+    $('#btnDim').disabled=$('#btnMag').disabled=true;
+  } else {
+    warn.classList.remove('on'); $('#btnDim').disabled=$('#btnMag').disabled=false;
+  }
+  drawCondition(); refreshChart(); updateMag();
+  if(!rafOn){ benchLayout(); benchDraw(performance.now()); }
+}
+drawCondition();
+
+/* ================= MAGNIFICATION ================= */
+const xMag=$('#xMag');
+function updateMag(){
+  const D=store.D; xMag.max=Math.max(1,(0.95*D)).toFixed(0);
+  const x=clamp(parseFloat(xMag.value)||0,0,0.95*D);
+  $('#xMagV').textContent=x.toFixed(1)+' cm';
+  const m1=x>0?(D+x)/(D-x):1, m2=1/Math.max(m1,1e-9), Oc=2;
+  const I1=m1*Oc, I2=m2*Oc;
+  const scale=200/Math.max(I1,Oc);
+  $('#barO').style.height=(Oc*scale)+'px';
+  $('#barI1').style.height=clamp(I1*scale,4,230)+'px';
+  $('#barI2').style.height=clamp(I2*scale,4,230)+'px';
+  $('#lblO').textContent=Oc.toFixed(2)+' cm';
+  $('#lblI1').textContent=I1.toFixed(2)+' cm'; $('#lblI2').textContent=I2.toFixed(2)+' cm';
+  $('#prodLive').textContent=`live · m₁ = ${m1.toFixed(3)} × m₂ = ${m2.toFixed(3)} = ${(m1*m2).toFixed(3)}`;
+}
+xMag.addEventListener('input',updateMag);
+updateMag();
+function osq(){ const a=parseFloat($('#iI1').value), b=parseFloat($('#iI2').value);
+  $('#oOut').textContent=(a>0&&b>0)?Math.sqrt(a*b).toFixed(2):'—'; }
+$('#iI1').addEventListener('input',osq); $('#iI2').addEventListener('input',osq); osq();
+
+/* ================= DRILL ================= */
+$('#drillBtn').addEventListener('click',()=>{
+  const steps=$$('.dr-step');
+  if(window.gsap&&!RM){ gsap.to(steps,{opacity:1,x:0,duration:.45,stagger:.5,ease:'power2.out',
+    onStart:()=>steps.forEach(s=>s.classList.add('show'))}); }
+  else steps.forEach(s=>s.classList.add('show'));
+});
+$('#dcGo').addEventListener('click',()=>{
+  const D=parseFloat($('#dcD').value), x=parseFloat($('#dcX').value);
+  const bad=$('#dcWarn');
+  if(!(D>0&&x>=0&&x<D)){ bad.style.display='inline-flex'; return; } bad.style.display='none';
+  const f=(D*D-x*x)/(4*D);
+  $('#dcF').textContent=f.toFixed(2)+' cm';
+  $('#dcM1').textContent=((D+x)/(D-x)).toFixed(2);
+  $('#dcM2').textContent=((D-x)/(D+x)).toFixed(3);
+});
+
+/* ---- MCQs ---- */
+const MCQS=[
+ {q:'In a displacement-method experiment D = 100 cm and the two lens positions are 40 cm apart. The focal length of the lens is:',
+  o:['16 cm','21 cm','25 cm','42 cm'],a:1,
+  w:'f = (D² − x²)/4D = (10000 − 1600)/400 = 8400/400 = 21 cm.'},
+ {q:'Object and screen are fixed 48 cm apart. For which focal length will you get TWO DISTINCT sharp lens positions?',
+  o:['f = 14 cm','f = 12 cm','f = 10 cm','f = 24 cm'],a:2,
+  w:'Two distinct positions need D > 4f ⇒ f < 12 cm. f = 12 cm gives only the merged single position (x = 0); larger f gives none.'},
+ {q:'The two images formed in a displacement experiment are 9 cm and 4 cm tall. The object size is:',
+  o:['6.5 cm','13 cm','6 cm','√13 cm'],a:2,
+  w:'O = √(I₁I₂) = √(9×4) = √36 = 6 cm — the object is the geometric mean of its two images.'}
+];
+let score=0;
+const wrap=$('#mcqs');
+MCQS.forEach((m,i)=>{
+  const card=document.createElement('div'); card.className='card mcq';
+  card.innerHTML=`<div class="q"><span class="n">Q${i+1}</span>${m.q}</div>`+
+    m.o.map((o,j)=>`<button class="opt" data-j="${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')+
+    `<div class="why"><b style="color:var(--amber)">→</b> ${m.w}</div>`;
+  wrap.appendChild(card);
+  card.querySelectorAll('.opt').forEach(btn=>btn.addEventListener('click',()=>{
+    if(card.classList.contains('answered')) return;
+    card.classList.add('answered');
+    const j=+btn.dataset.j;
+    if(j===m.a){ btn.classList.add('right'); score++; }
+    else { btn.classList.add('wrong'); card.querySelectorAll('.opt')[m.a].classList.add('right'); }
+    card.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+    $('#mcqScore').textContent=score+' / 3';
+  }));
+});
+
+/* ================= global polish ================= */
+if(window.ScrollTrigger&&!RM){
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.batch('.rv',{start:'top 88%', once:true,
+    onEnter:els=>gsap.from(els,{y:26,opacity:0,duration:.7,stagger:.1,ease:'power3.out',overwrite:true})});
+  ScrollTrigger.create({start:0,end:'max',onUpdate:s=>$('#pbar').style.transform=`scaleX(${s.progress})`});
+} else {
+  addEventListener('scroll',()=>{const h=document.documentElement;
+    $('#pbar').style.transform=`scaleX(${h.scrollTop/(h.scrollHeight-h.clientHeight)})`;},{passive:true});
+}
+onStoreChange();
+})();
+</script>
+</body>
+</html>

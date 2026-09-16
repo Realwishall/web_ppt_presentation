@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculus for Physics — An Interactive Field Guide</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script>document.documentElement.classList.add('js');</script>
+
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --paper:#f7f8f3; --card:#ffffff; --ink:#13294b; --ink60:rgba(19,41,75,.6);
+  --red:#d5382f; --teal:#0e8f7e; --amber:#e18b00; --blue:#2b5fc7;
+  --ok:#177245; --bad:#b3261e;
+  --line:rgba(19,41,75,.18);
+  --shadow:8px 8px 0 rgba(19,41,75,.07);
+  --disp:'Space Grotesk',sans-serif; --body:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body); color:var(--ink); background:var(--paper);
+  background-image:
+    linear-gradient(rgba(43,95,199,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(43,95,199,.13) 1px,transparent 1px),
+    linear-gradient(rgba(43,95,199,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(43,95,199,.06) 1px,transparent 1px);
+  background-size:120px 120px,120px 120px,24px 24px,24px 24px;
+  line-height:1.6; font-size:16px;
+}
+::selection{background:var(--amber);color:#fff}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+canvas{display:block;width:100%}
+
+/* ============ MASTHEAD ============ */
+.masthead{background:#0e1b33;color:#eef3ff;border-bottom:4px solid var(--amber);overflow:hidden;position:relative}
+.masthead::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(900px 400px at 85% -10%,rgba(225,139,0,.14),transparent 60%),
+             radial-gradient(700px 380px at 8% 110%,rgba(14,143,126,.12),transparent 60%)}
+.mast-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:64px 0 56px}
+.kicker{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;color:var(--amber);text-transform:uppercase}
+.masthead h1{font-family:var(--disp);font-weight:700;font-size:clamp(2.5rem,5.4vw,4.1rem);line-height:1.02;margin:14px 0 18px;letter-spacing:-.01em}
+.masthead h1 em{font-style:normal;color:var(--amber)}
+.lede{max-width:52ch;color:#c3d0e8;font-size:1.06rem}
+.mast-chips{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 30px}
+.mchip{font-family:var(--mono);font-size:.8rem;border:1px solid rgba(238,243,255,.35);border-radius:999px;padding:6px 14px;color:#e8eefb}
+.mchip b{color:var(--amber);font-weight:600}
+.mast-btns{display:flex;gap:12px;flex-wrap:wrap}
+.fig-frame{border:1.5px solid rgba(238,243,255,.28);border-radius:12px;background:rgba(255,255,255,.03);padding:12px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.fig-frame figcaption{font-family:var(--mono);font-size:.72rem;color:#8fa4c8;padding:10px 4px 2px}
+#mast{height:clamp(240px,30vw,330px)}
+
+/* ============ BUTTONS / CONTROLS ============ */
+.btn{font-family:var(--body);font-weight:600;font-size:.92rem;cursor:pointer;border:1.5px solid var(--ink);
+  background:var(--card);color:var(--ink);padding:10px 18px;border-radius:9px;box-shadow:3px 3px 0 rgba(19,41,75,.18);
+  transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(19,41,75,.22)}
+.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(19,41,75,.2)}
+.btn.ink{background:var(--ink);color:#fff}
+.btn.amber{background:var(--amber);border-color:var(--amber);color:#fff}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.ghostlight{background:transparent;border-color:rgba(238,243,255,.5);color:#eef3ff;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.small{padding:6px 12px;font-size:.82rem;box-shadow:2px 2px 0 rgba(19,41,75,.18)}
+
+.ctl{min-width:150px;flex:1}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.ctl label{font-weight:600;font-size:.85rem}
+.ctl output{font-family:var(--mono);font-size:.82rem;color:var(--teal);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:5px;background:rgba(19,41,75,.22);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;
+  border:3px solid var(--ink);margin-top:-7px;box-shadow:2px 2px 0 rgba(19,41,75,.25);transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-track{height:5px;background:rgba(19,41,75,.22);border-radius:3px}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--ink)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:9px;overflow:hidden}
+.seg button{font-family:var(--body);font-size:.82rem;font-weight:600;padding:7px 13px;background:var(--card);border:none;cursor:pointer;border-right:1.5px solid var(--ink);transition:background .15s}
+.seg button:last-child{border-right:none}
+.seg button.active{background:var(--ink);color:#fff}
+.seg button:not(.active):hover{background:rgba(19,41,75,.08)}
+.ctls{display:flex;flex-wrap:wrap;gap:16px 22px;align-items:flex-end;margin:16px 0 14px}
+
+.readouts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ro{font-family:var(--mono);font-size:.8rem;background:var(--ink);color:#dfe8f8;border-radius:8px;padding:6px 11px;display:flex;gap:7px;align-items:center}
+.ro b{font-weight:600}
+.ro .d{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* ============ TOOLBAR ============ */
+.toolbar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:2px solid var(--ink);padding:10px 0}
+.toolbar .wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:8px}
+.tab{font-family:var(--disp);font-weight:700;font-size:.95rem;padding:9px 18px;border:2px solid var(--ink);border-radius:9px;
+  background:var(--card);cursor:pointer;transition:all .18s;letter-spacing:.01em}
+.tab small{display:block;font-family:var(--mono);font-weight:400;font-size:.64rem;letter-spacing:.14em;color:var(--ink60)}
+.tab:hover{transform:translateY(-2px)}
+.tab.active[data-mod=diff]{background:var(--teal);border-color:var(--teal);color:#fff}
+.tab.active[data-mod=int]{background:var(--amber);border-color:var(--amber);color:#fff}
+.tab.active small{color:rgba(255,255,255,.75)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.chip{font-family:var(--mono);font-size:.74rem;padding:6px 13px;border-radius:999px;border:1.5px solid var(--line);
+  background:var(--card);cursor:pointer;transition:all .15s;color:var(--ink)}
+.chip:hover{border-color:var(--ink);transform:translateY(-1px)}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ============ MODULES & SECTIONS ============ */
+.module{display:none;padding-bottom:40px}
+.module.on{display:block}
+.mod-head{padding:58px 0 8px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px}
+.mod-head .bignum{font-family:var(--disp);font-weight:700;font-size:clamp(3.4rem,8vw,5.6rem);line-height:.85;
+  color:transparent;-webkit-text-stroke:2px var(--ink);opacity:.9}
+.mod-head h2{font-family:var(--disp);font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.05}
+.mod-head p{max-width:60ch;color:var(--ink60);font-size:1rem}
+.score-chip{margin-left:auto;font-family:var(--mono);font-size:.78rem;border:1.5px dashed var(--ink);border-radius:9px;padding:8px 14px;background:var(--card)}
+#panel-diff .mod-head h2 em{color:var(--teal);font-style:normal}
+#panel-int .mod-head h2 em{color:var(--amber);font-style:normal}
+
+.sec{padding:56px 0 30px;border-top:1.5px dashed var(--line);scroll-margin-top:110px}
+.sec-head{display:flex;gap:18px;align-items:baseline;margin-bottom:26px;flex-wrap:wrap}
+.sec-no{font-family:var(--mono);font-size:.82rem;font-weight:600;color:#fff;background:var(--ink);padding:4px 10px;border-radius:6px;letter-spacing:.08em}
+#panel-diff .sec-no{background:var(--teal)} #panel-int .sec-no{background:var(--amber)}
+.sec-head h3{font-family:var(--disp);font-size:clamp(1.4rem,2.6vw,2rem);letter-spacing:-.01em}
+.lede2{max-width:72ch;margin-bottom:18px}
+
+.grid-2{display:grid;grid-template-columns:5fr 7fr;gap:30px;align-items:start}
+.grid-2.flip{grid-template-columns:7fr 5fr}
+.lab{margin-top:44px}
+.lab-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.lab-head h4{font-family:var(--disp);font-size:1.25rem}
+.lab-head .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink60)}
+.lab p.sub{color:var(--ink60);font-size:.94rem;max-width:70ch;margin-bottom:14px}
+
+.card{background:var(--card);border:1.5px solid var(--ink);border-radius:12px;box-shadow:var(--shadow);padding:20px;transition:transform .2s,box-shadow .2s}
+.card.hoverable:hover{transform:translate(-3px,-3px);box-shadow:11px 11px 0 rgba(19,41,75,.1)}
+.note{background:rgba(14,143,126,.07);border-left:4px solid var(--teal);padding:12px 16px;border-radius:0 8px 8px 0;font-size:.92rem;margin-top:16px}
+.note.amber{background:rgba(225,139,0,.09);border-left-color:var(--amber)}
+.note b{font-weight:700}
+ul.ticks{list-style:none;margin:14px 0}
+ul.ticks li{padding-left:26px;position:relative;margin-bottom:12px;font-size:.97rem}
+ul.ticks li::before{content:'▸';position:absolute;left:4px;color:var(--red);font-weight:700}
+
+canvas.plot{border:1.5px solid var(--ink);border-radius:10px;background:#fff;touch-action:none;cursor:crosshair}
+.cv-lab{aspect-ratio:3/2}.cv-wide{aspect-ratio:16/8.5}
+.cv-row{height:128px}.cv-track{height:60px}
+
+/* kinematics stack */
+.kstack{display:grid;gap:8px}
+.krow{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:stretch}
+.klabel{display:flex;flex-direction:column;justify-content:center;font-size:.8rem;line-height:1.35}
+.klabel b{font-family:var(--mono);font-size:.86rem}
+.klabel .hint{color:var(--ink60);font-size:.72rem}
+.kdot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+.ddt-arrow{font-family:var(--mono);font-size:.72rem;color:var(--ink60);text-align:center}
+
+/* rule cards */
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px}
+.rule{display:flex;flex-direction:column}
+.rule-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.rule-no{font-family:var(--mono);font-size:.72rem;font-weight:600;letter-spacing:.1em;color:var(--ink60)}
+.rule h4{font-family:var(--disp);font-size:1.15rem;margin-bottom:6px}
+.rule .fmtex{background:rgba(19,41,75,.045);border:1px solid var(--line);border-radius:8px;padding:12px 10px;text-align:center;margin:8px 0;overflow-x:auto}
+.rule .sub{font-size:.87rem;color:var(--ink60);flex:1}
+.rule .ex-toggle{margin-top:12px;align-self:flex-start}
+.rule-ex{display:none;border-top:1.5px dashed var(--line);margin-top:14px;padding-top:12px}
+.rule.open .ex-toggle{display:none}
+.rule.open .rule-ex{display:block}
+.ex-prompt{font-size:.9rem;margin-bottom:10px}
+.step-note{font-size:.86rem;font-weight:600;color:var(--teal)}
+.step-tex{overflow-x:auto;padding:8px 0}
+.step-nav{display:flex;align-items:center;gap:10px;margin-top:8px}
+.step-count{font-family:var(--mono);font-size:.74rem;color:var(--ink60);margin-right:auto}
+
+/* quizzes */
+.quiz{margin-top:36px;border:2px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.q-head{background:var(--ink);color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center}
+.q-head .q-flag{font-family:var(--mono);font-size:.76rem;letter-spacing:.2em;color:var(--amber)}
+.q-head .q-score{font-family:var(--mono);font-size:.8rem}
+.qcard{padding:20px;border-top:1.5px dashed var(--line)}
+.qprompt{font-weight:600;margin-bottom:12px;font-size:.98rem}
+.qopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px}
+.qopt{text-align:left;font-family:var(--body);font-size:.9rem;padding:9px 12px 9px 34px;border:1.5px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;position:relative;transition:all .15s}
+.qopt::before{content:attr(data-l);position:absolute;left:10px;font-family:var(--mono);font-size:.74rem;font-weight:600;color:var(--ink60)}
+.qopt:hover{border-color:var(--ink);transform:translateY(-1px)}
+.qcard.answered .qopt{pointer-events:none;opacity:.5}
+.qcard.answered .qopt.is-correct{opacity:1;border-color:var(--ok);background:rgba(23,114,69,.1)}
+.qcard.answered .qopt.is-wrong{opacity:1;border-color:var(--bad);background:rgba(179,38,30,.08)}
+.qex{display:none;margin-top:12px;background:rgba(19,41,75,.05);border-left:4px solid var(--amber);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.9rem}
+.qex.show{display:block}
+
+footer{background:var(--ink);color:#c3d0e8;margin-top:60px;border-top:4px solid var(--teal)}
+footer .wrap{padding:34px 24px;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:.86rem}
+footer b{color:#fff}
+
+/* reveal (only when JS is alive) */
+html.js .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+html.js .reveal.in{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .mast-grid{grid-template-columns:1fr;gap:30px;padding:44px 0}
+  .grid-2,.grid-2.flip{grid-template-columns:1fr}
+  .krow{grid-template-columns:1fr}.klabel{flex-direction:row;gap:8px;align-items:center}
+  .chips{margin-left:0}
+  .score-chip{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= MASTHEAD ================= -->
+<header class="masthead">
+  <div class="wrap mast-grid">
+    <div>
+      <div class="kicker">An interactive field guide · math that moves</div>
+      <h1>Calculus, <em>for things that move.</em></h1>
+      <p class="lede">Differentiation dissects motion into velocity, acceleration and force. Integration piles
+        infinitesimal pieces back into wholes — distance, work, impulse. Two operations, one machine,
+        and every graph on this page is alive: pull a slider and the physics answers back.</p>
+      <div class="mast-chips">
+        <span class="mchip">v = <b>dx/dt</b> · slope of position</span>
+        <span class="mchip">W = <b>∫ F dx</b> · area under force</span>
+        <span class="mchip">Δt → 0 · the whole idea</span>
+      </div>
+      <div class="mast-btns">
+        <button class="btn amber" data-goto="diff">Start: Differentiation ↓</button>
+        <button class="btn ghostlight" data-goto="int">Jump to Integration</button>
+      </div>
+    </div>
+    <figure class="fig-frame">
+      <canvas id="mast" aria-label="Animated curve with a sweeping tangent line tracing out its derivative"></canvas>
+      <figcaption>fig. 0 — a point walks a curve; its tangent sweeps along, and the slopes it leaves behind <i>are</i> the derivative.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- ================= TOOLBAR ================= -->
+<div class="toolbar" id="toolbar">
+  <div class="wrap">
+    <div class="tabs" role="tablist" aria-label="Modules">
+      <button class="tab active" data-mod="diff" role="tab" aria-selected="true">Module 01 · Differentiation<small>slopes · rates · motion</small></button>
+      <button class="tab" data-mod="int" role="tab" aria-selected="false">Module 02 · Integration<small>area · accumulation · totals</small></button>
+    </div>
+    <nav class="chips" id="chips" aria-label="Sections"></nav>
+  </div>
+</div>
+
+<!-- ================= MODULE 1 : DIFFERENTIATION ================= -->
+<main>
+<section class="module on" id="panel-diff">
+  <div class="wrap">
+    <div class="mod-head reveal">
+      <span class="bignum">01</span>
+      <div>
+        <h2>Differentiation: <em>the mathematics of “right now”</em></h2>
+        <p>Everything in physics happens <i>now</i> — this velocity, this force, this acceleration. The derivative is the tool that reads the present instant out of a changing quantity.</p>
+      </div>
+      <span class="score-chip" id="sc-d">Checkpoints · 0 / 8</span>
+    </div>
+
+    <section class="sec" id="sec-d1">
+      <div class="sec-head reveal"><span class="sec-no">1.1</span><h3>The feel of differentiation</h3></div>
+      <div class="grid-2">
+        <div class="reveal">
+          <p class="lede2">Your trip computer reports <b>average</b> velocity — total displacement divided by total time.
+            The speedometer reports the <b>instantaneous</b> value: what the average <i>would</i> be if the time window
+            were squeezed down to nothing. That squeeze, \(\Delta t \to 0\), is the entire idea of the derivative.</p>
+          <ul class="ticks">
+            <li>Over a window, \(v_{avg}=\dfrac{\Delta x}{\Delta t}\) — geometrically, the slope of a <b>secant line</b> through two points of \(x(t)\).</li>
+            <li>Shrink the window: the secant pivots and settles onto the <b>tangent line</b>.</li>
+            <li>The limit is the derivative: \(v=\dfrac{dx}{dt}\) — the slope of position, <i>right now</i>.</li>
+          </ul>
+          <div class="note"><b>Try it:</b> drag \(\Delta t\) toward zero and watch the secant lock into the tangent.
+            Move \(t_0\) to probe other instants, or hit <i>Shrink Δt</i> to watch the limit happen by itself.</div>
+        </div>
+        <div class="card hoverable reveal">
+          <div class="lab-head"><h4>Secant → Tangent Laboratory</h4><span class="tag">x(t) = ½t³ − 3t² + 4.5t + 1</span></div>
+          <canvas id="cvSec" class="plot cv-lab" aria-label="Secant to tangent interactive graph"></canvas>
+          <div class="ctls">
+            <div class="ctl" id="ctl-dt"></div>
+            <div class="ctl" id="ctl-t0"></div>
+            <button class="btn teal small" id="btnShrink">Shrink Δt →</button>
+            <button class="btn small" id="btnSecReset">Reset</button>
+          </div>
+          <div class="readouts">
+            <span class="ro">Δt <b id="roDt" style="color:#ffd166">—</b></span>
+            <span class="ro">Δx <b id="roDx" style="color:#9ecbff">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--red)"></span>v<sub>avg</sub>=Δx/Δt <b id="roVavg" style="color:#ff9d97">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>v=dx/dt <b id="roVins" style="color:#7fe0cf">—</b></span>
+          </div>
+          <div id="secFormula" style="margin-top:12px;overflow-x:auto"></div>
+        </div>
+      </div>
+      <div id="quiz-d1"></div>
+    </section>
+
+    <section class="sec" id="sec-d2">
+      <div class="sec-head reveal"><span class="sec-no">1.2</span><h3>The rulebook</h3></div>
+      <p class="lede2 reveal">Six rules cover roughly 95% of intro-physics differentiation. Each card states the identity,
+        then walks one worked example <b>step by step</b> — open one and click through.</p>
+      <div class="rules-grid" id="ruleDiff"></div>
+      <div id="quiz-d2"></div>
+    </section>
+
+    <section class="sec" id="sec-d3">
+      <div class="sec-head reveal"><span class="sec-no">1.3</span><h3>Calculus as a physics engine</h3></div>
+      <p class="lede2 reveal">Rules on paper are one thing; watching a machine grind \(x \to v \to a\) in real time is another.
+        Three labs below: the kinematics engine, slope along a path, and hunting maxima and minima.</p>
+
+      <div class="lab reveal">
+        <div class="lab-head"><h4>A · The Kinematics Engine</h4><span class="tag">x(t) → v(t) → a(t)</span></div>
+        <p class="sub">Each row is the <b>slope</b> of the row above it: velocity is the slope of position, acceleration the slope of velocity.
+          Pick a motion, pull the sliders, then <b>drag across any graph to scrub time</b> — all three rows stay locked together, along with the particle on the track.</p>
+        <div class="card">
+          <div class="ctls">
+            <div class="seg" id="kinPresets"></div>
+            <button class="btn ink small" id="kinPlay">❚❚ Pause</button>
+            <div class="ctl" id="kinSpeed" style="max-width:160px"></div>
+          </div>
+          <div class="ctls" id="kinParams"></div>
+          <div class="kstack">
+            <div class="krow"><div class="klabel"><b><span class="kdot" style="background:var(--blue)"></span>x(t)</b><span class="hint">position (m)</span></div><canvas id="cvKx" class="plot cv-row"></canvas></div>
+            <div class="ddt-arrow">↓ d/dt — velocity is the slope of position</div>
+            <div class="krow"><div class="klabel"><b><span class="kdot" style="background:var(--red)"></span>v(t)</b><span class="hint">slope of x(t)</span></div><canvas id="cvKv" class="plot cv-row"></canvas></div>
+            <div class="ddt-arrow">↓ d/dt — acceleration is the slope of velocity</div>
+            <div class="krow"><div class="klabel"><b><span class="kdot" style="background:var(--amber)"></span>a(t)</b><span class="hint">slope of v(t)</span></div><canvas id="cvKa" class="plot cv-row"></canvas></div>
+            <div class="krow"><div class="klabel"><b>track</b><span class="hint">the particle</span></div><canvas id="cvTrack" class="plot cv-track"></canvas></div>
+          </div>
+          <div class="readouts">
+            <span class="ro">t <b id="roT" style="color:#ffd166">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--blue)"></span>x <b id="roX" style="color:#9ecbff">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--red)"></span>v <b id="roV" style="color:#ff9d97">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--amber)"></span>a <b id="roA" style="color:#ffcf7a">—</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab grid-2 reveal">
+        <div>
+          <div class="lab-head"><h4>B · Slope along a path</h4><span class="tag">geometric view</span></div>
+          <p class="sub">The derivative is just slope, read off point by point. Slide the probe along
+            \(f(x)=\tfrac{x^3}{3}-x\) and watch the tangent tilt; where the tangent goes flat, \(f'(x)=0\).
+            Toggle the derivative curve — its height at any \(x\) <i>is</i> the slope you see on the left.</p>
+          <ul class="ticks">
+            <li>Positive slope → function climbing; negative → falling.</li>
+            <li>\(f'(x)=0\) at \(x=\pm1\): the crest and the valley (extrema).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <canvas id="cvSlope" class="plot cv-lab" aria-label="Tangent slope probe"></canvas>
+          <div class="ctls">
+            <div class="ctl" id="ctl-x0"></div>
+            <button class="btn small" id="btnDeriv">Show f′(x) curve</button>
+          </div>
+          <div class="readouts">
+            <span class="ro">x₀ <b id="roSx" style="color:#9ecbff">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>slope f′(x₀) <b id="roSm" style="color:#7fe0cf">—</b></span>
+            <span class="ro" id="roFlat" style="display:none;background:var(--teal)">≈ 0 — flat! extremum nearby</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab grid-2 flip reveal" style="margin-top:44px">
+        <div class="card">
+          <div class="lab-head"><h4>C · Maxima, minima & the perfect throw</h4><span class="tag">optimization</span></div>
+          <canvas id="cvTraj" class="plot cv-row" style="height:190px" aria-label="Projectile trajectory"></canvas>
+          <div style="height:10px"></div>
+          <canvas id="cvRange" class="plot cv-row" style="height:190px" aria-label="Range versus launch angle"></canvas>
+          <div class="ctls">
+            <div class="ctl" id="ctl-theta"></div>
+            <div class="ctl" id="ctl-v0"></div>
+            <button class="btn amber small" id="btnHunt">⛰ Hunt the maximum</button>
+          </div>
+          <div class="readouts">
+            <span class="ro">θ <b id="roTh" style="color:#ffd166">—</b></span>
+            <span class="ro">R <b id="roR" style="color:#9ecbff">—</b></span>
+            <span class="ro">dR/dθ <b id="roDR">—</b></span>
+            <span class="ro" id="roVerdict">—</span>
+          </div>
+        </div>
+        <div>
+          <p class="lede2">At the top of an arc, the bottom of an energy well, the launch angle that throws farthest —
+            the slope passes through zero. The <b>first derivative</b> finds candidates (\(f'=0\));
+            the <b>second derivative</b> referees: \(f''<0\) ⇒ the curve crests (maximum), \(f''>0\) ⇒ it bottoms out (minimum).</p>
+          <p class="lede2">Projectile range is \(R(\theta)=\dfrac{v_0^{2}\sin 2\theta}{g}\). Setting
+            \(\dfrac{dR}{d\theta}=\dfrac{2v_0^{2}\cos 2\theta}{g}=0\) forces \(2\theta=90^\circ\Rightarrow\theta=45^\circ\),
+            and \(\dfrac{d^{2}R}{d\theta^{2}}<0\) there — a genuine maximum.</p>
+          <div class="note amber"><b>Watch the sign of dR/dθ:</b> positive while \(R\) climbs, negative after it crests —
+            the flip <i>through zero</i> is the first-derivative test happening live.</div>
+        </div>
+      </div>
+      <div id="quiz-d3"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ================= MODULE 2 : INTEGRATION ================= -->
+<section class="module" id="panel-int">
+  <div class="wrap">
+    <div class="mod-head reveal">
+      <span class="bignum">02</span>
+      <div>
+        <h2>Integration: <em>piling up the infinitely small</em></h2>
+        <p>Physics keeps asking the other question: if little pieces accumulate continuously, what’s the total?
+          Distance from a changing speed, energy from a changing force, charge from a changing current.</p>
+      </div>
+      <span class="score-chip" id="sc-i">Checkpoints · 0 / 8</span>
+    </div>
+
+    <section class="sec" id="sec-i1">
+      <div class="sec-head reveal"><span class="sec-no">2.1</span><h3>The feel of integration</h3></div>
+      <div class="grid-2">
+        <div class="reveal">
+          <p class="lede2">Slice the interval into \(n\) pieces. Approximate each with a rectangle of height \(f(x)\) and width \(\Delta x\), and add them up.
+            As \(n\to\infty\) the jagged tops dissolve into the curve, and the sum becomes the <b>definite integral</b> — exactly the area under the graph:</p>
+          <p class="lede2">\[\int_a^b f(x)\,dx=\lim_{n\to\infty}\sum_{i=1}^{n} f(x_i)\,\Delta x\]</p>
+          <ul class="ticks">
+            <li><b>Accumulation:</b> an integral is a running total of tiny contributions \(f\,dx\).</li>
+            <li><b>Undoing:</b> integration reverses differentiation — the Fundamental Theorem connects the area to an antiderivative.</li>
+            <li>Here \(f(x)=\dfrac{x(6-x)}{4}\) on \([0,6]\), whose exact area is exactly \(9\). Watch the sum converge.</li>
+          </ul>
+        </div>
+        <div class="card hoverable reveal">
+          <div class="lab-head"><h4>Riemann Sum Visualizer</h4><span class="tag">Σ → ∫</span></div>
+          <canvas id="cvRie" class="plot cv-lab" aria-label="Riemann sum rectangles under a curve"></canvas>
+          <div class="ctls">
+            <div class="ctl" id="ctl-n"></div>
+            <div class="seg" id="rieMethod">
+              <button data-m="mid" class="active">Midpoint</button>
+              <button data-m="left">Left</button>
+              <button data-m="right">Right</button>
+            </div>
+            <button class="btn amber small" id="btnRieRun">Let n → ∞</button>
+            <button class="btn small" id="btnRieReset">Reset</button>
+          </div>
+          <div class="readouts">
+            <span class="ro">n <b id="roN" style="color:#ffd166">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--amber)"></span>Σ rectangles <b id="roSum" style="color:#ffcf7a">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>exact ∫ = 9 <b id="roErr" style="color:#7fe0cf">—</b></span>
+          </div>
+        </div>
+      </div>
+      <div id="quiz-i1"></div>
+    </section>
+
+    <section class="sec" id="sec-i2">
+      <div class="sec-head reveal"><span class="sec-no">2.2</span><h3>The integration rulebook</h3></div>
+      <p class="lede2 reveal">Because integration undoes differentiation, every rule is the mirror image of one you already own.
+        The new idea is the <b>\(+C\)</b>: a derivative erases constants, so antiderivatives come in whole families — until physics hands you an initial condition.</p>
+      <div class="rules-grid" id="ruleInt"></div>
+
+      <div class="lab grid-2 reveal">
+        <div>
+          <div class="lab-head"><h4>Why \(+C\) is physics</h4><span class="tag">initial conditions</span></div>
+          <p class="sub">Constant acceleration \(a=2\,\mathrm{m/s^2}\) integrates to \(v(t)=2t+C\). Every value of \(C\) is a
+            <i>different physical situation</i> with the <i>same acceleration</i> — the whole dashed family below.
+            Only a measurement like \(v(0)=v_0\) pins \(C\) down. This is where “\(v_0\)” in every kinematics formula comes from:
+            \(v(t)=at+v_0\).</p>
+          <div class="note amber"><b>\[\int a\,dt = at + C,\qquad v(0)=v_0 \Rightarrow C=v_0\]</b></div>
+        </div>
+        <div class="card">
+          <canvas id="cvConst" class="plot cv-lab" aria-label="Family of antiderivative lines controlled by C"></canvas>
+          <div class="ctls"><div class="ctl" id="ctl-C"></div></div>
+          <div class="readouts">
+            <span class="ro">C = v₀ <b id="roC" style="color:#ffcf7a">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--amber)"></span>v(t) = 2t + C <b id="roCv" style="color:#7fe0cf">slope = 2 always</b></span>
+          </div>
+        </div>
+      </div>
+      <div id="quiz-i2"></div>
+    </section>
+
+    <section class="sec" id="sec-i3">
+      <div class="sec-head reveal"><span class="sec-no">2.3</span><h3>Area is physics</h3></div>
+      <p class="lede2 reveal">The same picture — area under a curve — is four different laws depending on which axes you chose.
+        Four labs, one idea.</p>
+
+      <div class="lab grid-2 reveal">
+        <div>
+          <div class="lab-head"><h4>A · Work from F(x)</h4><span class="tag">work–energy</span></div>
+          <p class="sub">Force acting <i>over distance</i> is work: \(W=\int F\,dx\). A spring pulls with \(F=kx\) — the area is a
+            triangle, \(W=\tfrac12 kx^2\), which lands as kinetic energy. Release the 2 kg cart from rest and read off its launch speed.</p>
+        </div>
+        <div class="card">
+          <canvas id="cvWork" class="plot cv-lab" aria-label="Area under force versus distance graph"></canvas>
+          <div class="ctls"><div class="ctl" id="ctl-k"></div><div class="ctl" id="ctl-xw"></div></div>
+          <div class="readouts">
+            <span class="ro"><span class="d" style="background:var(--amber)"></span>W = ∫F dx <b id="roW" style="color:#ffcf7a">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>v = √(2W/m) <b id="roWv" style="color:#7fe0cf">—</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab grid-2 flip reveal">
+        <div class="card">
+          <div class="lab-head"><h4>B · Impulse from F(t)</h4><span class="tag">momentum</span></div>
+          <canvas id="cvImp" class="plot cv-lab" aria-label="Force pulse with accumulating impulse area"></canvas>
+          <div class="ctls">
+            <div class="ctl" id="ctl-F0"></div><div class="ctl" id="ctl-tau"></div>
+            <button class="btn amber small" id="btnImp">▶ Fire the pulse</button>
+          </div>
+          <div class="readouts">
+            <span class="ro"><span class="d" style="background:var(--amber)"></span>J = ∫F dt <b id="roJ" style="color:#ffcf7a">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--red)"></span>Δv = J/m <b id="roJv" style="color:#ff9d97">—</b></span>
+            <span class="ro">F<sub>avg</sub> = J/τ <b id="roJf" style="color:#9ecbff">—</b></span>
+          </div>
+        </div>
+        <div>
+          <p class="sub" style="max-width:100%">Force acting <i>over time</i> is impulse: \(J=\int F\,dt=\Delta p\).
+            A short sharp crack and a long gentle shove can hand over the very same momentum — the collision only cares about the area.
+            The pulse here is a half-sine, \(F(t)=F_0\sin(\pi t/\tau)\), with exact integral \(J=\dfrac{2F_0\tau}{\pi}\).</p>
+          <div class="note"><b>Fire the pulse</b> and watch the area accumulate; the 1.5 kg cart’s \(\Delta v\) counts up with it.</div>
+        </div>
+      </div>
+
+      <div class="lab grid-2 reveal">
+        <div>
+          <div class="lab-head"><h4>C · Running kinematics backwards</h4><span class="tag">v(t) → x(t)</span></div>
+          <p class="sub">Area under \(v(t)\) is displacement — signed area. Here \(v(t)=6-1.5t\): the particle surges forward,
+            halts at \(t=4\), then reverses. By \(t=8\) the positive and negative areas cancel and it is back where it started —
+            displacement zero, distance traveled 24 m. Press play and scrub.</p>
+        </div>
+        <div class="card">
+          <canvas id="cvRev" class="plot cv-row" style="height:170px" aria-label="Velocity curve with swept area"></canvas>
+          <div style="height:10px"></div>
+          <canvas id="cvRevTrack" class="plot cv-track" aria-label="Particle track"></canvas>
+          <div class="ctls">
+            <button class="btn ink small" id="btnRev">▶ Play</button>
+            <span style="font-family:var(--mono);font-size:.75rem;color:var(--ink60)">tip: drag on the graph to scrub</span>
+          </div>
+          <div class="readouts">
+            <span class="ro">t <b id="roRt" style="color:#ffd166">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>+ area <b id="roRpos" style="color:#7fe0cf">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--red)"></span>− area <b id="roRneg" style="color:#ff9d97">—</b></span>
+            <span class="ro">displacement <b id="roRx" style="color:#9ecbff">—</b></span>
+            <span class="ro">distance <b id="roRd" style="color:#ffcf7a">—</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab grid-2 flip reveal">
+        <div class="card">
+          <div class="lab-head"><h4>D · Average value</h4><span class="tag">the flat equivalent</span></div>
+          <canvas id="cvMean" class="plot cv-lab" aria-label="Average value line over a curve"></canvas>
+          <div class="ctls">
+            <div class="seg" id="meanFn">
+              <button data-f="lift" class="active">f = 4 + 2 sin x</button>
+              <button data-f="pure">f = 3 sin x</button>
+            </div>
+            <div class="ctl" id="ctl-b"></div>
+          </div>
+          <div class="readouts">
+            <span class="ro">∫₀ᵇ f dx <b id="roMint" style="color:#ffcf7a">—</b></span>
+            <span class="ro"><span class="d" style="background:var(--teal)"></span>f̄ = 1/(b−a)·∫ <b id="roMean" style="color:#7fe0cf">—</b></span>
+          </div>
+        </div>
+        <div>
+          <p class="sub" style="max-width:100%">Every varying quantity has a flat stand-in with the same total:
+            \[\bar f=\frac{1}{b-a}\int_a^b f(x)\,dx\]
+            The dashed line is the height of the rectangle with identical area. Slide \(b\) across a full period of the pure sine
+            (\(2\pi\)) and the average collapses to <b>zero</b> — exactly why AC circuits quote <i>RMS</i> values instead.</p>
+        </div>
+      </div>
+      <div id="quiz-i3"></div>
+    </section>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>Calculus for Physics</b> · one self-contained HTML file · KaTeX for the math · Canvas2D for the plots.</div>
+    <div>Made for curious students &amp; patient teachers. Drag everything.</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+'use strict';
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const f2=(x,d=2)=>(+x).toFixed(d);
+const COL={ink:'#13294b',red:'#d5382f',teal:'#0e8f7e',amber:'#e18b00',blue:'#2b5fc7'};
+const hasGsap=typeof gsap!=='undefined';
+function niceStep(range,target){const raw=range/target,mag=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/mag;
+  return (n<1.5?1:n<3.5?2:n<7.5?5:10)*mag;}
+const KATEX_OPTS={delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false};
+const texTo=(el,s,disp=true)=>{try{katex.render(s,el,{throwOnError:false,displayMode:disp});}catch(e){el.textContent=s;}};
+const texInline=el=>{try{renderMathInElement(el,KATEX_OPTS);}catch(e){}};
+
+/* tiny tween engine — core animations never depend on a CDN */
+const _tweens=[];
+function tween(obj,key,to,o={}){
+  const dur=o.dur||1,onUpdate=o.onUpdate,onComplete=o.onComplete,ease=o.ease||'io';
+  const from=obj[key],t0=performance.now();
+  const h={dead:false,kill(){h.dead=true;},
+    step(now){
+      if(h.dead)return true;
+      if(document.hidden)return false;
+      const p=Math.min(1,(now-t0)/(dur*1000));
+      const e=ease==='linear'?p:(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2);
+      obj[key]=from+(to-from)*e;
+      if(onUpdate)onUpdate();
+      if(p>=1){if(onComplete)onComplete();return true;}
+      return false;}};
+  _tweens.push(h);return h;}
+(function twTick(now){for(let i=_tweens.length-1;i>=0;i--)if(_tweens[i].step(now))_tweens.splice(i,1);
+  requestAnimationFrame(twTick);})(performance.now());
+
+/* slider factory */
+function mkSlider(host,{label,min,max,step,value,unit='',fmt}){
+  const wrap=document.createElement('div');wrap.className='ctl';
+  const top=document.createElement('div');top.className='ctl-top';
+  const lab=document.createElement('label');lab.textContent=label;
+  const out=document.createElement('output');
+  const inp=document.createElement('input');Object.assign(inp,{type:'range',min,max,step,value});
+  const show=v=>{out.textContent=(fmt?fmt(+v):f2(+v))+(unit?' '+unit:'');};
+  show(value);inp.addEventListener('input',()=>show(inp.value));
+  top.append(lab,out);wrap.append(top,inp);host.appendChild(wrap);
+  return {inp,get val(){return +inp.value;},set(v){inp.value=v;show(v);}};
+}
+
+/* ================= PLOT CLASS ================= */
+class Plot{
+  static all=[];
+  constructor(cv,world){this.cv=cv;this.ctx=cv.getContext('2d');this.world=world;this.w=0;this.h=0;this.redraw=null;
+    Plot.all.push(this);this.resize();
+    new ResizeObserver(()=>{this.resize();this.redraw&&this.redraw();}).observe(cv);}
+  resize(){const r=this.cv.getBoundingClientRect();if(r.width<2)return;
+    const d=window.devicePixelRatio||1;this.w=r.width;this.h=r.height;
+    this.cv.width=Math.round(r.width*d);this.cv.height=Math.round(r.height*d);
+    this.ctx.setTransform(d,0,0,d,0,0);}
+  X(x){const w=this.world;return (x-w.x0)/(w.x1-w.x0)*this.w;}
+  Y(y){const w=this.world;return this.h-(y-w.y0)/(w.y1-w.y0)*this.h;}
+  IX(px){const w=this.world;return w.x0+px/this.w*(w.x1-w.x0);}
+  clear(){const c=this.ctx;c.fillStyle='#ffffff';c.fillRect(0,0,this.w,this.h);}
+  grid(sx,sy,opt={}){const c=this.ctx,w=this.world,me=opt.majorEvery||5;
+    c.lineWidth=1;
+    const lines=(step,vert)=>{let i=Math.ceil((vert?w.x0:w.y0)/step),k=0;
+      for(let v=i*step;v<=(vert?w.x1:w.y1)+1e-9;v+=step,k++){
+        c.strokeStyle=(k%me===0)?'rgba(43,95,199,.22)':'rgba(43,95,199,.09)';
+        c.beginPath();
+        if(vert){const p=this.X(v);c.moveTo(p,0);c.lineTo(p,this.h);}
+        else{const p=this.Y(v);c.moveTo(0,p);c.lineTo(this.w,p);}
+        c.stroke();}};
+    if(sx)lines(sx,true); if(sy)lines(sy,false);}
+  labels(stepX,stepY,fd){fd=(fd===undefined)?1:fd;const c=this.ctx;c.fillStyle='rgba(19,41,75,.55)';c.font='10.5px IBM Plex Mono,monospace';
+    if(stepX){c.textAlign='center';c.textBaseline='bottom';
+      for(let v=Math.ceil(this.world.x0/stepX)*stepX;v<=this.world.x1+1e-9;v+=stepX)
+        c.fillText(f2(v,fd).replace(/\.0+$/,''),this.X(v),this.h-3);}
+    if(stepY){c.textAlign='left';c.textBaseline='middle';
+      for(let v=Math.ceil(this.world.y0/stepY)*stepY;v<=this.world.y1+1e-9;v+=stepY)
+        c.fillText(f2(v,fd).replace(/\.0+$/,''),4,this.Y(v));}}
+  axisY0(color){color=color||'rgba(19,41,75,.5)';if(this.world.y0>0||this.world.y1<0)return;const p=this.Y(0);
+    const c=this.ctx;c.strokeStyle=color;c.lineWidth=1.4;c.beginPath();c.moveTo(0,p);c.lineTo(this.w,p);c.stroke();}
+  fn(f,o){o=o||{};const c=this.ctx,a=(o.x0!==undefined)?o.x0:this.world.x0,b=(o.x1!==undefined)?o.x1:this.world.x1;
+    const color=o.color||COL.ink,width=o.width||2,dash=o.dash||[],n=o.n||240;
+    c.save();c.beginPath();c.setLineDash(dash);c.lineWidth=width;c.strokeStyle=color;let on=false;
+    for(let i=0;i<=n;i++){const x=a+(b-a)*i/n,y=f(x);
+      if(!isFinite(y)){on=false;continue;}
+      const px=this.X(x),py=this.Y(y); on?c.lineTo(px,py):c.moveTo(px,py);on=true;}
+    c.stroke();c.restore();}
+  fillArea(f,a,b,o){o=o||{};const fill=o.fill||'rgba(225,139,0,.30)',base=(o.base!==undefined)?o.base:0,n=o.n||140;
+    const c=this.ctx;c.save();c.beginPath();
+    c.moveTo(this.X(a),this.Y(f(a)));
+    for(let i=1;i<=n;i++){const x=a+(b-a)*i/n;c.lineTo(this.X(x),this.Y(f(x)));}
+    c.lineTo(this.X(b),this.Y(base));c.lineTo(this.X(a),this.Y(base));c.closePath();
+    c.fillStyle=fill;c.fill();c.restore();}
+  line(x1,y1,x2,y2,o){o=o||{};const c=this.ctx;c.save();c.setLineDash(o.dash||[]);
+    c.strokeStyle=o.color||COL.ink;c.lineWidth=o.width||2;c.beginPath();c.moveTo(this.X(x1),this.Y(y1));
+    c.lineTo(this.X(x2),this.Y(y2));c.stroke();c.restore();}
+  dot(x,y,o){o=o||{};const r=o.r||5,c=this.ctx;c.beginPath();
+    c.arc(this.X(x),this.Y(y),r,0,7);c.fillStyle=o.color||COL.ink;c.fill();
+    if(o.ring!==null){c.lineWidth=(o.rw!==undefined)?o.rw:2;c.strokeStyle=o.ring||'#fff';c.stroke();}}
+  rect(x,yb,w,h,o){o=o||{};const c=this.ctx,px=this.X(x),py=this.Y(yb+h),
+    pw=this.X(x+w)-px,ph=this.Y(yb)-py;c.save();
+    if(o.fill){c.fillStyle=o.fill;c.fillRect(px,py,pw,ph);}
+    if(o.stroke){c.strokeStyle=o.stroke;c.lineWidth=o.width||1.4;c.strokeRect(px,py,pw,ph);}c.restore();}
+  wtext(s,wx,wy,o){o=o||{};const c=this.ctx;c.save();c.font=o.font||'11px IBM Plex Mono,monospace';
+    c.fillStyle=o.color||COL.ink;c.textAlign=o.align||'left';c.textBaseline=o.base||'alphabetic';
+    c.fillText(s,this.X(wx),this.Y(wy));c.restore();}
+}
+const resizeAll=()=>Plot.all.forEach(p=>{p.resize();p.redraw&&p.redraw();});
+
+/* ================= MASTHEAD FIGURE ================= */
+(function(){
+  const cv=document.getElementById('mast');if(!cv)return;
+  const p=new Plot(cv,{x0:0,x1:12.6,y0:-2.6,y1:2.9});
+  const f=x=>1.5*Math.sin(x)+.5*Math.sin(2.3*x), df=x=>1.5*Math.cos(x)+1.15*Math.cos(2.3*x);
+  let tx=0,last=performance.now();
+  p.redraw=function(){if(!p.w)return;p.clear();
+    const c=p.ctx;
+    c.strokeStyle='rgba(190,205,235,.12)';c.lineWidth=1;
+    for(let gx=0;gx<=12.6;gx++){c.beginPath();c.moveTo(p.X(gx),0);c.lineTo(p.X(gx),p.h);c.stroke();}
+    for(let gy=-2;gy<=2;gy++){c.beginPath();c.moveTo(0,p.Y(gy));c.lineTo(p.w,p.Y(gy));c.stroke();}
+    p.axisY0('rgba(190,205,235,.3)');
+    p.fn(df,{color:'#ffb454',width:1.6,dash:[5,4]});
+    p.fn(f,{color:'#8fd9cc',width:2.6});
+    if(tx>0)p.fn(df,{x0:0,x1:tx,color:'#ffb454',width:2.4});
+    const m=df(tx),y=f(tx),L=1.15/Math.sqrt(1+m*m);
+    p.line(tx-L,y-m*L,tx+L,y+m*L,{color:'#ff5d52',width:2.4});
+    p.dot(tx,y,{r:6,color:'#ff5d52'});
+    c.fillStyle='rgba(238,243,255,.65)';c.font='10px IBM Plex Mono,monospace';
+    c.fillText('f(x) — position',10,16);
+    c.fillStyle='#ffb454';c.fillText('f′(x) — slope traced live',10,30);
+    c.fillStyle='#ff8d85';c.fillText('tangent',10,44);};
+  function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+    if(!document.hidden){tx+=dt*1.7;if(tx>12.6)tx=0;p.redraw();}
+    requestAnimationFrame(loop);}
+  requestAnimationFrame(t=>{last=t;loop(t);});
+})();
+
+/* ================= WIDGET · SECANT → TANGENT ================= */
+(function(){
+  const cv=document.getElementById('cvSec');if(!cv)return;
+  const f=t=>0.5*t*t*t-3*t*t+4.5*t+1, v=t=>1.5*t*t-6*t+4.5;
+  const p=new Plot(cv,{x0:-.15,x1:4.35,y0:-.4,y1:4.2});
+  const s={dt:1.4,t0:1.7};let tw=null;
+  const sDt=mkSlider(document.getElementById('ctl-dt'),{label:'Δt (time window)',min:.05,max:1.8,step:.01,value:s.dt});
+  const sT0=mkSlider(document.getElementById('ctl-t0'),{label:'t₀ (instant)',min:.2,max:2.4,step:.01,value:s.t0});
+  sDt.inp.addEventListener('input',()=>{if(tw)tw.kill();s.dt=sDt.val;draw();});
+  sT0.inp.addEventListener('input',()=>{s.t0=sT0.val;draw();});
+  function draw(){
+    if(!p.w)return;p.clear();p.grid(.5,.5);p.labels(1,.5,1);
+    p.fn(f,{color:COL.ink,width:2.6});
+    const t0=s.t0,dt=s.dt,t1=t0+dt,x0=f(t0),x1=f(t1);
+    const mSec=(x1-x0)/dt, mTan=v(t0);
+    p.line(t0,x0,t1,x0,{color:'rgba(43,95,199,.6)',width:1.4,dash:[4,4]});
+    p.line(t1,x0,t1,x1,{color:'rgba(213,56,47,.6)',width:1.4,dash:[4,4]});
+    const xa=p.world.x0,xb=p.world.x1;
+    p.line(xa,x0+mSec*(xa-t0),xb,x0+mSec*(xb-t0),{color:COL.red,width:2.4});
+    const a=clamp((.35-dt)/.30,0,1);
+    if(a>0)p.line(xa,x0+mTan*(xa-t0),xb,x0+mTan*(xb-t0),{color:COL.teal,width:2.8+1.5*a});
+    p.dot(t0,x0,{r:6,color:COL.teal});
+    p.dot(t1,x1,{r:5,color:COL.blue});
+    p.wtext('P',t0-.16,x0+.14,{color:COL.teal,font:'bold 12px IBM Plex Sans'});
+    p.wtext('Q',t1+.1,x1+.14,{color:COL.blue,font:'bold 12px IBM Plex Sans'});
+    p.wtext('Δt',.5*(t0+t1),x0-.18,{color:COL.blue,align:'center',base:'top'});
+    p.wtext('Δx',t1+.08,.5*(x0+x1),{color:COL.red});
+    if(dt<.15)p.wtext('tangent! dx/dt',t0+.15,x0+.5,{color:COL.teal,font:'bold 12px IBM Plex Sans'});
+    document.getElementById('roDt').textContent=f2(dt)+' s';
+    document.getElementById('roDx').textContent=f2(x1-x0)+' m';
+    document.getElementById('roVavg').textContent=f2(mSec)+' m/s';
+    document.getElementById('roVins').textContent=f2(mTan)+' m/s';
+    texTo(document.getElementById('secFormula'),
+      'v_{avg}=\\frac{\\Delta x}{\\Delta t}=\\frac{'+f2(x1-x0)+'}{'+f2(dt)+'}='+f2(mSec)+'\\;\\xrightarrow{\\;\\Delta t\\to 0\\;}\\;v(t_0)='+f2(mTan)+'\\;\\text{m/s}',true);
+  }
+  p.redraw=draw;
+  document.getElementById('btnShrink').addEventListener('click',()=>{if(tw)tw.kill();
+    tw=tween(s,'dt',.05,{dur:2.4,onUpdate:()=>{sDt.set(s.dt);draw();}});});
+  document.getElementById('btnSecReset').addEventListener('click',()=>{if(tw)tw.kill();
+    tw=tween(s,'dt',1.4,{dur:.6,onUpdate:()=>{sDt.set(s.dt);draw();}});});
+  draw();
+})();
+
+/* ================= WIDGET · KINEMATICS ENGINE ================= */
+(function(){
+  const cvx=document.getElementById('cvKx');if(!cvx)return;
+  const TAU=6.28;
+  const PRESETS={
+    accel:{label:'Constant accel',T:6,
+      x:(t,q)=>q.v0*t+.5*q.a*t*t, v:(t,q)=>q.v0+q.a*t, a:(t,q)=>q.a,
+      params:{v0:{label:'v₀ (m/s)',min:-4,max:10,step:.5,value:2},
+              a:{label:'a (m/s²)',min:-4,max:4,step:.2,value:1.2}}},
+    shm:{label:'Spring · SHM',T:TAU,
+      x:(t,q)=>q.A*Math.sin(q.w*t), v:(t,q)=>q.A*q.w*Math.cos(q.w*t), a:(t,q)=>-q.A*q.w*q.w*Math.sin(q.w*t),
+      params:{A:{label:'A (m)',min:.5,max:2.5,step:.1,value:1.5},
+              w:{label:'ω (rad/s)',min:.5,max:3,step:.1,value:1}}},
+    cubic:{label:'Cubic glide',T:6,
+      x:(t,q)=>.25*t*t*t-1.5*t*t+3*t, v:(t,q)=>.75*t*t-3*t+3, a:(t,q)=>1.5*t-3, params:{}}
+  };
+  const px=new Plot(cvx,{x0:0,x1:6,y0:-1,y1:5}),
+        pv=new Plot(document.getElementById('cvKv'),{x0:0,x1:6,y0:-1,y1:5}),
+        pa=new Plot(document.getElementById('cvKa'),{x0:0,x1:6,y0:-1,y1:5}),
+        pt=new Plot(document.getElementById('cvTrack'),{x0:-1,x1:5,y0:-1,y1:1});
+  const K={pre:'accel',p:{},t:0,playing:true,speed:1,sliders:{}};
+  const COLORS={x:COL.blue,v:COL.red,a:COL.amber};
+  const sSpeed=mkSlider(document.getElementById('kinSpeed'),{label:'speed',min:.25,max:2,step:.25,value:1,fmt:x=>f2(x,2)+'×'});
+  sSpeed.inp.addEventListener('input',()=>K.speed=sSpeed.val);
+  const ph=document.getElementById('kinPresets');
+  Object.keys(PRESETS).forEach(function(k,i){
+    const cfg=PRESETS[k];
+    const b=document.createElement('button');b.textContent=cfg.label;if(i===0)b.className='active';
+    b.addEventListener('click',function(){
+      for(const x of ph.children)x.classList.remove('active');
+      b.classList.add('active');K.pre=k;K.t=0;buildParams();refresh();});
+    ph.appendChild(b);});
+  function buildParams(){const host=document.getElementById('kinParams');host.innerHTML='';K.sliders={};K.p={};
+    Object.keys(PRESETS[K.pre].params).forEach(function(key){
+      const cfg=PRESETS[K.pre].params[key];
+      K.p[key]=cfg.value;
+      K.sliders[key]=mkSlider(host,{label:cfg.label,min:cfg.min,max:cfg.max,step:cfg.step,value:cfg.value});
+      K.sliders[key].inp.addEventListener('input',function(){K.p[key]=K.sliders[key].val;refresh();});});}
+  function sample(fn){const T=PRESETS[K.pre].T,arr=[];for(let i=0;i<=240;i++)arr.push(fn(i/240*T,K.p));return arr;}
+  function rangeOf(arr){let mn=Math.min.apply(null,arr),mx=Math.max.apply(null,arr);
+    if(mx-mn<1e-6){mn-=1;mx+=1;}const pad=(mx-mn)*.18;return[mn-pad,mx+pad];}
+  function refresh(){const cfg=PRESETS[K.pre],T=cfg.T;
+    const rx=rangeOf(sample(cfg.x)),rv=rangeOf(sample(cfg.v)),ra=rangeOf(sample(cfg.a));
+    px.world={x0:0,x1:T,y0:rx[0],y1:rx[1]};
+    pv.world={x0:0,x1:T,y0:rv[0],y1:rv[1]};
+    pa.world={x0:0,x1:T,y0:ra[0],y1:ra[1]};
+    pt.world={x0:rx[0]-(rx[1]-rx[0])*.12,x1:rx[1]+(rx[1]-rx[0])*.12,y0:-1,y1:1};
+    draw();}
+  function drawRow(pl,fn,color,name){
+    if(!pl.w)return;pl.clear();
+    pl.grid(niceStep(pl.world.x1,6),niceStep(pl.world.y1-pl.world.y0,3.5));
+    pl.axisY0();
+    pl.fn(function(t){return fn(t,K.p);},{color:color,width:2.4});
+    pl.line(K.t,pl.world.y0,K.t,pl.world.y1,{color:'rgba(19,41,75,.45)',width:1.2,dash:[4,4]});
+    const yv=fn(K.t,K.p);
+    pl.dot(K.t,yv,{r:5,color:color});
+    pl.wtext(name,.15,pl.world.y1-(pl.world.y1-pl.world.y0)*.06,{color:color,font:'bold 11px IBM Plex Mono',base:'top'});
+    pl.labels(1,0,0);}
+  function draw(){const cfg=PRESETS[K.pre];
+    drawRow(px,cfg.x,COLORS.x,'x(t)');
+    drawRow(pv,cfg.v,COLORS.v,'v(t)');
+    drawRow(pa,cfg.a,COLORS.a,'a(t)');
+    if(pt.w){pt.clear();pt.grid(1,0);
+      const c=pt.ctx;c.strokeStyle='rgba(19,41,75,.5)';c.lineWidth=2;
+      c.beginPath();c.moveTo(0,pt.Y(0));c.lineTo(pt.w,pt.Y(0));c.stroke();
+      const x=cfg.x(K.t,K.p);
+      c.fillStyle='rgba(43,95,199,.25)';c.beginPath();c.arc(pt.X(x),pt.Y(0),13,0,7);c.fill();
+      pt.dot(x,0,{r:8,color:COL.blue});}}
+  px.redraw=draw;pv.redraw=draw;pa.redraw=draw;pt.redraw=draw;
+  [px,pv,pa].forEach(function(pl){
+    pl.cv.addEventListener('pointerdown',function(e){
+      const r=pl.cv.getBoundingClientRect();
+      function setT(ev){K.t=clamp(pl.IX(ev.clientX-r.left),0,PRESETS[K.pre].T);draw();tickRO();}
+      setT(e);K.playing=false;document.getElementById('kinPlay').textContent='▶ Play';
+      function mv(ev){setT(ev);}
+      function up(){window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);}
+      window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);});});
+  document.getElementById('kinPlay').addEventListener('click',function(){
+    K.playing=!K.playing;this.textContent=K.playing?'❚❚ Pause':'▶ Play';});
+  function tickRO(){const cfg=PRESETS[K.pre];
+    document.getElementById('roT').textContent=f2(K.t)+' s';
+    document.getElementById('roX').textContent=f2(cfg.x(K.t,K.p))+' m';
+    document.getElementById('roV').textContent=f2(cfg.v(K.t,K.p))+' m/s';
+    document.getElementById('roA').textContent=f2(cfg.a(K.t,K.p))+' m/s²';}
+  let last=performance.now();
+  function loop(now){const dt=Math.min(.06,(now-last)/1000);last=now;
+    if(K.playing&&!document.hidden){K.t=(K.t+dt*K.speed)%PRESETS[K.pre].T;draw();tickRO();}
+    requestAnimationFrame(loop);}
+  requestAnimationFrame(loop);
+  buildParams();refresh();tickRO();
+})();
+
+/* ================= WIDGET · SLOPE PROBE ================= */
+(function(){
+  const cv=document.getElementById('cvSlope');if(!cv)return;
+  const f=x=>x*x*x/3-x, df=x=>x*x-1;
+  const p=new Plot(cv,{x0:-2.3,x1:2.3,y0:-2.4,y1:4});
+  const s={x0:.4,showDeriv:false};
+  const sX=mkSlider(document.getElementById('ctl-x0'),{label:'probe position x₀',min:-2,max:2,step:.01,value:s.x0});
+  sX.inp.addEventListener('input',()=>{s.x0=sX.val;draw();});
+  document.getElementById('btnDeriv').addEventListener('click',function(){
+    s.showDeriv=!s.showDeriv;
+    this.textContent=s.showDeriv?'Hide f′(x) curve':'Show f′(x) curve';
+    this.classList.toggle('teal',s.showDeriv);draw();});
+  function draw(){if(!p.w)return;p.clear();p.grid(.5,.5);p.labels(1,1);
+    if(s.showDeriv){p.fn(df,{color:COL.red,width:2,dash:[6,4]});
+      p.wtext('f′(x) — the slope itself',1.05,3.6,{color:COL.red});}
+    p.fn(f,{color:COL.ink,width:2.6});
+    [-1,1].forEach(x=>p.dot(x,f(x),{r:3.5,color:'rgba(225,139,0,.9)'}));
+    const x0=s.x0,y0=f(x0),m=df(x0);
+    const L=.9/Math.sqrt(1+m*m);
+    p.line(x0-L,y0-m*L,x0+L,y0+m*L,{color:COL.teal,width:3});
+    p.dot(x0,y0,{r:6,color:COL.teal});
+    if(s.showDeriv)p.dot(x0,m,{r:5,color:COL.red});
+    document.getElementById('roSx').textContent=f2(x0);
+    document.getElementById('roSm').textContent=f2(m);
+    document.getElementById('roFlat').style.display=Math.abs(m)<.12?'flex':'none';}
+  p.redraw=draw;draw();
+})();
+
+/* ================= WIDGET · PROJECTILE OPTIMIZATION ================= */
+(function(){
+  const cvT=document.getElementById('cvTraj');if(!cvT)return;
+  const g=9.81;
+  const pT=new Plot(cvT,{x0:-.5,x1:11,y0:-.5,y1:6}),
+        pR=new Plot(document.getElementById('cvRange'),{x0:0,x1:90,y0:-.3,y1:11});
+  const s={deg:30,v0:10,prog:1};let tw=null;
+  const sTh=mkSlider(document.getElementById('ctl-theta'),{label:'launch angle θ',min:5,max:85,step:.5,value:s.deg,fmt:x=>f2(x,1)+'°'});
+  const sV=mkSlider(document.getElementById('ctl-v0'),{label:'v₀',min:6,max:14,step:.5,value:s.v0,fmt:x=>f2(x,1)+' m/s'});
+  sTh.inp.addEventListener('input',()=>{if(tw)tw.kill();s.deg=sTh.val;launch();draw();});
+  sV.inp.addEventListener('input',()=>{s.v0=sV.val;draw();});
+  function traj(d){const th=d*Math.PI/180,T=2*s.v0*Math.sin(th)/g;
+    return {x:t=>s.v0*Math.cos(th)*t, y:t=>s.v0*Math.sin(th)*t-.5*g*t*t, T:T};}
+  function launch(){s.prog=0;tween(s,'prog',1,{dur:1.1,ease:'linear',onUpdate:draw});}
+  function draw(){
+    const th=s.deg*Math.PI/180,
+          Rv=s.v0*s.v0*Math.sin(2*th)/g,
+          dRad=2*s.v0*s.v0*Math.cos(2*th)/g,
+          dDeg=dRad*Math.PI/180;
+    if(pT.w){const Rmax=s.v0*s.v0/g,Hmax=s.v0*s.v0/(2*g);
+      pT.world={x0:-.5,x1:Math.max(Rmax*1.15,4),y0:-.5,y1:Hmax*1.5};
+      pT.clear();pT.grid(niceStep(pT.world.x1,6),niceStep(pT.world.y1,3));
+      pT.line(pT.world.x0,0,pT.world.x1,0,{color:'rgba(19,41,75,.55)',width:2});
+      const g45=traj(45);
+      pT.fn(t=>g45.y(t),{x0:0,x1:g45.T,color:'rgba(14,143,126,.5)',width:1.6,dash:[5,5]});
+      const gm={x:g45.x(g45.T*.55),y:g45.y(g45.T*.55)};
+      pT.wtext('45° ghost',gm.x,gm.y+.4,{color:COL.teal});
+      const cur=traj(s.deg);
+      pT.fn(t=>cur.y(t),{x0:0,x1:cur.T,color:COL.red,width:2.6});
+      const tt=s.prog*cur.T;
+      pT.dot(cur.x(tt),Math.max(0,cur.y(tt)),{r:5,color:COL.ink});
+      if(s.prog>=1)pT.dot(cur.x(cur.T),0,{r:4,color:COL.red});
+      pT.wtext('θ = '+f2(s.deg,1)+'°',.4,pT.world.y1*.86,{color:COL.red,font:'bold 12px IBM Plex Sans'});}
+    if(pR.w){pR.world={x0:0,x1:90,y0:-.3,y1:s.v0*s.v0/g*1.12};
+      pR.clear();pR.grid(15,niceStep(pR.world.y1,4));
+      pR.fn(d=>{const r=d*Math.PI/180;return s.v0*s.v0*Math.sin(2*r)/g;},{color:COL.ink,width:2.6});
+      pR.dot(45,s.v0*s.v0/g,{r:4,color:COL.teal});
+      pR.wtext('max: 45°',45,s.v0*s.v0/g+pR.world.y1*.05,{color:COL.teal,align:'center'});
+      pR.line(s.deg-8,Rv-8*dDeg,s.deg+8,Rv+8*dDeg,{color:COL.red,width:2,dash:[3,3]});
+      pR.dot(s.deg,Rv,{r:6,color:COL.red});
+      pR.wtext('R(θ)',2.5,pR.world.y1*.92,{font:'bold 11px IBM Plex Mono',color:COL.ink});
+      pR.labels(30,0,0);}
+    document.getElementById('roTh').textContent=f2(s.deg,1)+'°';
+    document.getElementById('roR').textContent=f2(Rv)+' m';
+    const roDR=document.getElementById('roDR');
+    roDR.textContent=f2(dRad)+' m/rad';
+    roDR.style.color=dRad>0.02?'#7fe0cf':dRad<-0.02?'#ff9d97':'#ffd166';
+    const verdict=document.getElementById('roVerdict');
+    if(Math.abs(dRad)<0.02){verdict.textContent='dR/dθ ≈ 0 · d²R/dθ² < 0 → MAXIMUM';verdict.style.background=COL.teal;}
+    else if(dRad>0){verdict.textContent='dR/dθ > 0 — climbing ↗ increase θ';verdict.style.background=COL.ink;}
+    else{verdict.textContent='dR/dθ < 0 — falling ↘ decrease θ';verdict.style.background=COL.ink;}}
+  pT.redraw=draw;pR.redraw=draw;
+  document.getElementById('btnHunt').addEventListener('click',function(){
+    if(tw)tw.kill();launch();
+    tw=tween(s,'deg',45,{dur:1.6,onUpdate:()=>{sTh.set(s.deg);draw();}});});
+  launch();draw();
+})();
+
+/* ================= WIDGET · RIEMANN SUM ================= */
+(function(){
+  const cv=document.getElementById('cvRie');if(!cv)return;
+  const F=x=>x*(6-x)/4, EXACT=9;
+  const p=new Plot(cv,{x0:-.3,x1:6.3,y0:-.4,y1:2.6});
+  const s={n:6,method:'mid'};let tw=null;
+  const sN=mkSlider(document.getElementById('ctl-n'),{label:'n rectangles',min:1,max:80,step:1,value:s.n,fmt:x=>Math.round(x)});
+  sN.inp.addEventListener('input',()=>{if(tw)tw.kill();s.n=Math.round(sN.val);draw();});
+  $$('#rieMethod button').forEach(b=>b.addEventListener('click',()=>{
+    $$('#rieMethod button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    s.method=b.dataset.m;draw();}));
+  function riemann(){const dx=6/s.n;let sum=0;
+    for(let i=0;i<s.n;i++){const xi=s.method==='left'?i*dx:s.method==='right'?(i+1)*dx:(i+.5)*dx;
+      sum+=F(xi)*dx;}return{sum:sum,dx:dx};}
+  function draw(){if(!p.w)return;p.clear();p.grid(.5,.5);p.labels(1,.5);
+    const r=riemann(),dx=r.dx;
+    for(let i=0;i<s.n;i++){
+      const xi=s.method==='left'?i*dx:s.method==='right'?(i+1)*dx:(i+.5)*dx;
+      p.rect(i*dx,0,dx,F(xi),{fill:'rgba(225,139,0,.38)',stroke:'rgba(225,139,0,.9)',width:s.n>40?.5:1.2});}
+    p.fn(F,{color:COL.ink,width:2.8});
+    p.line(0,0,6,0,{color:'rgba(19,41,75,.55)',width:1.6});
+    document.getElementById('roN').textContent=Math.round(s.n);
+    document.getElementById('roSum').textContent=f2(r.sum,3);
+    const err=Math.abs(r.sum-EXACT);
+    document.getElementById('roErr').textContent='error '+f2(err,3)+(err<.005?' ✓':'');}
+  p.redraw=draw;
+  document.getElementById('btnRieRun').addEventListener('click',()=>{if(tw)tw.kill();
+    tw=tween(s,'n',80,{dur:2.6,onUpdate:()=>{sN.set(Math.round(s.n));draw();}});});
+  document.getElementById('btnRieReset').addEventListener('click',()=>{if(tw)tw.kill();s.n=6;sN.set(6);draw();});
+  draw();
+})();
+
+/* ================= WIDGET · CONSTANT OF INTEGRATION ================= */
+(function(){
+  const cv=document.getElementById('cvConst');if(!cv)return;
+  const p=new Plot(cv,{x0:-.4,x1:6,y0:-6,y1:15});
+  const s={C:3};
+  const sC=mkSlider(document.getElementById('ctl-C'),{label:'C = v(0)',min:-4,max:6,step:.5,value:s.C,fmt:x=>f2(x,1)});
+  sC.inp.addEventListener('input',()=>{s.C=sC.val;draw();});
+  function draw(){if(!p.w)return;p.clear();p.grid(1,3);p.labels(1,3,0);p.axisY0();
+    [-4,-2,0,2,4,6].forEach(C=>{if(Math.abs(C-s.C)<.01)return;
+      p.fn(t=>2*t+C,{color:'rgba(19,41,75,.16)',width:1.6,dash:[5,5]});});
+    p.fn(t=>2*t+s.C,{color:COL.amber,width:3.2});
+    p.dot(0,s.C,{r:6,color:COL.amber});
+    p.wtext('v(0) = C = '+f2(s.C,1),.25,s.C+.7,{color:COL.amber,font:'bold 12px IBM Plex Sans'});
+    p.wtext('all lines share slope 2 (same a!)',2.2,13.2,{color:'rgba(19,41,75,.55)'});
+    p.wtext('v = 2t + C',.25,.4,{font:'bold 11px IBM Plex Mono',color:COL.ink});
+    document.getElementById('roC').textContent=f2(s.C,1)+' m/s';}
+  p.redraw=draw;draw();
+})();
+
+/* ================= WIDGET · WORK (SPRING) ================= */
+(function(){
+  const cv=document.getElementById('cvWork');if(!cv)return;
+  const p=new Plot(cv,{x0:-.1,x1:2.1,y0:-.5,y1:22}),m=2;
+  const s={k:8,x:1.2};
+  const sK=mkSlider(document.getElementById('ctl-k'),{label:'k (N/m)',min:2,max:20,step:.5,value:s.k,fmt:x=>f2(x,1)});
+  const sX=mkSlider(document.getElementById('ctl-xw'),{label:'stretch x (m)',min:0,max:2,step:.05,value:s.x});
+  sK.inp.addEventListener('input',()=>{s.k=sK.val;draw();});
+  sX.inp.addEventListener('input',()=>{s.x=sX.val;draw();});
+  function draw(){if(!p.w)return;
+    p.clear();p.grid(.5,4);p.labels(.5,4,1);
+    p.fillArea(x=>s.k*x,0,s.x,{fill:'rgba(225,139,0,.35)'});
+    p.fn(x=>s.k*x,{color:COL.ink,width:2.6});
+    p.line(0,0,2,0,{color:'rgba(19,41,75,.55)',width:1.6});
+    const W=.5*s.k*s.x*s.x;
+    if(s.x>.3)p.wtext('W = ½kx² = '+f2(W,2)+' J',s.x*.5,s.k*s.x*.35,{color:'#8a5600',font:'bold 12px IBM Plex Sans'});
+    p.wtext('F = kx',1.55,s.k*1.55+.9,{font:'bold 11px IBM Plex Mono',color:COL.ink});
+    document.getElementById('roW').textContent=f2(W,2)+' J';
+    document.getElementById('roWv').textContent=f2(Math.sqrt(2*W/m),2)+' m/s';}
+  p.redraw=draw;draw();
+})();
+
+/* ================= WIDGET · IMPULSE ================= */
+(function(){
+  const cv=document.getElementById('cvImp');if(!cv)return;
+  const p=new Plot(cv,{x0:-.05,x1:1.6,y0:-3,y1:55}),m=1.5;
+  const s={F0:20,tau:.8,sweep:null,playing:false};
+  const sF=mkSlider(document.getElementById('ctl-F0'),{label:'F₀ (N)',min:5,max:50,step:1,value:s.F0,fmt:x=>f2(x,0)});
+  const sT=mkSlider(document.getElementById('ctl-tau'),{label:'τ duration (s)',min:.2,max:1.5,step:.05,value:s.tau});
+  sF.inp.addEventListener('input',()=>{s.F0=sF.val;stop();draw();});
+  sT.inp.addEventListener('input',()=>{s.tau=sT.val;stop();draw();});
+  const F=t=>(t<0||t>s.tau)?0:s.F0*Math.sin(Math.PI*t/s.tau);
+  const Jpart=t=>s.F0*s.tau/Math.PI*(1-Math.cos(Math.PI*clamp(t,0,s.tau)/s.tau));
+  function stop(){if(s.playing){s.playing=false;document.getElementById('btnImp').textContent='▶ Fire the pulse';}}
+  function draw(){if(!p.w)return;
+    p.world={x0:-.05,x1:Math.max(s.tau*1.25,.6),y0:-3,y1:s.F0*1.18};
+    p.clear();p.grid(niceStep(p.world.x1,6),niceStep(p.world.y1,4));
+    p.axisY0();
+    if(s.sweep!=null)p.fillArea(F,0,s.sweep,{fill:'rgba(225,139,0,.4)'});
+    else p.fillArea(F,0,s.tau,{fill:'rgba(225,139,0,.28)'});
+    p.fn(F,{color:COL.ink,width:2.6});
+    const J=Jpart(s.sweep!=null?s.sweep:s.tau);
+    p.wtext('J(t) = '+f2(J,2)+' N·s',p.world.x1*.04,p.world.y1*.9,{color:'#8a5600',font:'bold 12px IBM Plex Sans'});
+    p.wtext('F(t) — collision pulse',p.world.x1*.04,.6,{font:'bold 11px IBM Plex Mono',color:COL.ink});
+    document.getElementById('roJ').textContent=f2(J,2)+' N·s';
+    document.getElementById('roJv').textContent=f2(J/m,2)+' m/s';
+    document.getElementById('roJf').textContent=f2(J/s.tau,2)+' N';}
+  p.redraw=draw;
+  document.getElementById('btnImp').addEventListener('click',function(){
+    if(s.playing){stop();return;}
+    s.playing=true;this.textContent='❚❚ Stop';
+    const obj={t:0};s.sweep=0;
+    tween(obj,'t',s.tau,{dur:1.6,ease:'linear',
+      onUpdate:()=>{s.sweep=obj.t;draw();},
+      onComplete:()=>{s.sweep=null;stop();draw();}});});
+  draw();
+})();
+
+/* ================= WIDGET · REVERSE KINEMATICS ================= */
+(function(){
+  const cv=document.getElementById('cvRev');if(!cv)return;
+  const v=t=>6-1.5*t,T=8,x=t=>6*t-.75*t*t;
+  const p=new Plot(cv,{x0:-.2,x1:8.2,y0:-7.5,y1:7.5}),
+        pt=new Plot(document.getElementById('cvRevTrack'),{x0:-1.5,x1:14,y0:-1,y1:1});
+  const s={t:0,playing:false};
+  function draw(){if(!p.w)return;p.clear();p.grid(1,2);p.labels(1,2,0);p.axisY0();
+    if(s.t>0){p.fillArea(v,0,Math.min(s.t,4),{fill:'rgba(14,143,126,.35)'});
+      if(s.t>4)p.fillArea(v,4,s.t,{fill:'rgba(213,56,47,.30)'});}
+    p.fn(v,{color:COL.ink,width:2.6});
+    p.dot(4,0,{r:4,color:COL.amber});
+    p.wtext('v = 0 here: turn-around',4,.8,{color:'#8a5600',align:'center'});
+    p.line(s.t,p.world.y0,s.t,p.world.y1,{color:'rgba(19,41,75,.45)',width:1.2,dash:[4,4]});
+    p.dot(s.t,v(s.t),{r:5,color:COL.blue});
+    p.wtext('v(t)',.25,6.7,{font:'bold 11px IBM Plex Mono',color:COL.ink});
+    if(pt.w){pt.clear();pt.grid(2,0);
+      const c=pt.ctx;c.strokeStyle='rgba(19,41,75,.5)';c.lineWidth=2;
+      c.beginPath();c.moveTo(0,pt.Y(0));c.lineTo(pt.w,pt.Y(0));c.stroke();
+      pt.dot(0,0,{r:3,color:'rgba(19,41,75,.4)'});
+      pt.dot(12,0,{r:3,color:'rgba(225,139,0,.8)'});
+      pt.wtext('start',0,-.55,{align:'center',color:'rgba(19,41,75,.6)'});
+      pt.wtext('x = 12 m at t = 4',12,-.55,{align:'center',color:'rgba(19,41,75,.6)'});
+      pt.dot(x(s.t),0,{r:8,color:COL.blue});}
+    const posA=s.t<=4?x(s.t):12;
+    const negA=s.t<=4?0:12-x(s.t);
+    document.getElementById('roRt').textContent=f2(s.t)+' s';
+    document.getElementById('roRpos').textContent='+'+f2(posA,1)+' m';
+    document.getElementById('roRneg').textContent='−'+f2(negA,1)+' m';
+    document.getElementById('roRx').textContent=f2(x(s.t),2)+' m';
+    document.getElementById('roRd').textContent=f2(posA+negA,1)+' m';}
+  p.redraw=draw;pt.redraw=draw;
+  const btn=document.getElementById('btnRev');
+  btn.addEventListener('click',()=>{s.playing=!s.playing;btn.textContent=s.playing?'❚❚ Pause':'▶ Play';});
+  p.cv.addEventListener('pointerdown',function(e){
+    const r=p.cv.getBoundingClientRect();s.playing=false;btn.textContent='▶ Play';
+    function setT(ev){s.t=clamp(p.IX(ev.clientX-r.left),0,T);draw();}
+    setT(e);
+    function mv(ev){setT(ev);}
+    function up(){window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);}
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);});
+  let last=performance.now();
+  function loop(now){const dt=Math.min(.06,(now-last)/1000);last=now;
+    if(s.playing&&!document.hidden){s.t+=dt*1.4;if(s.t>=T)s.t=0;draw();}
+    requestAnimationFrame(loop);}
+  requestAnimationFrame(loop);
+  draw();
+})();
+
+/* ================= WIDGET · MEAN VALUE ================= */
+(function(){
+  const cv=document.getElementById('cvMean');if(!cv)return;
+  const p=new Plot(cv,{x0:-.3,x1:13,y0:-1.2,y1:7.5});
+  const s={fn:'lift',b:6};
+  const FUN={lift:{f:x=>4+2*Math.sin(x),I:b=>4*b+2*(1-Math.cos(b)),floor:-1},
+             pure:{f:x=>3*Math.sin(x),I:b=>3*(1-Math.cos(b)),floor:-3.6}};
+  const sB=mkSlider(document.getElementById('ctl-b'),{label:'interval end b',min:.5,max:12.5,step:.1,value:s.b,fmt:x=>f2(x,1)});
+  sB.inp.addEventListener('input',()=>{s.b=sB.val;draw();});
+  $$('#meanFn button').forEach(b=>b.addEventListener('click',()=>{
+    $$('#meanFn button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    s.fn=b.dataset.f;draw();}));
+  function draw(){if(!p.w)return;const F=FUN[s.fn];
+    p.world={x0:-.3,x1:Math.max(s.b*1.12,3),y0:F.floor-1,y1:7.5};
+    p.clear();p.grid(1,1);p.labels(2,1,0);p.axisY0();
+    p.fillArea(F.f,0,s.b,{fill:'rgba(225,139,0,.28)'});
+    p.fn(F.f,{color:COL.ink,width:2.6});
+    const mean=F.I(s.b)/s.b;
+    p.rect(0,Math.min(0,mean),s.b,Math.abs(mean),{stroke:'rgba(14,143,126,.9)',width:2});
+    p.line(0,mean,s.b,mean,{color:COL.teal,width:2.4,dash:[7,5]});
+    p.wtext('f̄ = '+f2(mean,2),s.b*.5,mean+(mean>=0?.35:-.55),{color:COL.teal,align:'center',font:'bold 12px IBM Plex Sans'});
+    document.getElementById('roMint').textContent=f2(F.I(s.b),2);
+    document.getElementById('roMean').textContent=f2(mean,3);}
+  p.redraw=draw;draw();
+})();
+
+/* ================= RULEBOOKS ================= */
+const DIFF_RULES=[
+ {no:'R1',title:'Power rule',tag:'polynomials',
+  tex:'\\frac{d}{dx}\\,x^{n}=n\\,x^{n-1}',
+  sub:'Multiply by the exponent, drop the exponent by one. Constants and sums pass straight through: (cf)′ = cf′, (f+g)′ = f′+g′.',
+  prompt:'Differentiate \\(f(x)=4x^{3}-5x+7\\)',
+  steps:[
+   {t:'Identify each term and its exponent.',m:'f(x)=4x^{3}\\;-\\;5x\\;+\\;7'},
+   {t:'Power rule term-by-term; constants die.',m:'\\frac{d}{dx}4x^{3}=12x^{2},\\quad \\frac{d}{dx}(-5x)=-5,\\quad \\frac{d}{dx}(7)=0'},
+   {t:'Assemble the result.',m:"\\boxed{\\,f'(x)=12x^{2}-5\\,}"}]},
+ {no:'R2',title:'Trig derivatives',tag:'oscillations',
+  tex:'\\frac{d}{dx}\\sin x=\\cos x,\\qquad \\frac{d}{dx}\\cos x=-\\sin x',
+  sub:'Sine hands you cosine; cosine flips to minus sine. This pair is the heartbeat of waves and springs.',
+  prompt:'Differentiate \\(y=3\\sin x-2\\cos x\\)',
+  steps:[
+   {t:'Recall the two rules.',m:"(\\sin x)'=\\cos x,\\qquad(\\cos x)'=-\\sin x"},
+   {t:'Differentiate term-by-term — mind the double negative.',m:"y'=3\\cos x-2(-\\sin x)"},
+   {t:'Simplify.',m:"\\boxed{\\,y'=3\\cos x+2\\sin x\\,}"}]},
+ {no:'R3',title:'Exponentials & logs',tag:'growth · decay',
+  tex:'\\frac{d}{dx}\\,e^{x}=e^{x},\\qquad \\frac{d}{dx}\\ln x=\\frac{1}{x}',
+  sub:'eˣ equals its own rate of change — the mathematics of radioactive decay, RC circuits, air resistance.',
+  prompt:'Differentiate \\(f(x)=5e^{x}-2\\ln x\\)',
+  steps:[
+   {t:'eˣ survives untouched; ln x becomes 1/x.',m:'\\frac{d}{dx}5e^{x}=5e^{x},\\qquad \\frac{d}{dx}\\big(-2\\ln x\\big)=-\\frac{2}{x}'},
+   {t:'Combine.',m:"\\boxed{\\,f'(x)=5e^{x}-\\frac{2}{x}\\,}"}]},
+ {no:'R4',title:'Product rule',tag:'two moving parts',
+  tex:"(uv)'=u'v+uv'",
+  sub:'When two factors both change, each gets a turn being differentiated while the other holds still.',
+  prompt:'Differentiate \\(f(x)=x^{2}\\sin x\\)',
+  steps:[
+   {t:'Choose the parts.',m:'u=x^{2},\\qquad v=\\sin x'},
+   {t:'Differentiate each.',m:"u'=2x,\\qquad v'=\\cos x"},
+   {t:'Plug into the rule.',m:"f'=(2x)(\\sin x)+(x^{2})(\\cos x)"},
+   {t:'Result.',m:"\\boxed{\\,f'(x)=2x\\sin x+x^{2}\\cos x\\,}"}]},
+ {no:'R5',title:'Quotient rule',tag:'ratios',
+  tex:"\\left(\\frac{u}{v}\\right)'=\\frac{u'v-uv'}{v^{2}}",
+  sub:'Low d minus high d, over the square of what is below — the sign order matters.',
+  prompt:'Differentiate \\(f(x)=\\dfrac{x}{x+1}\\)',
+  steps:[
+   {t:'Choose the parts.',m:"u=x,\\qquad v=x+1"},
+   {t:'Differentiate each.',m:"u'=1,\\qquad v'=1"},
+   {t:'Plug into the rule.',m:"f'=\\frac{(1)(x+1)-(x)(1)}{(x+1)^{2}}"},
+   {t:'The x terms cancel beautifully.',m:"\\boxed{\\,f'(x)=\\frac{1}{(x+1)^{2}}\\,}"}]},
+ {no:'R6',title:'Chain rule',tag:'nested functions',
+  tex:"\\frac{d}{dx}\\,f\\big(g(x)\\big)=f'\\big(g(x)\\big)\\cdot g'(x)",
+  sub:'Differentiate the outer function keeping the inner intact, then multiply by the derivative of the inner. Physics runs on it: sin(ωt), e^(−t/RC)…',
+  prompt:'Differentiate \\(y=\\sin\\!\\left(x^{2}\\right)\\)',
+  steps:[
+   {t:'Name outer and inner.',m:'f(\\,\\cdot\\,)=\\sin(\\,\\cdot\\,),\\qquad g(x)=x^{2}'},
+   {t:'Derivatives of each layer.',m:"f'=\\cos,\\qquad g'=2x"},
+   {t:'Multiply outer′(inner) by inner′.',m:"\\boxed{\\,y'=\\cos\\!\\left(x^{2}\\right)\\cdot 2x\\,}"}]}
+];
+const INT_RULES=[
+ {no:'I1',title:'Power rule for ∫',tag:'mirror of R1',
+  tex:'\\int x^{n}\\,dx=\\frac{x^{n+1}}{n+1}+C\\quad(n\\neq -1)',
+  sub:'Raise the power, divide by the new power. The reverse of dropping the exponent.',
+  prompt:'Evaluate \\(\\displaystyle\\int(3x^{2}-4x)\\,dx\\)',
+  steps:[
+   {t:'Integrate term-by-term.',m:'\\int 3x^{2}dx=\\frac{3x^{3}}{3}=x^{3},\\qquad \\int -4x\\,dx=-2x^{2}'},
+   {t:'Add the family constant.',m:'\\boxed{\\,x^{3}-2x^{2}+C\\,}'}]},
+ {no:'I2',title:'Trig integrals',tag:'mirror of R2',
+  tex:'\\int\\cos x\\,dx=\\sin x+C,\\qquad \\int\\sin x\\,dx=-\\cos x+C',
+  sub:'Cosine integrates up to sine; sine pays a minus sign on the way.',
+  prompt:'Evaluate \\(\\displaystyle\\int(4\\cos x-\\sin x)\\,dx\\)',
+  steps:[
+   {t:'Apply both rules.',m:'\\int 4\\cos x\\,dx=4\\sin x,\\qquad \\int(-\\sin x)dx=\\cos x'},
+   {t:'Combine.',m:'\\boxed{\\,4\\sin x+\\cos x+C\\,}'}]},
+ {no:'I3',title:'Exponentials',tag:'mirror of R3',
+  tex:'\\int e^{x}\\,dx=e^{x}+C',
+  sub:'The self-replicating function again. Constant terms grow a factor of x: \\(\\int k\\,dx=kx+C\\).',
+  prompt:'Evaluate \\(\\displaystyle\\int(e^{x}+3)\\,dx\\)',
+  steps:[
+   {t:'eˣ integrates to itself; 3 becomes 3x.',m:'\\int e^{x}dx=e^{x},\\qquad \\int 3\\,dx=3x'},
+   {t:'Combine.',m:'\\boxed{\\,e^{x}+3x+C\\,}'}]},
+ {no:'I4',title:'Definite vs indefinite',tag:'FTC',
+  tex:'\\int_{a}^{b}f(x)\\,dx=F(b)-F(a)',
+  sub:'Indefinite integrals hand back a family of functions; definite integrals hand back a number — the net area, via the Fundamental Theorem.',
+  prompt:'Evaluate \\(\\displaystyle\\int_{0}^{2}3x^{2}\\,dx\\)',
+  steps:[
+   {t:'Find the antiderivative.',m:'F(x)=x^{3}'},
+   {t:'Evaluate at the bounds.',m:'F(2)-F(0)=8-0'},
+   {t:'Result.',m:'\\boxed{\\,8\\,}'}]},
+ {no:'I5',title:'The +C & initial conditions',tag:'physics chooses',
+  tex:'\\int a\\,dt=at+C,\\qquad v(0)=v_0\\Rightarrow C=v_0',
+  sub:'Derivatives erase constants, so every antiderivative ships with a free one. Physics spends that freedom on data: the launch speed, the starting height.',
+  prompt:'If \\(a(t)=2\\) and \\(v(0)=5\\), find \\(v(t)\\)',
+  steps:[
+   {t:'Integrate the acceleration.',m:'v(t)=\\int 2\\,dt=2t+C'},
+   {t:'Apply the initial condition.',m:'v(0)=C=5'},
+   {t:'The one true curve.',m:'\\boxed{\\,v(t)=2t+5\\,}'}]}
+];
+function buildRules(list,host){
+  list.forEach(function(rule){
+    const card=document.createElement('div');card.className='card rule hoverable reveal';
+    const top=document.createElement('div');top.className='rule-top';
+    top.innerHTML='<span class="rule-no">'+rule.no+' · '+rule.tag+'</span>';
+    const h=document.createElement('h4');h.textContent=rule.title;
+    const fmt=document.createElement('div');fmt.className='fmtex';texTo(fmt,rule.tex,true);
+    const sub=document.createElement('p');sub.className='sub';sub.innerHTML=rule.sub;
+    const tog=document.createElement('button');tog.className='btn small teal ex-toggle';tog.textContent='Worked example →';
+    const ex=document.createElement('div');ex.className='rule-ex';
+    const prompt=document.createElement('div');prompt.className='ex-prompt';prompt.innerHTML=rule.prompt;
+    const note=document.createElement('div');note.className='step-note';
+    const stm=document.createElement('div');stm.className='step-tex';
+    const nav=document.createElement('div');nav.className='step-nav';
+    nav.innerHTML='<button class="btn small s-prev">←</button><span class="step-count"></span><button class="btn small teal s-next">Next step →</button>';
+    let idx=0;
+    function render(){const st=rule.steps[idx];
+      note.textContent='Step '+(idx+1)+': '+st.t;texTo(stm,st.m,true);
+      nav.querySelector('.step-count').textContent=(idx+1)+' / '+rule.steps.length;
+      nav.querySelector('.s-prev').disabled=idx===0;
+      nav.querySelector('.s-next').textContent=idx===rule.steps.length-1?'Done ✓':'Next step →';
+      nav.querySelector('.s-next').disabled=idx===rule.steps.length-1;}
+    nav.querySelector('.s-prev').addEventListener('click',()=>{if(idx>0){idx--;render();}});
+    nav.querySelector('.s-next').addEventListener('click',()=>{if(idx<rule.steps.length-1){idx++;render();}});
+    tog.addEventListener('click',()=>{card.classList.add('open');render();});
+    ex.append(prompt,note,stm,nav);
+    card.append(top,h,fmt,sub,tog,ex);
+    host.appendChild(card);});
+}
+buildRules(DIFF_RULES,document.getElementById('ruleDiff'));
+buildRules(INT_RULES,document.getElementById('ruleInt'));
+
+/* ================= QUIZZES ================= */
+const QUIZZES={
+ 'quiz-d1':{mod:'d',qs:[
+  {q:'Shrink \\(\\Delta t\\) toward zero. The secant line through \\(P\\) and \\(Q\\) becomes…',
+   o:['A vertical line, since the points coincide','The tangent line at \\(P\\)','The horizontal axis','An ever-steeper secant, forever'],a:1,
+   ex:'As \\(Q\\to P\\) the secant pivots into the tangent at \\(P\\). Its slope \\(\\Delta x/\\Delta t\\) becomes the derivative — the instantaneous velocity.'},
+  {q:'For \\(x(t)=t^{2}\\), the average velocity on \\([2,\\,2.5]\\) is…',
+   o:['\\(2\\)','\\(4\\)','\\(4.5\\)','\\(6.25\\)'],a:2,
+   ex:'\\(v_{avg}=\\frac{x(2.5)-x(2)}{0.5}=\\frac{6.25-4}{0.5}=4.5\\). For a parabola this equals the instantaneous velocity at the midpoint — a nice coincidence of quadratics.'}]},
+ 'quiz-d2':{mod:'d',qs:[
+  {q:'\\(\\dfrac{d}{dx}\\,5x^{4}=\\) ?',o:['\\(5x^{3}\\)','\\(20x^{3}\\)','\\(4x^{4}\\)','\\(20x^{4}\\)'],a:1,
+   ex:'Power rule: bring the 4 down — \\(5\\cdot 4\\,x^{3}=20x^{3}\\).'},
+  {q:'Product rule: \\(\\dfrac{d}{dx}\\big[x\\,e^{x}\\big]=\\) ?',o:['\\(e^{x}\\)','\\(x\\,e^{x}\\)','\\(e^{x}+x\\,e^{x}\\)','\\(e^{x}-x\\,e^{x}\\)'],a:2,
+   ex:'\\((uv)^{\\prime}=u^{\\prime}v+uv^{\\prime}=(1)e^{x}+x e^{x}=e^{x}(1+x)\\).'},
+  {q:'Chain rule: \\(\\dfrac{d}{dx}\\sin(3x)=\\) ?',o:['\\(\\cos(3x)\\)','\\(3\\cos(3x)\\)','\\(-3\\cos(3x)\\)','\\(3\\sin^{2}(x)\\)'],a:1,
+   ex:'Outer derivative \\(\\cos(3x)\\) times inner derivative \\(3\\).'}]},
+ 'quiz-d3':{mod:'d',qs:[
+  {q:'If \\(x(t)=3t^{2}-2t\\), the velocity at \\(t=2\\) is…',o:['\\(4\\)','\\(8\\)','\\(10\\)','\\(12\\)'],a:2,
+   ex:'\\(v=dx/dt=6t-2\\), so \\(v(2)=12-2=10\\).'},
+  {q:'The range \\(R(\\theta)=\\frac{v_0^{2}\\sin 2\\theta}{g}\\) is maximized at…',o:['\\(30^{\\circ}\\)','\\(45^{\\circ}\\)','\\(60^{\\circ}\\)','\\(90^{\\circ}\\)'],a:1,
+   ex:'\\(dR/d\\theta\\propto\\cos 2\\theta=0\\Rightarrow\\theta=45^{\\circ}\\), and \\(d^{2}R/d\\theta^{2}<0\\) there confirms a maximum.'},
+  {q:'At a point where \\(f^{\\prime}=0\\) and \\(f^{\\prime\\prime}<0\\), the curve has…',o:['A local minimum','An inflection point','A local maximum','No special feature'],a:2,
+   ex:'Zero slope nominates the point; a negative second derivative means the slope is decreasing through zero — the graph crests: a maximum.'}]},
+ 'quiz-i1':{mod:'i',qs:[
+  {q:'Increasing \\(n\\) in a Riemann sum…',o:['Makes each rectangle taller','Approaches the exact area under the curve','Changes the curve itself','Only works for straight lines'],a:1,
+   ex:'Thinner rectangles fill the gaps under the curve; the sum converges to \\(\\int_a^b f\\,dx\\), no matter left/right/midpoint.'},
+  {q:'\\(\\displaystyle\\int_{0}^{2}2x\\,dx = \\) ?',o:['\\(2\\)','\\(4\\)','\\(8\\)','It depends on \\(n\\)'],a:1,
+   ex:'A triangle: base 2, height 4 → \\(\\tfrac12\\cdot2\\cdot4=4\\). The integral never depends on how you slice.'}]},
+ 'quiz-i2':{mod:'i',qs:[
+  {q:'\\(\\displaystyle\\int x^{3}\\,dx =\\) ?',o:['\\(3x^{2}+C\\)','\\(\\frac{x^{4}}{4}+C\\)','\\(\\frac{x^{3}}{3}+C\\)','\\(x^{4}+C\\)'],a:1,
+   ex:'Raise the power, divide by the new power: \\(x^{3+1}/(3+1)+C\\). (Option A is the derivative — the trap!)'},
+  {q:'Why do indefinite integrals carry \\(+C\\)?',o:['Constants make answers bigger','Derivatives erase constants, so any \\(C\\) works until data pins it down','Only trig functions need it','It is a rounding error'],a:1,
+   ex:'Every \\(F(x)+C\\) differentiates back to \\(f(x)\\). An initial condition like \\(v(0)=v_0\\) selects the one physically correct member of the family.'},
+  {q:'\\(\\displaystyle\\int_{0}^{\\pi}\\sin x\\,dx =\\) ?',o:['\\(0\\)','\\(1\\)','\\(2\\)','\\(\\pi\\)'],a:2,
+   ex:'Antiderivative \\(-\\cos x\\): \\(-\\cos\\pi-(-\\cos 0)=1+1=2\\).'}]},
+ 'quiz-i3':{mod:'i',qs:[
+  {q:'The area under an \\(F\\)-vs-\\(x\\) graph is…',o:['Power','Work','Impulse','Acceleration'],a:1,
+   ex:'\\(W=\\int F\\,dx\\). The area under \\(F\\)-vs-\\(t\\), by contrast, is impulse \\(J=\\Delta p\\).'},
+  {q:'An object moves at constant \\(v=4\\) m/s for 3 s. Its displacement is…',o:['\\(\\tfrac{4}{3}\\) m','\\(7\\) m','\\(12\\) m','Impossible without \\(a\\)'],a:2,
+   ex:'Rectangle area \\(4\\times3=12\\) m. Constant velocity needs no calculus — which is exactly what integration generalizes.'},
+  {q:'The average value of \\(f(x)=x\\) on \\([0,4]\\) is…',o:['\\(1\\)','\\(2\\)','\\(4\\)','\\(8\\)'],a:1,
+   ex:'\\(\\bar f=\\frac{1}{4}\\int_0^4 x\\,dx=\\frac{8}{4}=2\\) — the height of the flat rectangle with equal area.'}]}
+};
+const scores={d:{got:0,tot:0},i:{got:0,tot:0}};
+function updateScoreChip(mod){const el=mod==='d'?document.getElementById('sc-d'):document.getElementById('sc-i');
+  el.textContent='Checkpoints · '+scores[mod].got+' / '+scores[mod].tot;
+  if(hasGsap)gsap.fromTo(el,{scale:1.12},{scale:1,duration:.35,ease:'back.out(3)'});}
+function buildQuiz(id){const cfg=QUIZZES[id],host=document.getElementById(id);if(!host)return;
+  scores[cfg.mod].tot+=cfg.qs.length;
+  const quiz=document.createElement('div');quiz.className='quiz reveal';
+  quiz.innerHTML='<div class="q-head"><span class="q-flag">▣ CHECKPOINT</span><span class="q-score">0 / '+cfg.qs.length+'</span></div>';
+  let got=0;
+  cfg.qs.forEach(function(q,i){
+    const card=document.createElement('div');card.className='qcard';
+    const pr=document.createElement('div');pr.className='qprompt';pr.innerHTML='<b>Q'+(i+1)+'.</b> '+q.q;
+    const opts=document.createElement('div');opts.className='qopts';
+    q.o.forEach(function(opt,oi){
+      const b=document.createElement('button');b.className='qopt';b.dataset.l='ABCD'[oi];b.innerHTML=opt;
+      b.addEventListener('click',function(){
+        if(card.classList.contains('answered'))return;
+        card.classList.add('answered');
+        const btns=[].slice.call(opts.children);
+        btns[q.a].classList.add('is-correct');
+        if(oi===q.a){got++;scores[cfg.mod].got++;updateScoreChip(cfg.mod);}
+        else b.classList.add('is-wrong');
+        quiz.querySelector('.q-score').textContent=got+' / '+cfg.qs.length;
+        exBox.classList.add('show');
+        if(hasGsap)gsap.from(exBox,{opacity:0,y:-6,duration:.4});});
+      opts.appendChild(b);});
+    const exBox=document.createElement('div');exBox.className='qex';exBox.setAttribute('aria-live','polite');
+    exBox.innerHTML='<b>Why:</b> '+q.ex;
+    card.append(pr,opts,exBox);quiz.appendChild(card);});
+  host.appendChild(quiz);}
+Object.keys(QUIZZES).forEach(buildQuiz);
+
+/* ================= TABS, CHIPS, REVEAL ================= */
+const CHIP_CFG={
+  diff:[['sec-d1','1 · The feel'],['sec-d2','2 · Rulebook'],['sec-d3','3 · Physics lab']],
+  int:[['sec-i1','1 · The feel'],['sec-i2','2 · Rulebook'],['sec-i3','3 · Physics lab']]};
+let chipObserver=null;
+function buildChips(mod){const host=document.getElementById('chips');host.innerHTML='';
+  CHIP_CFG[mod].forEach(function(pair){
+    const id=pair[0],label=pair[1];
+    const b=document.createElement('button');b.className='chip';b.textContent=label;
+    b.addEventListener('click',()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}));
+    host.appendChild(b);});
+  if(chipObserver)chipObserver.disconnect();
+  chipObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){if(e.isIntersecting){
+      $$('#chips .chip').forEach(function(c,i){c.classList.toggle('active',CHIP_CFG[mod][i][0]===e.target.id);});}});
+  },{rootMargin:'-30% 0px -55% 0px'});
+  CHIP_CFG[mod].forEach(function(pair){chipObserver.observe(document.getElementById(pair[0]));});}
+function showMod(mod,scroll){
+  $$('.tab').forEach(function(t){const on=t.dataset.mod===mod;t.classList.toggle('active',on);t.setAttribute('aria-selected',on);});
+  $$('.module').forEach(m=>m.classList.remove('on'));
+  const panel=document.getElementById('panel-'+mod);panel.classList.add('on');
+  buildChips(mod);
+  requestAnimationFrame(function(){resizeAll();
+    if(hasGsap)gsap.fromTo(panel,{opacity:0,y:16},{opacity:1,y:0,duration:.45,ease:'power2.out'});
+    if(scroll){const y=panel.getBoundingClientRect().top+window.scrollY-70;
+      window.scrollTo({top:y,behavior:'smooth'});}});}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>showMod(t.dataset.mod,true)));
+$$('[data-goto]').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.goto,true)));
+buildChips('diff');
+
+/* reveal on scroll */
+(function(){const io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{threshold:.12});
+  $$('.reveal').forEach(el=>io.observe(el));})();
+
+/* typeset all static math, then polish */
+texInline(document.body);
+if(hasGsap)gsap.from('.mast-grid > div',{opacity:0,y:26,duration:.9,stagger:.15,ease:'power3.out'});
+</script>
+</body>
+</html>

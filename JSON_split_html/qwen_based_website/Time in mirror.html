@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Module 01 · Time in a Mirror — Optics</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+<!-- KaTeX 0.16.9 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<!-- Lucide 0.436.0 -->
+<script src="https://unpkg.com/lucide@0.436.0/dist/umd/lucide.min.js"></script>
+
+<!-- GSAP 3.12.5 + ScrollTrigger -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+<!-- canvas-confetti for the drill -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+/* ============================================================
+   BASE TOKENS — copied verbatim from optics-base.html
+   ============================================================ */
+:root{
+  --bg:#0B0D10;--bg-elev:#14181D;--bg-card:#1A1F26;--bg-card-2:#212730;
+  --fg:#F2F5F8;--fg-dim:#9AA6B2;--fg-mute:#6B7684;--line:#2A313B;
+  --accent:#FFC531;--accent-2:#4C9AFF;--success:#3DDC84;--danger:#FF6B6B;
+  --radius:14px;--radius-sm:8px;
+  --shadow-1:0 4px 14px rgba(0,0,0,.35);--shadow-2:0 12px 32px rgba(0,0,0,.45);
+  --ff-ui:'Inter',system-ui,sans-serif;--ff-prose:'Lora',Georgia,serif;
+  --ff-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --rail-w:240px;--header-h:64px;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#F7F9FC;--bg-elev:#FFFFFF;--bg-card:#FFFFFF;--bg-card-2:#EEF2F7;
+  --fg:#0E1420;--fg-dim:#4A5566;--fg-mute:#7A8594;--line:#DDE3EC;
+  --shadow-1:0 4px 14px rgba(14,20,32,.08);--shadow-2:0 12px 32px rgba(14,20,32,.12);
+}}
+[data-theme="light"]{
+  --bg:#F7F9FC;--bg-elev:#FFFFFF;--bg-card:#FFFFFF;--bg-card-2:#EEF2F7;
+  --fg:#0E1420;--fg-dim:#4A5566;--fg-mute:#7A8594;--line:#DDE3EC;
+  --shadow-1:0 4px 14px rgba(14,20,32,.08);--shadow-2:0 12px 32px rgba(14,20,32,.12);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--ff-ui);
+  font-size:clamp(15px,1.02vw,17px);line-height:1.6;
+  -webkit-font-smoothing:antialiased;min-height:100vh}
+h1,h2,h3,h4{font-family:var(--ff-ui);font-weight:700;letter-spacing:-0.01em;line-height:1.2;margin:0 0 .6em}
+h1{font-size:clamp(28px,4.2vw,44px);font-weight:800}
+h2{font-size:clamp(22px,2.6vw,30px)}
+h3{font-size:clamp(17px,1.6vw,20px)}
+p{font-family:var(--ff-prose);color:var(--fg);margin:0 0 1em}
+a{color:var(--accent-2);text-decoration:none}
+a:hover{text-decoration:underline}
+code,kbd{font-family:var(--ff-mono);font-size:.9em;background:var(--bg-elev);padding:2px 6px;border-radius:6px;border:1px solid var(--line)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* Shell */
+.site-header{position:sticky;top:0;z-index:50;height:var(--header-h);
+  background:color-mix(in oklab,var(--bg-elev) 92%,transparent);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;
+  padding:0 clamp(16px,3vw,32px);gap:16px}
+.site-header .title{font-weight:700;font-size:15px;letter-spacing:.02em;
+  text-transform:uppercase;color:var(--fg-dim)}
+.site-header .title strong{color:var(--fg);font-weight:800}
+.site-header .progress{flex:1;height:6px;border-radius:999px;background:var(--bg-card-2);
+  overflow:hidden;max-width:360px}
+.site-header .progress > span{display:block;height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  width:var(--progress,0%);transition:width .4s ease}
+.theme-toggle{margin-left:auto;background:var(--bg-card);border:1px solid var(--line);
+  color:var(--fg);width:40px;height:40px;border-radius:10px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle:hover{background:var(--bg-card-2)}
+
+.shell{display:grid;grid-template-columns:var(--rail-w) 1fr;gap:0;min-height:calc(100vh - var(--header-h))}
+.module-rail{position:sticky;top:var(--header-h);align-self:start;height:calc(100vh - var(--header-h));
+  overflow-y:auto;padding:24px 16px 24px 24px;border-right:1px solid var(--line);background:var(--bg)}
+.module-rail h4{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--fg-mute);margin:0 0 12px;font-weight:700}
+.module-rail ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.module-rail a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  color:var(--fg-dim);font-weight:500;font-size:14px;border:1px solid transparent}
+.module-rail a:hover{background:var(--bg-elev);color:var(--fg);text-decoration:none}
+.module-rail a.active{background:var(--bg-card);color:var(--fg);border-color:var(--line);
+  box-shadow:inset 3px 0 0 var(--accent)}
+.module-rail a .dot{width:6px;height:6px;border-radius:50%;background:var(--fg-mute)}
+.module-rail a.active .dot{background:var(--accent)}
+main{padding:clamp(24px,4vw,56px);max-width:1100px;margin:0 auto;width:100%}
+main section{scroll-margin-top:calc(var(--header-h) + 16px);padding:clamp(24px,3vw,40px) 0}
+main section + section{border-top:1px dashed var(--line)}
+.site-footer{border-top:1px solid var(--line);padding:24px clamp(16px,3vw,32px);
+  display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--fg-dim);font-size:14px}
+.site-footer a{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
+  background:var(--bg-card);border:1px solid var(--line);color:var(--fg);font-weight:600}
+.site-footer a:hover{background:var(--bg-card-2);text-decoration:none}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .module-rail{position:relative;top:0;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:12px 16px}
+  .module-rail ol{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  .module-rail h4{display:none}
+  .module-rail a{white-space:nowrap;font-size:13px;padding:8px 12px}
+}
+
+/* Components */
+.concept-card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:clamp(18px,2vw,26px);box-shadow:var(--shadow-1)}
+.concept-card h3{color:var(--fg)}
+.concept-card .eyebrow{font-family:var(--ff-ui);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:8px;display:inline-block}
+.qa-card{perspective:1200px;height:180px;cursor:pointer}
+.qa-card .flipper{position:relative;width:100%;height:100%;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.qa-card.flipped .flipper{transform:rotateY(180deg)}
+.qa-card .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:var(--radius);border:1px solid var(--line);padding:18px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  background:var(--bg-card);box-shadow:var(--shadow-1)}
+.qa-card .face.back{transform:rotateY(180deg);
+  background:linear-gradient(135deg,var(--bg-card),var(--bg-card-2));
+  border-color:color-mix(in oklab,var(--accent) 40%,var(--line))}
+.qa-card .face .tag{position:absolute;top:10px;left:12px;font-size:10px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--fg-mute)}
+.qa-card .face.back .tag{color:var(--accent)}
+.qa-card .answer{font-family:var(--ff-mono);font-size:22px;font-weight:700;color:var(--success)}
+.qa-card .work{font-size:12px;color:var(--fg-dim);margin-top:8px;font-family:var(--ff-mono)}
+.formula-strip{display:inline-flex;align-items:center;gap:14px;padding:14px 22px;
+  background:var(--bg-card);border:1px solid var(--line);border-left:4px solid var(--accent);
+  border-radius:var(--radius);font-family:var(--ff-mono);
+  transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;box-shadow:var(--shadow-1)}
+.formula-strip:hover{transform:translateY(-2px);
+  box-shadow:0 0 0 1px var(--accent),0 10px 24px rgba(255,197,49,.18);border-color:var(--accent)}
+.formula-strip .katex{font-size:1.15em}
+.trap-callout{position:relative;background:color-mix(in oklab,var(--danger) 10%,var(--bg-card));
+  border:1px solid color-mix(in oklab,var(--danger) 40%,var(--line));
+  border-left:4px solid var(--danger);border-radius:var(--radius);
+  padding:16px 18px 16px 52px;color:var(--fg)}
+.trap-callout::before{content:"⚠";position:absolute;left:16px;top:14px;width:28px;height:28px;
+  border-radius:8px;background:var(--danger);color:#1a0000;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:16px}
+.trap-callout strong{color:var(--danger)}
+.info-callout{background:color-mix(in oklab,var(--accent-2) 10%,var(--bg-card));
+  border:1px solid color-mix(in oklab,var(--accent-2) 40%,var(--line));
+  border-left:4px solid var(--accent-2);border-radius:var(--radius);
+  padding:16px 18px 16px 52px;position:relative}
+.info-callout::before{content:"i";position:absolute;left:16px;top:14px;width:28px;height:28px;
+  border-radius:8px;background:var(--accent-2);color:#001a33;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:14px;font-style:italic;font-family:var(--ff-prose)}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media (max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.grid-2,.grid-4{grid-template-columns:1fr}}
+.reveal{opacity:0;transform:translateY(24px)}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1 !important;transform:none !important;transition:none !important}
+  .qa-card .flipper{transition:none !important}
+  .formula-strip{transition:none !important}
+}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
+  background:var(--bg-card);border:1px solid var(--line);color:var(--fg);
+  font-weight:600;font-size:14px;cursor:pointer;font-family:var(--ff-ui)}
+.btn:hover{background:var(--bg-card-2)}
+.btn.primary{background:var(--accent);color:#1a1400;border-color:var(--accent)}
+.btn.primary:hover{background:#ffd35a}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;
+  border-radius:999px;background:var(--bg-card-2);outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;
+  border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:var(--shadow-1)}
+input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:2px solid var(--bg)}
+.switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.switch .track{width:42px;height:24px;border-radius:999px;background:var(--bg-card-2);
+  border:1px solid var(--line);position:relative;transition:background .2s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:var(--fg-dim);transition:transform .2s,background .2s}
+.switch input:checked + .track{background:color-mix(in oklab,var(--accent) 30%,var(--bg-card-2));border-color:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(18px);background:var(--accent)}
+.switch input:focus-visible + .track{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ============================================================
+   MODULE 01 — SPECIFIC STYLES
+   ============================================================ */
+#hero{
+  min-height: calc(100vh - var(--header-h));
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding: 40px 20px;
+  position:relative;overflow:hidden;
+}
+#hero::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(600px 300px at 20% 30%, color-mix(in oklab, var(--accent-2) 15%, transparent), transparent 60%),
+    radial-gradient(500px 260px at 80% 70%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 60%);
+  pointer-events:none;z-index:0;
+}
+#hero > *{position:relative;z-index:1}
+#hero h1 .letter{display:inline-block;opacity:0}
+#hero .sub{color:var(--fg-dim);font-size:clamp(15px,1.3vw,18px);max-width:640px;margin:0 auto 28px}
+.hero-clocks{display:flex;align-items:center;gap:clamp(16px,3vw,40px);margin-top:24px;flex-wrap:wrap;justify-content:center}
+.hero-clocks .clock-wrap{width:clamp(180px,22vw,240px);aspect-ratio:1;position:relative}
+.hero-clocks .mirror-bar{
+  width:6px;height:clamp(180px,22vw,240px);
+  background:linear-gradient(180deg, transparent, var(--accent-2), var(--accent), var(--accent-2), transparent);
+  border-radius:4px;
+  box-shadow:0 0 24px color-mix(in oklab, var(--accent-2) 50%, transparent);
+  clip-path: inset(100% 0 0 0);
+}
+.hero-clocks .label{
+  position:absolute;bottom:-28px;left:0;right:0;
+  font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fg-dim);
+}
+
+.clock-svg{width:100%;height:100%;display:block}
+.digital{
+  font-family:var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(18px, 1.8vw, 24px);
+  font-weight:700;
+  color:var(--fg);
+  background:var(--bg-elev);
+  border:1px solid var(--line);
+  padding:8px 14px;border-radius:10px;
+  display:inline-block;margin-top:10px;
+  letter-spacing:.05em;
+}
+
+/* Playground */
+.playground{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:clamp(18px,2.5vw,32px);box-shadow:var(--shadow-2);
+}
+.playground .clocks-row{
+  display:grid;grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: clamp(12px, 2vw, 24px);align-items:center;justify-items:center;
+  margin-bottom:24px;
+}
+.playground .clock-wrap{width:clamp(140px,18vw,200px);aspect-ratio:1}
+.playground .mirror-bar{width:5px;height:clamp(140px,18vw,200px);
+  background:linear-gradient(180deg,transparent,var(--accent-2),var(--accent),var(--accent-2),transparent);
+  border-radius:3px;box-shadow:0 0 16px color-mix(in oklab,var(--accent-2) 40%,transparent)}
+.playground .clock-caption{
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fg-dim);text-align:center;margin-bottom:8px;
+}
+.playground .readouts{display:flex;justify-content:space-around;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.playground .controls{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  padding-top:20px;border-top:1px solid var(--line);
+}
+.control-group label{
+  display:block;font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--fg-dim);margin-bottom:8px;
+}
+.control-group .val{font-family:var(--ff-mono);color:var(--accent);font-weight:700}
+@media (max-width:800px){
+  .playground .clocks-row{grid-template-columns:1fr;gap:20px}
+  .playground .mirror-bar{width:60%;height:5px;background:linear-gradient(90deg,transparent,var(--accent-2),var(--accent),var(--accent-2),transparent)}
+  .playground .controls{grid-template-columns:1fr}
+}
+
+/* Rule section — column subtraction */
+.subtraction{
+  display:grid;grid-template-columns:auto auto;gap:2px 18px;
+  font-family:var(--ff-mono);font-size:clamp(18px,2vw,24px);
+  font-variant-numeric:tabular-nums;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 28px;box-shadow:var(--shadow-1);
+  width:fit-content;margin:20px 0;
+}
+.subtraction .row{display:contents}
+.subtraction .cell{text-align:right;min-width:2.2ch}
+.subtraction .lbl{text-align:left;color:var(--fg-dim);font-size:.7em;align-self:center}
+.subtraction .op{color:var(--fg-mute)}
+.subtraction .res{color:var(--success);font-weight:700}
+.subtraction .line{grid-column:1 / -1;height:2px;background:var(--line);margin:4px 0}
+.subtraction .borrow{color:var(--accent);font-size:.65em;align-self:end}
+
+/* Drill */
+.drill{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:clamp(18px,2.5vw,32px);box-shadow:var(--shadow-1);
+}
+.drill .q{
+  font-family:var(--ff-mono);font-size:clamp(28px,3.4vw,40px);font-weight:800;
+  color:var(--accent);text-align:center;margin:12px 0 20px;letter-spacing:.03em;
+}
+.drill .timer{
+  height:6px;border-radius:999px;background:var(--bg-card-2);overflow:hidden;margin-bottom:18px;
+}
+.drill .timer > span{display:block;height:100%;background:linear-gradient(90deg,var(--success),var(--accent),var(--danger));
+  width:100%;transition:width .2s linear}
+.drill .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.drill .choice{
+  padding:14px;border-radius:12px;background:var(--bg-elev);
+  border:1px solid var(--line);color:var(--fg);font-family:var(--ff-mono);
+  font-size:18px;font-weight:700;cursor:pointer;text-align:center;
+  transition:transform .15s, border-color .15s, background .15s;
+}
+.drill .choice:hover{border-color:var(--accent);transform:translateY(-1px)}
+.drill .choice.correct{background:color-mix(in oklab,var(--success) 20%,var(--bg-elev));border-color:var(--success);color:var(--success)}
+.drill .choice.wrong{background:color-mix(in oklab,var(--danger) 20%,var(--bg-elev));border-color:var(--danger);color:var(--danger)}
+.drill .choice:disabled{cursor:default;opacity:.85}
+.drill .score{font-family:var(--ff-mono);font-size:14px;color:var(--fg-dim);text-align:center;margin-top:14px}
+.drill .score b{color:var(--accent)}
+
+/* Horizontal mirror card */
+.hmirror-card{
+  background:linear-gradient(135deg, color-mix(in oklab,var(--accent-2) 12%,var(--bg-card)), var(--bg-card));
+  border:1px solid color-mix(in oklab,var(--accent-2) 40%,var(--line));
+  border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-1);
+}
+.hmirror-card h3{color:var(--accent-2)}
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+<header class="site-header" role="banner">
+  <div class="title"><strong>Optics</strong> · Module 01 · Time in a Mirror</div>
+  <div class="progress" role="progressbar" aria-label="Module progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="--progress:0%"></div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+    <i data-lucide="moon" width="18" height="18"></i>
+  </button>
+</header>
+
+<div class="shell">
+
+  <!-- =========================================================
+       LEFT RAIL
+       ========================================================= -->
+  <nav class="module-rail" aria-label="Module sections">
+    <h4>Module 01</h4>
+    <ol>
+      <li><a href="#hero" class="active"><span class="dot"></span>Overview</a></li>
+      <li><a href="#rule"><span class="dot"></span>The Rule</a></li>
+      <li><a href="#playground"><span class="dot"></span>Twin-Clock Lab</a></li>
+      <li><a href="#drill"><span class="dot"></span>Worked Cases</a></li>
+      <li><a href="#rapid"><span class="dot"></span>Rapid Fire</a></li>
+      <li><a href="#extension"><span class="dot"></span>Horizontal Mirror</a></li>
+    </ol>
+  </nav>
+
+  <!-- =========================================================
+       MAIN
+       ========================================================= -->
+  <main id="main" role="main">
+
+    <!-- ——— HERO ——— -->
+    <section id="hero">
+      <h1 id="heroTitle">Time in a Mirror</h1>
+      <p class="sub">A vertical plane mirror beside a clock <em>reverses</em> the apparent time.
+         Learn the one-line rule, then watch it live on an analog clock.</p>
+
+      <div class="hero-clocks" aria-hidden="true">
+        <div class="clock-wrap">
+          <svg class="clock-svg" id="heroClockL" viewBox="0 0 200 200"></svg>
+          <div class="label">Actual · 5:00</div>
+        </div>
+        <div class="mirror-bar" id="heroMirrorBar"></div>
+        <div class="clock-wrap">
+          <svg class="clock-svg" id="heroClockR" viewBox="0 0 200 200"></svg>
+          <div class="label">Mirror · 7:00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ——— RULE ——— -->
+    <section id="rule">
+      <h2>The master rule</h2>
+      <p>A vertical mirror swaps left and right. On a 12-hour dial, that is equivalent to a reflection about the <strong>12–6 line</strong>,
+         which is the same as subtracting the time from 12:00:00. To keep the arithmetic clean (especially when seconds are non-zero)
+         we write it as a column subtraction from $11\!:\!59\!:\!60$:</p>
+
+      <div class="formula-strip reveal">
+        <span>$$T_{\text{mirror}} \;=\; 11\!:\!59\!:\!60 \;-\; T_{\text{actual}}$$</span>
+      </div>
+
+      <p style="margin-top:20px">Worked digit-by-digit for $5\!:\!53\!:\!00 \to 6\!:\!07\!:\!00$:</p>
+
+      <div class="subtraction reveal" role="math" aria-label="11:59:60 minus 5:53:00 equals 6:07:00">
+        <div class="row"><span class="lbl">borrow</span><span class="borrow">11 · 59 · 60</span></div>
+        <div class="row"><span class="lbl">minus</span><span class="op">− 5 · 53 · 00</span></div>
+        <div class="row"><span class="line"></span></div>
+        <div class="row"><span class="lbl">equals</span><span class="res">6 · 07 · 00</span></div>
+      </div>
+
+      <p><strong>Shortcut.</strong> If minutes and seconds are both zero, just do $12 - h$.
+         So $5\!:\!00\!:\!00 \to 7\!:\!00\!:\!00$ in one step.</p>
+
+      <div class="trap-callout reveal">
+        <strong>Common trap.</strong> If seconds $\neq 0$ you must <em>borrow twice</em> — once from minutes, once from hours.
+        Students who do $12\!:\!00\!:\!00 - T$ without borrowing get case (iii) below wrong.
+        Always rewrite as $11\!:\!59\!:\!60 - T$.
+      </div>
+    </section>
+
+    <!-- ——— PLAYGROUND ——— -->
+    <section id="playground">
+      <h2>Twin-Clock Lab</h2>
+      <p>Drag the sliders. The left clock shows the actual time, the middle face shows what you literally see in the mirror
+         (hands flipped, numerals normal), and the right face shows the <em>readable interpretation</em> — the time the rule predicts.</p>
+
+      <div class="playground reveal">
+        <div class="clocks-row">
+          <div>
+            <div class="clock-caption">Actual</div>
+            <div class="clock-wrap"><svg class="clock-svg" id="clkActual" viewBox="0 0 200 200"></svg></div>
+          </div>
+          <div class="mirror-bar" aria-hidden="true"></div>
+          <div>
+            <div class="clock-caption">Mirror view</div>
+            <div class="clock-wrap"><svg class="clock-svg" id="clkMirror" viewBox="0 0 200 200"></svg></div>
+          </div>
+          <div class="mirror-bar" aria-hidden="true" style="opacity:.4"></div>
+          <div>
+            <div class="clock-caption">Readable equivalent</div>
+            <div class="clock-wrap"><svg class="clock-svg" id="clkEquiv" viewBox="0 0 200 200"></svg></div>
+          </div>
+        </div>
+
+        <div class="readouts">
+          <div class="digital" id="digActual">05:00:00</div>
+          <div class="digital" id="digMirror" style="color:var(--accent-2)">— mirror —</div>
+          <div class="digital" id="digEquiv" style="color:var(--success)">07:00:00</div>
+        </div>
+
+        <div class="controls">
+          <div class="control-group">
+            <label for="rngH">Hour · <span class="val" id="valH">5</span></label>
+            <input type="range" id="rngH" min="1" max="12" value="5" aria-label="Hour">
+          </div>
+          <div class="control-group">
+            <label for="rngM">Minute · <span class="val" id="valM">0</span></label>
+            <input type="range" id="rngM" min="0" max="59" value="0" aria-label="Minute">
+          </div>
+          <div class="control-group">
+            <label for="rngS">Second · <span class="val" id="valS">0</span></label>
+            <input type="range" id="rngS" min="0" max="59" value="0" aria-label="Second">
+          </div>
+        </div>
+
+        <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <label class="switch">
+            <input type="checkbox" id="liveToggle">
+            <span class="track"></span>
+            <span>Live clock (drive from system time)</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="sweepToggle" checked>
+            <span class="track"></span>
+            <span>Sweep second hand</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ——— DRILL (4 worked cases) ——— -->
+    <section id="drill">
+      <h2>Four worked cases</h2>
+      <p>Click or press Enter / Space on each card to flip.</p>
+      <div class="grid-4">
+        <div class="qa-card reveal" tabindex="0" role="button" aria-label="Case (i): 4:00:00">
+          <div class="flipper">
+            <div class="face front"><span class="tag">(i) Actual</span><div style="font-family:var(--ff-mono);font-size:26px;font-weight:800">4:00:00</div></div>
+            <div class="face back"><span class="tag">Mirror</span><div class="answer">8:00:00</div><div class="work">12 − 4 = 8</div></div>
+          </div>
+        </div>
+        <div class="qa-card reveal" tabindex="0" role="button" aria-label="Case (ii): 4:32:00">
+          <div class="flipper">
+            <div class="face front"><span class="tag">(ii) Actual</span><div style="font-family:var(--ff-mono);font-size:26px;font-weight:800">4:32:00</div></div>
+            <div class="face back"><span class="tag">Mirror</span><div class="answer">7:28:00</div><div class="work">11:59:60 − 4:32:00</div></div>
+          </div>
+        </div>
+        <div class="qa-card reveal" tabindex="0" role="button" aria-label="Case (iii): 1:25:45">
+          <div class="flipper">
+            <div class="face front"><span class="tag">(iii) Actual</span><div style="font-family:var(--ff-mono);font-size:26px;font-weight:800">1:25:45</div></div>
+            <div class="face back"><span class="tag">Mirror</span><div class="answer">10:34:15</div><div class="work">11:59:60 − 1:25:45</div></div>
+          </div>
+        </div>
+        <div class="qa-card reveal" tabindex="0" role="button" aria-label="Case (iv): 2:00:40">
+          <div class="flipper">
+            <div class="face front"><span class="tag">(iv) Actual</span><div style="font-family:var(--ff-mono);font-size:26px;font-weight:800">2:00:40</div></div>
+            <div class="face back"><span class="tag">Mirror</span><div class="answer">9:59:20</div><div class="work">11:59:60 − 2:00:40</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ——— RAPID FIRE ——— -->
+    <section id="rapid">
+      <h2>Rapid-fire drill</h2>
+      <p>Six questions, 15 seconds each. Score $\ge 5/6$ for confetti. 🎉</p>
+
+      <div class="drill reveal" id="rapidDrill">
+        <div class="score" id="drillStatus">Press <b>Start</b> to begin.</div>
+        <div class="timer"><span id="drillTimerBar"></span></div>
+        <div class="q" id="drillQ">— : — : —</div>
+        <div class="choices" id="drillChoices"></div>
+        <div style="text-align:center;margin-top:18px">
+          <button class="btn primary" id="drillStart"><i data-lucide="play" width="16" height="16"></i> Start drill</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ——— EXTENSION ——— -->
+    <section id="extension">
+      <h2>Extension · Horizontal mirror</h2>
+      <p>What if the mirror is placed <strong>horizontally above</strong> the clock instead?
+         Now top and bottom swap — a reflection about the <strong>3–9 line</strong>.</p>
+
+      <div class="hmirror-card reveal">
+        <h3>Horizontal-mirror rule</h3>
+        <div class="formula-strip" style="margin-top:10px">
+          <span>$$T_{\text{h-mirror}} \;=\; 6\!:\!00\!:\!00 \;-\; T_{\text{actual}} \pmod{12}$$</span>
+        </div>
+        <p style="margin-top:14px">Example: $2\!:\!00\!:\!00$ above a horizontal mirror reads $4\!:\!00\!:\!00$.
+           $8\!:\!30\!:\!00$ reads $5\!:\!30\!:\!00$ (since $6 - 8\!:\!30 \equiv 9\!:\!30$ mod 12 → actually $5\!:\!30$ when interpreted as the 12-hour reading — verify on your twin-clock by flipping it top-to-bottom).</p>
+        <div class="info-callout" style="margin-top:14px">
+          The vertical-mirror rule uses the 12–6 axis; the horizontal-mirror rule uses the 3–9 axis.
+          A mirror at <em>any</em> angle $\alpha$ through the centre reflects the dial by $2\alpha$.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer class="site-footer" role="contentinfo">
+  <a href="optics-base.html" aria-label="Previous: Base"><i data-lucide="arrow-left" width="16" height="16"></i> Base</a>
+  <span>Module 01 · Time in a Mirror</span>
+  <a href="#" aria-label="Next module">Next <i data-lucide="arrow-right" width="16" height="16"></i></a>
+</footer>
+
+<!-- =========================================================
+     JS — single module-scoped IIFE, one global: OpticsBase
+     ========================================================= -->
+<script>
+window.OpticsBase = (function(){
+  'use strict';
+
+  /* ---------- Theme ---------- */
+  const root = document.documentElement;
+  const stored = localStorage.getItem('optics-theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  const toggleBtn = document.getElementById('themeToggle');
+  if (toggleBtn){
+    toggleBtn.addEventListener('click', () => {
+      const cur = root.getAttribute('data-theme')
+               || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      const next = cur === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('optics-theme', next);
+    });
+  }
+
+  /* ---------- Icons ---------- */
+  if (window.lucide) window.lucide.createIcons();
+
+  /* ---------- KaTeX ---------- */
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.renderMathInElement){
+      window.renderMathInElement(document.body, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$',  right: '$',  display: false}
+        ],
+        throwOnError: false
+      });
+    }
+  });
+
+  /* ---------- Progress bar ---------- */
+  const progressBar = document.querySelector('.site-header .progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    if (progressBar){
+      progressBar.style.setProperty('--progress', pct + '%');
+      progressBar.setAttribute('aria-valuenow', Math.round(pct));
+    }
+  }, {passive:true});
+
+  /* ---------- Rail active link ---------- */
+  const railLinks = document.querySelectorAll('.module-rail a');
+  const sections = Array.from(railLinks).map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  if (railLinks.length && 'IntersectionObserver' in window){
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting){
+          railLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+        }
+      });
+    }, {rootMargin: '-40% 0px -55% 0px', threshold: 0});
+    sections.forEach(s => io.observe(s));
+  }
+
+  /* ---------- QA flip cards ---------- */
+  document.querySelectorAll('.qa-card').forEach(card => {
+    const flip = () => card.classList.toggle('flipped');
+    card.addEventListener('click', flip);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); }
+    });
+  });
+
+  /* ---------- GSAP reveal ---------- */
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function revealOnScroll(selector, opts = {}){
+    if (reduced || !window.gsap || !window.ScrollTrigger){
+      document.querySelectorAll(selector).forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+      return;
+    }
+    gsap.registerPlugin(ScrollTrigger);
+    const els = Array.isArray(selector) ? selector : gsap.utils.toArray(selector);
+    if (!els.length) return;
+    gsap.to(els, {
+      opacity:1, y:0,
+      duration: opts.duration ?? 0.6,
+      ease: opts.ease ?? 'power2.out',
+      stagger: opts.stagger ?? 0.08,
+      scrollTrigger:{ trigger: opts.trigger ?? els[0], start: opts.start ?? 'top 85%', once:true }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.grid-2,.grid-3,.grid-4').forEach(grid => {
+      revealOnScroll(Array.from(grid.querySelectorAll(':scope > .reveal')), {stagger:0.08});
+    });
+    document.querySelectorAll('main > section > .reveal, main > section > * > .reveal').forEach(el => {
+      if (!el.closest('.grid-2,.grid-3,.grid-4')) revealOnScroll(el, {stagger:0});
+    });
+  });
+
+  /* ============================================================
+     CLOCK RENDERING — pure function
+     ============================================================ */
+  const CX = 100, CY = 100, R = 88;
+
+  function buildClockSVG(svg){
+    svg.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs={}) => {
+      const n = document.createElementNS(ns, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    };
+
+    // Face
+    const defs = el('defs');
+    const grad = el('radialGradient', {id:'faceGrad-' + Math.random().toString(36).slice(2,8), cx:'50%', cy:'40%', r:'70%'});
+    grad.appendChild(el('stop', {offset:'0%', 'stop-color':'#2a313c'}));
+    grad.appendChild(el('stop', {offset:'100%', 'stop-color':'#14181d'}));
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+    const faceId = grad.getAttribute('id');
+
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:R, fill:`url(#${faceId})`, stroke:'#2a313b', 'stroke-width':'2'}));
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:R-4, fill:'none', stroke:'#FFC531', 'stroke-width':'1', opacity:'0.35'}));
+
+    // Ticks + numerals
+    for (let i = 0; i < 60; i++){
+      const ang = (i * 6 - 90) * Math.PI / 180;
+      const isHour = i % 5 === 0;
+      const r1 = R - (isHour ? 14 : 7);
+      const r2 = R - 3;
+      svg.appendChild(el('line', {
+        x1: CX + Math.cos(ang)*r1, y1: CY + Math.sin(ang)*r1,
+        x2: CX + Math.cos(ang)*r2, y2: CY + Math.sin(ang)*r2,
+        stroke: isHour ? '#F2F5F8' : '#6B7684',
+        'stroke-width': isHour ? 2.5 : 1,
+        'stroke-linecap': 'round'
+      }));
+      if (isHour){
+        const n = i / 5 || 12;
+        const tx = CX + Math.cos(ang) * (R - 26);
+        const ty = CY + Math.sin(ang) * (R - 26) + 4;
+        const t = el('text', {
+          x:tx, y:ty, 'text-anchor':'middle',
+          fill:'#F2F5F8', 'font-family':'Inter, sans-serif',
+          'font-size':'12', 'font-weight':'700'
+        });
+        t.textContent = n;
+        svg.appendChild(t);
+      }
+    }
+
+    // Hands group (will be rotated)
+    const hands = el('g', {'class':'hands'});
+    hands.appendChild(el('line', {'class':'h-hand', x1:CX, y1:CY, x2:CX, y2:CY-46,
+      stroke:'#F2F5F8', 'stroke-width':'5', 'stroke-linecap':'round'}));
+    hands.appendChild(el('line', {'class':'m-hand', x1:CX, y1:CY, x2:CX, y2:CY-66,
+      stroke:'#F2F5F8', 'stroke-width':'3.5', 'stroke-linecap':'round'}));
+    hands.appendChild(el('line', {'class':'s-hand', x1:CX, y1:CY+10, x2:CX, y2:CY-74,
+      stroke:'#FFC531', 'stroke-width':'1.5', 'stroke-linecap':'round'}));
+    svg.appendChild(hands);
+
+    // Centre cap
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:4.5, fill:'#FFC531'}));
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:1.8, fill:'#0B0D10'}));
+  }
+
+  /**
+   * Pure render: set hands of an already-built clock SVG.
+   * @param {SVGElement} svg
+   * @param {{h:number,m:number,s:number}} t
+   * @param {{sweep?:boolean}} opts
+   */
+  function renderClock(svg, t, opts = {}){
+    const {h, m, s} = t;
+    const sFrac = opts.sweep ? (s + (performance.now() % 1000) / 1000) : s;
+    const hourAng   = ((h % 12) + m/60 + s/3600) * 30;   // 360/12
+    const minuteAng = (m + s/60) * 6;                     // 360/60
+    const secondAng = sFrac * 6;
+
+    const hands = svg.querySelector('.hands');
+    if (!hands) return;
+    hands.setAttribute('transform', `rotate(${hourAng} ${CX} ${CY})`);
+
+    // Individual hand rotations are relative to 12; we rotate the whole group by hour,
+    // so we need minute/second hands to be drawn in their own rotation.
+    // Simpler approach: rotate each hand independently from a common centre.
+    const hHand = hands.querySelector('.h-hand');
+    const mHand = hands.querySelector('.m-hand');
+    const sHand = hands.querySelector('.s-hand');
+    hands.removeAttribute('transform');
+    hHand.setAttribute('transform', `rotate(${hourAng} ${CX} ${CY})`);
+    mHand.setAttribute('transform', `rotate(${minuteAng} ${CX} ${CY})`);
+    sHand.setAttribute('transform', `rotate(${secondAng} ${CX} ${CY})`);
+  }
+
+  /**
+   * Mirror-flip a clock's hands about the 12-6 axis.
+   * We reflect each hand's angle: mirrored_angle = 360 - angle (mod 360).
+   * Numerals stay readable because we only transform the hands.
+   */
+  function renderMirrorClock(svg, t, opts = {}){
+    const {h, m, s} = t;
+    const sFrac = opts.sweep ? (s + (performance.now() % 1000) / 1000) : s;
+    const hourAng   = ((h % 12) + m/60 + s/3600) * 30;
+    const minuteAng = (m + s/60) * 6;
+    const secondAng = sFrac * 6;
+
+    const hands = svg.querySelector('.hands');
+    if (!hands) return;
+    const hHand = hands.querySelector('.h-hand');
+    const mHand = hands.querySelector('.m-hand');
+    const sHand = hands.querySelector('.s-hand');
+    // Reflect about 12-6 axis: angle -> -angle (mod 360) == 360 - angle
+    const mirror = a => (360 - (a % 360)) % 360;
+    hHand.setAttribute('transform', `rotate(${mirror(hourAng)} ${CX} ${CY})`);
+    mHand.setAttribute('transform', `rotate(${mirror(minuteAng)} ${CX} ${CY})`);
+    sHand.setAttribute('transform', `rotate(${mirror(secondAng)} ${CX} ${CY})`);
+  }
+
+  /* ---------- Mirror math ---------- */
+  function mirrorTime(h, m, s){
+    // 11:59:60 - (h:m:s)
+    let H = 11 - h, M = 59 - m, S = 60 - s;
+    if (S === 60){ S = 0; }
+    else { M -= 1; }
+    if (M < 0){ M += 60; H -= 1; }
+    if (H < 0) H += 12;
+    if (H === 0) H = 12;
+    return {h:H, m:M, s:S};
+  }
+  const pad = n => String(n).padStart(2,'0');
+  const fmt = t => `${pad(t.h)}:${pad(t.m)}:${pad(t.s)}`;
+
+  /* ---------- Build all clocks ---------- */
+  const clockIds = ['heroClockL','heroClockR','clkActual','clkMirror','clkEquiv'];
+  clockIds.forEach(id => {
+    const svg = document.getElementById(id);
+    if (svg) buildClockSVG(svg);
+  });
+
+  /* ---------- Hero static + GSAP timeline ---------- */
+  const heroT = {h:5, m:0, s:0};
+  const heroMirrorT = mirrorTime(5, 0, 0);
+  renderClock(document.getElementById('heroClockL'), heroT);
+  renderClock(document.getElementById('heroClockR'), heroMirrorT);
+
+  if (!reduced && window.gsap){
+    gsap.registerPlugin(ScrollTrigger);
+    const title = document.getElementById('heroTitle');
+    if (title){
+      const text = title.textContent;
+      title.innerHTML = '';
+      [...text].forEach(ch => {
+        const span = document.createElement('span');
+        span.className = 'letter';
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+        title.appendChild(span);
+      });
+      gsap.to(title.querySelectorAll('.letter'), {
+        opacity:1, y:0, duration:0.5, ease:'power2.out', stagger:0.03, delay:0.1
+      });
+      title.querySelectorAll('.letter').forEach(l => { l.style.transform = 'translateY(14px)'; });
+    }
+    gsap.from('.hero-clocks .clock-wrap', {
+      scale:0.9, rotation:-4, opacity:0, duration:0.8, ease:'power2.out', stagger:0.15, delay:0.4
+    });
+    gsap.to('#heroMirrorBar', {
+      clipPath:'inset(0% 0 0 0)', duration:0.9, ease:'power2.inOut', delay:0.7
+    });
+  } else {
+    document.querySelectorAll('#heroTitle .letter').forEach(l => l.style.opacity = 1);
+    const bar = document.getElementById('heroMirrorBar');
+    if (bar) bar.style.clipPath = 'inset(0% 0 0 0)';
+  }
+
+  /* ---------- Playground ---------- */
+  const rngH = document.getElementById('rngH');
+  const rngM = document.getElementById('rngM');
+  const rngS = document.getElementById('rngS');
+  const valH = document.getElementById('valH');
+  const valM = document.getElementById('valM');
+  const valS = document.getElementById('valS');
+  const digActual = document.getElementById('digActual');
+  const digEquiv  = document.getElementById('digEquiv');
+  const liveToggle = document.getElementById('liveToggle');
+  const sweepToggle = document.getElementById('sweepToggle');
+
+  function updatePlayground(){
+    let h, m, s;
+    if (liveToggle.checked){
+      const d = new Date();
+      h = d.getHours() % 12; if (h === 0) h = 12;
+      m = d.getMinutes();
+      s = d.getSeconds();
+      valH.textContent = h; valM.textContent = m; valS.textContent = s;
+      rngH.value = h; rngM.value = m; rngS.value = s;
+    } else {
+      h = +rngH.value; m = +rngM.value; s = +rngS.value;
+      valH.textContent = h; valM.textContent = m; valS.textContent = s;
+    }
+    const actual = {h, m, s};
+    const equiv  = mirrorTime(h, m, s);
+    const sweep  = sweepToggle.checked;
+
+    renderClock(document.getElementById('clkActual'), actual, {sweep});
+    renderMirrorClock(document.getElementById('clkMirror'), actual, {sweep});
+    renderClock(document.getElementById('clkEquiv'), equiv, {sweep});
+
+    digActual.textContent = fmt(actual);
+    digEquiv.textContent  = fmt(equiv);
+  }
+  [rngH, rngM, rngS].forEach(r => r.addEventListener('input', () => {
+    liveToggle.checked = false; updatePlayground();
+  }));
+  liveToggle.addEventListener('change', updatePlayground);
+  sweepToggle.addEventListener('change', updatePlayground);
+
+  // Animation loop (for sweep + live)
+  let lastTs = 0;
+  function loop(ts){
+    if (liveToggle.checked || sweepToggle.checked){
+      if (ts - lastTs > 40){ // ~25fps is plenty for analog
+        updatePlayground();
+        lastTs = ts;
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  updatePlayground();
+
+  /* ============================================================
+     RAPID-FIRE DRILL
+     ============================================================ */
+  const drillStart   = document.getElementById('drillStart');
+  const drillQ       = document.getElementById('drillQ');
+  const drillChoices = document.getElementById('drillChoices');
+  const drillTimerBar= document.getElementById('drillTimerBar');
+  const drillStatus  = document.getElementById('drillStatus');
+
+  function randTime(){
+    const h = 1 + Math.floor(Math.random() * 12);
+    const m = Math.floor(Math.random() * 12) * 5; // round to 5-min for clean distractors
+    const s = 0;
+    return {h, m, s};
+  }
+  function distractors(correct){
+    // Generate 3 wrong options that are plausible (nearby hours or swapped digits)
+    const set = new Set([fmt(correct)]);
+    const tries = [];
+    while (set.size < 4 && tries.length < 40){
+      tries.push(1);
+      const h = 1 + Math.floor(Math.random() * 12);
+      const m = Math.floor(Math.random() * 12) * 5;
+      const cand = fmt({h, m, s:0});
+      if (!set.has(cand)) set.add(cand);
+    }
+    const arr = [...set];
+    // shuffle
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let drillState = null;
+  function startDrill(){
+    drillState = { q:0, score:0, total:6, timer:null, timeLeft:15 };
+    drillStart.disabled = true;
+    drillStart.style.opacity = .5;
+    nextQuestion();
+  }
+  function nextQuestion(){
+    if (!drillState) return;
+    if (drillState.q >= drillState.total) return finishDrill();
+    drillState.q++;
+    const t = randTime();
+    const ans = mirrorTime(t.h, t.m, t.s);
+    const opts = distractors(ans);
+    drillQ.textContent = fmt(t);
+    drillChoices.innerHTML = '';
+    opts.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.textContent = opt;
+      b.addEventListener('click', () => answerDrill(b, opt, fmt(ans)));
+      drillChoices.appendChild(b);
+    });
+    drillState.timeLeft = 15;
+    drillTimerBar.style.width = '100%';
+    clearInterval(drillState.timer);
+    const started = performance.now();
+    drillState.timer = setInterval(() => {
+      const elapsed = (performance.now() - started) / 1000;
+      const pct = Math.max(0, 100 - (elapsed / 15) * 100);
+      drillTimerBar.style.width = pct + '%';
+      if (elapsed >= 15){
+        clearInterval(drillState.timer);
+        // mark correct, move on
+        [...drillChoices.children].forEach(c => {
+          c.disabled = true;
+          if (c.textContent === fmt(ans)) c.classList.add('correct');
+        });
+        setTimeout(nextQuestion, 900);
+      }
+    }, 80);
+  }
+  function answerDrill(btn, picked, correct){
+    clearInterval(drillState.timer);
+    [...drillChoices.children].forEach(c => {
+      c.disabled = true;
+      if (c.textContent === correct) c.classList.add('correct');
+    });
+    if (picked === correct){
+      drillState.score++;
+    } else {
+      btn.classList.add('wrong');
+    }
+    setTimeout(nextQuestion, 900);
+  }
+  function finishDrill(){
+    drillQ.textContent = `${drillState.score} / ${drillState.total}`;
+    drillChoices.innerHTML = '';
+    drillTimerBar.style.width = '0%';
+    drillStatus.innerHTML = `Final score: <b>${drillState.score}/${drillState.total}</b>` +
+      (drillState.score >= 5 ? ' — 🎉 Excellent!' : ' — Try again!');
+    drillStart.disabled = false;
+    drillStart.style.opacity = 1;
+    drillStart.innerHTML = '<i data-lucide="rotate-ccw" width="16" height="16"></i> Retry';
+    if (window.lucide) window.lucide.createIcons();
+    if (drillState.score >= 5 && window.confetti){
+      confetti({ particleCount: 140, spread: 80, origin:{y:0.6}, colors:['#FFC531','#4C9AFF','#3DDC84'] });
+      setTimeout(() => confetti({ particleCount: 80, angle:60, spread:55, origin:{x:0} }), 200);
+      setTimeout(() => confetti({ particleCount: 80, angle:120, spread:55, origin:{x:1} }), 400);
+    }
+    drillState = null;
+  }
+  drillStart.addEventListener('click', startDrill);
+
+  /* ---------- Public API ---------- */
+  return {
+    revealOnScroll,
+    renderClock,
+    mirrorTime,
+    setProgress(pct){
+      if (progressBar){
+        progressBar.style.setProperty('--progress', Math.max(0, Math.min(100, pct)) + '%');
+      }
+    }
+  };
+})();
+</script>
+</body>
+</html>

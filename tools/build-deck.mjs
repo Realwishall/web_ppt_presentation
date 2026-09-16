@@ -997,10 +997,589 @@ const motifSvg = {
     </g>
   </svg>`,
 
+  /* Chapter motif "calculus": the differentiation chapter, and the whole of it
+     is one event -- a second point sliding down a curve onto a first, so that
+     the chord it makes turns into the tangent. That is the board slides 36-40
+     spend five morph frames on, and it is the one thing a still figure cannot
+     carry, so it is what moves here. Low-left: a curve, a fixed point P, and a
+     fan of chords from P to points that get closer and closer; the brightness
+     walks down the fan from the far chord to the near one and the gold tangent
+     is what it arrives at. Low-right, at REST: the same curve's maxima and
+     minima with a flat bar lying on each -- dy/dx = 0 is a statement about a
+     point, not an event, and a tangent bar that drifted would read as a slope
+     that is changing. CSS only (`.motif-calculus .chase`), no script,
+     flattened in @media print and under prefers-reduced-motion. Texture, never
+     information (rule 11): it stays low-left and right of centre, clear of the
+     band the teacher writes on.                                              */
+  calculus: `<svg class="motif-calculus" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-cal-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M48 0H0V48" fill="none" stroke="#9fb4ff" stroke-opacity="0.05" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-cal-grid)"/>
+    <!-- low-left: the chord collapsing onto the tangent -->
+    <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="2.2" stroke-linecap="round">
+      <path d="M104 848 V 330"/>
+      <path d="M104 848 H 780"/>
+    </g>
+    <path d="M112 836 C 300 826 432 764 522 662 C 604 570 656 468 700 350"
+          fill="none" stroke="#7c8cff" stroke-opacity="0.16" stroke-width="3" stroke-linecap="round"/>
+    <g class="chase" fill="none" stroke="#f5c542" stroke-opacity="0.09" stroke-width="2.2" stroke-linecap="round">
+      <path d="M596 566 L 700 350"/>
+      <path d="M596 566 L 668 428"/>
+      <path d="M596 566 L 640 484"/>
+      <path d="M596 566 L 618 524"/>
+    </g>
+    <path d="M455 821 L 714 352" fill="none" stroke="#f5c542" stroke-opacity="0.22"
+          stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="596" cy="566" r="6" fill="#f5c542" fill-opacity="0.28"/>
+    <!-- low-right, at rest: dy/dx = 0 where the curve turns over -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M930 780 H 1548"/>
+    </g>
+    <path d="M948 716 C 1024 452 1112 414 1196 546 C 1266 656 1322 706 1392 616 C 1444 550 1486 476 1524 408"
+          fill="none" stroke="#7c8cff" stroke-opacity="0.15" stroke-width="3" stroke-linecap="round"/>
+    <g stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.6" stroke-linecap="round">
+      <path d="M1084 452 H 1200"/>
+      <path d="M1318 668 H 1430"/>
+    </g>
+    <g fill="#f5c542" fill-opacity="0.24">
+      <circle cx="1142" cy="452" r="5.5"/>
+      <circle cx="1374" cy="668" r="5.5"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "percent": the percentage board's own signature. Low-left is
+     the one event this deck is about -- a quantity standing at 100 and the
+     EXTRA part arriving on its end, so "20% more" is a piece added to a whole
+     rather than a number written down. The gold part grows out of the right
+     edge of the indigo hundred and dies back; the hundred itself never moves,
+     because it is the reference the percentage is taken against and a
+     reference that drifted would be a contradiction. Low-right, at REST: a
+     hundred squares with eleven of them filled -- percent is per hundred, and
+     that is a definition, not an event. CSS only (`.motif-percent .grow`), no
+     script, flattened in @media print and under prefers-reduced-motion.
+     Texture, never information (rule 11): it stays low and to the sides of the
+     band the teacher writes on.                                              */
+  percent: `<svg class="motif-percent" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-pc-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+        <path d="M52 0H0V52" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-pc-grid)"/>
+    <!-- low-left: the hundred, and the (n-1) part arriving on its end -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M108 846 H 792"/>
+    </g>
+    <rect x="116" y="690" width="452" height="76" rx="10" fill="none"
+          stroke="#7c8cff" stroke-opacity="0.19" stroke-width="3"/>
+    <g class="grow">
+      <rect x="568" y="690" width="92" height="76" rx="10" fill="#f5c542" fill-opacity="0.09"
+            stroke="#f5c542" stroke-opacity="0.24" stroke-width="2.6"/>
+    </g>
+    <g stroke="#7c8cff" stroke-opacity="0.10" stroke-width="1.8" stroke-linecap="round">
+      <path d="M116 782 V 806"/><path d="M568 782 V 806"/><path d="M660 782 V 806"/>
+      <path d="M116 794 H 568"/><path d="M568 794 H 660"/>
+    </g>
+    <!-- the same quantity, one step further out: 100 -> 120 -> 144 -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.10" stroke-width="2.4">
+      <rect x="116" y="606" width="452" height="42" rx="8"/>
+      <rect x="116" y="826" width="452" height="0.5" rx="0"/>
+    </g>
+    <rect x="568" y="606" width="180" height="42" rx="8" fill="none"
+          stroke="#f5c542" stroke-opacity="0.11" stroke-width="2.2"/>
+    <!-- low-right, at rest: percent is per hundred -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.11" stroke-width="1.6">
+      <rect x="1008" y="560" width="440" height="264" rx="6"/>
+      <path d="M1052 560 V 824 M1096 560 V 824 M1140 560 V 824 M1184 560 V 824 M1228 560 V 824
+               M1272 560 V 824 M1316 560 V 824 M1360 560 V 824 M1404 560 V 824"/>
+      <path d="M1008 586 H 1448 M1008 613 H 1448 M1008 639 H 1448 M1008 666 H 1448 M1008 692 H 1448
+               M1008 719 H 1448 M1008 745 H 1448 M1008 772 H 1448 M1008 798 H 1448"/>
+    </g>
+    <g fill="#f5c542" fill-opacity="0.13">
+      <rect x="1008" y="560" width="44" height="26"/><rect x="1052" y="560" width="44" height="26"/>
+      <rect x="1096" y="560" width="44" height="26"/><rect x="1140" y="560" width="44" height="26"/>
+      <rect x="1184" y="560" width="44" height="26"/><rect x="1228" y="560" width="44" height="26"/>
+      <rect x="1272" y="560" width="44" height="26"/><rect x="1316" y="560" width="44" height="26"/>
+      <rect x="1360" y="560" width="44" height="26"/><rect x="1404" y="560" width="44" height="26"/>
+      <rect x="1008" y="586" width="44" height="27"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "ratio": dividing a whole in a given ratio, which is a thing
+     that HAPPENS to one bar -- so low-left the bar has a fixed total length K
+     and a divider that walks along it, the indigo part and the gold part
+     trading length while their sum never changes. That invariance is the whole
+     technique (x = a/(a+b) x K), and it is exactly what two still bars cannot
+     carry. The unit ticks under it stay put, because a+b is the count the
+     divider lands on. Low-right a beam balance rocks about its fulcrum and
+     settles: the same statement read as a comparison rather than a cut. CSS
+     only (`.motif-ratio .divide` / `.part-a` / `.part-b` / `.beam`), no script,
+     flattened in @media print and under prefers-reduced-motion. Texture, never
+     information (rule 11).                                                    */
+  ratio: `<svg class="motif-ratio" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-rt-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+        <path d="M52 0H0V52" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-rt-grid)"/>
+    <!-- low-left: one whole, cut at a walking divider; the sum never changes -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M108 848 H 800"/>
+    </g>
+    <rect x="116" y="672" width="600" height="80" rx="10" fill="none"
+          stroke="#7c8cff" stroke-opacity="0.16" stroke-width="3"/>
+    <rect class="part-a" x="118" y="674" width="240" height="76" rx="9"
+          fill="#7c8cff" fill-opacity="0.10"/>
+    <rect class="part-b" x="358" y="674" width="356" height="76" rx="9"
+          fill="#f5c542" fill-opacity="0.08"/>
+    <path class="divide" d="M358 654 V 770" stroke="#f5c542" stroke-opacity="0.30"
+          stroke-width="3.4" stroke-linecap="round"/>
+    <g stroke="#7c8cff" stroke-opacity="0.13" stroke-width="1.8" stroke-linecap="round">
+      <path d="M236 770 V 792 M356 770 V 792 M476 770 V 792 M596 770 V 792"/>
+      <path d="M116 782 H 716"/>
+    </g>
+    <!-- low-right: the same statement as a balance -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M1010 844 H 1520"/>
+    </g>
+    <path d="M1265 838 L 1220 700 H 1310 Z" fill="none" stroke="#7c8cff"
+          stroke-opacity="0.14" stroke-width="2.6" stroke-linejoin="round"/>
+    <g class="beam">
+      <path d="M1075 690 H 1455" stroke="#f5c542" stroke-opacity="0.22"
+            stroke-width="4" stroke-linecap="round"/>
+      <path d="M1105 690 V 738 M1425 690 V 738" stroke="#7c8cff"
+            stroke-opacity="0.14" stroke-width="2.2"/>
+      <path d="M1058 738 H 1152 L 1132 786 H 1078 Z" fill="none" stroke="#7c8cff"
+            stroke-opacity="0.15" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M1378 738 H 1472 L 1452 786 H 1398 Z" fill="none" stroke="#f5c542"
+            stroke-opacity="0.15" stroke-width="2.4" stroke-linejoin="round"/>
+    </g>
+    <circle cx="1265" cy="690" r="7" fill="#f5c542" fill-opacity="0.24"/>
+  </svg>`,
+
+  /* Chapter motif "proportion": making a relation between two cases, which is
+     never about one point on a curve but about TWO -- so low-left two markers
+     ride the same power curve together, each dropping a dashed line to its own
+     x and its own y. Neither is the answer; the pair is, because the whole of
+     "relate case 1 and case 2" is that the ratio of the ys is fixed by the
+     ratio of the xs. They travel on one period and never cross, since a pair
+     that swapped would be two independent points rather than two cases of one
+     law. Low-right, at REST: two similar figures, one scaled from the other,
+     with the second scaling drawn on -- x doubles, area goes as the square.
+     That is a statement about shape, not an event, and a figure that breathed
+     would read as a body that is changing size. CSS only
+     (`.motif-proportion .ride`), no script, flattened in @media print and under
+     prefers-reduced-motion. Texture, never information (rule 11).            */
+  proportion: `<svg class="motif-proportion" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-pr-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M48 0H0V48" fill="none" stroke="#9fb4ff" stroke-opacity="0.045" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-pr-grid)"/>
+    <!-- low-left: two cases riding one law -->
+    <g stroke="#ffffff" stroke-opacity="0.075" stroke-width="2.2" stroke-linecap="round">
+      <path d="M126 846 V 466"/>
+      <path d="M126 846 H 742"/>
+    </g>
+    <path d="M132 840 C 300 828 430 780 528 700 C 618 626 682 540 726 470"
+          fill="none" stroke="#7c8cff" stroke-opacity="0.17" stroke-width="3" stroke-linecap="round"/>
+    <path d="M132 844 C 260 806 372 762 470 706 C 566 650 650 578 722 494"
+          fill="none" stroke="#7c8cff" stroke-opacity="0.07" stroke-width="2.4" stroke-linecap="round"/>
+    <g class="ride">
+      <path d="M126 762 H 318 V 846" fill="none" stroke="#f5c542" stroke-opacity="0.13"
+            stroke-width="1.9" stroke-dasharray="7 9"/>
+      <path d="M126 616 H 574 V 846" fill="none" stroke="#f5c542" stroke-opacity="0.13"
+            stroke-width="1.9" stroke-dasharray="7 9"/>
+      <circle cx="318" cy="762" r="7" fill="#f5c542" fill-opacity="0.26"/>
+      <circle cx="574" cy="616" r="7" fill="#f5c542" fill-opacity="0.26"/>
+    </g>
+    <!-- low-right, at rest: same shape, scaled -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.15" stroke-width="2.6">
+      <rect x="1000" y="742" width="112" height="86" rx="7"/>
+    </g>
+    <g fill="none" stroke="#f5c542" stroke-opacity="0.15" stroke-width="2.6">
+      <rect x="1000" y="570" width="224" height="172" rx="9"/>
+    </g>
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.08" stroke-width="2" stroke-dasharray="8 10">
+      <path d="M1112 742 H 1224 M1000 742 H 1000"/>
+      <path d="M1000 828 L 1224 570"/>
+    </g>
+    <g stroke="#7c8cff" stroke-opacity="0.10" stroke-width="1.8" stroke-linecap="round">
+      <path d="M1000 852 H 1112 M1000 866 H 1224"/>
+      <path d="M1000 844 V 860 M1112 844 V 860 M1224 858 V 874 M1000 858 V 874"/>
+    </g>
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.09" stroke-width="2.2">
+      <rect x="1320" y="640" width="188" height="188" rx="9"/>
+      <path d="M1320 734 H 1508 M1414 640 V 828"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "ntimes": the multiplier method, whose point is that the
+     factors are taken IN STAGES -- 1, then x2, then x3, and the answer is what
+     the last stage leaves standing. So low-left the chain lights link by link
+     and the bar under it climbs in discrete jumps rather than growing smoothly;
+     a bar that eased between the values would say the quantity passes through
+     everything in between, which is precisely not what "n times" means. The
+     chain's boxes and arrows are drawn before the light walks, so the road is
+     complete with every animation off. Low-right, at REST: the power ladder
+     n, n^2, n^(5/2) as three heights on one baseline -- an exponent is a
+     statement about a body, not an event. CSS only (`.motif-ntimes .walk` /
+     `.stair`), no script, flattened in @media print and under
+     prefers-reduced-motion. Texture, never information (rule 11).             */
+  ntimes: `<svg class="motif-ntimes" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-nt-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+        <path d="M52 0H0V52" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-nt-grid)"/>
+    <!-- low-left: the multiplier chain, lit link by link -->
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.16" stroke-width="2.6">
+      <rect x="112" y="596" width="104" height="72" rx="10"/>
+      <rect x="330" y="596" width="104" height="72" rx="10"/>
+      <rect x="548" y="596" width="104" height="72" rx="10"/>
+    </g>
+    <g class="walk" fill="none" stroke="#f5c542" stroke-opacity="0.12"
+       stroke-width="2.8" stroke-linecap="round">
+      <path d="M226 632 H 310"/>
+      <path d="M444 632 H 528"/>
+    </g>
+    <g fill="#f5c542" fill-opacity="0.16">
+      <path d="M310 622 l 22 10 l -22 10 z"/>
+      <path d="M528 622 l 22 10 l -22 10 z"/>
+    </g>
+    <!-- and the same product taken in stages, as heights on one baseline -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M108 846 H 720"/>
+    </g>
+    <g class="stair" fill="#f5c542" fill-opacity="0.10">
+      <rect x="128" y="820" width="72" height="24" rx="4"/>
+      <rect x="240" y="796" width="72" height="48" rx="4"/>
+      <rect x="352" y="748" width="72" height="96" rx="4"/>
+      <rect x="464" y="700" width="72" height="144" rx="4"/>
+      <rect x="576" y="700" width="72" height="144" rx="4"/>
+    </g>
+    <!-- low-right, at rest: the power ladder -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M1000 846 H 1524"/>
+      <path d="M1000 846 V 528"/>
+    </g>
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.15" stroke-width="2.6">
+      <rect x="1042" y="754" width="94" height="90" rx="6"/>
+      <rect x="1188" y="664" width="94" height="180" rx="6"/>
+      <rect x="1334" y="590" width="94" height="254" rx="6"/>
+    </g>
+    <g stroke="#f5c542" stroke-opacity="0.13" stroke-width="2.2" stroke-dasharray="8 10">
+      <path d="M1000 754 H 1042 M1000 664 H 1188 M1000 590 H 1334"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "delta": the small-change method, and the whole of it is the
+     word SMALL. So low-left a quantity stands as one block with the change
+     drawn as a sliver on its edge, and the sliver THINS across the cycle --
+     dZ/Z = a dx/x + b dy/y is exact only in that limit, and the slide the deck
+     ends on is the one where 20% breaks it. The block itself never moves,
+     because it is the quantity the change is measured against. Low-right, at
+     REST: the sum itself -- a bar for dx, a bar of twice the height for 2dy,
+     and the total standing beside them at exactly their combined height. That
+     is an identity, not an event, and a total that grew would read as a
+     quantity still settling. CSS only (`.motif-delta .thin`), no script,
+     flattened in @media print and under prefers-reduced-motion. Texture, never
+     information (rule 11).                                                    */
+  delta: `<svg class="motif-delta" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-dl-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M48 0H0V48" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-dl-grid)"/>
+    <!-- low-left: the quantity, and the sliver of change on its edge -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M108 848 H 800"/>
+    </g>
+    <rect x="120" y="600" width="470" height="200" rx="12" fill="#7c8cff" fill-opacity="0.05"
+          stroke="#7c8cff" stroke-opacity="0.17" stroke-width="3"/>
+    <g class="thin">
+      <rect x="590" y="600" width="84" height="200" rx="6" fill="#f5c542" fill-opacity="0.11"
+            stroke="#f5c542" stroke-opacity="0.24" stroke-width="2.4"/>
+    </g>
+    <g stroke="#7c8cff" stroke-opacity="0.11" stroke-width="1.8" stroke-linecap="round">
+      <path d="M120 818 H 590 M120 810 V 826 M590 810 V 826"/>
+    </g>
+    <path d="M120 578 H 590" stroke="#7c8cff" stroke-opacity="0.08" stroke-width="1.8"
+          stroke-dasharray="7 9"/>
+    <!-- low-right, at rest: dZ = a dx + b dy as three heights -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M990 846 H 1524"/>
+    </g>
+    <g fill="none" stroke="#7c8cff" stroke-opacity="0.16" stroke-width="2.6">
+      <rect x="1030" y="784" width="92" height="60" rx="6"/>
+      <rect x="1172" y="724" width="92" height="120" rx="6"/>
+    </g>
+    <g fill="none" stroke="#f5c542" stroke-opacity="0.17" stroke-width="2.8">
+      <rect x="1354" y="664" width="112" height="180" rx="7"/>
+    </g>
+    <g stroke="#f5c542" stroke-opacity="0.11" stroke-width="2" stroke-dasharray="8 10">
+      <path d="M1122 784 H 1354 M1264 724 H 1354 M990 664 H 1354"/>
+    </g>
+    <path d="M1300 764 h 30 M1315 749 v 30" stroke="#7c8cff" stroke-opacity="0.13"
+          stroke-width="2.6" stroke-linecap="round"/>
+  </svg>`,
+
+  /* Chapter motif "series": the A.P. / G.P. board, and the whole of it is that
+     two sequences can take the SAME number of steps and get to wildly
+     different places, because one adds a constant and the other multiplies by
+     one. So low-left the two ladders stand on one baseline, index for index,
+     and the light walks them TOGETHER in discrete jumps: at step 5 the
+     arithmetic bar has grown by 5d and the geometric one has been doubled four
+     times, and the room reads that off two bars rather than off two formulas.
+     The step is discrete on purpose (`steps(1,end)`) — a sequence has terms,
+     not a continuum, and a bar that eased between them would say the opposite.
+     The pale rule through the arithmetic tops is straight and the one through
+     the geometric tops is not; that is the whole distinction, drawn at rest.
+     Low-right, also at rest: the bouncing ball's apexes, h, h/2, h/4, h/8 —
+     this deck's own G.P., which it spends its last two slides summing. CSS
+     only (`.motif-series .rung`), no script, flattened in @media print and
+     under prefers-reduced-motion. Texture, never information (rule 11).      */
+  series: `<svg class="motif-series" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-sr-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+        <path d="M50 0H0V50" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-sr-grid)"/>
+    <!-- low-left: a + (n-1)d against a r^(n-1), index for index, one baseline -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M108 850 H 884"/>
+    </g>
+    <g class="rungs">
+      <g class="rung">
+        <rect x="120" y="822" width="46" height="26" rx="4" fill="#7c8cff" fill-opacity="0.07"
+              stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.2"/>
+        <rect x="520" y="834" width="46" height="14" rx="4" fill="#f5c542" fill-opacity="0.07"
+              stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.2"/>
+      </g>
+      <g class="rung">
+        <rect x="190" y="796" width="46" height="52" rx="4" fill="#7c8cff" fill-opacity="0.07"
+              stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.2"/>
+        <rect x="590" y="820" width="46" height="28" rx="4" fill="#f5c542" fill-opacity="0.07"
+              stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.2"/>
+      </g>
+      <g class="rung">
+        <rect x="260" y="770" width="46" height="78" rx="4" fill="#7c8cff" fill-opacity="0.07"
+              stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.2"/>
+        <rect x="660" y="792" width="46" height="56" rx="4" fill="#f5c542" fill-opacity="0.07"
+              stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.2"/>
+      </g>
+      <g class="rung">
+        <rect x="330" y="744" width="46" height="104" rx="4" fill="#7c8cff" fill-opacity="0.07"
+              stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.2"/>
+        <rect x="730" y="736" width="46" height="112" rx="4" fill="#f5c542" fill-opacity="0.07"
+              stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.2"/>
+      </g>
+      <g class="rung">
+        <rect x="400" y="718" width="46" height="130" rx="4" fill="#7c8cff" fill-opacity="0.07"
+              stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.2"/>
+        <rect x="800" y="624" width="46" height="224" rx="4" fill="#f5c542" fill-opacity="0.07"
+              stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.2"/>
+      </g>
+    </g>
+    <!-- at rest: the arithmetic tops lie on a straight rule, the geometric ones do not -->
+    <path d="M143 822 L423 718" fill="none" stroke="#7c8cff" stroke-opacity="0.13"
+          stroke-width="2" stroke-dasharray="8 10"/>
+    <path d="M543 834 L613 820 L683 792 L753 736 L823 624" fill="none" stroke="#f5c542"
+          stroke-opacity="0.13" stroke-width="2" stroke-dasharray="8 10"/>
+    <!-- low-right, at rest: h, h/2, h/4, h/8 — the deck's own G.P. -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M990 850 H 1520"/>
+    </g>
+    <g fill="none" stroke="#f5c542" stroke-opacity="0.15" stroke-width="2.4">
+      <path d="M1010 850 Q1080 550 1150 850"/>
+      <path d="M1150 850 Q1200 700 1249 850"/>
+      <path d="M1249 850 Q1284 776 1319 850"/>
+      <path d="M1319 850 Q1344 812 1368 850"/>
+      <path d="M1368 850 Q1386 832 1403 850"/>
+    </g>
+    <g fill="#f5c542" fill-opacity="0.16">
+      <circle cx="1080" cy="700" r="5"/><circle cx="1200" cy="775" r="4.5"/>
+      <circle cx="1284" cy="813" r="4"/><circle cx="1344" cy="831" r="3.5"/>
+    </g>
+    <g stroke="#7c8cff" stroke-opacity="0.09" stroke-width="1.8" stroke-dasharray="6 9">
+      <path d="M990 700 H 1080 M990 775 H 1200 M990 813 H 1284"/>
+    </g>
+  </svg>`,
+
+  /* Chapter motif "variation": the "directly - linearly - exponentially" board.
+     Low-left is the one event this deck turns on, which belongs to the
+     exponential half: EQUAL steps along x multiply y by the SAME factor. The
+     four intervals are equal and drawn at rest with the halved levels ruled
+     across to the axis; what moves is a light walking interval by interval, in
+     discrete jumps, because "after the next 2 s" is a step and not a slide.
+     The curve itself never moves — it is the law, and a law that drifted would
+     read as a measurement changing (the same reasoning that keeps the gravity
+     motif's graph still). Low-right, also at rest: the three laws the slide
+     names, on one axis pair — a line through the origin, a line with an
+     intercept, and the decay. CSS only (`.motif-variation .walk`), no script,
+     flattened in @media print and under prefers-reduced-motion.             */
+  variation: `<svg class="motif-variation" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-vr-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+        <path d="M50 0H0V50" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-vr-grid)"/>
+    <!-- low-left: equal steps in x, the same factor in y -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M132 852 H 700"/><path d="M132 852 V 616"/>
+    </g>
+    <g class="walk">
+      <rect x="132" y="640" width="132" height="212" fill="#f5c542" fill-opacity="0.032"/>
+      <rect x="264" y="640" width="132" height="212" fill="#f5c542" fill-opacity="0.032"/>
+      <rect x="396" y="640" width="132" height="212" fill="#f5c542" fill-opacity="0.032"/>
+      <rect x="528" y="640" width="132" height="212" fill="#f5c542" fill-opacity="0.032"/>
+    </g>
+    <path d="M132 646 L165 668 L198 685 L231 699 L264 734 L297 745 L330 754 L363 762
+             L396 778 L429 782 L462 786 L495 789 L528 800 L561 802 L594 804 L627 806 L660 811"
+          fill="none" stroke="#f5c542" stroke-opacity="0.24" stroke-width="3"/>
+    <g stroke="#7c8cff" stroke-opacity="0.11" stroke-width="1.8" stroke-dasharray="6 9">
+      <path d="M132 646 H 264 M132 734 H 396 M132 778 H 528 M132 800 H 660"/>
+      <path d="M264 646 V 852 M396 734 V 852 M528 778 V 852 M660 800 V 852"/>
+    </g>
+    <g fill="#7c8cff" fill-opacity="0.20">
+      <circle cx="132" cy="646" r="5"/><circle cx="264" cy="734" r="5"/>
+      <circle cx="396" cy="778" r="4.5"/><circle cx="528" cy="800" r="4"/>
+      <circle cx="660" cy="811" r="3.5"/>
+    </g>
+    <!-- low-right, at rest: directly, linearly, exponentially on one pair of axes -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M1030 846 H 1524"/><path d="M1030 846 V 606"/>
+    </g>
+    <path d="M1030 846 L1500 646" fill="none" stroke="#f5c542" stroke-opacity="0.20" stroke-width="2.8"/>
+    <path d="M1030 776 L1500 636" fill="none" stroke="#7c8cff" stroke-opacity="0.19" stroke-width="2.6"/>
+    <path d="M1046 686 L1072 705 L1097 722 L1123 736 L1148 749 L1174 760 L1200 770 L1225 778
+             L1251 786 L1276 792 L1302 798 L1328 803 L1353 807 L1379 811 L1404 814 L1430 817
+             L1456 820 L1481 822 L1507 824"
+          fill="none" stroke="#7c8cff" stroke-opacity="0.14" stroke-width="2.4"/>
+    <path d="M1030 776 h -16" stroke="#7c8cff" stroke-opacity="0.14" stroke-width="2.4"/>
+  </svg>`,
+
+  /* Chapter motif "log": the logarithm, whose whole content is that it trades
+     one kind of step for another. Low-left the two scales stand one above the
+     other with the same five marks tied together: on the upper, linear scale
+     the marks are evenly spaced; on the lower one, each is twice the last, so
+     they crowd at the origin and race away. The light jumps along BOTH at once,
+     in discrete steps, because the claim is that one step up there is one
+     multiplication down here — two markers on unrelated periods would be two
+     unrelated facts. Low-right, at rest, the curve itself with the y-axis drawn
+     as a dashed wall: log(x) has nothing to the left of it, which is the NOTE
+     the source slide ends on. The curve never moves — it is the law. CSS only
+     (`.motif-log .pair`), no script, flattened in @media print and under
+     prefers-reduced-motion.                                                  */
+  log: `<svg class="motif-log" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-lg-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+        <path d="M50 0H0V50" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-lg-grid)"/>
+    <!-- low-left: an even step up here is a doubling down there -->
+    <g stroke="#ffffff" stroke-opacity="0.075" stroke-width="2.2" stroke-linecap="round">
+      <path d="M130 700 H 700"/><path d="M130 812 H 700"/>
+    </g>
+    <g stroke="#7c8cff" stroke-opacity="0.16" stroke-width="2.4" stroke-linecap="round">
+      <path d="M130 688 V 712 M262 688 V 712 M394 688 V 712 M526 688 V 712 M658 688 V 712"/>
+    </g>
+    <g stroke="#f5c542" stroke-opacity="0.16" stroke-width="2.4" stroke-linecap="round">
+      <path d="M130 800 V 824 M165 800 V 824 M236 800 V 824 M377 800 V 824 M658 800 V 824"/>
+    </g>
+    <g stroke="#9fb4ff" stroke-opacity="0.09" stroke-width="1.8" stroke-dasharray="6 9">
+      <path d="M130 714 V 798 M262 714 L165 798 M394 714 L236 798 M526 714 L377 798 M658 714 V 798"/>
+    </g>
+    <g class="pairs">
+      <g class="pair"><circle cx="130" cy="700" r="6"/><circle cx="130" cy="812" r="6"/></g>
+      <g class="pair"><circle cx="262" cy="700" r="6"/><circle cx="165" cy="812" r="6"/></g>
+      <g class="pair"><circle cx="394" cy="700" r="6"/><circle cx="236" cy="812" r="6"/></g>
+      <g class="pair"><circle cx="526" cy="700" r="6"/><circle cx="377" cy="812" r="6"/></g>
+      <g class="pair"><circle cx="658" cy="700" r="6"/><circle cx="658" cy="812" r="6"/></g>
+    </g>
+    <!-- low-right, at rest: the curve, and the wall it never crosses -->
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M986 762 H 1524"/>
+    </g>
+    <path d="M1004 856 V 620" stroke="#7c8cff" stroke-opacity="0.15" stroke-width="2.4"
+          stroke-dasharray="9 8"/>
+    <path d="M1012 837 L1032 781 L1052 757 L1073 741 L1093 730 L1113 721 L1133 714 L1154 707
+             L1174 702 L1194 697 L1215 692 L1235 688 L1255 684 L1275 681 L1296 678 L1316 675
+             L1336 672 L1357 669 L1377 667 L1397 665 L1417 662 L1438 660 L1458 658 L1478 656 L1499 655"
+          fill="none" stroke="#f5c542" stroke-opacity="0.22" stroke-width="3"/>
+    <circle cx="1047" cy="762" r="5" fill="#f5c542" fill-opacity="0.20"/>
+  </svg>`,
+
+  /* Chapter motif "binomial": (1+x)^n ~ 1+nx, and the whole of it is the word
+     SMALL. Low-left the exact curve and the straight approximation leave the
+     same point together and pull apart; the wedge between them is drawn at
+     rest, and what moves is a light walking OUTWARD along a row of error bars,
+     each the true height of the gap at its own x. Near the origin the bar is
+     invisible; by the far end it is most of the board. The room watches the
+     approximation stop being true rather than being told where it stops, and
+     the walk is discrete because each bar is one value of x, not a sweep.
+     Low-right, at rest: Pascal's rows with the first two entries lit and the
+     rest faded — the terms this chapter keeps and the terms it throws away.
+     CSS only (`.motif-binomial .err`), no script, flattened in @media print
+     and under prefers-reduced-motion.                                        */
+  binomial: `<svg class="motif-binomial" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900">
+    <defs>
+      <pattern id="lf-bn-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+        <path d="M50 0H0V50" fill="none" stroke="#9fb4ff" stroke-opacity="0.042" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1600" height="900" fill="url(#lf-bn-grid)"/>
+    <g stroke="#ffffff" stroke-opacity="0.07" stroke-width="2.2" stroke-linecap="round">
+      <path d="M132 852 H 700"/><path d="M132 852 V 604"/>
+    </g>
+    <path d="M132 806 L160 801 L189 796 L217 791 L246 785 L274 778 L303 770 L331 762 L360 754
+             L388 744 L416 734 L445 723 L473 712 L502 699 L530 686 L559 672 L587 657 L616 641
+             L644 624 L644 728 L132 806 Z"
+          fill="#f5c542" fill-opacity="0.05" stroke="none"/>
+    <path d="M132 806 L160 801 L189 796 L217 791 L246 785 L274 778 L303 770 L331 762 L360 754
+             L388 744 L416 734 L445 723 L473 712 L502 699 L530 686 L559 672 L587 657 L616 641 L644 624"
+          fill="none" stroke="#f5c542" stroke-opacity="0.22" stroke-width="3"/>
+    <path d="M132 806 L644 728" fill="none" stroke="#7c8cff" stroke-opacity="0.20" stroke-width="2.8"/>
+    <g class="errs" stroke="#f5c542" stroke-linecap="round" stroke-width="4">
+      <path class="err" d="M214 793 V 791"/>
+      <path class="err" d="M296 781 V 772"/>
+      <path class="err" d="M378 769 V 748"/>
+      <path class="err" d="M460 756 V 717"/>
+      <path class="err" d="M542 744 V 680"/>
+      <path class="err" d="M624 731 V 636"/>
+    </g>
+    <!-- low-right, at rest: the two terms kept, the rest dropped -->
+    <g fill="#f5c542" fill-opacity="0.17">
+      <circle cx="1270" cy="620" r="6"/>
+      <circle cx="1247" cy="662" r="6"/><circle cx="1293" cy="662" r="6"/>
+      <circle cx="1224" cy="704" r="6"/><circle cx="1270" cy="704" r="6"/>
+      <circle cx="1201" cy="746" r="6"/><circle cx="1247" cy="746" r="6"/>
+      <circle cx="1178" cy="788" r="6"/><circle cx="1224" cy="788" r="6"/>
+      <circle cx="1155" cy="830" r="6"/><circle cx="1201" cy="830" r="6"/>
+    </g>
+    <g fill="#7c8cff" fill-opacity="0.07">
+      <circle cx="1316" cy="704" r="6"/>
+      <circle cx="1293" cy="746" r="6"/><circle cx="1339" cy="746" r="6"/>
+      <circle cx="1270" cy="788" r="6"/><circle cx="1316" cy="788" r="6"/><circle cx="1362" cy="788" r="6"/>
+      <circle cx="1247" cy="830" r="6"/><circle cx="1293" cy="830" r="6"/>
+      <circle cx="1339" cy="830" r="6"/><circle cx="1385" cy="830" r="6"/>
+    </g>
+  </svg>`,
+
 }[motif] || null;
 
 if (!motifSvg) {
-  console.error(`unknown motif "${motif}" — expected one of: hex, graph, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid, solid, element`);
+  console.error(`unknown motif "${motif}" — expected one of: hex, graph, calculus, rail, well, power, collision, inertia, torque, conserve, rolling, gravity, fluid, solid, element, percent, ratio, proportion, ntimes, delta, series, variation, log, binomial`);
   process.exit(1);
 }
 
@@ -1019,7 +1598,17 @@ const bgScene = has('--no-bg-scene')
          : (motif === 'gravity' ? 'gravity'
          : (motif === 'fluid' ? 'fluid'
          : (motif === 'solid' ? 'solid'
-         : null)))));
+         : (motif === 'calculus' ? 'calculus'
+         : (motif === 'percent' ? 'percent'
+         : (motif === 'ratio' ? 'ratio'
+         : (motif === 'proportion' ? 'proportion'
+         : (motif === 'ntimes' ? 'ntimes'
+         : (motif === 'delta' ? 'delta'
+         : (motif === 'series' ? 'series'
+         : (motif === 'variation' ? 'variation'
+         : (motif === 'log' ? 'log'
+         : (motif === 'binomial' ? 'binomial'
+         : null)))))))))))))));
 const bgSceneName = bgScene === true ? 'inertia' : bgScene;
 
 const persistentLayers = `<div id="bg" aria-hidden="true">${bgSceneName ? `
@@ -1172,6 +1761,192 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
               [-2.0, -9.0, -11], 0.07, 0.16);                                // cylinder in slabs
           add(sweep(strips(7.6, 4.2, 15, INDIGO, 0.10), 8, 0.14, 0.10, 0.30),
               [15.2, -8.6, -16], 0.05, 0.26);                                // lamina in strips
+        } else if (SCENE === 'calculus'){
+          /* The differentiation chapter's bodies are the curves themselves,
+             plotted from the real functions -- y = x^3, a parabola, the sine
+             train -- plus the one thing this chapter adds to a graph: the
+             TANGENT. Short segments are laid along the parabola, each already
+             turned to the slope the derivative gives at its own x, and one of
+             them at a time brightens and walks along the curve. That walk is
+             what dy/dx is. The whole ladder is drawn before the walk starts,
+             so nothing lives only in the motion, and it carries no information
+             (rules 7, 11, 20) -- the motif SVG is the real backdrop and this
+             is only depth behind it.                                         */
+          var calGrid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.09));
+          };
+          var calPlot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          /* one short segment per sample point, each turned to the slope the
+             derivative gives there -- the tangent ladder the sweep walks */
+          var calTangents = function(f, df, a, b, n, half, c, o){
+            var g = new T.Group(), i, x, y, s, L, ux, uy;
+            for (i = 0; i < n; i++){
+              x = a + (b - a) * i / (n - 1); y = f(x); s = df(x);
+              L = Math.sqrt(1 + s * s); ux = half / L; uy = half * s / L;
+              g.add(new T.Line(new T.BufferGeometry().setFromPoints(
+                [new T.Vector3(x - ux, y - uy, 0), new T.Vector3(x + ux, y + uy, 0)]), mat(c, o)));
+            }
+            return g;
+          };
+          var calSweep = function(g, period, phase, lo, hi){
+            sweeps.push({ g: g, p: period, ph: phase, lo: lo, hi: hi });
+            return g;
+          };
+          add(calGrid(13, 9, 9), [13.8, -3.0, -13], 0.05, 0.26);             // squared paper
+          add(calPlot(function(x){ return 0.24 * x * x - 3.2; }, -5.4, 5.4, 64, GOLD, 0.24),
+              [13.8, -3.0, -12.5], 0.08, 0.26);                              // the parabola
+          add(calSweep(calTangents(function(x){ return 0.24 * x * x - 3.2; },
+                                   function(x){ return 0.48 * x; },
+                                   -4.8, 4.8, 13, 1.5, GOLD, 0.10), 10, 0, 0.10, 0.42),
+              [13.8, -3.0, -12.5], 0.08, 0.26);                              // its tangent, walking
+          add(calPlot(function(x){ return 0.055 * x * x * x; }, -4.6, 4.6, 72, GOLD, 0.18),
+              [-13.0, -4.8, -13], 0.07, 0.18);                               // y = x^3
+          add(calPlot(function(x){ return 2.1 * Math.sin(x * 0.9); }, -6.2, 6.2, 96, INDIGO, 0.15),
+              [-2.2, -9.0, -11], 0.06, 0.12);                                // the sine train
+          add(calSweep(calTangents(function(x){ return 2.1 * Math.sin(x * 0.9); },
+                                   function(x){ return 1.89 * Math.cos(x * 0.9); },
+                                   -5.8, 5.8, 11, 1.2, GOLD, 0.08), 14, 0.41, 0.08, 0.30),
+              [-2.2, -9.0, -11], 0.06, 0.12);                                // and its tangent
+        } else if (SCENE === 'percent'){
+          /* The percentage chapter's bodies, and they are the only shapes this
+             chapter has: the hundred it measures against and the parts it cuts
+             off that hundred. A ring divided into a hundred marks, one segment
+             of it standing out; a bar and the shorter bar that is 20% of it;
+             a stack of five discs where one is the fifth. Each turns about its
+             own axis and none of them means anything -- the motif SVG is the
+             real backdrop and this is only depth behind it (rules 7, 11, 20). */
+          var pcRing = function(r, n, c, o){
+            var pts = [], i, a;
+            for (i = 0; i <= n; i++){
+              a = i / n * Math.PI * 2;
+              pts.push(new T.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
+            }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var pcArc = function(r, a0, a1, c, o){
+            var pts = [], i, a;
+            for (i = 0; i <= 40; i++){
+              a = a0 + (a1 - a0) * i / 40;
+              pts.push(new T.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
+            }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var pcTicks = function(r, n, len, c, o){
+            var pts = [], i, a;
+            for (i = 0; i < n; i++){
+              a = i / n * Math.PI * 2;
+              pts.push(new T.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0),
+                       new T.Vector3(Math.cos(a) * (r + len), Math.sin(a) * (r + len), 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          add(pcRing(3.9, 96, INDIGO, 0.17), [13.8, -2.8, -12], 0.05, 0.20);   // the hundred
+          add(pcTicks(3.9, 20, 0.42, INDIGO, 0.10), [13.8, -2.8, -12], 0.05, 0.20);
+          add(pcArc(4.5, 0, Math.PI * 0.4, GOLD, 0.20), [13.8, -2.8, -12], 0.05, 0.20);
+          add(wire(new T.BoxGeometry(8.4, 0.9, 0.9), INDIGO, 0.18),
+              [-13.2, -4.4, -13], 0.08, 0.22);                                 // the whole
+          add(wire(new T.BoxGeometry(1.7, 0.9, 0.9), GOLD, 0.15),
+              [-8.5, -4.4, -13], 0.08, 0.22);                                  // 20% of it
+          add(wire(new T.CylinderGeometry(2.6, 2.6, 0.30, 30, 1), INDIGO, 0.12),
+              [-2.0, -9.0, -11], 0.06, 0.26);                                  // a hundredth stack
+        } else if (SCENE === 'ratio'){
+          /* The ratio chapter's bodies: one whole cut into its a+b parts, and
+             a lever whose arms stand in that same ratio -- the two pictures the
+             deck draws. The cut is real geometry (the pieces are the parts),
+             not a symbol of one. Each turns about its own axis and carries no
+             information (rules 7, 11, 20).                                    */
+          var rtParts = function(total, a, b, c1, c2, o){
+            var g = new T.Group();
+            var la = total * a / (a + b), lb = total * b / (a + b);
+            var pa = wire(new T.BoxGeometry(la, 1.1, 1.1), c1, o);
+            pa.position.x = -total / 2 + la / 2;
+            var pb = wire(new T.BoxGeometry(lb, 1.1, 1.1), c2, o);
+            pb.position.x = total / 2 - lb / 2;
+            g.add(pa); g.add(pb);
+            return g;
+          };
+          add(rtParts(9.0, 2, 3, INDIGO, GOLD, 0.18),
+              [-13.0, -4.4, -13], 0.08, 0.20);                                 // K cut at 2:3
+          add(rtParts(7.4, 3, 1, INDIGO, GOLD, 0.13),
+              [15.0, -8.6, -16], 0.05, 0.30);                                  // and at 3:1
+          add(wire(new T.BoxGeometry(9.6, 0.24, 0.24), GOLD, 0.16),
+              [13.8, -2.6, -12], 0.07, 0.16);                                  // the beam
+          add(wire(new T.CylinderGeometry(0.0, 1.5, 2.2, 4, 1), INDIGO, 0.14),
+              [13.8, -4.3, -12], 0.07, 0);                                     // its fulcrum
+          add(wire(new T.BoxGeometry(2.2, 1.4, 2.2, 1, 1, 1), INDIGO, 0.11),
+              [-2.2, -9.0, -11], 0.06, 0.24);                                  // a pan
+        } else if (SCENE === 'proportion'){
+          /* The relation-making chapter's bodies are the power laws it makes
+             relations out of, plotted from the real functions: y = x, y = x^2,
+             y = sqrt(x) and y = 1/x^2 -- the four shapes every "relate case 1
+             and case 2" question is one of. Stand-in solids would say nothing;
+             a curve says which law. They carry no information (rules 7,11,20). */
+          var prPlot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var prGrid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.08));
+          };
+          add(prGrid(12, 8.4, 8), [13.8, -3.0, -13], 0.05, 0.24);              // squared paper
+          add(prPlot(function(x){ return 0.30 * x * x - 3.0; }, -5.0, 5.0, 64, GOLD, 0.24),
+              [13.8, -3.0, -12.5], 0.05, 0.24);                                // y = x^2
+          add(prPlot(function(x){ return 2.2 * Math.sqrt(x); }, 0.02, 6.4, 56, GOLD, 0.17),
+              [-13.0, -5.0, -13], 0.07, 0.18);                                 // y = sqrt(x)
+          add(prPlot(function(x){ return 3.0 / (x * x); }, 0.78, 5.6, 56, INDIGO, 0.16),
+              [-2.2, -9.0, -11], 0.06, 0.12);                                  // y = 1/x^2
+          add(prPlot(function(x){ return 0.66 * x; }, -5.0, 5.0, 2, INDIGO, 0.13),
+              [15.2, -8.8, -16], 0.05, 0.32);                                  // y = x
+        } else if (SCENE === 'ntimes'){
+          /* The n-times chapter's bodies are one body drawn at its successive
+             multiples: a cube, the same cube twice as long, and the volume that
+             is 2^3 of it -- so the backdrop says what the method says, that a
+             factor on a length is a power of that factor on the answer. Plus
+             the sqrt(2) case the pendulum question turns on. No information
+             (rules 7, 11, 20).                                                */
+          add(wire(new T.BoxGeometry(2.4, 2.4, 2.4), INDIGO, 0.20),
+              [-13.4, -4.4, -13], 0.09, 0.24);                                 // x1
+          add(wire(new T.BoxGeometry(4.8, 2.4, 2.4), GOLD, 0.14),
+              [-2.2, -9.0, -11], 0.07, 0.22);                                  // x2 on one edge
+          add(wire(new T.BoxGeometry(4.8, 4.8, 4.8, 2, 2, 2), INDIGO, 0.13),
+              [13.9, -3.0, -13], 0.06, 0.28);                                  // x2 on all three
+          add(wire(new T.CylinderGeometry(3.3, 3.3, 0.26, 30, 1), GOLD, 0.10),
+              [15.2, -8.8, -16], 0.05, 0.34);                                  // area x n^2
+        } else if (SCENE === 'delta'){
+          /* The small-change chapter's bodies, drawn as the thing the method
+             is: a body and the thin shell taken off it. A cube with its own
+             slightly larger cube around it (dV = 3 x dl), a disc with its outer
+             ring (dA = 2 pi r dr), a rod with its extension. The pairs are
+             deliberately close in size, because the method is only true while
+             the change is small -- a fat shell would contradict every slide in
+             front of it. No information (rules 7, 11, 20).                    */
+          add(wire(new T.BoxGeometry(4.4, 4.4, 4.4), INDIGO, 0.19),
+              [13.9, -3.0, -13], 0.06, 0.26);                                  // the body
+          add(wire(new T.BoxGeometry(4.9, 4.9, 4.9), GOLD, 0.10),
+              [13.9, -3.0, -13], 0.06, 0.26);                                  // and its shell
+          add(wire(new T.CylinderGeometry(3.0, 3.0, 0.24, 34, 1), INDIGO, 0.17),
+              [-13.1, -4.8, -13], 0.08, 0.30);                                 // the disc
+          add(wire(new T.TorusGeometry(3.25, 0.05, 4, 48), GOLD, 0.12),
+              [-13.1, -4.8, -13], 0.08, 0.30);                                 // its outer ring
+          add(wire(new T.BoxGeometry(7.6, 0.5, 0.5), INDIGO, 0.13),
+              [-2.4, -9.0, -11], 0.06, 0.14);                                  // the rod
+          add(wire(new T.BoxGeometry(0.7, 0.5, 0.5), GOLD, 0.11),
+              [1.8, -9.0, -11], 0.06, 0.14);                                   // and its extension
         } else if (SCENE === 'graph'){
           /* The graph-drawing chapter's bodies are the CURVES themselves --
              the straight line, the parabola, the sine train and the 1/x branch
@@ -1202,6 +1977,110 @@ const bgSceneFx = !bgSceneName ? '' : `<script>
               [-2.2, -9.0, -11], 0.06, 0.10);                                // the 1/x branch
           add(plot(function(x){ return 0.72 * x; }, -5.0, 5.0, 2, INDIGO, 0.14),
               [15.2, -8.8, -16], 0.05, 0.34);                                // the straight line
+        } else if (SCENE === 'series'){
+          /* The A.P. / G.P. chapter's bodies are its two laws, read as size:
+             three indigo rings whose radii grow by the SAME amount, and three
+             gold ones whose radii grow by the same FACTOR. Same three terms
+             either way, and by the third the gold one has left the indigo one
+             behind. They carry no information (rules 7, 11, 20).             */
+          add(wire(new T.TorusGeometry(1.6, 0.06, 5, 44), INDIGO, 0.20),
+              [-14.6, -4.0, -13], 0.09, 0.30);                                 // a
+          add(wire(new T.TorusGeometry(2.6, 0.06, 5, 52), INDIGO, 0.16),
+              [-11.4, -5.6, -14], 0.07, 0.30);                                 // a + d
+          add(wire(new T.TorusGeometry(3.6, 0.06, 5, 60), INDIGO, 0.12),
+              [-7.4, -7.6, -15], 0.05, 0.30);                                  // a + 2d
+          add(wire(new T.TorusGeometry(1.0, 0.06, 5, 36), GOLD, 0.19),
+              [8.2, -8.4, -14], 0.11, 0.22);                                   // a
+          add(wire(new T.TorusGeometry(2.0, 0.06, 5, 48), GOLD, 0.14),
+              [11.2, -6.2, -14], 0.08, 0.22);                                  // ar
+          add(wire(new T.TorusGeometry(4.0, 0.06, 5, 64), GOLD, 0.10),
+              [15.4, -2.8, -14], 0.05, 0.22);                                  // ar^2
+        } else if (SCENE === 'variation'){
+          /* This deck's bodies are the four laws its title names, plotted from
+             the real functions rather than stood in for by solids: y = x, a
+             line with an intercept, and the two exponentials, up and down. A
+             stand-in cube would say nothing about WHICH law (rules 7, 11, 20). */
+          var vrPlot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var vrGrid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.08));
+          };
+          add(vrGrid(12, 8.4, 8), [13.8, -3.0, -13], 0.05, 0.24);              // squared paper
+          add(vrPlot(function(x){ return 0.92 * x; }, -4.6, 4.6, 2, GOLD, 0.24),
+              [13.8, -3.0, -12.5], 0.05, 0.24);                                // directly
+          add(vrPlot(function(x){ return 0.55 * x + 1.8; }, -4.6, 4.6, 2, INDIGO, 0.17),
+              [13.8, -3.0, -12.5], 0.05, 0.24);                                // linearly
+          add(vrPlot(function(x){ return 4.4 * Math.exp(-0.62 * x) - 2.2; }, -1.2, 5.4, 56, GOLD, 0.17),
+              [-13.2, -5.0, -13], 0.07, 0.18);                                 // exponentially down
+          add(vrPlot(function(x){ return 0.34 * Math.exp(0.58 * x) - 2.4; }, -3.0, 4.4, 56, INDIGO, 0.15),
+              [-2.2, -9.0, -11], 0.06, 0.12);                                  // exponentially up
+        } else if (SCENE === 'log'){
+          /* The log chapter's bodies are the inverse pair themselves — y = e^x
+             and y = ln x — with the line y = x they are each other's mirror in,
+             all three plotted from the real functions and drawn on one sheet of
+             squared paper. That mirror IS the antilog slide. No information
+             (rules 7, 11, 20).                                                */
+          var lgPlot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var lgGrid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.08));
+          };
+          add(lgGrid(12, 8.4, 8), [13.8, -3.0, -13], 0.05, 0.22);              // squared paper
+          add(lgPlot(function(x){ return Math.exp(x * 0.72) - 3.4; }, -4.4, 2.6, 56, INDIGO, 0.20),
+              [13.8, -3.0, -12.5], 0.05, 0.22);                                // y = e^x
+          add(lgPlot(function(x){ return Math.log(x + 4.0) * 1.39 - 1.9; }, -3.9, 5.2, 56, GOLD, 0.24),
+              [13.8, -3.0, -12.5], 0.05, 0.22);                                // y = ln x
+          add(lgPlot(function(x){ return x; }, -4.2, 4.2, 2, INDIGO, 0.09),
+              [13.8, -3.0, -12.5], 0.05, 0.22);                                // the mirror
+          add(lgPlot(function(x){ return Math.log(x) * 1.9; }, 0.14, 6.4, 56, GOLD, 0.15),
+              [-13.0, -5.0, -13], 0.07, 0.16);                                 // the curve alone
+          add(lgPlot(function(x){ return Math.exp(x * 0.66) - 2.0; }, -3.0, 3.4, 48, INDIGO, 0.13),
+              [-2.2, -9.0, -11], 0.06, 0.12);                                  // its antilog
+        } else if (SCENE === 'binomial'){
+          /* The binomial chapter's bodies are the approximation itself: the
+             exact curve and the straight line it is replaced by, leaving the
+             same point together and pulling apart — drawn twice, once for a
+             positive power and once for a negative one, because the deck does
+             both. Real plots, because which curve it is, is the point
+             (rules 7, 11, 20).                                                */
+          var bnPlot = function(f, a, b, n, c, o){
+            var pts = [], i, x;
+            for (i = 0; i <= n; i++){ x = a + (b - a) * i / n; pts.push(new T.Vector3(x, f(x), 0)); }
+            return new T.Line(new T.BufferGeometry().setFromPoints(pts), mat(c, o));
+          };
+          var bnGrid = function(w, h, n){
+            var pts = [], i, x, y;
+            for (i = 0; i <= n; i++){
+              x = -w / 2 + w * i / n; pts.push(new T.Vector3(x, -h / 2, 0), new T.Vector3(x, h / 2, 0));
+              y = -h / 2 + h * i / n; pts.push(new T.Vector3(-w / 2, y, 0), new T.Vector3(w / 2, y, 0));
+            }
+            return new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), mat(INDIGO, 0.08));
+          };
+          add(bnGrid(12, 8.4, 8), [13.8, -3.0, -13], 0.05, 0.24);              // squared paper
+          add(bnPlot(function(x){ return 1.1 * Math.pow(1 + x, 3) - 3.6; }, -0.6, 1.5, 48, GOLD, 0.24),
+              [13.8, -3.0, -12.5], 0.05, 0.24);                                // (1+x)^3
+          add(bnPlot(function(x){ return 1.1 * (1 + 3 * x) - 3.6; }, -0.6, 1.5, 2, INDIGO, 0.18),
+              [13.8, -3.0, -12.5], 0.05, 0.24);                                // 1 + 3x
+          add(bnPlot(function(x){ return 2.6 * Math.pow(1 + x, -3) - 2.4; }, -0.45, 3.2, 48, GOLD, 0.16),
+              [-13.0, -5.0, -13], 0.07, 0.18);                                 // (1+x)^-3
+          add(bnPlot(function(x){ return 2.6 * (1 - 3 * x) - 2.4; }, -0.45, 1.1, 2, INDIGO, 0.12),
+              [-13.0, -5.0, -13], 0.07, 0.18);                                 // 1 - 3x
         } else {
         add(wire(new T.TorusGeometry(3.1, 0.10, 6, 64), INDIGO, 0.30),
             [13.5, -1.4, -10], 0.16, Math.PI / 2 - 0.42);                    // ring

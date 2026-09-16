@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>00 - Basic Math - 01.XX Integration on object.html</title>
+
+<!-- ============ FONTS ============ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ============ KATEX (math rendering) ============ -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+<!-- ============ THREE.JS (import map for 3D modules) ============ -->
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<style>
+/* ==========================================================================
+   THE DIFFERENTIAL ELEMENT — chalkboard-lab visual system
+   ========================================================================== */
+:root{
+  --bg0:#0b1613; --bg1:#0f201b;
+  --panel:#12261f; --panel2:#0d1c17;
+  --ink:#e9f2ea; --ink-dim:#9db4a7; --ink-faint:#5d7a6d;
+  --chalk:#f4f1e4;
+  --amber:#ffb84d; --amber-deep:#d98f1f;
+  --teal:#67e0c2; --sky:#8ecbff; --coral:#ff8a70;
+  --line:rgba(180,225,200,.14);
+  --grid:rgba(120,230,190,.05);
+  --disp:'Bricolage Grotesque',sans-serif;
+  --body:'Atkinson Hyperlegible',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  font-family:var(--body); color:var(--ink); overflow:hidden;
+  background:
+    radial-gradient(1200px 700px at 70% -10%, rgba(103,224,194,.06), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(255,184,77,.05), transparent 60%),
+    linear-gradient(160deg, var(--bg1), var(--bg0) 65%);
+}
+body::before{ /* vignette */
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.45));
+}
+::selection{background:rgba(255,184,77,.35)}
+
+/* ---- drifting ambient math glyphs ---- */
+.amb{position:fixed; z-index:0; pointer-events:none; color:rgba(150,230,200,.08);
+  font-family:var(--disp); animation:drift var(--dur,9s) ease-in-out var(--del,0s) infinite alternate;}
+@keyframes drift{from{transform:translateY(-14px) rotate(-3deg)}to{transform:translateY(14px) rotate(2.5deg)}}
+
+/* ================= APP GRID ================= */
+.app{position:relative; z-index:1; display:grid; height:100vh;
+  grid-template-columns:266px minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr);
+  gap:14px; padding:14px 18px 18px;}
+
+/* ================= SIDEBAR NAV ================= */
+.side{overflow:auto; min-height:0; padding-right:4px;}
+.grpTitle{font-family:var(--mono); font-size:10px; letter-spacing:.22em; color:var(--ink-faint);
+  text-transform:uppercase; margin:16px 8px 7px; display:flex; align-items:center; gap:8px;}
+.grpTitle::after{content:""; flex:1; height:1px; background:var(--line);}
+.navItem{width:100%; display:grid; grid-template-columns:26px 1fr 12px; align-items:center; gap:8px;
+  background:none; border:none; border-left:3px solid transparent; color:var(--ink-dim);
+  font-family:var(--body); font-size:13.5px; text-align:left; padding:8px 10px; cursor:pointer;
+  transition:.2s; border-radius:0 8px 8px 0;}
+.navItem .nNum{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.navItem:hover{background:rgba(255,255,255,.035); color:var(--chalk); transform:translateX(3px);}
+.navItem.active{border-left-color:var(--amber); background:rgba(255,184,77,.09); color:var(--chalk);}
+.navItem.active .nNum{color:var(--amber);}
+.dot{width:7px;height:7px;border-radius:50%;}
+.dot.ready{background:var(--amber); animation:ping 2.4s ease-out infinite;}
+.dot.queued{background:transparent; border:1.5px solid var(--ink-faint);}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,184,77,.5)}70%{box-shadow:0 0 0 7px rgba(255,184,77,0)}100%{box-shadow:0 0 0 0 rgba(255,184,77,0)}}
+
+/* ================= STAGE ================= */
+.stageCol{display:flex; min-width:0; min-height:0;}
+.stageCard{flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line); border-radius:12px;}
+.stageHead{display:flex; align-items:center; gap:16px; padding:14px 18px 10px;}
+.bigNum{font-family:var(--disp); font-weight:800; font-size:56px; line-height:.9;
+  color:var(--amber); text-shadow:0 0 26px rgba(255,184,77,.35); min-width:76px;}
+.stageHead h2{font-family:var(--disp); font-weight:700; font-size:23px; letter-spacing:-.01em;}
+.chips{display:flex; gap:8px; margin-top:5px;}
+.chip{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  padding:4px 10px; border-radius:99px; border:1px solid var(--line); color:var(--ink-dim);}
+.chip.amber{border-color:rgba(255,184,77,.4); color:var(--amber);}
+
+/* ---- control strip ---- */
+.controls{display:flex; flex-wrap:wrap; align-items:center; gap:14px 20px;
+  padding:10px 18px; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line);
+  background:rgba(0,0,0,.18); min-height:56px;}
+.ctl{display:flex; align-items:center; gap:9px;}
+.ctlLabel{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim);}
+.ctlVal{font-family:var(--mono); font-size:11px; color:var(--amber); min-width:56px; text-align:right;}
+input[type=range]{-webkit-appearance:none; appearance:none; width:150px; height:4px; border-radius:4px;
+  background:linear-gradient(to right, var(--amber) var(--p,50%), rgba(255,255,255,.12) var(--p,50%));
+  outline:none; cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:16px;height:16px;border-radius:50%;
+  background:var(--amber); border:2px solid #241703; box-shadow:0 0 0 0 rgba(255,184,77,.4);
+  transition:box-shadow .25s;}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 7px rgba(255,184,77,.18);}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--amber);border:2px solid #241703;}
+.switch{display:flex; align-items:center; gap:9px; background:none; border:1px solid var(--line);
+  border-radius:99px; padding:5px 12px 5px 6px; cursor:pointer; color:var(--ink-dim);
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; transition:.25s;}
+.switch .knob{width:26px;height:14px;border-radius:99px;background:rgba(255,255,255,.12);position:relative;transition:.25s;flex:none;}
+.switch .knob::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;
+  background:var(--ink-dim);transition:.25s;}
+.switch:hover{border-color:rgba(255,184,77,.5);}
+.switch.on{color:var(--amber); border-color:rgba(255,184,77,.55); background:rgba(255,184,77,.07);}
+.switch.on .knob{background:rgba(255,184,77,.35);}
+.switch.on .knob::after{left:14px;background:var(--amber);}
+.playBtn{display:flex;align-items:center;gap:8px;margin-left:auto;background:rgba(255,184,77,.1);
+  border:1.5px solid var(--amber); color:var(--amber); border-radius:99px; padding:6px 16px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:.2s;}
+.playBtn:hover{background:rgba(255,184,77,.22); transform:translateY(-1px);}
+.playBtn.playing{background:var(--amber); color:#241703;}
+
+/* ---- canvas ---- */
+.canvasWrap{flex:1; position:relative; min-height:300px;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    linear-gradient(rgba(120,230,190,.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,230,190,.075) 1px, transparent 1px);
+  background-size:26px 26px, 26px 26px, 130px 130px, 130px 130px;}
+.mount{position:absolute; inset:0; overflow:hidden;}
+.mount svg.fig{position:absolute; inset:0; width:100%; height:100%;}
+.tick{position:absolute; width:14px;height:14px; border-color:rgba(244,241,228,.35)!important; z-index:3; pointer-events:none;}
+.t-tl{top:8px;left:8px;border-top:1.5px solid;border-left:1.5px solid;}
+.t-tr{top:8px;right:8px;border-top:1.5px solid;border-right:1.5px solid;}
+.t-bl{bottom:8px;left:8px;border-bottom:1.5px solid;border-left:1.5px solid;}
+.t-br{bottom:8px;right:8px;border-bottom:1.5px solid;border-right:1.5px solid;}
+.figCap{position:absolute; left:16px; bottom:10px; font-family:var(--mono); font-size:10.5px;
+  color:var(--ink-faint); z-index:3; pointer-events:none;}
+.legend{position:absolute; right:16px; bottom:10px; display:flex; gap:14px; z-index:3; pointer-events:none;}
+.lg{display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; color:var(--ink-dim);}
+.lg i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.lbl3{position:absolute; z-index:4; pointer-events:none; font-family:var(--mono); font-size:12px;
+  color:var(--chalk); background:rgba(10,22,18,.75); border:1px solid var(--line);
+  padding:2px 8px; border-radius:6px; transform:translate(-50%,-50%); transition:opacity .3s; white-space:nowrap;}
+.lbl3.big{color:var(--amber); border-color:rgba(255,184,77,.55); font-size:13px;
+  box-shadow:0 0 22px rgba(255,184,77,.18);}
+
+/* ---- view panel text toggle button ---- */
+.viewTextBtn{position:absolute; top:14px; right:20px; z-index:10;
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(18,38,31,.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border:1px solid var(--line); border-radius:99px; padding:6px 14px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-dim); cursor:pointer; transition:all .2s ease; user-select:none;}
+.viewTextBtn:hover{border-color:rgba(255,184,77,.55); color:var(--chalk); transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);}
+.viewTextBtn.active{color:var(--amber); border-color:rgba(255,184,77,.55); background:rgba(255,184,77,.1);
+  box-shadow:0 0 16px rgba(255,184,77,.15);}
+.viewTextBtn .vtDot{width:7px; height:7px; border-radius:50%; background:var(--ink-faint); transition:all .2s ease;}
+.viewTextBtn.active .vtDot{background:var(--amber); box-shadow:0 0 7px var(--amber);}
+.viewTextBtn .vtStatus{font-weight:600; min-width:22px; text-align:left;}
+
+/* When text is deactivated on view panel */
+.canvasWrap.text-deactivated svg text,
+.canvasWrap.text-deactivated .lbl3,
+.canvasWrap.text-deactivated .figCap,
+.canvasWrap.text-deactivated .legend {
+  opacity:0 !important; visibility:hidden !important; pointer-events:none !important;
+  transition:opacity .25s ease, visibility .25s ease;
+}
+svg text, .lbl3, .figCap, .legend {
+  transition:opacity .25s ease, visibility .25s ease;
+}
+
+/* ---- SVG figure classes ---- */
+.monoTxt{font-family:var(--mono); fill:var(--ink-dim); font-size:14px;}
+.chalkTxt{font-family:var(--mono); fill:var(--chalk);}
+.amberTxt{font-family:var(--mono); fill:var(--amber);}
+.axisLn{stroke:rgba(233,242,234,.28); stroke-width:1.4;}
+.faintLn{stroke:rgba(233,242,234,.22); stroke-width:1; stroke-dasharray:3 5;}
+.bigNote{font-family:var(--body); font-style:italic; fill:var(--chalk); font-size:17px; opacity:0; transition:opacity .5s;}
+.elPulse{animation:elPulse 2.3s ease-in-out infinite;}
+@keyframes elPulse{50%{opacity:.7}}
+.pullLift{transition:transform .8s cubic-bezier(.2,.75,.2,1);}
+
+/* ---- queued placeholder ---- */
+.queuedCard{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:14px; text-align:center; padding:30px;}
+.qNum{font-family:var(--disp); font-weight:800; font-size:110px; line-height:1;
+  color:transparent; -webkit-text-stroke:1.5px rgba(255,184,77,.45);}
+.queuedCard h3{font-family:var(--disp); font-size:26px;}
+.qEl{font-size:1.5em; color:var(--chalk);}
+.qNote{max-width:520px; color:var(--ink-dim); font-size:14px; line-height:1.55;}
+.qPlan{font-family:var(--mono); font-size:11px; color:var(--teal); border:1px dashed rgba(103,224,194,.4);
+  border-radius:8px; padding:8px 16px;}
+.qPlan span{color:var(--ink-faint); margin-right:8px;}
+
+/* ================= DOSSIER (right panel) ================= */
+.dossier{overflow:auto; min-height:0; padding:4px 2px;}
+.dossier h3{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--amber); margin:18px 0 10px;}
+.dossier h3:first-child{margin-top:4px;}
+.dossier p{font-size:14px; line-height:1.65; color:#c9d9cd;}
+.formula{background:rgba(0,0,0,.28); border-left:3px solid var(--amber); border-radius:0 10px 10px 0;
+  padding:12px 16px; margin:12px 0;}
+.fLabel{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-faint); display:block; margin-bottom:8px;}
+.texLine{color:var(--chalk); overflow-x:auto; overflow-y:hidden; padding:2px 0;}
+.texLine .katex{font-size:1.18em;}
+.tex-fallback{font-family:var(--mono); font-size:12px; color:var(--teal);}
+.readout{border:1px solid var(--line); border-radius:10px; padding:6px 14px; margin:12px 0;
+  background:rgba(103,224,194,.04);}
+.rRow{display:flex; justify-content:space-between; gap:12px; padding:7px 0;
+  border-bottom:1px dashed rgba(255,255,255,.07); font-size:13px;}
+.rRow:last-child{border-bottom:none;}
+.rK{color:var(--ink-dim);}
+.rV{font-family:var(--mono); color:var(--teal);}
+.tip{border:1.5px dashed rgba(255,184,77,.4); border-radius:10px; padding:12px 14px;
+  font-size:13px; line-height:1.55; color:#d8e4da; margin:14px 0 20px;}
+.tip b{color:var(--amber);}
+.dossier>*{animation:riseIn .55s cubic-bezier(.2,.7,.2,1) both;}
+.dossier>*:nth-child(2){animation-delay:.05s}.dossier>*:nth-child(3){animation-delay:.1s}
+.dossier>*:nth-child(4){animation-delay:.15s}.dossier>*:nth-child(5){animation-delay:.2s}
+.dossier>*:nth-child(6){animation-delay:.25s}.dossier>*:nth-child(7){animation-delay:.3s}
+@keyframes riseIn{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+.stageCard.entering{animation:cardIn .5s cubic-bezier(.2,.7,.2,1) both;}
+@keyframes cardIn{from{opacity:0; transform:translateY(12px) scale(.995)}to{opacity:1; transform:none}}
+
+/* scrollbars */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,184,77,.3)}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:1240px){
+  .app{grid-template-columns:230px minmax(0,1fr);}
+  body{overflow:auto;} .app{height:auto; min-height:100vh;}
+}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr; grid-template-rows:auto 1fr;}
+  .side{display:flex; overflow-x:auto; gap:6px; padding-bottom:6px;}
+  .grpTitle{display:none;}
+  .navItem{border-left:none; border-bottom:3px solid transparent; border-radius:8px 8px 0 0; white-space:nowrap; width:auto;}
+  .navItem.active{border-bottom-color:var(--amber);}
+}
+</style>
+</head>
+<body>
+
+<!-- drifting ambient glyphs (populated by JS) -->
+<div id="ambient" aria-hidden="true"></div>
+
+<div class="app">
+
+  <!-- ================= NAV ================= -->
+  <nav class="side" id="sideNav"></nav>
+
+  <!-- ================= STAGE ================= -->
+  <main class="stageCol">
+    <section class="stageCard" id="stageCard">
+      <div class="stageHead">
+        <span class="bigNum" id="stageNum">01</span>
+        <div>
+          <h2 id="stageTitle">—</h2>
+          <div class="chips"><span class="chip" id="chipDim">—</span><span class="chip amber" id="chipEl">—</span></div>
+        </div>
+      </div>
+      <div class="controls" id="controlsBar"></div>
+      <div class="canvasWrap" id="canvasWrap">
+        <button id="viewTextBtn" class="viewTextBtn active" type="button" aria-pressed="true" title="Toggle text on view panel (Shortcut: T)">
+          <span class="vtDot"></span>
+          <span>Text</span>
+          <span class="vtStatus">ON</span>
+        </button>
+        <div class="mount" id="mount"></div>
+        <span class="tick t-tl"></span><span class="tick t-tr"></span>
+        <span class="tick t-bl"></span><span class="tick t-br"></span>
+        <div class="figCap" id="figCap"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<!-- GSAP (loaded before the app module; a tiny fallback is defined in-app if it fails) -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+<script type="module">
+/* ============================================================================
+   THE DIFFERENTIAL ELEMENT — application
+   ----------------------------------------------------------------------------
+   HOW TO ADD A MODULE (teacher notes):
+   1) Add an entry to the MODULES registry at the bottom of this file.
+      - status:'ready'   → needs a factory function that builds the scene.
+      - status:'queued'  → shows a placeholder card; maths already displayed.
+   2) A factory receives ctx = { mount, controlsBar, readout(), legend(),
+      caption(), setSweep() } and returns { dispose() }.
+   3) Use makeSlider / makeToggle to build controls; call ctx.readout() to
+      refresh live values; call ctx.setSweep(t) to enable the ▶ sweep button.
+   ========================================================================== */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------- micro-fallback if the GSAP CDN is blocked ---------- */
+if(!window.gsap){
+  const easeIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+  const SKIP=['duration','delay','ease','onUpdate','onComplete','repeat','yoyo','overwrite'];
+  window.gsap={_t:[],
+    to(target,vars){const anim={target,raf:0};this._t.push(anim);
+      const dur=Math.max(vars.duration??.5,.001)*1000, delay=(vars.delay??0)*1000;
+      const keys=Object.keys(vars).filter(k=>typeof vars[k]==='number'&&!SKIP.includes(k));
+      const from={};keys.forEach(k=>from[k]=target[k]);const t0=performance.now()+delay;
+      const step=now=>{let p=(now-t0)/dur;
+        if(p<0){anim.raf=requestAnimationFrame(step);return;}
+        p=Math.min(p,1);const e=easeIO(p);
+        keys.forEach(k=>target[k]=from[k]+(vars[k]-from[k])*e);
+        vars.onUpdate&&vars.onUpdate();
+        if(p<1)anim.raf=requestAnimationFrame(step);
+        else{this._t=this._t.filter(a=>a!==anim);vars.onComplete&&vars.onComplete();}};
+      anim.raf=requestAnimationFrame(step);return anim;},
+    killTweensOf(target){this._t=this._t.filter(a=>{if(a.target===target){cancelAnimationFrame(a.raf);return false;}return true;});}};
+}
+
+/* ============================ DOM / misc helpers ============================ */
+const $=s=>document.querySelector(s);
+function el(tag,cls,html){const d=document.createElement(tag);if(cls)d.className=cls;if(html!=null)d.innerHTML=html;return d;}
+function svgEl(n,attrs={},parent){const e=document.createElementNS('http://www.w3.org/2000/svg',n);
+  for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- KaTeX helper with graceful fallback ---------- */
+const texJobs=[];
+function tex(elm,str,display=true){texJobs.push({elm,str,display});paintTex(elm,str,display);}
+function paintTex(elm,str,display){
+  if(window.katex){try{katex.render(str,elm,{displayMode:display,throwOnError:false});}catch(e){elm.textContent=str;}}
+  else{elm.classList.add('tex-fallback');elm.textContent=str;}}
+window.addEventListener('load',()=>{if(window.katex)texJobs.forEach(j=>paintTex(j.elm,j.str,j.display));});
+
+/* ---------- ambient glyphs ---------- */
+(function ambient(){
+  const g=['∫','∂','Σ','dθ','ρ','∇','dx','Δ→0','π','r²','dℓ','∮','λ','4πr²'];
+  const host=$('#ambient');
+  g.forEach((ch,i)=>{const s=el('span','amb',ch);
+    s.style.left=(6+ (i*67)%88)+'%'; s.style.top=(8+(i*37)%80)+'%';
+    s.style.fontSize=(26+(i*13)%40)+'px';
+    s.style.setProperty('--dur',(7+i%6*1.7)+'s'); s.style.setProperty('--del',(i*.7)+'s');
+    host.appendChild(s);});
+})();
+
+/* ============================ control builders ============================ */
+function makeSlider(bar,{label,min,max,step,value,fmt,onInput}){
+  const w=el('div','ctl'); w.innerHTML=`<span class="ctlLabel">${label}</span>`;
+  const inp=document.createElement('input');
+  Object.assign(inp,{type:'range',min,max,step,value});
+  const badge=el('span','ctlVal');
+  w.append(inp,badge); bar.appendChild(w);
+  const paint=()=>{inp.style.setProperty('--p',((inp.value-min)/(max-min)*100)+'%');
+    badge.textContent=fmt?fmt(+inp.value):inp.value;};
+  inp.addEventListener('input',()=>{stopSweep();paint();onInput(+inp.value);});
+  paint();
+  return {set(v){inp.value=v;paint();}};
+}
+function makeToggle(bar,{label,value,onInput}){
+  const b=el('button','switch'+(value?' on':'')); b.type='button';
+  b.setAttribute('role','switch'); b.setAttribute('aria-checked',value);
+  b.innerHTML=`<span class="knob"></span><span>${label}</span>`;
+  b.addEventListener('click',()=>{stopSweep();
+    const on=!b.classList.contains('on');
+    b.classList.toggle('on',on); b.setAttribute('aria-checked',on); onInput(on);});
+  bar.appendChild(b);
+  return {set(v){b.classList.toggle('on',v);b.setAttribute('aria-checked',v);}};
+}
+
+/* ============================ Three.js stage helper ============================ */
+function threeStage(mount){
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});}
+  catch(e){return null;}
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled=true;
+  renderer.domElement.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;';
+  mount.appendChild(renderer.domElement);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(42,1,.1,60);
+  camera.position.set(2.7,1.9,3.4);
+  const controls=new OrbitControls(camera,renderer.domElement);
+  Object.assign(controls,{enableDamping:true,dampingFactor:.06,autoRotate:true,
+    autoRotateSpeed:.7,minDistance:2,maxDistance:9,enablePan:false});
+  let resumeT;
+  controls.addEventListener('start',()=>{controls.autoRotate=false;clearTimeout(resumeT);});
+  controls.addEventListener('end',()=>{resumeT=setTimeout(()=>controls.autoRotate=true,2600);});
+  let raf=0,userFn=null;
+  const size=()=>{const w=mount.clientWidth,h=mount.clientHeight;if(!w||!h)return;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+  size(); const ro=new ResizeObserver(size); ro.observe(mount);
+  const clock=new THREE.Clock();
+  (function loop(){raf=requestAnimationFrame(loop);
+    const t=clock.getElapsedTime();
+    if(userFn)userFn(t); controls.update(); renderer.render(scene,camera);})();
+  return {scene,camera,renderer,controls,
+    start(fn){userFn=fn;},
+    dispose(){cancelAnimationFrame(raf);ro.disconnect();controls.dispose();clearTimeout(resumeT);
+      scene.traverse(o=>{o.geometry&&o.geometry.dispose();
+        if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+      renderer.dispose();renderer.domElement.remove();}};
+}
+
+/* ============================ engine state ============================ */
+const mount=$('#mount'), controlsBar=$('#controlsBar'), dossier=$('#dossier');
+let live=null, sweepFn=null, sweepDur=4.5, playing=false, proxy={t:0}, playBtn=null;
+
+function stopSweep(){ if(!playing)return; playing=false; gsap.killTweensOf(proxy);
+  if(playBtn){playBtn.classList.remove('playing');playBtn.innerHTML='<span>▶</span> sweep';}}
+function toggleSweep(){
+  if(!sweepFn)return;
+  if(playing){stopSweep();return;}
+  playing=true; proxy.t=0;
+  playBtn.classList.add('playing'); playBtn.innerHTML='<span>■</span> stop';
+  gsap.to(proxy,{t:1,duration:sweepDur,
+    onUpdate:()=>sweepFn(proxy.t),
+    onComplete:()=>stopSweep()});
+}
+function renderReadout(rows){
+  if(!dossier) return;
+  let box=$('#readout');
+  if(!box){box=el('div','readout');box.id='readout';dossier.appendChild(box);}
+  box.innerHTML=rows.map(([k,v])=>`<div class="rRow"><span class="rK">${k}</span><span class="rV">${v}</span></div>`).join('');
+}
+function setLegend(items){$('#legend').innerHTML=items.map(i=>`<span class="lg"><i style="background:${i.c}"></i>${i.t}</span>`).join('');}
+function replayAnim(elm,cls){elm.classList.remove(cls);void elm.offsetWidth;elm.classList.add(cls);}
+
+/* ============================ dossier renderer ============================ */
+function renderDossier(m){
+  if(!dossier) return;
+  dossier.innerHTML='';
+  const old=$('#readout'); if(old)old.remove();
+  dossier.appendChild(el('h3',null,'Why this element?'));
+  dossier.appendChild(el('p',null,m.info.why));
+  (m.info.texBlocks||[]).forEach(b=>{
+    const f=el('div','formula'); f.appendChild(el('span','fLabel',b.label));
+    const t=el('div','texLine'); f.appendChild(t); tex(t,b.tex); dossier.appendChild(f);});
+  if(m.status==='queued'&&m.info.intTex){
+    const f=el('div','formula'); f.appendChild(el('span','fLabel','target integral'));
+    const t=el('div','texLine'); f.appendChild(t); tex(t,m.info.intTex); dossier.appendChild(f);}
+  dossier.appendChild(el('h3',null,'Live readout'));
+  if(m.info.tip)dossier.appendChild(el('div','tip',null,`<b>Teacher’s tip.</b> ${m.info.tip}`));
+}
+
+/* ============================ placeholder for queued modules ============================ */
+function renderQueued(m){
+  mount.innerHTML=''; setLegend([]);
+  $('#figCap').textContent=`fig. ${m.n} — ${m.title.toLowerCase()} · pending build`;
+  const d=el('div','queuedCard');
+  d.innerHTML=`<div class="qNum">${m.n}</div><h3>${m.title}</h3>
+    <div class="qEl"></div>
+    <p class="qNote">This module is in the build queue. The stage, controls and dossier around this
+    card are exactly the shell it will plug into — its registry entry already carries the maths,
+    so you can still discuss the element with the class today.</p>
+    <div class="qPlan"><span>PLANNED INTERACTIONS</span>${m.info.plan.join(' · ')}</div>`;
+  mount.appendChild(d); tex(d.querySelector('.qEl'),m.elTex);
+  renderReadout([['status','queued'],['element',m.elTexShort||'—']]);
+}
+
+/* ============================================================================
+   MODULE 01 — STRAIGHT WIRE  (1D, element dx)
+   ========================================================================== */
+function wireFactory(ctx){
+  const W=960,H=470,X0=150,X1=810,Y=210,L=X1-X0,Yr=Y+76;
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=
+   `<filter id="glowW" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0L9,4.5L0,9z" fill="#e9f2ea" opacity=".6"/></marker>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto">
+      <path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>`;
+
+  /* --- static axis / ruler --- */
+  const gAxis=svgEl('g',{},svg);
+  svgEl('line',{x1:X0-34,y1:Yr,x2:X1+40,y2:Yr,class:'axisLn','marker-end':'url(#arrC)'},gAxis);
+  svgEl('line',{x1:X0,y1:Yr-7,x2:X0,y2:Yr+7,class:'axisLn'},gAxis);
+  svgEl('line',{x1:X1,y1:Yr-7,x2:X1,y2:Yr+7,class:'axisLn'},gAxis);
+  svgEl('text',{x:X0-4,y:Yr+26,class:'monoTxt','text-anchor':'middle'},gAxis).textContent='0';
+  svgEl('text',{x:X1+4,y:Yr+26,class:'monoTxt','text-anchor':'middle'},gAxis).textContent='L';
+  svgEl('text',{x:X1+50,y:Yr+5,class:'monoTxt'},gAxis).textContent='x';
+
+  const gGhost=svgEl('g',{},svg);
+  /* wire body */
+  svgEl('line',{x1:X0,y1:Y,x2:X1,y2:Y,stroke:'var(--teal)','stroke-width':8,'stroke-linecap':'round',opacity:.85},svg);
+  svgEl('circle',{cx:X0,cy:Y,r:6,fill:'var(--chalk)'},svg);
+  svgEl('circle',{cx:X1,cy:Y,r:6,fill:'var(--chalk)'},svg);
+
+  /* --- element (inside a liftable wrapper) --- */
+  const slot=svgEl('rect',{y:Y-9,height:18,fill:'none',stroke:'var(--amber)','stroke-dasharray':'4 4',opacity:0},svg);
+  const wrap=svgEl('g',{class:'pullLift'},svg);
+  const leader=svgEl('line',{class:'faintLn'},svg);
+  const elLine=svgEl('line',{y1:Y,y2:Y,stroke:'var(--amber)','stroke-width':12,'stroke-linecap':'round',filter:'url(#glowW)',class:'elPulse'},wrap);
+  const tickL=svgEl('line',{y1:Y-16,y2:Y+16,stroke:'var(--chalk)','stroke-width':2},wrap);
+  const tickR=svgEl('line',{y1:Y-16,y2:Y+16,stroke:'var(--chalk)','stroke-width':2},wrap);
+  const dxLab=svgEl('text',{y:Y-26,class:'amberTxt','text-anchor':'middle','font-size':16},wrap); dxLab.textContent='dx';
+  /* dimension rig — only visible when pulled out */
+  const gDim=svgEl('g',{opacity:0},wrap);
+  svgEl('line',{x1:0,y1:Y+34,x2:0,y2:Y+34,stroke:'var(--amber)','stroke-width':1.5,
+    'marker-start':'url(#arrAs)','marker-end':'url(#arrA)',id:'dimLn'},gDim);
+  const dimTxt=svgEl('text',{y:Y+60,class:'amberTxt','text-anchor':'middle','font-size':14},gDim);
+  const note=svgEl('text',{x:W/2,y:92,class:'bigNote','text-anchor':'middle'},svg);
+  note.textContent='one infinitesimal piece — straight, tiny, and labelled by a single coordinate x';
+
+  const st={x:.35,N:32,ghosts:true,pull:false};
+
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    const dxp=L/st.N;
+    for(let i=0;i<=st.N;i++)
+      svgEl('line',{x1:X0+i*dxp,y1:Y-15,x2:X0+i*dxp,y2:Y+15,stroke:'var(--teal)','stroke-width':1.4,opacity:.38},gGhost);
+  }
+  function render(){
+    const dxp=L/st.N, xl=X0+st.x*(L-dxp), xr=xl+dxp, xc=(xl+xr)/2;
+    elLine.setAttribute('x1',xl); elLine.setAttribute('x2',xr);
+    tickL.setAttribute('x1',xl); tickL.setAttribute('x2',xl);
+    tickR.setAttribute('x1',xr); tickR.setAttribute('x2',xr);
+    dxLab.setAttribute('x',xc);
+    leader.setAttribute('x1',xc); leader.setAttribute('x2',xc);
+    leader.setAttribute('y1',Yr); leader.setAttribute('y2',Y+14);
+    slot.setAttribute('x',xl); slot.setAttribute('width',dxp);
+    slot.style.opacity=st.pull?1:0;
+    gDim.setAttribute('opacity',st.pull?1:0);
+    const dimLn=gDim.querySelector('#dimLn');
+    dimLn.setAttribute('x1',xl); dimLn.setAttribute('x2',xr);
+    dimTxt.setAttribute('x',xc); dimTxt.textContent=`dx = L/${st.N} ≈ ${(1/st.N).toFixed(3)} L`;
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.opacity=(st.ghosts&&!st.pull)?1:0;
+    gGhost.style.transition='opacity .5s';
+    const c=(xc-X0)/L;
+    ctx.readout([
+      ['position x', c.toFixed(2)+' L'],
+      ['piece width', `dx = L/${st.N} ≈ ${(1/st.N).toFixed(3)} L`],
+      ['element','dℓ = dx'],
+      ['pieces total', st.N]]);
+  }
+
+  buildGhosts(); render();
+  ctx.caption('fig. 01 — straight wire · element dx');
+  ctx.legend([{c:'var(--teal)',t:'body (wire)'},{c:'var(--amber)',t:'element dx'},{c:'rgba(233,242,234,.35)',t:'ghost pieces'}]);
+
+  makeSlider(controlsBar,{label:'position x',min:0,max:1,step:.001,value:st.x,
+    fmt:v=>v.toFixed(2)+' L', onInput:v=>{st.x=v;render();}});
+  const cX={set(v){controlsBar.querySelectorAll('input')[0].value=v;}}; // sweep sync via closure below
+  const sliders=controlsBar.querySelectorAll('input');
+  makeSlider(controlsBar,{label:'pieces N',min:4,max:32,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'all pieces',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'pull element out',value:false,onInput:v=>{
+    st.pull=v; wrap.style.transform=v?'translateY(-92px)':'translateY(0)'; render();}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.x=t; sliders[0].value=t;
+    sliders[0].style.setProperty('--p',(t*100)+'%'); render();});
+
+  return {dispose(){stopSweep();}};
+}
+
+/* ============================================================================
+   MODULE 06 — CIRCULAR DISC  (2D, element ring, dA = 2πr dr)
+   ========================================================================== */
+function discFactory(ctx){
+  const W=960,H=470,CX=268,CY=225,R=150,K=0.45,STRIP={x:648,y:352};
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=`<filter id="glowD" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+
+  const gDisc=svgEl('g',{},svg);
+  svgEl('circle',{cx:CX,cy:CY,r:R,fill:'rgba(103,224,194,.07)',stroke:'var(--teal)','stroke-width':2},gDisc);
+  svgEl('circle',{cx:CX,cy:CY,r:3,fill:'var(--chalk)'},gDisc);
+  const gGhost=svgEl('g',{},svg);
+  const ringGhost=svgEl('circle',{cx:CX,cy:CY,fill:'none',stroke:'var(--amber)','stroke-dasharray':'5 6',opacity:0},svg);
+  const gCut=svgEl('g',{opacity:0},svg);
+  const cutLn=svgEl('line',{stroke:'var(--coral)','stroke-width':1.6,'stroke-dasharray':'4 4'},gCut);
+  const cutTxt=svgEl('text',{class:'monoTxt','font-size':12,fill:'var(--coral)'},gCut); cutTxt.textContent='cut';
+  const radLn=svgEl('line',{stroke:'var(--chalk)','stroke-width':1.4,opacity:.8},svg);
+  const radTxt=svgEl('text',{class:'chalkTxt','font-size':15},svg); radTxt.textContent='r';
+  const elPath=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-linecap':'butt',filter:'url(#glowD)',class:'elPulse'},svg);
+  const gStrip=svgEl('g',{opacity:0},svg);
+  const sLen=svgEl('text',{class:'amberTxt','text-anchor':'middle','font-size':14},gStrip);
+  const sDr=svgEl('text',{class:'amberTxt','font-size':13},gStrip);
+  const sCap=svgEl('text',{class:'monoTxt','text-anchor':'middle','font-size':12.5},gStrip);
+  sCap.textContent='unrolled ring ≈ thin rectangle';
+  const sBrk=svgEl('line',{stroke:'var(--amber)','stroke-width':1.4},gStrip);
+
+  const st={r:.62,N:28,ghosts:true,unroll:false,t:0};
+
+  function arcPath(cx,cy,rho,phi,n=100){
+    let d=''; const a0=-Math.PI/2-phi/2;
+    for(let i=0;i<=n;i++){const a=a0+phi*i/n;
+      d+=(i?'L':'M')+(cx+rho*Math.cos(a)).toFixed(2)+' '+(cy+rho*Math.sin(a)).toFixed(2);}
+    return d;
+  }
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    for(let i=1;i<st.N;i++)
+      svgEl('circle',{cx:CX,cy:CY,r:R*i/st.N,fill:'none',stroke:'var(--teal)','stroke-width':1,opacity:.3},gGhost);
+  }
+  function render(){
+    const e=st.t, rpx=st.r*R, drpx=R/st.N;
+    const sig=lerp(1,K,e), sLenPx=2*Math.PI*rpx*sig;
+    const rhoEnd=(2*Math.PI*rpx*K)/0.55;
+    const rho=lerp(rpx,Math.max(rhoEnd,rpx+1),e);
+    const phi=sLenPx/rho;
+    const Sx=lerp(CX,STRIP.x,e), Sy=lerp(CY-rpx,STRIP.y,e);
+    elPath.setAttribute('d',arcPath(Sx,Sy+rho,rho,phi));
+    elPath.setAttribute('stroke-width',Math.max(lerp(drpx,drpx*K,e),2));
+    gGhost.style.opacity=st.ghosts?(1-e):0;
+    gDisc.setAttribute('opacity',1-.7*e);
+    /* radius indicator */
+    const A=-0.6, rx=CX+rpx*Math.cos(A), ry=CY+rpx*Math.sin(A);
+    radLn.setAttribute('x1',CX);radLn.setAttribute('y1',CY);
+    radLn.setAttribute('x2',rx);radLn.setAttribute('y2',ry);
+    radLn.setAttribute('opacity',(1-e)*.8);
+    radTxt.setAttribute('x',CX+rpx*.5*Math.cos(A)-16);
+    radTxt.setAttribute('y',CY+rpx*.5*Math.sin(A)+4);
+    radTxt.setAttribute('opacity',1-e);
+    /* ghost of original ring + cut mark while unrolling */
+    ringGhost.setAttribute('r',rpx); ringGhost.setAttribute('opacity',e*.85);
+    cutLn.setAttribute('x1',CX);cutLn.setAttribute('y1',CY-rpx+6);
+    cutLn.setAttribute('x2',CX);cutLn.setAttribute('y2',CY-rpx-18);
+    cutTxt.setAttribute('x',CX+8);cutTxt.setAttribute('y',CY-rpx-10);
+    gCut.setAttribute('opacity',clamp(e*2,0,1)*(1-e*.4));
+    /* strip labels */
+    const w=lerp(drpx,drpx*K,e);
+    gStrip.setAttribute('opacity',clamp((e-.7)/.3,0,1));
+    sLen.setAttribute('x',Sx); sLen.setAttribute('y',Sy+w/2+30);
+    sLen.textContent=`length = 2πr ≈ ${(2*Math.PI*st.r).toFixed(2)} R`;
+    sBrk.setAttribute('x1',Sx+sLenPx/2+14); sBrk.setAttribute('x2',Sx+sLenPx/2+14);
+    sBrk.setAttribute('y1',Sy-w/2); sBrk.setAttribute('y2',Sy+w/2);
+    sDr.setAttribute('x',Sx+sLenPx/2+22); sDr.setAttribute('y',Sy+4); sDr.textContent='dr';
+    sCap.setAttribute('x',Sx); sCap.setAttribute('y',Sy+w/2+54);
+
+    const drU=1/st.N, dA=2*Math.PI*st.r*drU;
+    ctx.readout([
+      ['ring radius r', st.r.toFixed(2)+' R'],
+      ['ring width dr', `R/${st.N} ≈ ${drU.toFixed(3)} R`],
+      ['element dA', `2πr·dr ≈ ${dA.toFixed(3)} R²`],
+      ['rings total', st.N]]);
+  }
+
+  buildGhosts(); render();
+  ctx.caption('fig. 06 — circular disc · element: concentric ring');
+  ctx.legend([{c:'var(--teal)',t:'body (disc)'},{c:'var(--amber)',t:'element ring'},{c:'var(--coral)',t:'cut & unroll'}]);
+
+  const sliders=[];
+  sliders.push(makeSlider(controlsBar,{label:'radius r',min:.08,max:.97,step:.005,value:st.r,
+    fmt:v=>v.toFixed(2)+' R', onInput:v=>{st.r=v;render();}}));
+  makeSlider(controlsBar,{label:'rings N',min:4,max:28,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost rings',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'unroll the ring',value:false,onInput:v=>{
+    st.unroll=v; gsap.killTweensOf(st);
+    gsap.to(st,{t:v?1:0,duration:1.15,ease:'power2.inOut',onUpdate:render});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{const v=lerp(.08,.97,t); st.r=v; sliders[0].set(v); render();});
+
+  return {dispose(){gsap.killTweensOf(st);stopSweep();}};
+}
+
+/* ============================================================================
+   MODULE 07 — CIRCULAR DISC (SECTOR / WEDGE, dA = ½ R² dθ)
+   ========================================================================== */
+function discSectorFactory(ctx){
+  const W=960,H=470,CX=330,CY=235,R=155;
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=`<filter id="glowSec" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto"><path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0L9,4.5L0,9z" fill="#e9f2ea" opacity=".6"/></marker>`;
+
+  const pt=(th,r)=>({x:CX+r*Math.cos(th), y:CY-r*Math.sin(th)});
+
+  /* Disc body background */
+  const gDisc=svgEl('g',{},svg);
+  svgEl('circle',{cx:CX,cy:CY,r:R,fill:'rgba(103,224,194,.07)',stroke:'var(--teal)','stroke-width':2},gDisc);
+  svgEl('line',{x1:CX-25,y1:CY,x2:CX+R+48,y2:CY,class:'axisLn','marker-end':'url(#arrC)'},gDisc);
+  svgEl('text',{x:CX+R+42,y:CY+22,class:'monoTxt','font-size':13},gDisc).textContent='θ = 0';
+  svgEl('circle',{cx:CX,cy:CY,r:4,fill:'var(--chalk)'},gDisc);
+  svgEl('text',{x:CX-16,y:CY+18,class:'monoTxt','font-size':13},gDisc).textContent='O';
+
+  /* Ghost wedges */
+  const gGhost=svgEl('g',{},svg);
+
+  /* Element slot outline */
+  const slot=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-dasharray':'4 4',opacity:0},svg);
+
+  /* Pulled wedge wrapper */
+  const wrap=svgEl('g',{},svg);
+  wrap.style.transition='transform .8s cubic-bezier(.2,.75,.2,1)';
+  const elSector=svgEl('path',{fill:'rgba(255,184,77,.75)',stroke:'var(--amber)','stroke-width':1.8,filter:'url(#glowSec)',class:'elPulse'},wrap);
+  const rimArc=svgEl('path',{fill:'none',stroke:'var(--coral)','stroke-width':3,'stroke-linecap':'round'},wrap);
+  const chordLn=svgEl('line',{stroke:'var(--chalk)','stroke-width':1.5,'stroke-dasharray':'4 3',opacity:0},wrap);
+
+  /* Angles & radius guides inside wrap */
+  const dthArc=svgEl('path',{fill:'none',stroke:'var(--sky)','stroke-width':1.4},wrap);
+  const dthTxt=svgEl('text',{class:'monoTxt',fill:'var(--sky)','font-size':12,'text-anchor':'middle'},wrap);
+
+  /* Dimension callouts (when pulled) */
+  const gDim=svgEl('g',{opacity:0},wrap);
+  const dimBaseTxt=svgEl('text',{class:'amberTxt','font-size':13.5,'text-anchor':'middle'},gDim);
+  const dimRadTxt=svgEl('text',{class:'amberTxt','font-size':13.5,'text-anchor':'middle'},gDim);
+  const formulaTxt=svgEl('text',{class:'amberTxt','font-size':15,'text-anchor':'middle'},gDim);
+  const note=svgEl('text',{x:W/2,y:52,class:'bigNote','text-anchor':'middle'},svg);
+  note.textContent='one infinitesimal triangle: base = R·dθ, height = R  ⇒  dA = ½·base·height = ½ R² dθ';
+
+  /* Comparison panel on right side */
+  const gComp=svgEl('g',{opacity:0},svg);
+  gComp.style.transition='opacity .6s';
+  svgEl('rect',{x:640,y:115,width:280,height:240,rx:10,fill:'rgba(13,28,23,.8)',stroke:'var(--line)'},gComp);
+  svgEl('text',{x:780,y:145,class:'monoTxt',fill:'var(--amber)','font-size':13.5,'text-anchor':'middle','font-weight':'600'},gComp).textContent='TRIANGLE APPROXIMATION';
+  const cTria=svgEl('path',{fill:'rgba(255,184,77,.25)',stroke:'var(--amber)','stroke-width':1.6},gComp);
+  const cArc=svgEl('path',{fill:'none',stroke:'var(--coral)','stroke-width':2.2},gComp);
+  const cBaseTxt=svgEl('text',{x:780,y:306,class:'monoTxt',fill:'var(--coral)','font-size':12.5,'text-anchor':'middle'},gComp);
+  const cHeightTxt=svgEl('text',{x:695,y:230,class:'monoTxt',fill:'var(--amber)','font-size':12.5,'text-anchor':'middle'},gComp);
+  const cEq1=svgEl('text',{x:780,y:332,class:'chalkTxt','font-size':14,'text-anchor':'middle'},gComp);
+  cEq1.textContent='dA = ½ · (R dθ) · R = ½ R² dθ';
+
+  const st={th:.32,N:36,ghosts:true,chord:false,pull:false};
+
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    const dth=2*Math.PI/st.N;
+    for(let i=0;i<st.N;i++){
+      const a=i*dth, p=pt(a,R);
+      svgEl('line',{x1:CX,y1:CY,x2:p.x,y2:p.y,stroke:'var(--teal)','stroke-width':1.2,opacity:.3},gGhost);
+    }
+  }
+
+  function render(){
+    const dth=2*Math.PI/st.N;
+    const th1=st.th*(2*Math.PI-dth), th2=th1+dth, thm=(th1+th2)/2;
+    const p1=pt(th1,R), p2=pt(th2,R);
+
+    /* Wedge SVG path: Center -> P1 -> Arc to P2 -> Center */
+    const sectorD=`M ${CX} ${CY} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${R} ${R} 0 0 0 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`;
+    elSector.setAttribute('d',sectorD);
+    slot.setAttribute('d',sectorD);
+    slot.style.opacity=st.pull?1:0;
+
+    /* Rim arc */
+    rimArc.setAttribute('d',`M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${R} ${R} 0 0 0 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`);
+
+    /* Straight chord between rim endpoints */
+    chordLn.setAttribute('x1',p1.x); chordLn.setAttribute('y1',p1.y);
+    chordLn.setAttribute('x2',p2.x); chordLn.setAttribute('y2',p2.y);
+    chordLn.style.opacity=(st.chord||st.pull)?1:0;
+
+    /* dθ angle arc near center */
+    const rArc=36, a1=pt(th1,rArc), a2=pt(th2,rArc);
+    dthArc.setAttribute('d',`M ${a1.x.toFixed(2)} ${a1.y.toFixed(2)} A ${rArc} ${rArc} 0 0 0 ${a2.x.toFixed(2)} ${a2.y.toFixed(2)}`);
+    const pmArc=pt(thm,rArc+15);
+    dthTxt.setAttribute('x',pmArc.x); dthTxt.setAttribute('y',pmArc.y+4);
+    dthTxt.textContent='dθ';
+
+    /* Pull offset */
+    const ux=Math.cos(thm), uy=-Math.sin(thm);
+    const PULL_DIST=85;
+    wrap.style.transform=st.pull?`translate(${ux*PULL_DIST}px,${uy*PULL_DIST}px)`:'translate(0,0)';
+    gDim.setAttribute('opacity',st.pull?1:0);
+
+    /* Dimensions on pulled sector */
+    const pRimM=pt(thm,R+18);
+    dimBaseTxt.setAttribute('x',pRimM.x+ux*10); dimBaseTxt.setAttribute('y',pRimM.y+uy*10+4);
+    dimBaseTxt.textContent=`base ≈ R·dθ`;
+
+    const pRadM=pt(th1,R*.55);
+    dimRadTxt.setAttribute('x',pRadM.x-uy*18); dimRadTxt.setAttribute('y',pRadM.y+ux*18);
+    dimRadTxt.textContent='height = R';
+
+    const pForm=pt(thm,R+46);
+    formulaTxt.setAttribute('x',pForm.x+ux*8); formulaTxt.setAttribute('y',pForm.y+uy*8+4);
+    formulaTxt.textContent='dA = ½ R² dθ';
+
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.opacity=(st.ghosts&&!st.pull)?1:0;
+    gGhost.style.transition='opacity .5s';
+
+    /* Right comparison panel */
+    gComp.style.opacity=(st.chord||st.pull)?1:0;
+    const baseW=Math.min(180,Math.max(28,260*Math.tan(dth/2)));
+    cTria.setAttribute('d',`M 780 170 L ${780-baseW/2} 290 L ${780+baseW/2} 290 Z`);
+    cArc.setAttribute('d',`M ${780-baseW/2} 290 Q 780 ${290+baseW*0.12} ${780+baseW/2} 290`);
+    cBaseTxt.textContent=`base = R·dθ ≈ ${(dth).toFixed(3)} R`;
+    cHeightTxt.textContent='R';
+
+    const dA=0.5*dth, chordLen=2*Math.sin(dth/2);
+    ctx.readout([
+      ['element angle θ', `${(thm*180/Math.PI).toFixed(1)}° = ${thm.toFixed(3)} rad`],
+      ['angular width dθ', `2π/${st.N} ≈ ${dth.toFixed(3)} rad (${(dth*180/Math.PI).toFixed(1)}°)`],
+      ['arc base R·dθ', `${dth.toFixed(3)} R`],
+      ['straight chord base', `${chordLen.toFixed(3)} R`],
+      ['element dA', `½ R² dθ ≈ ${dA.toFixed(3)} R²`],
+      ['area check', '∫₀²ᵖ ½ R² dθ = π R² ≈ 3.142 R²']]);
+  }
+
+  buildGhosts(); render();
+  ctx.caption('fig. 07 — circular disc · element: triangular sector ½ R² dθ');
+  ctx.legend([{c:'var(--teal)',t:'body (disc)'},{c:'var(--amber)',t:'element sector'},{c:'var(--coral)',t:'rim base R dθ'},{c:'rgba(233,242,234,.35)',t:'ghost sectors'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'angle θ',min:0,max:1,step:.001,value:st.th,
+    fmt:v=>(v*(2*Math.PI-2*Math.PI/st.N)).toFixed(2)+' rad', onInput:v=>{st.th=v;render();}});
+  makeSlider(controlsBar,{label:'sectors N',min:6,max:36,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost sectors',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'straight chord (Δ)',value:false,onInput:v=>{st.chord=v;render();}});
+  makeToggle(controlsBar,{label:'pull sector out',value:false,onInput:v=>{st.pull=v;render();}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.th=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ============================================================================
+   MODULE 08 — CIRCULAR DISC (EDGE-CENTERED ARC, dA = 2r arccos(r/2R) dr)
+   ========================================================================== */
+function discArcEdgeFactory(ctx){
+  const W=960,H=470,CX=370,CY=235,R=140;
+  const PX=CX-R, PY=CY;
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=`<filter id="glowEdgeArc" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto"><path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0L9,4.5L0,9z" fill="#e9f2ea" opacity=".6"/></marker>`;
+
+  /* Disc body background */
+  const gDisc=svgEl('g',{},svg);
+  svgEl('circle',{cx:CX,cy:CY,r:R,fill:'rgba(103,224,194,.07)',stroke:'var(--teal)','stroke-width':2},gDisc);
+  const accPath=svgEl('path',{fill:'rgba(103,224,194,.16)',stroke:'none'},gDisc);
+
+  /* Diameter baseline */
+  svgEl('line',{x1:PX-30,y1:CY,x2:CX+R+45,y2:CY,class:'axisLn','marker-end':'url(#arrC)'},gDisc);
+  svgEl('text',{x:CX+R+38,y:CY+20,class:'monoTxt','font-size':12},gDisc).textContent='2R';
+  svgEl('circle',{cx:CX,cy:CY,r:3.5,fill:'var(--chalk)'},gDisc);
+  svgEl('text',{x:CX-4,y:CY+18,class:'monoTxt','font-size':12},gDisc).textContent='O';
+
+  /* Edge Pole Marker */
+  svgEl('circle',{cx:PX,cy:PY,r:5,fill:'var(--amber)'},gDisc);
+  svgEl('text',{x:PX-14,y:PY+22,class:'monoTxt',fill:'var(--amber)','font-size':13,'text-anchor':'end'},gDisc).textContent='P (edge)';
+
+  /* Ghost arcs */
+  const gGhost=svgEl('g',{},svg);
+
+  /* Geometric Proof Triangle ΔPOQ overlay */
+  const gTri=svgEl('g',{opacity:0},svg);
+  gTri.style.transition='opacity .4s';
+  svgEl('line',{x1:PX,y1:PY,x2:CX,y2:CY,stroke:'var(--chalk)','stroke-width':1.5},gTri);
+  const triOQ=svgEl('line',{stroke:'var(--coral)','stroke-width':1.8,'stroke-dasharray':'5 4'},gTri);
+  const triPQ=svgEl('line',{stroke:'var(--sky)','stroke-width':1.8},gTri);
+  const altOM=svgEl('line',{stroke:'var(--coral)','stroke-width':1.4,'stroke-dasharray':'3 3'},gTri);
+  const triTxtPO=svgEl('text',{x:(PX+CX)/2,y:CY+18,class:'chalkTxt','font-size':13,'text-anchor':'middle'},gTri); triTxtPO.textContent='R';
+  const triTxtOQ=svgEl('text',{class:'monoTxt',fill:'var(--coral)','font-size':13,'text-anchor':'middle'},gTri); triTxtOQ.textContent='R';
+  const triTxtPQ=svgEl('text',{class:'monoTxt',fill:'var(--sky)','font-size':13,'text-anchor':'middle'},gTri);
+  const triEq=svgEl('text',{x:180,y:100,class:'monoTxt',fill:'var(--coral)','font-size':12.5},gTri);
+  triEq.textContent='ΔPOQ is isosceles (PO = OQ = R)';
+  const triEq2=svgEl('text',{x:180,y:120,class:'monoTxt',fill:'var(--sky)','font-size':12.5},gTri);
+  triEq2.textContent='⇒ cos φ = (r/2)/R = r/(2R)';
+
+  /* Active Arc Element */
+  const wrap=svgEl('g',{},svg);
+  wrap.style.transition='transform .8s cubic-bezier(.2,.75,.2,1)';
+  const elStrip=svgEl('path',{fill:'rgba(255,184,77,.75)',stroke:'var(--amber)','stroke-width':1.4,filter:'url(#glowEdgeArc)',class:'elPulse'},wrap);
+  const elArcCenter=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-width':2.5},wrap);
+  const ptQ1=svgEl('circle',{r:4,fill:'var(--coral)'},wrap);
+  const ptQ2=svgEl('circle',{r:4,fill:'var(--coral)'},wrap);
+  const rayP=svgEl('line',{stroke:'var(--amber)','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.7},wrap);
+  const phiArc=svgEl('path',{fill:'none',stroke:'var(--sky)','stroke-width':1.4},wrap);
+  const phiTxt=svgEl('text',{class:'monoTxt',fill:'var(--sky)','font-size':12},wrap); phiTxt.textContent='φ';
+
+  /* Pull-out unrolled strip on right side */
+  const gPull=svgEl('g',{opacity:0},svg);
+  gPull.style.transition='opacity .6s';
+  const pStrip=svgEl('rect',{fill:'rgba(255,184,77,.7)',stroke:'var(--amber)','stroke-width':1.5},gPull);
+  const pLenBrk=svgEl('line',{stroke:'var(--amber)','stroke-width':1.4,'marker-start':'url(#arrAs)','marker-end':'url(#arrA)'},gPull);
+  const pLenTxt=svgEl('text',{class:'amberTxt','font-size':13,'text-anchor':'middle'},gPull);
+  const pWidBrk=svgEl('line',{stroke:'var(--amber)','stroke-width':1.4,'marker-start':'url(#arrAs)','marker-end':'url(#arrA)'},gPull);
+  const pWidTxt=svgEl('text',{class:'amberTxt','font-size':13},gPull);
+  const pCap=svgEl('text',{class:'monoTxt','font-size':12.5,'text-anchor':'middle'},gPull);
+  pCap.textContent='unrolled arc strip ≈ rectangle of length s(r) × width dr';
+  const pForm=svgEl('text',{class:'chalkTxt','font-size':14,'text-anchor':'middle'},gPull);
+  pForm.textContent='dA = 2r arccos(r/2R) · dr';
+
+  const note=svgEl('text',{x:W/2,y:52,class:'bigNote','text-anchor':'middle'},svg);
+  note.textContent='arcs centered on the edge: radius r sweeps from 0 to 2R, subtending 2φ = 2 arccos(r/2R)';
+
+  const st={u:.5,N:28,ghosts:true,tri:false,pull:false};
+
+  function getArcGeom(rad){
+    const u_val=clamp(rad/(2*R),0.001,0.999);
+    const phi=Math.acos(u_val);
+    const xq=PX+rad*Math.cos(phi);
+    const yq=rad*Math.sin(phi);
+    return {rad,phi,q1:{x:xq,y:CY+yq},q2:{x:xq,y:CY-yq}};
+  }
+
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    for(let i=1;i<st.N;i++){
+      const rad=i*(2*R)/st.N;
+      const {q1,q2}=getArcGeom(rad);
+      svgEl('path',{d:`M ${q2.x.toFixed(2)} ${q2.y.toFixed(2)} A ${rad} ${rad} 0 0 1 ${q1.x.toFixed(2)} ${q1.y.toFixed(2)}`,
+        fill:'none',stroke:'var(--teal)','stroke-width':1.1,opacity:.28},gGhost);
+    }
+  }
+
+  function render(){
+    const dr=(2*R)/st.N;
+    const rCurr=clamp(st.u*2*R,dr*0.6,2*R-dr*0.6);
+    const r1=Math.max(1,rCurr-dr/2), r2=Math.min(2*R-0.5,rCurr+dr/2);
+
+    const gC=getArcGeom(rCurr), g1=getArcGeom(r1), g2=getArcGeom(r2);
+
+    /* Center arc */
+    elArcCenter.setAttribute('d',`M ${gC.q2.x.toFixed(2)} ${gC.q2.y.toFixed(2)} A ${rCurr} ${rCurr} 0 0 1 ${gC.q1.x.toFixed(2)} ${gC.q1.y.toFixed(2)}`);
+
+    /* Element strip polygon */
+    const stripD=`M ${g2.q2.x.toFixed(2)} ${g2.q2.y.toFixed(2)} `+
+      `A ${r2} ${r2} 0 0 1 ${g2.q1.x.toFixed(2)} ${g2.q1.y.toFixed(2)} `+
+      `L ${g1.q1.x.toFixed(2)} ${g1.q1.y.toFixed(2)} `+
+      `A ${r1} ${r1} 0 0 0 ${g1.q2.x.toFixed(2)} ${g1.q2.y.toFixed(2)} Z`;
+    elStrip.setAttribute('d',stripD);
+
+    /* Accumulated region */
+    accPath.setAttribute('d',`M ${gC.q2.x.toFixed(2)} ${gC.q2.y.toFixed(2)} `+
+      `A ${rCurr} ${rCurr} 0 0 1 ${gC.q1.x.toFixed(2)} ${gC.q1.y.toFixed(2)} `+
+      `A ${R} ${R} 0 0 1 ${gC.q2.x.toFixed(2)} ${gC.q2.y.toFixed(2)} Z`);
+
+    /* Endpoints */
+    ptQ1.setAttribute('cx',gC.q1.x); ptQ1.setAttribute('cy',gC.q1.y);
+    ptQ2.setAttribute('cx',gC.q2.x); ptQ2.setAttribute('cy',gC.q2.y);
+
+    /* Radius ray from P to top endpoint */
+    rayP.setAttribute('x1',PX); rayP.setAttribute('y1',PY);
+    rayP.setAttribute('x2',gC.q2.x); rayP.setAttribute('y2',gC.q2.y);
+
+    /* Angle arc for φ */
+    const aR=Math.min(rCurr*0.5,45);
+    phiArc.setAttribute('d',`M ${PX+aR} ${PY} A ${aR} ${aR} 0 0 0 ${(PX+aR*Math.cos(gC.phi)).toFixed(2)} ${(PY-aR*Math.sin(gC.phi)).toFixed(2)}`);
+    phiTxt.setAttribute('x',PX+aR+8); phiTxt.setAttribute('y',PY-8);
+
+    /* Geometric triangle ΔPOQ */
+    triOQ.setAttribute('x1',CX); triOQ.setAttribute('y1',CY);
+    triOQ.setAttribute('x2',gC.q2.x); triOQ.setAttribute('y2',gC.q2.y);
+    triPQ.setAttribute('x1',PX); triPQ.setAttribute('y1',PY);
+    triPQ.setAttribute('x2',gC.q2.x); triPQ.setAttribute('y2',gC.q2.y);
+    const mx=(PX+gC.q2.x)/2, my=(PY+gC.q2.y)/2;
+    altOM.setAttribute('x1',CX); altOM.setAttribute('y1',CY);
+    altOM.setAttribute('x2',mx); altOM.setAttribute('y2',my);
+    triTxtOQ.setAttribute('x',(CX+gC.q2.x)/2+12); triTxtOQ.setAttribute('y',(CY+gC.q2.y)/2);
+    triTxtPQ.setAttribute('x',mx-14); triTxtPQ.setAttribute('y',my-10);
+    triTxtPQ.textContent=`r = ${(rCurr/R).toFixed(2)} R`;
+    gTri.setAttribute('opacity',st.tri?1:0);
+
+    /* Pull arc out & show unrolled strip */
+    wrap.style.transform=st.pull?'translate(0,-30px)':'translate(0,0)';
+    gPull.setAttribute('opacity',st.pull?1:0);
+
+    const sLen=2*rCurr*gC.phi;
+    const sLenScaled=Math.min(260,sLen*0.75), sDrScaled=Math.max(4,dr*0.75);
+    const px0=680, py0=240;
+    pStrip.setAttribute('x',px0-sLenScaled/2); pStrip.setAttribute('y',py0-sDrScaled/2);
+    pStrip.setAttribute('width',sLenScaled); pStrip.setAttribute('height',sDrScaled);
+
+    pLenBrk.setAttribute('x1',px0-sLenScaled/2); pLenBrk.setAttribute('x2',px0+sLenScaled/2);
+    pLenBrk.setAttribute('y1',py0+sDrScaled/2+18); pLenBrk.setAttribute('y2',py0+sDrScaled/2+18);
+    pLenTxt.setAttribute('x',px0); pLenTxt.setAttribute('y',py0+sDrScaled/2+35);
+    pLenTxt.textContent=`length = 2r arccos(r/2R) ≈ ${(sLen/R).toFixed(2)} R`;
+
+    pWidBrk.setAttribute('x1',px0+sLenScaled/2+14); pWidBrk.setAttribute('x2',px0+sLenScaled/2+14);
+    pWidBrk.setAttribute('y1',py0-sDrScaled/2); pWidBrk.setAttribute('y2',py0+sDrScaled/2);
+    pWidTxt.setAttribute('x',px0+sLenScaled/2+22); pWidTxt.setAttribute('y',py0+4);
+    pWidTxt.textContent='dr';
+
+    pCap.setAttribute('x',px0); pCap.setAttribute('y',py0-sDrScaled/2-24);
+    pForm.setAttribute('x',px0); pForm.setAttribute('y',py0+sDrScaled/2+62);
+
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.opacity=(st.ghosts&&!st.pull)?1:0;
+    gGhost.style.transition='opacity .5s';
+
+    const rU=rCurr/R, drU=dr/R, dA=(sLen/R)*drU;
+    ctx.readout([
+      ['arc radius r', `${rU.toFixed(2)} R  (r ∈ [0, 2R])`],
+      ['half-angle φ', `arccos(r/2R) = ${(gC.phi*180/Math.PI).toFixed(1)}° (${gC.phi.toFixed(3)} rad)`],
+      ['arc span 2φ', `${(2*gC.phi*180/Math.PI).toFixed(1)}° (${(2*gC.phi).toFixed(3)} rad)`],
+      ['arc length s(r)', `2r arccos(r/2R) ≈ ${(sLen/R).toFixed(3)} R`],
+      ['thickness dr', `2R/${st.N} ≈ ${drU.toFixed(3)} R`],
+      ['element dA', `s(r)·dr ≈ ${dA.toFixed(3)} R²`],
+      ['area check', '∫₀²ᴿ 2r arccos(r/2R) dr = π R² ≈ 3.142 R²']]);
+  }
+
+  buildGhosts(); render();
+  ctx.caption('fig. 08 — circular disc · element: edge-centered arc  s(r)·dr');
+  ctx.legend([{c:'var(--teal)',t:'body (disc)'},{c:'var(--amber)',t:'element arc strip'},{c:'var(--coral)',t:'boundary endpoints'},{c:'rgba(233,242,234,.35)',t:'ghost arcs'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'radius r',min:0.03,max:0.97,step:.001,value:st.u,
+    fmt:v=>(v*2).toFixed(2)+' R', onInput:v=>{st.u=v;render();}});
+  makeSlider(controlsBar,{label:'arcs N',min:6,max:28,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost arcs',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'triangle ΔPOQ (cosφ)',value:false,onInput:v=>{st.tri=v;render();}});
+  makeToggle(controlsBar,{label:'pull arc out',value:false,onInput:v=>{st.pull=v;render();}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.u=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ============================================================================
+   MODULE 09 — SOLID SPHERE  (3D, element: concentric shell, dV = 4πr² dr)
+   ========================================================================== */
+function sphereFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL is unavailable on this device — the 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage;
+
+  scene.add(new THREE.AmbientLight(0xbfe8d8,.55));
+  const key=new THREE.DirectionalLight(0xfff2d8,1.15); key.position.set(3,4,5); scene.add(key);
+  const rim=new THREE.DirectionalLight(0x67e0c2,.5); rim.position.set(-4,-2,-3); scene.add(rim);
+
+  const plane=new THREE.Plane(new THREE.Vector3(0,0,-1),0);
+  const clipMats=[]; const clip=m=>{clipMats.push(m);return m;};
+
+  const outerMat=clip(new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.10,
+    side:THREE.DoubleSide,depthWrite:false,shininess:80,specular:0x224433}));
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1,72,48),outerMat));
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.001,26,16),
+    new THREE.MeshBasicMaterial({color:0x67e0c2,wireframe:true,transparent:true,opacity:.05})));
+
+  const coreMat=clip(new THREE.MeshPhongMaterial({color:0x1d574b,transparent:true,opacity:.45,depthWrite:false,shininess:20}));
+  const core=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),coreMat); scene.add(core);
+
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+  const shellMat=clip(new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.95,side:THREE.DoubleSide,shininess:60}));
+  const shell=new THREE.Mesh(new THREE.SphereGeometry(1,64,40),shellMat); peelGroup.add(shell);
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+
+  const DIR=new THREE.Vector3(.62,.6,.5).normalize();      // radius direction
+  const DDIR=new THREE.Vector3(.18,.95,.25).normalize();   // dr-gauge direction
+  const mkLine=c=>{const l=new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.9}));
+    scene.add(l);return l;};
+  const radLine=mkLine(0xf4f1e4), drLine=mkLine(0xff8a70);
+  const conn=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.08,gapSize:.06,transparent:true,opacity:.55}));
+  conn.visible=false; scene.add(conn);
+
+  /* HTML labels projected from 3D */
+  function makeLabel(html,big){const d=el('div','lbl3'+(big?' big':''),html);
+    mount.appendChild(d);return{el:d,pos:new THREE.Vector3(),op:1};}
+  const labR=makeLabel('r'), labDr=makeLabel('dr'), labShell=makeLabel('dV = 4πr²·dr',true);
+  const labels=[labR,labDr,labShell];
+
+  const st={r:.6,N:12,cut:false,ghosts:true,peel:false};
+  const dr=()=>1/st.N;
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    ghostGroup.clear();
+    for(let i=1;i<st.N;i++){
+      const m=new THREE.MeshBasicMaterial({color:0x67e0c2,transparent:true,opacity:.07,depthWrite:false});
+      if(st.cut)m.clippingPlanes=[plane];
+      const g=new THREE.Mesh(new THREE.SphereGeometry(1,30,18),m);
+      g.scale.setScalar(i/st.N); ghostGroup.add(g);}
+  }
+  function setLine(l,a,b){l.geometry.setFromPoints([a,b]);}
+  function applyR(){
+    const d=dr(), shellR=Math.min(st.r+d/2,.995), coreR=Math.max(st.r-d/2,.02);
+    shell.scale.setScalar(shellR); core.scale.setScalar(coreR);
+    setLine(radLine,new THREE.Vector3(),DIR.clone().multiplyScalar(shellR));
+    setLine(drLine,DDIR.clone().multiplyScalar(shellR-d/2),DDIR.clone().multiplyScalar(shellR+d/2));
+    labR.pos.copy(DIR).multiplyScalar(shellR*.55);
+    labDr.pos.copy(DDIR).multiplyScalar(shellR+d/2+.09);
+    labShell.pos.set(peelGroup.position.x,shellR+.26,0);
+    const A=4*Math.PI*st.r*st.r, dV=A*d;
+    ctx.readout([
+      ['shell radius r', st.r.toFixed(2)+' R'],
+      ['thickness dr', `R/${st.N} ≈ ${d.toFixed(3)} R`],
+      ['shell area 4πr²', A.toFixed(2)+' R²'],
+      ['element dV', dV.toFixed(3)+' R³']]);
+  }
+  function updateConn(){
+    const x=peelGroup.position.x;
+    conn.visible=st.peel&&x>.25;
+    if(conn.visible){
+      conn.geometry.setFromPoints([new THREE.Vector3(1.03,0,0),
+        new THREE.Vector3(x-shell.scale.x-.06,0,0)]);
+      conn.computeLineDistances();}
+    labShell.pos.set(x,shell.scale.x+.26,0);
+  }
+  function applyCut(){
+    clipMats.forEach(m=>{m.clippingPlanes=st.cut?[plane]:null;m.needsUpdate=true;});
+    ghostGroup.children.forEach(g=>{g.material.clippingPlanes=st.cut?[plane]:null;g.material.needsUpdate=true;});
+  }
+
+  buildGhosts(); applyR();
+  ctx.caption('fig. 09 — solid sphere · element: hollow shell  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'body'},{c:'var(--amber)',t:'element shell'},
+    {c:'rgba(103,224,194,.5)',t:'ghost shells'},{c:'var(--chalk)',t:'∫ done (core)'}]);
+
+  stage.start(t=>{
+    shellMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    if(st.peel)shell.rotation.y=t*.4;
+    labels.forEach(L=>{
+      const v=L.pos.clone().project(camera);
+      const w=mount.clientWidth,h=mount.clientHeight;
+      L.el.style.transform=`translate(-50%,-50%) translate(${(v.x*.5+.5)*w}px,${(-v.y*.5+.5)*h}px)`;
+      L.el.style.opacity=(v.z<1?L.op:0);});
+  });
+
+  const sliders=[];
+  sliders.push(makeSlider(controlsBar,{label:'radius r',min:.12,max:1,step:.005,value:st.r,
+    fmt:v=>v.toFixed(2)+' R', onInput:v=>{st.r=v;applyR();}}));
+  makeSlider(controlsBar,{label:'shells N',min:4,max:12,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyR();}});
+  makeToggle(controlsBar,{label:'cutaway',value:false,onInput:v=>{st.cut=v;applyCut();}});
+  makeToggle(controlsBar,{label:'ghost shells',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'peel shell off',value:false,onInput:v=>{
+    st.peel=v; labShell.op=v?1:0;
+    gsap.to(peelGroup.position,{x:v?2.05:0,duration:1,ease:'power3.inOut',onUpdate:updateConn});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{const v=lerp(.12,1,t); st.r=v; sliders[0].set(v); applyR();});
+
+  return {dispose(){gsap.killTweensOf(peelGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ============================================================================
+   MODULE 10 — SOLID SPHERE (DISC SLICES, dV = π (R² - y²) dy)
+   ========================================================================== */
+function sphereDiscFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage;
+  stdLights(scene);
+  controls.target.set(0,0,0); camera.position.set(2.9,1.9,3.3);
+
+  /* Translucent outer sphere (radius R = 1) */
+  const outerMat=new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.10,
+    side:THREE.DoubleSide,depthWrite:false,shininess:70});
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1,72,48),outerMat));
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.001,26,16),
+    new THREE.MeshBasicMaterial({color:0x67e0c2,wireframe:true,transparent:true,opacity:.05})));
+
+  /* Vertical axis along y (from -1.35 to +1.35) */
+  const dashM=new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.55});
+  const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,-1.35,0),new THREE.Vector3(0,1.35,0)]),dashM);
+  axis.computeLineDistances(); scene.add(axis);
+
+  /* Equator circle guide */
+  const eq=[]; for(let i=0;i<=72;i++){const a=i/72*Math.PI*2; eq.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)));}
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eq),
+    new THREE.LineBasicMaterial({color:0xf4f1e4,transparent:true,opacity:.2})));
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  const coreGroup=new THREE.Group(); scene.add(coreGroup);
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+
+  /* Element Disc Mesh (Unit Cylinder, scaled to rho, dy, rho) */
+  const discMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.95,side:THREE.DoubleSide,shininess:50});
+  const discMesh=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,64),discMat);
+  peelGroup.add(discMesh);
+
+  /* Disc rim wireframe */
+  const rimWire=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(1,1,1,36,1)),
+    new THREE.LineBasicMaterial({color:0xffd99a,transparent:true,opacity:.75}));
+  peelGroup.add(rimWire);
+
+  /* 3D Geometric guides: Right Triangle (Hypotenuse R, Vertical y, Horizontal rho) */
+  const mkLine=(c,dashed)=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(),new THREE.Vector3()]),
+    dashed?new THREE.LineDashedMaterial({color:c,dashSize:.06,gapSize:.04,transparent:true,opacity:.75})
+          :new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.9}));
+    if(dashed)l.computeLineDistances(); scene.add(l); return l;};
+
+  const lineHypR=mkLine(0xff8a70), lineLegRho=mkLine(0x8ecbff),
+    lineLegY=mkLine(0xf4f1e4), lineDyGauge=mkLine(0xffb84d);
+  const conn=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.55}));
+  conn.computeLineDistances(); scene.add(conn);
+
+  const LF=labelFactory(mount);
+  const labY=LF.make('y'), labRho=LF.make('r(y) = √(R²−y²)'), labR=LF.make('R'),
+    labDy=LF.make('dy'), labDisc=LF.make('dV = π(R²−y²) dy',true);
+
+  const st={s:.6,N:24,ghosts:true,tri:true,pull:false};
+  const dy=()=>2/st.N;
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    ghostGroup.clear();
+    const d=dy();
+    for(let i=1;i<st.N;i++){
+      const yi=-1+i*d, r=Math.sqrt(Math.max(0,1-yi*yi)), pts=[];
+      for(let k=0;k<=72;k++){const a=k/72*Math.PI*2;
+        pts.push(new THREE.Vector3(r*Math.cos(a),yi,r*Math.sin(a)));}
+      ghostGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.22})));
+    }
+  }
+
+  function buildCore(yCurrent){
+    coreGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    coreGroup.clear();
+    const d=dy();
+    for(let i=0;i<st.N;i++){
+      const yi=-1+i*d+d/2;
+      if(yi>yCurrent) break;
+      const r=Math.sqrt(Math.max(0.001,1-yi*yi));
+      const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d,40),
+        new THREE.MeshPhongMaterial({color:0x1d574b,transparent:true,opacity:.45,depthWrite:false,shininess:20}));
+      m.position.y=yi; coreGroup.add(m);
+    }
+  }
+
+  function applyAll(){
+    const d=dy();
+    const y=-1+d/2+st.s*(2-d);
+    const rho=Math.sqrt(Math.max(0.001,1-y*y));
+
+    discMesh.scale.set(rho,d,rho); discMesh.position.y=y;
+    rimWire.scale.set(rho,d,rho); rimWire.position.y=y;
+
+    buildCore(y-d/2);
+
+    /* Guides for right triangle in xy plane: (0,0) -> (0,y) -> (rho,y) -> (0,0) */
+    setPts(lineHypR,new THREE.Vector3(0,0,0),new THREE.Vector3(rho,y,0));
+    setPts(lineLegY,new THREE.Vector3(0,0,0),new THREE.Vector3(0,y,0));
+    setPts(lineLegRho,new THREE.Vector3(0,y,0),new THREE.Vector3(rho,y,0));
+    setPts(lineDyGauge,new THREE.Vector3(rho+.08,y-d/2,0),new THREE.Vector3(rho+.08,y+d/2,0));
+
+    const triVis=st.tri?1:0;
+    lineHypR.visible=!!triVis; lineLegY.visible=!!triVis; lineLegRho.visible=!!triVis;
+
+    /* Pull connector */
+    const pxv=peelGroup.position.x;
+    setPts(conn,new THREE.Vector3(rho,y,0),new THREE.Vector3(pxv-rho-.05,y,0));
+    conn.visible=st.pull&&pxv>.25;
+
+    /* Labels */
+    labY.pos.set(-.08,y/2,0);
+    labRho.pos.set(rho*.5,y+.09,0);
+    labR.pos.set(rho*.45,y*.45+.08,0);
+    labDy.pos.set(rho+.18,y,0);
+    labDisc.pos.set(pxv,y+rho*.5+.28,0);
+
+    const dV=Math.PI*rho*rho*d;
+    ctx.readout([
+      ['slice height y', `${y.toFixed(2)} R  (y ∈ [−R, +R])`],
+      ['thickness dy', `2R/${st.N} ≈ ${d.toFixed(3)} R`],
+      ['disc radius r(y)', `√(R²−y²) ≈ ${rho.toFixed(3)} R`],
+      ['disc area π·r²', `π(R²−y²) ≈ ${(Math.PI*rho*rho).toFixed(3)} R²`],
+      ['element dV', `π(R²−y²) dy ≈ ${dV.toFixed(3)} R³`],
+      ['volume check', '∫₋ᵣ⁺ᵣ π(R²−y²) dy = ⁴⁄₃ πR³ ≈ 4.189 R³']]);
+  }
+
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 10 — solid sphere · element: thin disc slice  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'sphere'},{c:'var(--amber)',t:'element disc'},
+    {c:'var(--chalk)',t:'∫ done (stack)'},{c:'var(--sky)',t:'radius r(y)'}]);
+
+  stage.start(t=>{
+    discMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    if(st.pull)discMesh.rotation.y=t*.4;
+    LF.update(camera);
+  });
+
+  const sPos=makeSlider(controlsBar,{label:'height y',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(-1+dy()/2+v*(2-dy())).toFixed(2)+' R', onInput:v=>{st.s=v;applyAll();}});
+  makeSlider(controlsBar,{label:'discs N',min:4,max:24,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'ghost discs',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'triangle (R, y, r)',value:true,onInput:v=>{st.tri=v;applyAll();}});
+  makeToggle(controlsBar,{label:'pull disc out',value:false,onInput:v=>{
+    st.pull=v; labDisc.op=v?1:0;
+    gsap.killTweensOf(peelGroup.position);
+    gsap.to(peelGroup.position,{x:v?1.85:0,duration:1,ease:'power3.inOut',onUpdate:applyAll});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(peelGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ============================================================================
+   BATCH A — 2D / LINEAR-CURVE & PLANAR MODULES
+   ========================================================================== */
+
+/* ---------- MODULE 02 — CIRCULAR ARC (element ds = R dθ) ---------- */
+function arcFactory(ctx){
+  const W=960,H=470,CX=430,CY=262,R=186;
+  const TH1=10*Math.PI/180, TH2=170*Math.PI/180, SPAN=TH2-TH1;
+  const pt=(th,r)=>({x:CX+r*Math.cos(th), y:CY-r*Math.sin(th)});
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=
+   `<filter id="glowArc" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto"><path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>`;
+  const arcA=(r,a0,a1,n=64)=>{let d='';for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,p=pt(a,r);
+    d+=(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2);}return d;};
+
+  /* static scenery */
+  svgEl('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'var(--teal)','stroke-dasharray':'3 7','stroke-width':1.2,opacity:.3},svg);
+  const p1=pt(TH1,R),p2=pt(TH2,R);
+  svgEl('line',{x1:CX,y1:CY,x2:p1.x,y2:p1.y,class:'faintLn'},svg);
+  svgEl('text',{x:p1.x+14,y:p1.y+22,class:'monoTxt','font-size':13},svg).textContent='θ₁';
+  svgEl('text',{x:p2.x-34,y:p2.y+22,class:'monoTxt','font-size':13},svg).textContent='θ₂';
+  svgEl('path',{d:arcA(R,TH1,TH2),fill:'none',stroke:'var(--teal)','stroke-width':8,'stroke-linecap':'round',opacity:.85},svg);
+  svgEl('circle',{cx:p1.x,cy:p1.y,r:5.5,fill:'var(--chalk)'},svg);
+  svgEl('circle',{cx:p2.x,cy:p2.y,r:5.5,fill:'var(--chalk)'},svg);
+  svgEl('circle',{cx:CX,cy:CY,r:4,fill:'var(--chalk)'},svg);
+  svgEl('text',{x:CX-6,y:CY+24,class:'monoTxt','font-size':13},svg).textContent='O';
+
+  const gGhost=svgEl('g',{},svg);
+  const angArc=svgEl('path',{fill:'none',stroke:'var(--chalk)','stroke-width':1.3,opacity:.55},svg);
+  const angTxt=svgEl('text',{class:'chalkTxt','font-size':15},svg); angTxt.textContent='θ';
+  const radLn=svgEl('line',{x1:CX,y1:CY,stroke:'var(--chalk)','stroke-width':1.3,opacity:.75},svg);
+  const radTxt=svgEl('text',{class:'chalkTxt','font-size':15},svg); radTxt.textContent='R';
+
+  /* element wrapper (lifts radially when pulled) */
+  const wrap=svgEl('g',{},svg);
+  wrap.style.transition='transform .8s cubic-bezier(.2,.75,.2,1)';
+  const elArc=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-width':12,'stroke-linecap':'round',filter:'url(#glowArc)',class:'elPulse'},wrap);
+  const tick1=svgEl('line',{stroke:'var(--chalk)','stroke-width':2},wrap);
+  const tick2=svgEl('line',{stroke:'var(--chalk)','stroke-width':2},wrap);
+  const dthArc=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-width':1.4},wrap);
+  const dthTxt=svgEl('text',{class:'amberTxt','font-size':14,'text-anchor':'middle'},wrap); dthTxt.textContent='dθ';
+  const gPull=svgEl('g',{opacity:0},wrap);
+  const dsTxt=svgEl('text',{class:'amberTxt','font-size':15,'text-anchor':'middle'},gPull);
+  const note=svgEl('text',{x:W/2,y:52,class:'bigNote','text-anchor':'middle'},svg);
+  note.textContent='the radius is frozen — the only coordinate left is the angle θ';
+
+  const st={s:.35,N:36,ghosts:true,pull:false};
+  function buildGhosts(){
+    gGhost.innerHTML=''; const dth=SPAN/st.N;
+    for(let i=0;i<=st.N;i++){const a=TH1+i*dth,q1=pt(a,R-13),q2=pt(a,R+13);
+      svgEl('line',{x1:q1.x,y1:q1.y,x2:q2.x,y2:q2.y,stroke:'var(--teal)','stroke-width':1.4,opacity:.35},gGhost);}
+  }
+  function render(){
+    const dth=SPAN/st.N, the=TH1+st.s*(SPAN-dth), thm=the+dth/2;
+    elArc.setAttribute('d',arcA(R,the,the+dth));
+    [ [tick1,the],[tick2,the+dth] ].forEach(([tk,a])=>{const q1=pt(a,R-15),q2=pt(a,R+15);
+      tk.setAttribute('x1',q1.x);tk.setAttribute('y1',q1.y);tk.setAttribute('x2',q2.x);tk.setAttribute('y2',q2.y);});
+    dthArc.setAttribute('d',arcA(R+26,the,the+dth,24));
+    const pd=pt(thm,R+46); dthTxt.setAttribute('x',pd.x); dthTxt.setAttribute('y',pd.y+5);
+    angArc.setAttribute('d',arcA(44,TH1,thm,32));
+    const pt2=pt((TH1+thm)/2,64); angTxt.setAttribute('x',pt2.x-5); angTxt.setAttribute('y',pt2.y+5);
+    const pm=pt(thm,R); radLn.setAttribute('x2',pm.x); radLn.setAttribute('y2',pm.y);
+    const pr=pt(thm,R*.55); radTxt.setAttribute('x',pr.x+8); radTxt.setAttribute('y',pr.y-8);
+    const u={x:Math.cos(thm),y:-Math.sin(thm)};
+    wrap.style.transform=st.pull?`translate(${u.x*80}px,${u.y*80}px)`:'translate(0,0)';
+    gPull.setAttribute('opacity',st.pull?1:0);
+    const ds=pt(thm,R+66); dsTxt.setAttribute('x',ds.x); dsTxt.setAttribute('y',ds.y+6);
+    dsTxt.textContent=`ds = R·dθ ≈ ${dth.toFixed(3)} R`;
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.transition='opacity .5s';
+    gGhost.style.opacity=(st.ghosts&&!st.pull)?1:0;
+    ctx.readout([
+      ['element centre θ', `${(thm*180/Math.PI).toFixed(1)}° = ${thm.toFixed(3)} rad`],
+      ['angular width dθ', `${(SPAN/st.N).toFixed(3)} rad = ${(SPAN*180/Math.PI/st.N).toFixed(1)}°`],
+      ['element ds', `R·dθ ≈ ${(SPAN/st.N).toFixed(3)} R`],
+      ['pieces total', st.N]]);
+  }
+  buildGhosts(); render();
+  ctx.caption('fig. 02 — circular arc · element R dθ');
+  ctx.legend([{c:'var(--teal)',t:'body (arc)'},{c:'var(--amber)',t:'element ds'},{c:'rgba(233,242,234,.35)',t:'ghost pieces'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'angle θ',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(TH1+v*(SPAN-SPAN/st.N)).toFixed(2)+' rad', onInput:v=>{st.s=v;render();}});
+  makeSlider(controlsBar,{label:'pieces N',min:6,max:36,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost pieces',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'pull element out',value:false,onInput:v=>{st.pull=v;render();}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ---------- MODULE 03 — SMOOTH CURVE (element dℓ = √(dx²+dy²)) ---------- */
+function curveFactory(ctx){
+  const W=960,H=470,X0=140,X1=820,BASE=352,SY=64,SX=(X1-X0)/6;
+  const f=x=>1.35*Math.sin(1.05*x)+1.5+0.12*x;
+  const PX=x=>X0+x*SX, PY=y=>BASE-y*SY;
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=
+   `<filter id="glowC" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="lensClip"><circle cx="802" cy="112" r="86"/></clipPath>`;
+  const LC={x:802,y:112,r:86},Z=9;
+
+  /* axes + full curve */
+  svgEl('line',{x1:X0-30,y1:BASE,x2:X1+42,y2:BASE,class:'axisLn'},svg);
+  svgEl('line',{x1:X0,y1:BASE+20,x2:X0,y2:70,class:'axisLn'},svg);
+  svgEl('text',{x:X1+40,y:BASE+24,class:'monoTxt','font-size':13},svg).textContent='x';
+  svgEl('text',{x:X0-28,y:80,class:'monoTxt','font-size':13},svg).textContent='y';
+  const curvePath=(x0,x1,n)=>{let d='';for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n;
+    d+=(i?'L':'M')+PX(x).toFixed(1)+' '+PY(f(x)).toFixed(1);}return d;};
+  svgEl('path',{d:curvePath(0,6,170),fill:'none',stroke:'var(--teal)','stroke-width':4,'stroke-linecap':'round',opacity:.85},svg);
+
+  const gGhost=svgEl('g',{},svg);
+  const conn=svgEl('line',{class:'faintLn',opacity:.22},svg);
+  /* element: triangle legs + highlighted segment */
+  const legH=svgEl('line',{stroke:'var(--coral)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const legV=svgEl('line',{stroke:'var(--coral)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const raM=svgEl('path',{fill:'none',stroke:'var(--chalk)','stroke-width':1,opacity:.6},svg);
+  const elSeg=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-width':7,'stroke-linecap':'round',filter:'url(#glowC)',class:'elPulse'},svg);
+  const dxTxt=svgEl('text',{class:'amberTxt','font-size':13.5,'text-anchor':'middle'},svg); dxTxt.textContent='dx';
+  const dyTxt=svgEl('text',{class:'amberTxt','font-size':13.5},svg); dyTxt.textContent='dy';
+  const dlTxt=svgEl('text',{class:'chalkTxt','font-size':14,'text-anchor':'middle'},svg); dlTxt.textContent='dℓ';
+
+  /* zoom lens */
+  const gLens=svgEl('g',{},svg);
+  svgEl('circle',{cx:LC.x,cy:LC.y,r:LC.r,fill:'rgba(7,16,13,.93)',stroke:'rgba(244,241,228,.35)','stroke-width':1.2},gLens);
+  const gIn=svgEl('g',{'clip-path':'url(#lensClip)'},gLens);
+  const zCurve=svgEl('path',{fill:'none',stroke:'var(--amber)','stroke-width':4.5},gIn);
+  const zChord=svgEl('line',{stroke:'var(--chalk)','stroke-width':1.4,'stroke-dasharray':'6 5',opacity:.75},gIn);
+  const zH=svgEl('line',{stroke:'var(--coral)','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.8},gIn);
+  const zV=svgEl('line',{stroke:'var(--coral)','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.8},gIn);
+  svgEl('text',{x:LC.x,y:LC.y+LC.r+20,class:'monoTxt','font-size':11.5,'text-anchor':'middle'},gLens)
+    .textContent='zoomed ×9 — the curve is (locally) straight';
+
+  const st={s:.3,N:40,ghosts:true,lens:true};
+  function buildGhosts(){
+    gGhost.innerHTML=''; const dxU=6/st.N; let d='';
+    for(let i=0;i<=st.N;i++){const x=i*dxU,px=PX(x),py=PY(f(x));
+      d+=(i?'L':'M')+px.toFixed(1)+' '+py.toFixed(1);
+      svgEl('circle',{cx:px,cy:py,r:2.6,fill:'var(--teal)',opacity:.5},gGhost);}
+    svgEl('path',{d,fill:'none',stroke:'var(--teal)','stroke-width':1,opacity:.25},gGhost);
+  }
+  function render(){
+    const dxU=6/st.N, xa=st.s*(6-dxU), xb=xa+dxU;
+    const P1={x:PX(xa),y:PY(f(xa))}, P2={x:PX(xb),y:PY(f(xb))}, Cpt={x:P2.x,y:P1.y};
+    elSeg.setAttribute('d',curvePath(xa,xb,26));
+    legH.setAttribute('x1',P1.x);legH.setAttribute('y1',P1.y);legH.setAttribute('x2',Cpt.x);legH.setAttribute('y2',Cpt.y);
+    legV.setAttribute('x1',Cpt.x);legV.setAttribute('y1',Cpt.y);legV.setAttribute('x2',P2.x);legV.setAttribute('y2',P2.y);
+    const sg=Math.sign(P2.y-P1.y)||1;
+    raM.setAttribute('d',`M ${Cpt.x-8} ${Cpt.y} L ${Cpt.x-8} ${Cpt.y+sg*8} L ${Cpt.x} ${Cpt.y+sg*8}`);
+    dxTxt.setAttribute('x',(P1.x+Cpt.x)/2); dxTxt.setAttribute('y',P1.y+18);
+    dyTxt.setAttribute('x',Cpt.x+12); dyTxt.setAttribute('y',(Cpt.y+P2.y)/2+4);
+    const mx=(P1.x+P2.x)/2,my=(P1.y+P2.y)/2,ddx=P2.x-P1.x,ddy=P2.y-P1.y,
+      L=Math.hypot(ddx,ddy)||1,nx=ddy/L,ny=-ddx/L;
+    dlTxt.setAttribute('x',mx+nx*16); dlTxt.setAttribute('y',my+ny*16);
+    /* lens mapping */
+    const zm=(xa+xb)/2, MX=PX(zm), MY=PY(f(zm));
+    const ZP=(px,py)=>({x:LC.x+(px-MX)*Z, y:LC.y+(py-MY)*Z});
+    let zd=''; for(let i=0;i<=40;i++){const x=xa+(xb-xa)*i/40,q=ZP(PX(x),PY(f(x)));
+      zd+=(i?'L':'M')+q.x.toFixed(1)+' '+q.y.toFixed(1);}
+    zCurve.setAttribute('d',zd);
+    const z1=ZP(P1.x,P1.y),z2=ZP(P2.x,P2.y),zc=ZP(Cpt.x,Cpt.y);
+    zChord.setAttribute('x1',z1.x);zChord.setAttribute('y1',z1.y);zChord.setAttribute('x2',z2.x);zChord.setAttribute('y2',z2.y);
+    zH.setAttribute('x1',z1.x);zH.setAttribute('y1',z1.y);zH.setAttribute('x2',zc.x);zH.setAttribute('y2',zc.y);
+    zV.setAttribute('x1',zc.x);zV.setAttribute('y1',zc.y);zV.setAttribute('x2',z2.x);zV.setAttribute('y2',z2.y);
+    conn.setAttribute('x1',mx);conn.setAttribute('y1',my);conn.setAttribute('x2',LC.x);conn.setAttribute('y2',LC.y);
+    gLens.style.opacity=st.lens?1:0; conn.style.opacity=st.lens?.22:0;
+    gLens.style.transition='opacity .4s';
+    gGhost.style.opacity=st.ghosts?1:0; gGhost.style.transition='opacity .4s';
+    const dy=f(xb)-f(xa), dl=Math.hypot(dxU,dy);
+    ctx.readout([
+      ['position x', xa.toFixed(2)],
+      ['dx', `6/${st.N} ≈ ${dxU.toFixed(3)}`],
+      ['dy', dy.toFixed(3)],
+      ['element dℓ', `√(dx²+dy²) ≈ ${dl.toFixed(3)}`],
+      ['slope dy/dx', (dy/dxU).toFixed(2)]]);
+  }
+  buildGhosts(); render();
+  ctx.caption('fig. 03 — smooth curve · element dℓ = √(dx² + dy²)');
+  ctx.legend([{c:'var(--teal)',t:'curve'},{c:'var(--amber)',t:'element dℓ'},{c:'var(--coral)',t:'dx, dy legs'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'position x',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(6-6/st.N)).toFixed(2), onInput:v=>{st.s=v;render();}});
+  makeSlider(controlsBar,{label:'pieces N',min:6,max:40,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'all pieces + chords',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'zoom lens ×9',value:true,onInput:v=>{st.lens=v;render();}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ---------- MODULE 04 — RECTANGLE (strip elements y dx or x dy) ---------- */
+function rectFactory(ctx){
+  const W=960,H=470,OX=190,OY=392,U=86,AU=5*U,BU=3*U;   /* a=5, b=3 units */
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=
+   `<filter id="glowR" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto"><path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0L9,4.5L0,9z" fill="#e9f2ea" opacity=".6"/></marker>`;
+
+  svgEl('line',{x1:OX-26,y1:OY,x2:OX+AU+58,y2:OY,class:'axisLn','marker-end':'url(#arrC)'},svg);
+  svgEl('line',{x1:OX,y1:OY+22,x2:OX,y2:OY-BU-44,class:'axisLn','marker-end':'url(#arrC)'},svg);
+  svgEl('text',{x:OX+AU+52,y:OY+24,class:'monoTxt','font-size':13},svg).textContent='x';
+  svgEl('text',{x:OX-30,y:OY-BU-38,class:'monoTxt','font-size':13},svg).textContent='y';
+  svgEl('rect',{x:OX,y:OY-BU,width:AU,height:BU,fill:'rgba(103,224,194,.07)',stroke:'var(--teal)','stroke-width':2},svg);
+  svgEl('text',{x:OX+AU/2,y:OY+28,class:'monoTxt','font-size':14,'text-anchor':'middle'},svg).textContent='a';
+  svgEl('text',{x:OX-24,y:OY-BU/2+5,class:'monoTxt','font-size':14},svg).textContent='b';
+  const edgeHint=svgEl('text',{class:'monoTxt','font-size':12.5},svg);
+
+  const gGhost=svgEl('g',{},svg);
+  const slot=svgEl('rect',{fill:'none',stroke:'var(--amber)','stroke-dasharray':'4 4',opacity:0},svg);
+  const wrap=svgEl('g',{},svg);
+  wrap.style.transition='transform .8s cubic-bezier(.2,.75,.2,1)';
+  const strip=svgEl('rect',{fill:'rgba(255,184,77,.72)',stroke:'var(--amber)','stroke-width':2,filter:'url(#glowR)',class:'elPulse'},wrap);
+  const gDim=svgEl('g',{opacity:0},wrap);
+  const br=(x1,y1,x2,y2,label,tx,ty)=>{
+    svgEl('line',{x1,y1,x2,y2,stroke:'var(--amber)','stroke-width':1.4,'marker-start':'url(#arrAs)','marker-end':'url(#arrA)'},gDim);
+    const t=svgEl('text',{x:tx,y:ty,class:'amberTxt','font-size':13,'text-anchor':'middle'},gDim);t.textContent=label;return t;};
+  const brW=br(0,0,0,0,'',0,0), brH=br(0,0,0,0,'',0,0);
+  const fTxt=svgEl('text',{class:'amberTxt','font-size':15,'text-anchor':'middle'},gDim);
+  const note=svgEl('text',{x:W/2,y:56,class:'bigNote','text-anchor':'middle'},svg);
+
+  const st={orient:'v',s:.4,N:26,ghosts:true,pull:false};
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    if(st.orient==='v')for(let i=1;i<st.N;i++)
+      svgEl('line',{x1:OX+i*AU/st.N,y1:OY,x2:OX+i*AU/st.N,y2:OY-BU,stroke:'var(--teal)','stroke-width':1.2,opacity:.3},gGhost);
+    else for(let i=1;i<st.N;i++)
+      svgEl('line',{x1:OX,y1:OY-i*BU/st.N,x2:OX+AU,y2:OY-i*BU/st.N,stroke:'var(--teal)','stroke-width':1.2,opacity:.3},gGhost);
+  }
+  function render(){
+    const v=st.orient==='v', thick=(v?AU:BU)/st.N, travel=(v?AU:BU)-thick, pos=st.s*travel;
+    let sx,sy;
+    if(v){sx=OX+pos; sy=OY-BU; strip.setAttribute('x',sx);strip.setAttribute('y',sy);
+      strip.setAttribute('width',thick);strip.setAttribute('height',BU);}
+    else {sx=OX; sy=OY-pos-thick; strip.setAttribute('x',sx);strip.setAttribute('y',sy);
+      strip.setAttribute('width',AU);strip.setAttribute('height',thick);}
+    slot.setAttribute('x',sx);slot.setAttribute('y',sy);
+    slot.setAttribute('width',v?thick:AU);slot.setAttribute('height',v?BU:thick);
+    slot.style.opacity=st.pull?1:0;
+    wrap.style.transform=st.pull?(v?'translate(0,44px)':'translate(64px,0)'):'translate(0,0)';
+    gDim.setAttribute('opacity',st.pull?1:0);
+    if(v){
+      brW.setAttribute('x1',sx);brW.setAttribute('x2',sx+thick);brW.setAttribute('y1',OY+62);brW.setAttribute('y2',OY+62);
+      brW.nextSibling.setAttribute('x',sx+thick/2);brW.nextSibling.setAttribute('y',OY+80);brW.nextSibling.textContent='dx';
+      brH.setAttribute('x1',sx+thick+16);brH.setAttribute('x2',sx+thick+16);brH.setAttribute('y1',OY+44);brH.setAttribute('y2',OY+44-BU);
+      brH.nextSibling.setAttribute('x',sx+thick+34);brH.nextSibling.setAttribute('y',OY+44-BU/2);brH.nextSibling.textContent='b';
+      fTxt.setAttribute('x',sx+thick/2);fTxt.setAttribute('y',OY+108);fTxt.textContent='dA = b·dx';
+      edgeHint.setAttribute('x',OX+AU+14);edgeHint.setAttribute('y',OY-BU+4);edgeHint.textContent='boundary: y = b';
+      note.textContent='vertical strip: thickness dx, height fixed by the boundary y = b';
+    }else{
+      brW.setAttribute('x1',sx+64);brW.setAttribute('x2',sx+64+AU);brW.setAttribute('y1',sy+thick+16);brW.setAttribute('y2',sy+thick+16);
+      brW.nextSibling.setAttribute('x',sx+64+AU/2);brW.nextSibling.setAttribute('y',sy+thick+34);brW.nextSibling.textContent='a';
+      brH.setAttribute('x1',sx+AU+64+16);brH.setAttribute('x2',sx+AU+64+16);brH.setAttribute('y1',sy);brH.setAttribute('y2',sy+thick);
+      brH.nextSibling.setAttribute('x',sx+AU+64+38);brH.nextSibling.setAttribute('y',sy+thick/2+4);brH.nextSibling.textContent='dy';
+      fTxt.setAttribute('x',sx+64+AU/2);fTxt.setAttribute('y',sy-12);fTxt.textContent='dA = a·dy';
+      edgeHint.setAttribute('x',OX+AU+14);edgeHint.setAttribute('y',OY-BU/2);edgeHint.textContent='boundary: x = a';
+      note.textContent='horizontal strip: thickness dy, width fixed by the boundary x = a';
+    }
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.opacity=st.ghosts&&!st.pull?1:0; gGhost.style.transition='opacity .5s';
+    const dU=(v?5:3)/st.N, posU=st.s*((v?5:3)-dU), dA=(v?3:5)*dU;
+    ctx.readout([
+      ['orientation', v?'vertical strips (y dx)':'horizontal strips (x dy)'],
+      ['strip position', posU.toFixed(2)+(v?' a': ' b')],
+      ['thickness', `${v?'dx = a':'dy = b'}/${st.N} ≈ ${dU.toFixed(3)}`],
+      ['element dA', `${v?'b·dx':'a·dy'} ≈ ${dA.toFixed(3)}`],
+      ['area check', '∫ dA = a·b = 15']]);
+  }
+  buildGhosts(); render();
+  ctx.caption('fig. 04 — rectangle · strip element y dx or x dy');
+  ctx.legend([{c:'var(--teal)',t:'body (region)'},{c:'var(--amber)',t:'element strip'},{c:'rgba(233,242,234,.35)',t:'ghost strips'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'strip position',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(1-1/st.N)*(st.orient==='v'?5:3)).toFixed(2)+(st.orient==='v'?' a':' b'),
+    onInput:v=>{st.s=v;render();}});
+  makeSlider(controlsBar,{label:'strips N',min:4,max:26,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost strips',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'horizontal strips (x dy)',value:false,onInput:v=>{
+    st.orient=v?'h':'v';buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'pull strip out',value:false,onInput:v=>{st.pull=v;render();}});
+  ctx.sweepDur=4.5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ---------- MODULE 05 — TRIANGLE (strip width set by similar triangles) ---------- */
+function triFactory(ctx){
+  const W=960,H=470,OX=210,OY=400,U=82,BU=6*U,HU=4*U;   /* base b=6, height h=4 */
+  const wpx=y=>6*(1-y/4)*U;
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',class:'fig'},mount);
+  const defs=svgEl('defs',{},svg);
+  defs.innerHTML=
+   `<filter id="glowT" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="#ffb84d"/></marker>
+    <marker id="arrAs" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto"><path d="M8,0L0,4L8,8z" fill="#ffb84d"/></marker>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0L9,4.5L0,9z" fill="#e9f2ea" opacity=".6"/></marker>`;
+
+  svgEl('line',{x1:OX-26,y1:OY,x2:OX+BU+52,y2:OY,class:'axisLn','marker-end':'url(#arrC)'},svg);
+  svgEl('line',{x1:OX,y1:OY+22,x2:OX,y2:OY-HU-34,class:'axisLn','marker-end':'url(#arrC)'},svg);
+  svgEl('text',{x:OX+BU+48,y:OY+24,class:'monoTxt','font-size':13},svg).textContent='x';
+  svgEl('text',{x:OX-30,y:OY-HU-28,class:'monoTxt','font-size':13},svg).textContent='y';
+  svgEl('path',{d:`M ${OX} ${OY} L ${OX+BU} ${OY} L ${OX} ${OY-HU} Z`,
+    fill:'rgba(103,224,194,.07)',stroke:'var(--teal)','stroke-width':2},svg);
+  svgEl('text',{x:OX+BU/2,y:OY+28,class:'monoTxt','font-size':14,'text-anchor':'middle'},svg).textContent='b';
+  svgEl('text',{x:OX-24,y:OY-HU/2+5,class:'monoTxt','font-size':14},svg).textContent='h';
+
+  const gGhost=svgEl('g',{},svg);
+  const gSim=svgEl('g',{opacity:0},svg);
+  const simPath=svgEl('path',{fill:'none',stroke:'var(--coral)','stroke-width':1.6,'stroke-dasharray':'6 5'},gSim);
+  const simV=svgEl('text',{class:'monoTxt','font-size':12.5,fill:'var(--coral)','text-anchor':'end'},gSim);
+  const simW=svgEl('text',{class:'monoTxt','font-size':12.5,fill:'var(--coral)','text-anchor':'middle'},gSim);
+  const simEq=svgEl('text',{x:742,y:150,class:'monoTxt','font-size':12.5},gSim);
+  simEq.textContent='w(y)/b = (h−y)/h';
+  const simEq2=svgEl('text',{x:742,y:170,class:'monoTxt','font-size':12.5},gSim);
+  simEq2.textContent='⇒ w(y) = b(1−y/h)';
+
+  const slot=svgEl('rect',{fill:'none',stroke:'var(--amber)','stroke-dasharray':'4 4',opacity:0},svg);
+  const wrap=svgEl('g',{},svg);
+  wrap.style.transition='transform .8s cubic-bezier(.2,.75,.2,1)';
+  const strip=svgEl('rect',{fill:'rgba(255,184,77,.72)',stroke:'var(--amber)','stroke-width':2,filter:'url(#glowT)',class:'elPulse'},wrap);
+  const gDim=svgEl('g',{opacity:0},wrap);
+  const mkBr=(label)=>{
+    const l=svgEl('line',{stroke:'var(--amber)','stroke-width':1.4,'marker-start':'url(#arrAs)','marker-end':'url(#arrA)'},gDim);
+    const t=svgEl('text',{class:'amberTxt','font-size':13,'text-anchor':'middle'},gDim);t.textContent=label;return[l,t];};
+  const [brW,brWt]=mkBr('w(y)'), [brH,brHt]=mkBr('dy');
+  const fTxt=svgEl('text',{class:'amberTxt','font-size':15},gDim); fTxt.textContent='dA = w(y)·dy';
+  const note=svgEl('text',{x:W/2,y:52,class:'bigNote','text-anchor':'middle'},svg);
+  note.textContent='the strip width is not free — similar triangles decide it';
+
+  const st={s:.35,N:26,ghosts:true,sim:false,pull:false};
+  function buildGhosts(){
+    gGhost.innerHTML='';
+    for(let i=1;i<st.N;i++){const y=i*4/st.N;
+      svgEl('line',{x1:OX,y1:OY-y*U,x2:OX+wpx(y),y2:OY-y*U,stroke:'var(--teal)','stroke-width':1.2,opacity:.3},gGhost);}
+  }
+  function render(){
+    const dyU=4/st.N, yb=st.s*(4-dyU), w=wpx(yb), sy=OY-(yb+dyU)*U, dyp=dyU*U;
+    strip.setAttribute('x',OX);strip.setAttribute('y',sy);
+    strip.setAttribute('width',w);strip.setAttribute('height',dyp);
+    slot.setAttribute('x',OX);slot.setAttribute('y',sy);
+    slot.setAttribute('width',w);slot.setAttribute('height',dyp);
+    slot.style.opacity=st.pull?1:0;
+    wrap.style.transform=st.pull?'translate(88px,0)':'translate(0,0)';
+    gDim.setAttribute('opacity',st.pull?1:0);
+    brW.setAttribute('x1',OX+88);brW.setAttribute('x2',OX+88+w);brW.setAttribute('y1',sy+dyp+16);brW.setAttribute('y2',sy+dyp+16);
+    brWt.setAttribute('x',OX+88+w/2);brWt.setAttribute('y',sy+dyp+34);
+    brH.setAttribute('x1',OX+w+88+16);brH.setAttribute('x2',OX+w+88+16);brH.setAttribute('y1',sy);brH.setAttribute('y2',sy+dyp);
+    brHt.setAttribute('x',OX+w+88+38);brHt.setAttribute('y',sy+dyp/2+4);
+    fTxt.setAttribute('x',OX+w+130);fTxt.setAttribute('y',sy+dyp/2+4);
+    /* similar-triangles overlay (small upper triangle above the strip) */
+    const yTop=yb+dyU, wTop=wpx(yTop);
+    simPath.setAttribute('d',`M ${OX} ${OY-HU} L ${OX} ${OY-yTop*U} L ${OX+wTop} ${OY-yTop*U} Z`);
+    simV.setAttribute('x',OX-12);simV.setAttribute('y',(OY-HU+OY-yTop*U)/2);simV.textContent='h−y';
+    simW.setAttribute('x',OX+wTop/2);simW.setAttribute('y',OY-yTop*U-8);simW.textContent='w(y)';
+    gSim.setAttribute('opacity',st.sim?1:0);
+    note.style.opacity=st.pull?1:0;
+    gGhost.style.opacity=st.ghosts&&!st.pull?1:0; gGhost.style.transition='opacity .5s';
+    const wU=6*(1-yb/4), dA=wU*dyU;
+    ctx.readout([
+      ['strip height y', yb.toFixed(2)+' h·¼ → '+yb.toFixed(2)],
+      ['thickness dy', `h/${st.N} = ${(dyU).toFixed(3)}`],
+      ['width w(y)', `b(1−y/h) ≈ ${wU.toFixed(3)}`],
+      ['element dA', `w·dy ≈ ${dA.toFixed(3)}`],
+      ['area check', '∫ dA = ½·b·h = 12']]);
+  }
+  buildGhosts(); render();
+  ctx.caption('fig. 05 — triangle · strip with geometry-dependent width');
+  ctx.legend([{c:'var(--teal)',t:'body'},{c:'var(--amber)',t:'element strip'},{c:'var(--coral)',t:'similar triangles'}]);
+
+  const sPos=makeSlider(controlsBar,{label:'height y',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(4-4/st.N)).toFixed(2), onInput:v=>{st.s=v;render();}});
+  makeSlider(controlsBar,{label:'strips N',min:4,max:26,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();render();}});
+  makeToggle(controlsBar,{label:'ghost strips',value:true,onInput:v=>{st.ghosts=v;render();}});
+  makeToggle(controlsBar,{label:'similar triangles',value:false,onInput:v=>{st.sim=v;render();}});
+  makeToggle(controlsBar,{label:'pull strip out',value:false,onInput:v=>{st.pull=v;render();}});
+  ctx.sweepDur=4.5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);render();});
+  return {dispose(){stopSweep();}};
+}
+
+/* ============================================================================
+   BATCH B — 3D SOLID MODULES (share the threeStage helper)
+   ========================================================================== */
+
+/* ---------- shared 3D helpers ---------- */
+function stdLights(scene){
+  scene.add(new THREE.AmbientLight(0xbfe8d8,.55));
+  const key=new THREE.DirectionalLight(0xfff2d8,1.15); key.position.set(3,4,5); scene.add(key);
+  const rim=new THREE.DirectionalLight(0x67e0c2,.5); rim.position.set(-4,-2,-3); scene.add(rim);
+}
+function labelFactory(mount){
+  const list=[];
+  const make=(html,big)=>{const d=el('div','lbl3'+(big?' big':''),html);mount.appendChild(d);
+    const item={el:d,pos:new THREE.Vector3(),op:1};list.push(item);return item;};
+  const update=camera=>{const w=mount.clientWidth,h=mount.clientHeight;
+    list.forEach(L=>{const v=L.pos.clone().project(camera);
+      L.el.style.transform=`translate(-50%,-50%) translate(${(v.x*.5+.5)*w}px,${(-v.y*.5+.5)*h}px)`;
+      L.el.style.opacity=(v.z<1?L.op:0);});};
+  return {make,update};
+}
+function setPts(line,a,b){line.geometry.setFromPoints([a,b]);
+  if(line.material.isLineDashedMaterial)line.computeLineDistances();}
+function swapGeo(mesh,geo){mesh.geometry.dispose();mesh.geometry=geo;}
+
+/* ---------- MODULE 08 — HOLLOW SPHERE (latitude band, dA = 2πR sinθ · R dθ) ---------- */
+function hshellFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  controls.target.set(0,0,0);
+
+  /* hollow shell body */
+  const shellMat=new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.13,
+    side:THREE.DoubleSide,depthWrite:false,shininess:70});
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1,72,48),shellMat));
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.001,28,18),
+    new THREE.MeshBasicMaterial({color:0x67e0c2,wireframe:true,transparent:true,opacity:.06})));
+
+  /* axis + meridian guides */
+  const dash=c=>new THREE.LineDashedMaterial({color:c,dashSize:.07,gapSize:.05,transparent:true,opacity:.5});
+  const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,-1.25,0),new THREE.Vector3(0,1.25,0)]),dash(0xf4f1e4));
+  axis.computeLineDistances(); scene.add(axis);
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+
+  /* element: spherical zone between θ and θ+dθ */
+  const bandMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.95,side:THREE.DoubleSide,shininess:50});
+  const band=new THREE.Mesh(new THREE.SphereGeometry(1,72,8,0,Math.PI*2,0,.2),bandMat);
+  peelGroup.add(band);
+
+  /* unrolled ribbon shown when pulled */
+  const ribMat=new THREE.MeshBasicMaterial({color:0xffb84d,transparent:true,opacity:0,
+    side:THREE.DoubleSide});
+  const ribbon=new THREE.Mesh(new THREE.PlaneGeometry(1,1),ribMat); peelGroup.add(ribbon);
+
+  /* guides: radius, θ arc, ring radius, dθ gauge */
+  const mkLine=(c,dashed)=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(),new THREE.Vector3()]),
+    dashed?dash(c):new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.85}));
+    if(dashed)l.computeLineDistances(); scene.add(l); return l;};
+  const radLine=mkLine(0xf4f1e4), thArc=mkLine(0xf4f1e4), ringRad=mkLine(0x8ecbff),
+    dthGauge=mkLine(0xff8a70), conn=mkLine(0xf4f1e4,true);
+  conn.material.opacity=.55;
+
+  const LF=labelFactory(mount);
+  const labTh=LF.make('θ'), labR=LF.make('R'), labRsin=LF.make('R sinθ'),
+    labDth=LF.make('R dθ'), labBand=LF.make('dA = 2πR sinθ · R dθ',true);
+
+  const st={s:.4,N:24,ghosts:true,pull:false};
+  const dth=()=>Math.PI/st.N;
+  const px={x:0}; // peel offset tracker
+
+  function circleAt(th,color,op){
+    const pts=[]; for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.sin(th)*Math.cos(a),Math.cos(th),Math.sin(th)*Math.sin(a)));}
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color,transparent:true,opacity:op}));
+  }
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    ghostGroup.clear();
+    for(let i=1;i<st.N;i++)ghostGroup.add(circleAt(i*Math.PI/st.N,0x67e0c2,.28));
+  }
+  function arcGeo(r,th1,th2){const pts=[];
+    for(let i=0;i<=40;i++){const t=th1+(th2-th1)*i/40;
+      pts.push(new THREE.Vector3(r*Math.sin(t),r*Math.cos(t),0));}
+    return new THREE.BufferGeometry().setFromPoints(pts);}
+  function applyAll(){
+    const d=dth(), thE=st.s*(Math.PI-d), thM=thE+d/2;
+    swapGeo(band,new THREE.SphereGeometry(1.001,72,8,0,Math.PI*2,thE,d));
+    /* guides in the z=0 meridian plane */
+    const dir=new THREE.Vector3(Math.sin(thM),Math.cos(thM),0);
+    setPts(radLine,new THREE.Vector3(),dir.clone().multiplyScalar(1));
+    swapGeo(thArc,arcGeo(.36,0,thM));
+    setPts(ringRad,new THREE.Vector3(0,Math.cos(thM),0),
+      new THREE.Vector3(Math.sin(thM),Math.cos(thM),0));
+    swapGeo(dthGauge,arcGeo(1.06,thE,thE+d));
+    /* unrolled ribbon: 2πR sinθ × R dθ (scale k) */
+    const k=.3, w=2*Math.PI*Math.sin(thM)*k, h=d*k;
+    swapGeo(ribbon,new THREE.PlaneGeometry(Math.max(w,.01),Math.max(h,.01)));
+    ribbon.position.set(1.42+w/2,Math.cos(thM),0);
+    /* labels */
+    labTh.pos.set(.3*Math.sin(thM/2)+.1,.3*Math.cos(thM/2),0);
+    labR.pos.copy(dir).multiplyScalar(.55).add(new THREE.Vector3(.09,0,0));
+    labRsin.pos.set(Math.sin(thM)/2,Math.cos(thM)+.09,0);
+    labDth.pos.copy(dir).multiplyScalar(1.16);
+    labBand.pos.set(px.x,Math.cos(thM)+ (st.pull?.42:.3),0);
+    setPts(conn,new THREE.Vector3(Math.sin(thM)*1.03,Math.cos(thM),0),
+      new THREE.Vector3(px.x+Math.sin(thM)-.05,Math.cos(thM),0));
+    conn.visible=st.pull&&px.x>.25;
+    const sinT=Math.sin(thM);
+    ctx.readout([
+      ['band centre θ', `${(thM*180/Math.PI).toFixed(1)}° = ${thM.toFixed(3)} rad`],
+      ['width R dθ', `πR/${st.N} ≈ ${(Math.PI/st.N).toFixed(3)} R`],
+      ['ring length 2πR sinθ', (2*Math.PI*sinT).toFixed(3)+' R'],
+      ['element dA', (2*Math.PI*sinT*Math.PI/st.N).toFixed(3)+' R²'],
+      ['area check','∫ dA = 4πR²']]);
+  }
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 11 — hollow sphere · element: latitude band  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'body (shell)'},{c:'var(--amber)',t:'element band'},
+    {c:'rgba(103,224,194,.5)',t:'ghost bands'},{c:'var(--sky)',t:'ring radius R sinθ'}]);
+
+  stage.start(t=>{
+    bandMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    if(st.pull)band.rotation.y=t*.35;
+    LF.update(camera);
+  });
+
+  const sPos=makeSlider(controlsBar,{label:'angle θ',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(Math.PI-Math.PI/st.N)).toFixed(2)+' rad', onInput:v=>{st.s=v;applyAll();}});
+  makeSlider(controlsBar,{label:'bands N',min:6,max:24,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'ghost bands',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'pull band + unroll',value:false,onInput:v=>{
+    st.pull=v; labBand.op=v?1:0;
+    gsap.killTweensOf(px); gsap.killTweensOf(peelGroup.position); gsap.killTweensOf(ribMat);
+    gsap.to(peelGroup.position,{x:v?1.85:0,duration:1,ease:'power3.inOut',
+      onUpdate:()=>{px.x=peelGroup.position.x;applyAll();}});
+    gsap.to(ribMat,{opacity:v?.85:0,duration:.8,delay:v?.35:0});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(peelGroup.position);gsap.killTweensOf(ribMat);stopSweep();stage.dispose();}};
+}
+
+/* ---------- MODULE 09 — SOLID CONE (disc element, dV = π r(y)² dy, y from apex) ---------- */
+function coneFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  const H=1.5;                                    /* base radius R=1, height h=1.5 */
+  controls.target.set(0,.6,0); camera.position.set(2.9,2.0,3.3);
+
+  /* translucent cone body (apex up at y=H, base at y=0) */
+  const bodyMat=new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.12,
+    side:THREE.DoubleSide,depthWrite:false,shininess:70});
+  const body=new THREE.Mesh(new THREE.ConeGeometry(1,H,72,1),bodyMat);
+  body.position.y=H/2; scene.add(body);
+  const baseRing=(()=>{const pts=[];for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)));}
+    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.5}));
+    scene.add(l);return l;})();
+
+  const dashM=new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.5});
+  const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,-.12,0),new THREE.Vector3(0,H+.3,0)]),dashM);
+  axis.computeLineDistances(); scene.add(axis);
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+
+  /* accumulated core: cone from apex down to y */
+  const coreMat=new THREE.MeshPhongMaterial({color:0x1d574b,transparent:true,opacity:.5,depthWrite:false,shininess:20});
+  const core=new THREE.Mesh(new THREE.ConeGeometry(1,1,48,1),coreMat); scene.add(core);
+
+  /* element disc (unit cylinder, scaled) */
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+  const discMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.95,side:THREE.DoubleSide,shininess:50});
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,56),discMat); peelGroup.add(disc);
+
+  const mkLine=(c,dashed)=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      [new THREE.Vector3(),new THREE.Vector3()]),
+      dashed?new THREE.LineDashedMaterial({color:c,dashSize:.07,gapSize:.05,transparent:true,opacity:.55})
+             :new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.85}));
+    if(dashed)l.computeLineDistances(); scene.add(l); return l;};
+  const radLine=mkLine(0xf4f1e4), dyGauge=mkLine(0xff8a70), conn=mkLine(0xf4f1e4,true);
+
+  const LF=labelFactory(mount);
+  const labY=LF.make('y (from apex)'), labR=LF.make('r(y) = R·y/h'), labDy=LF.make('dy'),
+    labDisc=LF.make('dV = π r(y)² dy',true);
+
+  const st={s:.45,N:16,ghosts:true,pull:false};
+  const dy=()=>H/st.N;
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    ghostGroup.clear();
+    for(let i=1;i<st.N;i++){const yi=i*dy(), ri=yi/H, pts=[];
+      for(let k=0;k<=72;k++){const a=k/72*Math.PI*2;
+        pts.push(new THREE.Vector3(ri*Math.cos(a),H-yi,ri*Math.sin(a)));}
+      ghostGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.3})));}
+  }
+  function applyAll(){
+    const d=dy(), yS=Math.min(st.s*(H-d),H-d), r=yS/H, yc=H-yS-d/2;
+    disc.scale.set(r,d,r); disc.position.y=yc;
+    core.scale.set(r,Math.max(yS,.001),r); core.position.y=H-yS/2;
+    setPts(radLine,new THREE.Vector3(0,yc,0),new THREE.Vector3(r,yc,0));
+    setPts(dyGauge,new THREE.Vector3(r+.09,H-yS,0),new THREE.Vector3(r+.09,H-yS-d,0));
+    const pxv=peelGroup.position.x;
+    setPts(conn,new THREE.Vector3(r+.04,yc,0),new THREE.Vector3(pxv-r-.05,yc,0));
+    conn.visible=st.pull&&pxv>.25;
+    labY.pos.set(.02,H-yS+.12,0);
+    labR.pos.set(r*.55,yc+.09,0);
+    labDy.pos.set(r+.2,yc,0);
+    labDisc.pos.set(pxv,yc+r*.6+.22,0);
+    const yu=yS/H, dV=Math.PI*yu*yu/st.N;
+    ctx.readout([
+      ['disc position y', yu.toFixed(2)+' h (from apex)'],
+      ['thickness dy', `h/${st.N} ≈ ${(1/st.N).toFixed(3)} h`],
+      ['disc radius r(y)', `R·y/h ≈ ${yu.toFixed(3)} R`],
+      ['element dV', `π r² dy ≈ ${dV.toFixed(3)} R²h`],
+      ['volume check','∫ dV = ⅓ πR²h']]);
+  }
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 12 — solid cone · element: thin disc  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'body'},{c:'var(--amber)',t:'element disc'},
+    {c:'var(--chalk)',t:'∫ done (core)'},{c:'rgba(103,224,194,.5)',t:'ghost discs'}]);
+
+  stage.start(t=>{
+    discMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    if(st.pull)disc.rotation.y=t*.4;
+    LF.update(camera);
+  });
+
+  const sPos=makeSlider(controlsBar,{label:'height y',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' h', onInput:v=>{st.s=v;applyAll();}});
+  makeSlider(controlsBar,{label:'discs N',min:4,max:16,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'ghost discs',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'pull disc out',value:false,onInput:v=>{
+    st.pull=v; labDisc.op=v?1:0;
+    gsap.killTweensOf(peelGroup.position);
+    gsap.to(peelGroup.position,{x:v?1.7:0,duration:1,ease:'power3.inOut',onUpdate:applyAll});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(peelGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ---------- MODULE 10 — HOLLOW CONE (slant ring, dA = 2πr dℓ) ---------- */
+function conehFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  const H=1.5, R=1, L=Math.hypot(R,H);            /* slant length ℓ */
+  const cosA=H/L, sinA=R/L, phiG=.85;             /* generator facing the camera */
+  controls.target.set(0,.6,0); camera.position.set(2.9,2.0,3.3);
+
+  /* open conical surface */
+  const bodyMat=new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.14,
+    side:THREE.DoubleSide,depthWrite:false,shininess:70});
+  const body=new THREE.Mesh(new THREE.ConeGeometry(R,H,72,1,true),bodyMat);
+  body.position.y=H/2; scene.add(body);
+  const baseRing=(()=>{const pts=[];for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;
+      pts.push(new THREE.Vector3(R*Math.cos(a),0,R*Math.sin(a)));}
+    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.5}));
+    scene.add(l);return l;})();
+
+  /* generator line (the slant we integrate along) */
+  const G=s=>new THREE.Vector3(R*(s/L)*Math.cos(phiG),H-s*cosA,R*(s/L)*Math.sin(phiG));
+  const gen=new THREE.Line(new THREE.BufferGeometry().setFromPoints([G(0),G(L)]),
+    new THREE.LineBasicMaterial({color:0xf4f1e4,transparent:true,opacity:.7}));
+  scene.add(gen);
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+
+  /* element: conical band between slant s and s+dℓ */
+  const bandMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.95,side:THREE.DoubleSide,shininess:50});
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(.5,.6,.2,64,1,true),bandMat);
+  peelGroup.add(band);
+
+  const mkLine=c=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      [new THREE.Vector3(),new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.85}));
+    scene.add(l); return l;};
+  const legDr=mkLine(0xff8a70), legDy=mkLine(0xff8a70);
+  legDr.material.dasharray=null; legDr.material.opacity=.8; legDy.material.opacity=.8;
+  const conn=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.55}));
+  conn.computeLineDistances(); scene.add(conn);
+
+  const LF=labelFactory(mount);
+  const labL=LF.make('ℓ (slant)'), labR=LF.make('r'), labDr=LF.make('dr'),
+    labDy=LF.make('dy'), labDl=LF.make('dℓ'), labBand=LF.make('dA = 2πr · dℓ',true);
+
+  const st={s:.42,N:20,ghosts:true,tri:true,pull:false};
+  const dl=()=>L/st.N;
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});
+    ghostGroup.clear();
+    for(let i=1;i<st.N;i++){const si=i*dl(), ri=R*si/L, pts=[];
+      for(let k=0;k<=72;k++){const a=k/72*Math.PI*2;
+        pts.push(new THREE.Vector3(ri*Math.cos(a),H-si*cosA,ri*Math.sin(a)));}
+      ghostGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.3})));}
+  }
+  function applyAll(){
+    const d=dl(), s1=st.s*(L-d), s2=s1+d, sc=s1+d/2;
+    const r1=R*s1/L, r2=R*s2/L, rc=R*sc/L;
+    swapGeo(band,new THREE.CylinderGeometry(r1,r2,d*cosA,64,1,true));
+    band.position.y=H-sc*cosA;
+    /* dr–dy–dℓ triangle on the wall at the element */
+    const Pc=G(sc), Pe=G(s2),
+      Ph=new THREE.Vector3(R*(s2/L)*Math.cos(phiG),Pc.y,R*(s2/L)*Math.sin(phiG));
+    setPts(legDr,Pc,Ph); setPts(legDy,Ph,Pe);
+    const vis=st.tri?1:0; legDr.visible=!!vis; legDy.visible=!!vis;
+    labDr.pos.copy(Pc).lerp(Ph,.5).add(new THREE.Vector3(.05,.07,0));
+    labDy.pos.copy(Ph).lerp(Pe,.5).add(new THREE.Vector3(.14,0,0));
+    labDl.pos.copy(Pc).lerp(Pe,.5).add(new THREE.Vector3(-.02,.1,0));
+    const pxv=peelGroup.position.x;
+    setPts(conn,Pc.clone().add(new THREE.Vector3(.05,0,0)),
+      new THREE.Vector3(pxv+rc-.05,H-sc*cosA,0));
+    conn.visible=st.pull&&pxv>.25;
+    labL.pos.copy(G(L*.55)).add(new THREE.Vector3(.13,.05,0));
+    labR.pos.set(rc*.5,H-sc*cosA+.09,0).add(new THREE.Vector3(-.05,0,0));
+    labBand.pos.set(pxv,H-sc*cosA+rc*.5+.28,0);
+    const su=sc/L, dA=2*Math.PI*su/st.N;
+    ctx.readout([
+      ['slant position ℓ', su.toFixed(2)+' ℓ (from apex)'],
+      ['width dℓ', `ℓ/${st.N} ≈ ${(1/st.N).toFixed(3)} ℓ`],
+      ['ring radius r', `R·ℓ/ℓ₀ ≈ ${su.toFixed(3)} R`],
+      ['element dA', `2πr·dℓ ≈ ${dA.toFixed(3)} R·ℓ`],
+      ['area check','∫ dA = πRℓ']]);
+  }
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 13 — hollow cone · element: slant ring  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'surface'},{c:'var(--amber)',t:'element ring'},
+    {c:'var(--coral)',t:'dr–dy–dℓ triangle'},{c:'rgba(103,224,194,.5)',t:'ghost rings'}]);
+
+  stage.start(t=>{
+    bandMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    if(st.pull)band.rotation.y=t*.4;
+    LF.update(camera);
+  });
+
+  const sPos=makeSlider(controlsBar,{label:'slant ℓ',min:0,max:1,step:.001,value:st.s,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' ℓ', onInput:v=>{st.s=v;applyAll();}});
+  makeSlider(controlsBar,{label:'rings N',min:4,max:20,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'ghost rings',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'dr–dy–dℓ triangle',value:true,onInput:v=>{st.tri=v;applyAll();}});
+  makeToggle(controlsBar,{label:'pull ring out',value:false,onInput:v=>{
+    st.pull=v; labBand.op=v?1:0;
+    gsap.killTweensOf(peelGroup.position);
+    gsap.to(peelGroup.position,{x:v?1.7:0,duration:1,ease:'power3.inOut',onUpdate:applyAll});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.s=t;sPos.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(peelGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ============================================================================
+   BATCH C — MULTIVARIABLE VOLUME ELEMENTS
+   ========================================================================== */
+
+/* ---------- MODULE 11 — CARTESIAN VOLUME (brick, dV = dx dy dz) ---------- */
+function cartFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  const A=1.6,B=1.15,C=1.05;                    /* region a×b×c, corner at origin */
+  controls.target.set(A/2,B/2,C/2); camera.position.set(3.1,2.2,3.6);
+
+  /* region box */
+  const box=new THREE.Mesh(new THREE.BoxGeometry(A,B,C),
+    new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.08,
+      side:THREE.DoubleSide,depthWrite:false}));
+  box.position.set(A/2,B/2,C/2); scene.add(box);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(A,B,C)),
+    new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.5}));
+  frame.position.copy(box.position); scene.add(frame);
+
+  /* axes from the origin corner */
+  const ax=(to,lab)=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(),to]),new THREE.LineBasicMaterial({color:0xf4f1e4,transparent:true,opacity:.6}));
+    scene.add(l);return l;};
+  ax(new THREE.Vector3(A+.35,0,0)); ax(new THREE.Vector3(0,B+.35,0)); ax(new THREE.Vector3(0,0,C+.35));
+
+  /* subdivision grid (all three directions) */
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});ghostGroup.clear();
+    const pts=[],N=st.N;
+    for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){
+      const y=B*i/N,z=C*j/N,x=A*i/N;
+      pts.push(0,y,z, A,y,z);                    /* x-lines */
+      pts.push(x,0,z, x,B,z);                    /* y-lines */
+      pts.push(x,y,0, x,y,C);}                   /* z-lines */
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+    ghostGroup.add(new THREE.LineSegments(g,
+      new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:.14})));
+  }
+
+  /* element brick */
+  const peelGroup=new THREE.Group(); scene.add(peelGroup);
+  const brickMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.85,shininess:50});
+  const brick=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),brickMat); peelGroup.add(brick);
+  const brickEdge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
+    new THREE.LineBasicMaterial({color:0xffd99a,transparent:true,opacity:.95}));
+  peelGroup.add(brickEdge);
+  const conn=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.55}));
+  conn.computeLineDistances(); scene.add(conn);
+
+  const LF=labelFactory(mount);
+  const labX=LF.make('x'),labY=LF.make('y'),labZ=LF.make('z'),
+    labDx=LF.make('dx'),labDy=LF.make('dy'),labDz=LF.make('dz'),
+    labBrick=LF.make('dV = dx·dy·dz',true);
+
+  const st={x:.4,y:.4,z:.4,N:10,ghosts:true,pull:false};
+  const PULL=new THREE.Vector3(.9,.55,.75).normalize().multiplyScalar(1.35);
+
+  function applyAll(){
+    const dx=A/st.N,dy=B/st.N,dz=C/st.N;
+    const bx=st.x*(A-dx),by=st.y*(B-dy),bz=st.z*(C-dz);
+    brick.scale.set(dx,dy,dz); brickEdge.scale.set(dx,dy,dz);
+    const home=new THREE.Vector3(bx+dx/2,by+dy/2,bz+dz/2);
+    brick.position.copy(home); brickEdge.position.copy(home);
+    setPts(conn,home,home.clone().add(peelGroup.position));
+    conn.visible=st.pull&&peelGroup.position.length()>.2;
+    labX.pos.set(A+.48,0,0); labY.pos.set(0,B+.48,0); labZ.pos.set(0,0,C+.48);
+    labDx.pos.set(bx+dx/2,by-.09,bz+dz+.06);
+    labDy.pos.set(bx-.09,by+dy/2,bz+dz+.06);
+    labDz.pos.set(bx+dx+.09,by-.06,bz+dz/2);
+    labBrick.pos.copy(home).add(peelGroup.position).add(new THREE.Vector3(0,dy/2+.24,0));
+    ctx.readout([
+      ['brick position', `(${st.x.toFixed(2)}a, ${st.y.toFixed(2)}b, ${st.z.toFixed(2)}c)`],
+      ['edges', `dx=a/${st.N}, dy=b/${st.N}, dz=c/${st.N}`],
+      ['element dV', `abc/${st.N**3} ≈ ${(1/st.N**3).toFixed(4)} abc`],
+      ['volume check','∭ dx dy dz = abc']]);
+  }
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 14 — cartesian region · element: brick dx dy dz  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'region'},{c:'var(--amber)',t:'element brick'},
+    {c:'rgba(103,224,194,.4)',t:'partition grid'}]);
+
+  stage.start(t=>{brickMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);LF.update(camera);});
+
+  const sx=makeSlider(controlsBar,{label:'slice x',min:0,max:1,step:.001,value:st.x,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' a', onInput:v=>{st.x=v;applyAll();}});
+  const sy=makeSlider(controlsBar,{label:'slice y',min:0,max:1,step:.001,value:st.y,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' b', onInput:v=>{st.y=v;applyAll();}});
+  const sz=makeSlider(controlsBar,{label:'slice z',min:0,max:1,step:.001,value:st.z,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' c', onInput:v=>{st.z=v;applyAll();}});
+  makeSlider(controlsBar,{label:'cuts N',min:3,max:10,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'partition grid',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'pull brick out',value:false,onInput:v=>{
+    st.pull=v; labBrick.op=v?1:0;
+    gsap.killTweensOf(peelGroup.position);
+    gsap.to(peelGroup.position,{x:v?PULL.x:0,y:v?PULL.y:0,z:v?PULL.z:0,
+      duration:1,ease:'power3.inOut',onUpdate:applyAll});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.x=st.y=st.z=t;sx.set(t);sy.set(t);sz.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(peelGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ---------- shared: annular wedge geometry for module 12 ---------- */
+function wedgeGeo(r1,r2,t1,t2,z1,z2,seg=6){
+  const pos=[],P=(r,t,z)=>[r*Math.cos(t),z,r*Math.sin(t)];
+  const quad=(a,b,c,d)=>pos.push(...a,...b,...c,...a,...c,...d);
+  for(let i=0;i<seg;i++)for(let j=0;j<seg;j++){
+    const ra=r1+(r2-r1)*i/seg, rb=r1+(r2-r1)*(i+1)/seg;
+    const ta=t1+(t2-t1)*j/seg, tb=t1+(t2-t1)*(j+1)/seg;
+    quad(P(ra,ta,z2),P(rb,ta,z2),P(rb,tb,z2),P(ra,tb,z2));   /* top */
+    quad(P(ra,ta,z1),P(ra,tb,z1),P(rb,tb,z1),P(rb,ta,z1));}  /* bottom */
+  for(let j=0;j<seg;j++){
+    const ta=t1+(t2-t1)*j/seg, tb=t1+(t2-t1)*(j+1)/seg;
+    quad(P(r1,ta,z1),P(r1,ta,z2),P(r1,tb,z2),P(r1,tb,z1));   /* inner */
+    quad(P(r2,ta,z1),P(r2,tb,z1),P(r2,tb,z2),P(r2,ta,z2));}  /* outer */
+  for(let i=0;i<seg;i++){
+    const ra=r1+(r2-r1)*i/seg, rb=r1+(r2-r1)*(i+1)/seg;
+    quad(P(ra,t1,z1),P(ra,t1,z2),P(rb,t1,z2),P(rb,t1,z1));   /* side 1 */
+    quad(P(ra,t2,z1),P(rb,t2,z1),P(rb,t2,z2),P(ra,t2,z2));}  /* side 2 */
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.computeVertexNormals(); return g;
+}
+
+/* ---------- MODULE 12 — CYLINDRICAL VOLUME (wedge, dV = r dr dθ dz) ---------- */
+function cylFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  const H=1.4;                                   /* radius R=1, height h */
+  controls.target.set(0,H/2,0); camera.position.set(3.0,2.1,3.4);
+
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(1,1,H,72,1,false),
+    new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.10,
+      side:THREE.DoubleSide,depthWrite:false}));
+  body.position.y=H/2; scene.add(body);
+  const dash=c=>new THREE.LineDashedMaterial({color:c,dashSize:.07,gapSize:.05,transparent:true,opacity:.5});
+  const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,-.15,0),new THREE.Vector3(0,H+.3,0)]),dash(0xf4f1e4));
+  axis.computeLineDistances(); scene.add(axis);
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  const circleAt=(y,r,op)=>{const pts=[];for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;
+      pts.push(new THREE.Vector3(r*Math.cos(a),y,r*Math.sin(a)));}
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:0x67e0c2,transparent:true,opacity:op}));};
+
+  const elGroup=new THREE.Group(); scene.add(elGroup);
+  const wedgeMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.92,side:THREE.DoubleSide,shininess:40});
+  const wedge=new THREE.Mesh(new THREE.BufferGeometry(),wedgeMat); elGroup.add(wedge);
+
+  const mkLine=c=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      [new THREE.Vector3(),new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.9}));
+    elGroup.add(l);return l;};
+  const arcPts=(r,t1,t2,y,n=24)=>{const p=[];for(let i=0;i<=n;i++)
+      p.push(new THREE.Vector3(r*Math.cos(t1+(t2-t1)*i/n),y,r*Math.sin(t1+(t2-t1)*i/n)));return p;};
+  const drLine=mkLine(0xf4f1e4), dzLine=mkLine(0xf4f1e4),
+    arcRdth=mkLine(0xff8a70), arcDth=mkLine(0x8ecbff);
+  const conn=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),
+    dash(0xf4f1e4)); scene.add(conn);
+
+  const LF=labelFactory(mount);
+  const labDr=LF.make('dr'),labDz=LF.make('dz'),labRdth=LF.make('r dθ'),
+    labDth=LF.make('dθ'),labR=LF.make('r'),labWedge=LF.make('dV = r dr dθ dz',true);
+
+  const st={r:.5,th:.3,z:.45,N:14,ghosts:true,pull:false};
+  const dims=()=>({dr:1/st.N,dth:2*Math.PI/st.N,dz:H/st.N});
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});ghostGroup.clear();
+    for(let i=1;i<st.N;i++){ghostGroup.add(circleAt(H,i/st.N,.3));
+      ghostGroup.add(circleAt(0,i/st.N,.3));}
+    for(let j=1;j<st.N;j++)ghostGroup.add(circleAt(H*j/st.N,1,.18));
+  }
+  function applyAll(){
+    const {dr,dth,dz}=dims();
+    const r1=st.r*(1-dr), r2=r1+dr;
+    const t1=st.th*(Math.PI*2-dth), t2=t1+dth, tm=(t1+t2)/2;
+    const z1=st.z*(H-dz), z2=z1+dz;
+    swapGeo(wedge,wedgeGeo(r1,r2,t1,t2,z1,z2));
+    /* guides (local to elGroup so they travel when pulled) */
+    setPts(drLine,new THREE.Vector3(r1*Math.cos(t2),z2,r1*Math.sin(t2)),
+      new THREE.Vector3(r2*Math.cos(t2),z2,r2*Math.sin(t2)));
+    setPts(dzLine,new THREE.Vector3(r2*Math.cos(t2),z1,r2*Math.sin(t2)),
+      new THREE.Vector3(r2*Math.cos(t2),z2,r2*Math.sin(t2)));
+    arcRdth.geometry.setFromPoints(arcPts(r2+.04,t1,t2,z2+.04));
+    arcDth.geometry.setFromPoints(arcPts(.2,t1,t2,z2+.05));
+    const off=elGroup.position, add=p=>p.clone().add(off);
+    setPts(conn,new THREE.Vector3((r1+r2)/2*Math.cos(tm),(z1+z2)/2,(r1+r2)/2*Math.sin(tm)),
+      add(new THREE.Vector3((r1+r2)/2*Math.cos(tm)- .05,(z1+z2)/2,(r1+r2)/2*Math.sin(tm))));
+    conn.visible=st.pull&&off.length()>.2;
+    labDr.pos.copy(add(new THREE.Vector3((r1+r2)/2*Math.cos(t2),z2+.09,r1*Math.sin(t2)+ (r2-r1)*Math.sin(t2)/2)));
+    labDz.pos.copy(add(new THREE.Vector3(r2*Math.cos(t2)+.1,(z1+z2)/2,r2*Math.sin(t2)+.1)));
+    labRdth.pos.copy(add(new THREE.Vector3((r2+.16)*Math.cos(tm),z2+.13,(r2+.16)*Math.sin(tm))));
+    labDth.pos.copy(add(new THREE.Vector3(.32*Math.cos(tm),z2+.14,.32*Math.sin(tm))));
+    labR.pos.copy(add(new THREE.Vector3(r1*.55*Math.cos(t1+.02),z2+.08,r1*.55*Math.sin(t1+.02))));
+    labWedge.pos.copy(add(new THREE.Vector3(r2*Math.cos(tm),z2+.4,r2*Math.sin(tm))));
+    const ru=(r1+r2)/2, dV=2*Math.PI*ru/st.N**3;
+    ctx.readout([
+      ['position', `r=${ru.toFixed(2)}R · θ=${tm.toFixed(2)} · z=${(z1/H).toFixed(2)}h`],
+      ['edge dr', `R/${st.N} ≈ ${dr.toFixed(3)} R`],
+      ['edge r·dθ', `${(ru*dth).toFixed(3)} R   (dθ = ${dth.toFixed(3)} rad)`],
+      ['edge dz', `h/${st.N} ≈ ${(dz/H).toFixed(3)} h`],
+      ['element dV', `r dr dθ dz ≈ ${dV.toFixed(4)} R²h`],
+      ['volume check','∭ r dr dθ dz = πR²h']]);
+  }
+  buildGhosts(); applyAll();
+
+  ctx.caption('fig. 15 — cylinder · element: curved wedge  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'region'},{c:'var(--amber)',t:'element wedge'},
+    {c:'var(--coral)',t:'arc edge r·dθ'},{c:'var(--sky)',t:'angle dθ'}]);
+
+  stage.start(t=>{wedgeMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);LF.update(camera);});
+
+  makeSlider(controlsBar,{label:'radius r',min:0,max:1,step:.001,value:st.r,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' R', onInput:v=>{st.r=v;applyAll();}});
+  const sth=makeSlider(controlsBar,{label:'angle θ',min:0,max:1,step:.001,value:st.th,
+    fmt:v=>(v*(Math.PI*2-2*Math.PI/st.N)).toFixed(2)+' rad', onInput:v=>{st.th=v;applyAll();}});
+  makeSlider(controlsBar,{label:'height z',min:0,max:1,step:.001,value:st.z,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' h', onInput:v=>{st.z=v;applyAll();}});
+  makeSlider(controlsBar,{label:'cuts N',min:4,max:14,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();applyAll();}});
+  makeToggle(controlsBar,{label:'ghost partition',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'pull wedge out',value:false,onInput:v=>{
+    st.pull=v; labWedge.op=v?1:0;
+    const tm=st.th*(Math.PI*2-dims().dth)+dims().dth/2;
+    gsap.killTweensOf(elGroup.position);
+    gsap.to(elGroup.position,{x:v?Math.cos(tm)*1.5:0,z:v?Math.sin(tm)*1.5:0,y:v?.25:0,
+      duration:1,ease:'power3.inOut',onUpdate:applyAll});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.th=t;sth.set(t);applyAll();});
+  return {dispose(){gsap.killTweensOf(elGroup.position);stopSweep();stage.dispose();}};
+}
+
+/* ---------- shared: parametric face geometry for module 13 ---------- */
+function paramGeo(fn,nu,nv){
+  const pos=[];
+  for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){
+    const u0=i/nu,u1=(i+1)/nu,v0=j/nv,v1=(j+1)/nv;
+    const a=fn(u0,v0),b=fn(u1,v0),c=fn(u1,v1),d=fn(u0,v1);
+    pos.push(...a,...b,...c,...a,...c,...d);}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.computeVertexNormals(); return g;
+}
+
+/* ---------- MODULE 13 — SPHERICAL VOLUME (cell, dV = r² sinθ dr dθ dφ) ---------- */
+function sphvFactory(ctx){
+  const stage=threeStage(mount);
+  if(!stage){mount.appendChild(el('div','queuedCard','<p class="qNote">WebGL unavailable — 3D module cannot start.</p>'));return {};}
+  const {scene,camera,controls}=stage; stdLights(scene);
+  controls.target.set(0,0,0); camera.position.set(2.9,1.9,3.3);
+
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1,72,48),
+    new THREE.MeshPhongMaterial({color:0x8fe3cc,transparent:true,opacity:.09,
+      side:THREE.DoubleSide,depthWrite:false})));
+  const dashM=new THREE.LineDashedMaterial({color:0xf4f1e4,dashSize:.07,gapSize:.05,transparent:true,opacity:.5});
+  const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,-1.25,0),new THREE.Vector3(0,1.25,0)]),dashM);
+  axis.computeLineDistances(); scene.add(axis);
+  const eq=[];for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;eq.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)));}
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eq),
+    new THREE.LineBasicMaterial({color:0xf4f1e4,transparent:true,opacity:.18})));
+
+  const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+  const cellGroup=new THREE.Group(); scene.add(cellGroup);
+  const cellMat=new THREE.MeshPhongMaterial({color:0xffb84d,emissive:0x6b420c,
+    transparent:true,opacity:.92,side:THREE.DoubleSide,shininess:40});
+
+  const S=(r,th,ph)=>[r*Math.sin(th)*Math.cos(ph),r*Math.cos(th),r*Math.sin(th)*Math.sin(ph)];
+  const guide=c=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      [new THREE.Vector3(),new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.95}));
+    scene.add(l);return l;};
+  const gDr=guide(0xf4f1e4),gDth=guide(0xff8a70),gDph=guide(0x8ecbff);
+
+  const LF=labelFactory(mount);
+  const labDr=LF.make('dr'),labRdth=LF.make('r dθ'),labRsdph=LF.make('r sinθ dφ'),
+    labCell=LF.make('dV = r² sinθ dr dθ dφ',true);
+
+  const st={r:.55,th:.45,ph:.3,N:12,ghosts:true,pull:false,p:0};
+  const dims=()=>({dr:1/st.N,dth:Math.PI/st.N,dph:2*Math.PI/st.N});
+
+  function buildGhosts(){
+    ghostGroup.children.forEach(c=>{c.geometry.dispose();c.material.dispose();});ghostGroup.clear();
+    for(let i=1;i<st.N;i++)ghostGroup.add(new THREE.Mesh(new THREE.SphereGeometry(i/st.N,28,16),
+      new THREE.MeshBasicMaterial({color:0x67e0c2,wireframe:true,transparent:true,opacity:.05})));
+  }
+  function buildCell(){
+    cellGroup.children.forEach(c=>c.geometry&&c.geometry.dispose());cellGroup.clear();
+    const {dr,dth,dph}=dims();
+    const r1=st.r*(1-dr),r2=r1+dr,
+      t1=st.th*(Math.PI-dth),t2=t1+dth,
+      p1=st.ph*(Math.PI*2-dph),p2=p1+dph;
+    const faces=[
+      [u=>{},(u,v)=>S(r2,t1+(t2-t1)*u,p1+(p2-p1)*v)],               /* outer r2 */
+      [u=>{},(u,v)=>S(r1,t1+(t2-t1)*u,p1+(p2-p1)*v)],               /* inner r1 */
+      [u=>{},(u,v)=>S(r1+(r2-r1)*u,t2,p1+(p2-p1)*v)],               /* cone θ2 */
+      [u=>{},(u,v)=>S(r1+(r2-r1)*u,t1,p1+(p2-p1)*v)],               /* cone θ1 */
+      [u=>{},(u,v)=>S(r1+(r2-r1)*u,t1+(t2-t1)*v,p2)],               /* plane φ2 */
+      [u=>{},(u,v)=>S(r1+(r2-r1)*u,t1+(t2-t1)*v,p1)]];              /* plane φ1 */
+    const tm=(t1+t2)/2,pm=(p1+p2)/2;
+    const er=new THREE.Vector3(...S(1,tm,pm)).normalize(),
+      eth=new THREE.Vector3(Math.cos(tm)*Math.cos(pm),-Math.sin(tm),Math.cos(tm)*Math.sin(pm)),
+      eph=new THREE.Vector3(-Math.sin(pm),0,Math.cos(pm));
+    const dirs=[er.clone().multiplyScalar(.26),er.clone().multiplyScalar(-.18),
+      eth.clone().multiplyScalar(.2),eth.clone().multiplyScalar(-.2),
+      eph.clone().multiplyScalar(.2),eph.clone().multiplyScalar(-.2)];
+    faces.forEach((f,i)=>{const m=new THREE.Mesh(paramGeo(f[1],8,8),cellMat);
+      m.userData.dir=dirs[i]; cellGroup.add(m);});
+    /* edge guides */
+    gDr.geometry.setFromPoints([new THREE.Vector3(...S(r1,t2,p2)),new THREE.Vector3(...S(r2,t2,p2))]);
+    const a1=[];for(let i=0;i<=24;i++)a1.push(new THREE.Vector3(...S(r2,t1+(t2-t1)*i/24,p2)));
+    gDth.geometry.setFromPoints(a1);
+    const a2=[];for(let i=0;i<=24;i++)a2.push(new THREE.Vector3(...S(r2,t2,p1+(p2-p1)*i/24)));
+    gDph.geometry.setFromPoints(a2);
+    labDr.pos.set(...S((r1+r2)/2,t2,p2)).add(new THREE.Vector3(.08,.05,0));
+    labRdth.pos.set(...S(r2,tm,p2)).add(new THREE.Vector3(.1,.08,0));
+    labRsdph.pos.set(...S(r2,t2,pm)).add(new THREE.Vector3(0,.1,.1));
+    labCell.pos.set(...S(r2+.12,tm,pm));
+    return {tm,pm};
+  }
+  let meta=buildCell(); buildGhosts();
+
+  function readout(){
+    const {dr,dth,dph}=dims(), ru=st.r*(1-dr)+dr/2,
+      tm=meta.tm, dV=2*Math.PI*Math.PI*ru*ru*Math.sin(tm)/st.N**3;
+    ctx.readout([
+      ['position', `r=${ru.toFixed(2)}R · θ=${tm.toFixed(2)} · φ=${meta.pm.toFixed(2)}`],
+      ['edge dr', `${dr.toFixed(3)} R`],
+      ['edge r·dθ', `${(ru*dth).toFixed(3)} R`],
+      ['edge r sinθ·dφ', `${(ru*Math.sin(tm)*dph).toFixed(3)} R`],
+      ['element dV', `≈ ${dV.toFixed(4)} R³`],
+      ['volume check','∭ r² sinθ dr dθ dφ = 4⁄3 πR³']]);
+  }
+  readout();
+
+  ctx.caption('fig. 16 — sphere · element: spherical cell  (drag to orbit)');
+  ctx.legend([{c:'rgba(143,227,204,.6)',t:'region'},{c:'var(--amber)',t:'element cell'},
+    {c:'var(--coral)',t:'r dθ edge'},{c:'var(--sky)',t:'r sinθ dφ edge'}]);
+
+  stage.start(t=>{
+    cellMat.emissiveIntensity=.6+.3*Math.sin(t*2.4);
+    cellGroup.children.forEach(m=>m.position.copy(m.userData.dir).multiplyScalar(st.p));
+    LF.update(camera);});
+
+  const upd=()=>{meta=buildCell();readout();};
+  makeSlider(controlsBar,{label:'radius r',min:0,max:1,step:.001,value:st.r,
+    fmt:v=>(v*(1-1/st.N)).toFixed(2)+' R', onInput:v=>{st.r=v;upd();}});
+  makeSlider(controlsBar,{label:'polar θ',min:0,max:1,step:.001,value:st.th,
+    fmt:v=>(v*(Math.PI-Math.PI/st.N)).toFixed(2)+' rad', onInput:v=>{st.th=v;upd();}});
+  const sph=makeSlider(controlsBar,{label:'azimuth φ',min:0,max:1,step:.001,value:st.ph,
+    fmt:v=>(v*(Math.PI*2-2*Math.PI/st.N)).toFixed(2)+' rad', onInput:v=>{st.ph=v;upd();}});
+  makeSlider(controlsBar,{label:'cuts N',min:4,max:12,step:1,value:st.N,
+    fmt:v=>'N = '+v, onInput:v=>{st.N=v;buildGhosts();upd();}});
+  makeToggle(controlsBar,{label:'ghost shells',value:true,onInput:v=>{st.ghosts=v;ghostGroup.visible=v;}});
+  makeToggle(controlsBar,{label:'explode cell',value:false,onInput:v=>{
+    st.pull=v; labCell.op=v?1:0;
+    gsap.killTweensOf(st); gsap.to(st,{p:v?1:0,duration:.9,ease:'power3.inOut'});}});
+  ctx.sweepDur=5;
+  ctx.setSweep(t=>{st.ph=t;sph.set(t);upd();});
+  return {dispose(){gsap.killTweensOf(st);stopSweep();stage.dispose();}};
+}
+
+/* ============================================================================
+   MODULE REGISTRY — all 13 cases. status:'ready' modules get a factory;
+   'queued' modules show their maths + plan in a placeholder card.
+   ========================================================================== */
+const raw=String.raw;
+const MODULES=[
+ /* ---- 1D / LINEAR ---- */
+ {id:'wire',n:'01',group:'1D · LINEAR',title:'Straight Wire',dim:'1D',chip:'element of length',
+  elTex:raw`d\ell = dx`, elTexShort:'dℓ = dx', status:'ready', factory:wireFactory,
+  info:{why:'When a quantity is spread along a straight line — mass on a wire, charge on a rod — the coordinate x already labels every point. Cut the wire into N pieces of width Δx and let N → ∞: each piece becomes an infinitesimal straight segment dx. There is no curvature to follow, so dx is the whole story.',
+    texBlocks:[
+      {label:'the element',tex:raw`d\ell = dx`},
+      {label:'example: total mass from linear density λ(x)',tex:raw`M=\int_0^L \lambda(x)\,dx`}],
+    tip:'Ask the class: what breaks if the wire is bent? dx no longer follows the material — that is exactly why modules 02 and 03 exist. Press ▶ sweep to shower the pieces across the wire.'}},
+
+ {id:'arc',n:'02',group:'1D · LINEAR',title:'Circular Arc',dim:'1D',chip:'element of arc',
+  elTex:raw`ds = R\,d\theta`, elTexShort:'ds = R dθ', status:'ready', factory:arcFactory,
+  info:{why:'On a circle the radius is frozen — position is pure angle. Stepping the angle by dθ sweeps out a piece of arc whose length is radius × angle: ds = R·dθ. The angle itself becomes the integration variable, and radians make the conversion factor exactly R.',
+    texBlocks:[
+      {label:'the element',tex:raw`ds = R\,d\theta`},
+      {label:'summing every wedge',tex:raw`\ell=\int_{\theta_1}^{\theta_2} R\,d\theta = R(\theta_2-\theta_1)`}],
+    tip:'Radians are not optional here — they are precisely what makes arc length equal R·dθ. Pull the element out and ask: which two quantities are fixed for every piece? (R and dθ.)'}},
+
+ {id:'curve',n:'03',group:'1D · LINEAR',title:'Smooth Curve',dim:'1D',chip:'element of arc',
+  elTex:raw`d\ell=\sqrt{dx^2+dy^2}=\sqrt{1+\left(\tfrac{dy}{dx}\right)^2}\,dx`, elTexShort:'dℓ = √(dx²+dy²)', status:'ready', factory:curveFactory,
+  info:{why:'A bent curve is locally straight: zoom into any point and the tiny piece is the hypotenuse of a right triangle with legs dx and dy. Pythagoras supplies the element, and the slope dy/dx converts it into a single-variable integral.',
+    texBlocks:[
+      {label:'the element',tex:raw`d\ell=\sqrt{dx^2+dy^2}=\sqrt{1+\left(\tfrac{dy}{dx}\right)^2}\,dx`},
+      {label:'total length',tex:raw`\ell=\int_a^b \sqrt{1+\left(\tfrac{dy}{dx}\right)^2}\,dx`}],
+    tip:'Leave the ×9 zoom lens on and sweep the curve — at every point the amber piece sits flush with its dashed chord. Raise N and watch the ghost chord-polyline hug the curve: that polygon is literally the Riemann sum before the limit.'}},
+
+ {id:'rect',n:'04',group:'2D · PLANAR',title:'Rectangle / Region',dim:'2D',chip:'strip element',
+  elTex:raw`dA = y\,dx \;\;\text{or}\;\; dA = x\,dy`, elTexShort:'dA = y dx', status:'ready', factory:rectFactory,
+  info:{why:'Choose strips perpendicular to the axis you integrate along. Each strip has one infinitesimal thickness (dx or dy) and one finite extent fixed by the boundary — here y = b or x = a. Both orientations tile the same region and return the same area: the choice is strategic, not forced.',
+    texBlocks:[
+      {label:'the element (either orientation)',tex:raw`dA = \underbrace{b}_{y}\,dx \qquad\text{or}\qquad dA = \underbrace{a}_{x}\,dy`},
+      {label:'both give the same area',tex:raw`A=\int_0^a b\,dx = ab = \int_0^b a\,dy`}],
+    tip:'Flip the orientation switch mid-sweep: same answer, different bookkeeping. Then foreshadow the next lesson — the moment the boundary becomes a curve y(x), the strip height stops being constant and the integral gets interesting.'}},
+
+ {id:'tri',n:'05',group:'2D · PLANAR',title:'Triangle',dim:'2D',chip:'dependent strip',
+  elTex:raw`dA = w(y)\,dy,\qquad w(y)=b\!\left(1-\tfrac{y}{h}\right)`, elTexShort:'dA = w(y) dy', status:'ready', factory:triFactory,
+  info:{why:'A strip inside a triangle is still a rectangle — but its width is no longer free. The slanted side, via similar triangles, pins the width to the height: w(y)/b = (h−y)/h. The element carries that geometric dependence into the integral; that is the whole skill.',
+    texBlocks:[
+      {label:'the element',tex:raw`dA = w(y)\,dy,\qquad w(y)=b\!\left(1-\tfrac{y}{h}\right)`},
+      {label:'summing every strip',tex:raw`A=\int_0^h b\!\left(1-\tfrac{y}{h}\right)dy=\tfrac12 bh`}],
+    tip:'Turn on “similar triangles” and drag y — the dashed coral triangle is always similar to the big one. Notice the strip’s corner slightly overshoots the hypotenuse: that leftover sliver is exactly what Δy → 0 erases.'}},
+
+ /* ---- 2D / PLANAR ---- */
+
+ {id:'disc',n:'06',group:'2D · PLANAR',title:'Circular Disc',dim:'2D',chip:'ring element',
+  elTex:raw`dA = 2\pi r\,dr`, elTexShort:'dA = 2πr dr', status:'ready', factory:discFactory,
+  info:{why:'Every point in a disc has a distance r from the centre, so r is the natural variable. Take the ring at radius r with thickness dr: all of its points sit at (essentially) the same radius, so one label covers the whole element. Cut the ring and unroll it — it flattens into a rectangle of length 2πr and width dr.',
+    texBlocks:[
+      {label:'the element',tex:raw`dA=\underbrace{2\pi r}_{\text{circumference}}\;\underbrace{dr}_{\text{width}}`},
+      {label:'summing every ring',tex:raw`A=\int_0^R 2\pi r\,dr=\pi R^2`}],
+    tip:'Flip on “unroll the ring” — the morph shows why the ring counts as a rectangle: when dr is tiny, no wedge-curvature is left. Then sweep r and watch dA grow like r.'}},
+
+ {id:'disc_sector',n:'07',group:'2D · PLANAR',title:'Circular Disc (Sector)',dim:'2D',chip:'wedge element',
+  elTex:raw`dA = \tfrac12 R^2\,d\theta`, elTexShort:'dA = ½ R² dθ', status:'ready', factory:discSectorFactory,
+  info:{why:'Instead of concentric rings, slice the disc like a pie into N radial wedges of angular width dθ. As dθ → 0, each wedge becomes an isosceles triangle with apex at the origin, height R, and base along the circular rim of length R·dθ. The elementary area formula ½ · base · height yields dA = ½ R² dθ.',
+    texBlocks:[
+      {label:'the element (triangle approximation)',tex:raw`dA = \tfrac12 \cdot \underbrace{(R\,d\theta)}_{\text{base}}\;\underbrace{R}_{\text{height}} = \tfrac12 R^2\,d\theta`},
+      {label:'summing every wedge around the circle',tex:raw`A = \int_0^{2\pi} \tfrac12 R^2\,d\theta = \tfrac12 R^2 (2\pi) = \pi R^2`}],
+    tip:'Toggle “straight chord (Δ)” to compare the curved arc rim against the straight triangle base. The chord length is 2R sin(dθ/2); in the Taylor limit sin(dθ/2) ≈ dθ/2, so the discrepancy vanishes as dθ³.'}},
+
+ {id:'disc_arcedge',n:'08',group:'2D · PLANAR',title:'Disc: Edge-Centered Arcs',dim:'2D',chip:'boundary arc element',
+  elTex:raw`dA = 2r\arccos\!\left(\tfrac{r}{2R}\right)dr`, elTexShort:'dA = 2r arccos(r/2R) dr', status:'ready', factory:discArcEdgeFactory,
+  info:{why:'Fix a point P on the circular boundary. Sweep concentric circular arcs of radius r centered at P across the disc (0 ≤ r ≤ 2R). By the isosceles triangle ΔPOQ with sides R, R and base r, the half-angle subtended at P satisfies cosφ = (r/2)/R = r/(2R). The arc length inside the disc is s(r) = 2r arccos(r/2R), and multiplying by thickness dr yields the area element.',
+    texBlocks:[
+      {label:'subtended angle from boundary pole P',tex:raw`\cos\phi = \frac{r/2}{R} = \frac{r}{2R} \implies \phi(r) = \arccos\!\left(\frac{r}{2R}\right)`},
+      {label:'the element: arc length × thickness',tex:raw`dA = \underbrace{2r\arccos\!\left(\tfrac{r}{2R}\right)}_{\text{arc length } s(r)}\,dr`},
+      {label:'integrating from P to the antipodal point',tex:raw`A = \int_0^{2R} 2r\arccos\!\left(\tfrac{r}{2R}\right)dr = \pi R^2`}],
+    tip:'Turn on “triangle ΔPOQ (cosφ)” to see the geometric proof in action. This construction models Huygens wavelets radiating from a boundary source or antenna coverage across a circular basin.'}},
+
+ /* ---- 3D / SOLIDS ---- */
+ {id:'sphere',n:'09',group:'3D · SOLIDS',title:'Solid Sphere',dim:'3D',chip:'shell element',
+  elTex:raw`dV = 4\pi r^2\,dr`, elTexShort:'dV = 4πr² dr', status:'ready', factory:sphereFactory,
+  info:{why:'For a ball, radius is the natural coordinate. A thin shell at radius r collects every point between r and r + dr — one label for a whole layer, like an onion skin. Its volume is surface area × thickness: the sphere area 4πr² multiplied by dr.',
+    texBlocks:[
+      {label:'the element',tex:raw`dV=\underbrace{4\pi r^2}_{\text{shell area}}\;dr`},
+      {label:'stacking every shell',tex:raw`V=\int_0^R 4\pi r^2\,dr=\tfrac{4}{3}\pi R^3`}],
+    tip:'Turn on cutaway, then drag r — each shell is one onion layer, and the dark core is the integral you have already accumulated. “Peel shell off” hands the element to the class for inspection. Drag the canvas to orbit.'}},
+
+ {id:'sphere_disc',n:'10',group:'3D · SOLIDS',title:'Solid Sphere (Disc Slices)',dim:'3D',chip:'disc slice element',
+  elTex:raw`dV = \pi\,[r(y)]^2\,dy = \pi(R^2-y^2)\,dy`, elTexShort:'dV = π(R²−y²) dy', status:'ready', factory:sphereDiscFactory,
+  info:{why:'Rather than peeling concentric onion shells (module 09), slice the sphere horizontally along its axis into thin circular discs from y = −R to y = +R. By Pythagoras in the vertical cross-section, the radius of the disc at height y is r(y) = √(R² − y²). Each disc has area π·[r(y)]² = π(R² − y²) and infinitesimal thickness dy.',
+    texBlocks:[
+      {label:'disc radius from Pythagoras',tex:raw`[r(y)]^2 + y^2 = R^2 \implies r(y) = \sqrt{R^2 - y^2}`},
+      {label:'the element: circular slab volume',tex:raw`dV = \underbrace{\pi [r(y)]^2}_{\text{disc area}}\;dy = \pi(R^2 - y^2)\,dy`},
+      {label:'stacking every disc along the axis',tex:raw`V = \int_{-R}^{R} \pi(R^2 - y^2)\,dy = \pi\left[R^2 y - \tfrac{y^3}{3}\right]_{-R}^{R} = \tfrac{4}{3}\pi R^3`}],
+    tip:'Orbit the sphere and turn on “triangle (R, y, r)”. Notice how the disc area shrinks quadratically as |y| approaches the poles, unlike the cylinder where discs are identical.'}},
+
+ {id:'hshell',n:'11',group:'3D · SOLIDS',title:'Hollow Sphere (Shell)',dim:'3D',chip:'latitude band',
+  elTex:raw`dA=\underbrace{2\pi R\sin\theta}_{\text{ring length}}\;\underbrace{R\,d\theta}_{\text{band width}}`, elTexShort:'dA = 2πR sinθ · R dθ', status:'ready', factory:hshellFactory,
+  info:{why:'A hollow ball has fixed radius — the only freedom is angle. Slice it into latitude ribbons: each is a ring of radius R·sinθ (so length 2πR·sinθ) with slant width R·dθ. The sinθ factor is geometry doing the bookkeeping: ribbons shrink as they approach the poles.',
+    texBlocks:[
+      {label:'the element',tex:raw`dA=\underbrace{2\pi R\sin\theta}_{\text{ring length}}\;\underbrace{R\,d\theta}_{\text{band width}}`},
+      {label:'summing every ribbon',tex:raw`A=\int_0^{\pi}2\pi R^2\sin\theta\,d\theta=4\pi R^2`}],
+    tip:'Sweep θ pole-to-pole and have students predict where dA is largest before revealing it (the equator, where sinθ = 1). Then pull the band: the unrolled ribbon makes “length × width” literal.'}},
+
+ {id:'cone',n:'12',group:'3D · SOLIDS',title:'Solid Cone',dim:'3D',chip:'disc element',
+  elTex:raw`dV=\pi\,[r(y)]^2\,dy,\qquad r(y)=\tfrac{R}{h}\,y`, elTexShort:'dV = π r(y)² dy', status:'ready', factory:coneFactory,
+  info:{why:'Stack thin discs along the axis, measuring y down from the apex. The cone’s straight side plus similar triangles fix each disc’s radius: r(y) = R·y/h. The element is just “disc area × thickness” — with the geometry hidden inside r(y).',
+    texBlocks:[
+      {label:'the element',tex:raw`dV=\pi\,[r(y)]^2\,dy,\qquad r(y)=\tfrac{R}{h}\,y`},
+      {label:'stacking every disc',tex:raw`V=\int_0^h \pi\!\left(\tfrac{R}{h}y\right)^2dy=\tfrac13\pi R^2h`}],
+    tip:'The dark core is the partial integral — watch it swell as you sweep y toward the base. Ask: why do the thin top discs contribute so little? (Area scales like y², not y.)'}},
+
+ {id:'coneh',n:'13',group:'3D · SOLIDS',title:'Hollow Cone (Surface)',dim:'3D',chip:'slant ring',
+  elTex:raw`dA = 2\pi r\,d\ell`, elTexShort:'dA = 2πr dℓ', status:'ready', factory:conehFactory,
+  info:{why:'On the slanted wall you must measure along the wall. Rings of radius r carry a width dℓ down the generator — and dℓ is the hypotenuse of a dr-by-dy triangle, exactly like module 03. Using dy instead of dℓ is the classic mistake this module exists to prevent.',
+    texBlocks:[
+      {label:'the element',tex:raw`dA = 2\pi r\,d\ell,\qquad d\ell=\sqrt{dr^2+dy^2}`},
+      {label:'summing every ring',tex:raw`A=\int_0^{\ell_0} 2\pi r\,d\ell=\pi R\,\ell_0`}],
+    tip:'Leave the coral dr–dy–dℓ triangle on and ask students which leg the ring “steps along.” Then pose the trap: what goes wrong if we use dy as the width? (The strips overlap the surface at an angle — area comes out short by cosα.)'}},
+
+ /* ---- MULTIVARIABLE ---- */
+ {id:'cart',n:'14',group:'MULTIVARIABLE',title:'Cartesian Volume',dim:'3D',chip:'brick element',
+  elTex:raw`dV = dx\,dy\,dz`, elTexShort:'dV = dx dy dz', status:'ready', factory:cartFactory,
+  info:{why:'In Cartesian space the three directions are independent — box-shaped bricks dx·dy·dz tile any region, and each thickness is read straight off the axes. No hidden geometry, no extra factors: this is the baseline every curvilinear element will be compared against.',
+    texBlocks:[
+      {label:'the element',tex:raw`dV = dx\,dy\,dz`},
+      {label:'the total',tex:raw`V=\iiint dx\,dy\,dz = abc`}],
+    tip:'Three sliders, three independent directions — stress that nothing in the brick depends on where it sits. That innocence is exactly what the next two modules lose, and why.'}},
+
+ {id:'cyl',n:'15',group:'MULTIVARIABLE',title:'Cylindrical Volume',dim:'3D',chip:'wedge element',
+  elTex:raw`dV = r\,dr\,d\theta\,dz`, elTexShort:'dV = r dr dθ dz', status:'ready', factory:cylFactory,
+  info:{why:'Around an axis the natural brick is a curved wedge: radial thickness dr, height dz, and an arc edge. The angle step dθ is the same everywhere — but the arc it sweeps grows with radius: length r·dθ. That single stretch is the entire Jacobian.',
+    texBlocks:[
+      {label:'the element — three honest edges',tex:raw`dV = dr\;\underbrace{(r\,d\theta)}_{\text{arc length}}\;dz`},
+      {label:'the total',tex:raw`V=\int_0^h\!\int_0^{2\pi}\!\int_0^R r\,dr\,d\theta\,dz=\pi R^2h`}],
+    tip:'Compare the blue dθ arc near the axis with the coral r·dθ arc on the wedge: same angle, different lengths. Sweep r outward and let students watch the extra r grow — then sweep θ to send the wedge orbiting the axis.'}},
+
+ {id:'sphv',n:'16',group:'MULTIVARIABLE',title:'Spherical Volume',dim:'3D',chip:'spherical cell',
+  elTex:raw`dV = r^2\sin\theta\,dr\,d\theta\,d\phi`, elTexShort:'dV = r² sinθ dr dθ dφ', status:'ready', factory:sphvFactory,
+  info:{why:'The most layered brick of all: step dr outward, r·dθ down a meridian, and r·sinθ·dφ around a latitude circle. Two of the three edges carry an r because arcs grow with radius; one also carries sinθ because latitude circles shrink toward the poles. Multiply the three edges — the Jacobian writes itself.',
+    texBlocks:[
+      {label:'the element — three honest edges',tex:raw`dV = dr\;\underbrace{(r\,d\theta)}_{\text{meridian}}\;\underbrace{(r\sin\theta\,d\phi)}_{\text{latitude}}`},
+      {label:'the total',tex:raw`V=\int r^2\sin\theta\,dr\,d\theta\,d\phi=\tfrac43\pi R^3`}],
+    tip:'Press “explode cell” and read the three edge labels aloud — dr, r dθ, r sinθ dφ — then ask which edge dies at the poles and why (sinθ → 0). Finish the course arc: sweep φ at the equator, then near a pole, and compare.'}},
+];
+
+/* ============================ navigation & boot ============================ */
+const nav=$('#sideNav');
+let currentId=null;
+function buildNav(){
+  let last='';
+  MODULES.forEach(m=>{
+    if(m.group!==last){last=m.group;nav.appendChild(el('div','grpTitle',null,m.group));}
+    const b=el('button','navItem');b.dataset.id=m.id;
+    b.innerHTML=`<span class="nNum">${m.n}</span><span>${m.title}</span>
+      <span class="dot ${m.status==='ready'?'ready':'queued'}"></span>`;
+    b.addEventListener('click',()=>openModule(m.id));
+    nav.appendChild(b);});
+  const ready=MODULES.filter(m=>m.status==='ready').length;
+  const modCount=$('#modCount');
+  if(modCount) modCount.textContent=`${ready} / ${MODULES.length}`;
+}
+function openModule(id){
+  stopSweep();
+  if(live&&live.dispose)live.dispose(); live=null; sweepFn=null;
+  if(playBtn)playBtn.remove();
+  const m=MODULES.find(x=>x.id===id); currentId=id;
+  document.querySelectorAll('.navItem').forEach(b=>b.classList.toggle('active',b.dataset.id===id));
+  $('#stageNum').textContent=m.n; $('#stageTitle').textContent=m.title;
+  $('#chipDim').textContent=`${m.dim} · ${m.group}`; $('#chipEl').textContent=m.chip;
+  controlsBar.innerHTML=''; mount.innerHTML=''; setLegend([]); $('#figCap').textContent='';
+  const old=$('#readout'); if(old)old.remove();
+  renderDossier(m);
+  if(m.status!=='ready'){renderQueued(m);}
+  else{
+    const ctx={
+      readout:rows=>renderReadout(rows),
+      legend:setLegend,
+      caption:t=>{$('#figCap').textContent=t;},
+      setSweep:fn=>{sweepFn=fn;
+        playBtn=el('button','playBtn',null,'<span>▶</span> sweep');
+        playBtn.addEventListener('click',toggleSweep);
+        controlsBar.appendChild(playBtn);},
+      sweepDur:4};
+    live=m.factory(ctx)||{};
+    if(m.factory===sphereFactory){} /* sweepDur already set inside factories */
+    sweepDur=(m.id==='sphere'||m.id==='sphere_disc'?5:ctx.sweepDur)||4.5;
+  }
+  if(canvasWrapEl) canvasWrapEl.classList.toggle('text-deactivated',!viewTextActive);
+  replayAnim($('#stageCard'),'entering');
+}
+
+/* ============================ view panel text toggle ============================ */
+let viewTextActive=true;
+const canvasWrapEl=$('#canvasWrap');
+const viewTextBtn=$('#viewTextBtn');
+function setViewText(active){
+  viewTextActive=active;
+  if(canvasWrapEl)canvasWrapEl.classList.toggle('text-deactivated',!viewTextActive);
+  if(viewTextBtn){
+    viewTextBtn.classList.toggle('active',viewTextActive);
+    viewTextBtn.setAttribute('aria-pressed',viewTextActive);
+    const st=viewTextBtn.querySelector('.vtStatus');
+    if(st)st.textContent=viewTextActive?'ON':'OFF';
+  }
+}
+if(viewTextBtn){
+  viewTextBtn.addEventListener('click',()=>setViewText(!viewTextActive));
+}
+
+document.addEventListener('keydown',e=>{
+  if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  if(e.key==='t'||e.key==='T'){setViewText(!viewTextActive);return;}
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  const i=MODULES.findIndex(m=>m.id===currentId);
+  const j=(i+(e.key==='ArrowRight'?1:-1)+MODULES.length)%MODULES.length;
+  openModule(MODULES[j].id);
+});
+
+buildNav();
+openModule('wire');
+</script>
+</body>
+</html>

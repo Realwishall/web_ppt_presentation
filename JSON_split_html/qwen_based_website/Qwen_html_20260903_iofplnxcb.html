@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastering Logarithms — Interactive Presentation</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<style>
+:root {
+    --bg: #0a0e1a;
+    --bg-soft: #151b2e;
+    --card: #1a2138;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #f59e0b;
+    --accent-2: #3b82f6;
+    --accent-3: #10b981;
+    --danger: #ef4444;
+    --purple: #a855f7;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.presentation {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+    overflow-y: auto;
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.slide-content {
+    max-width: 1100px;
+    width: 100%;
+    text-align: center;
+}
+
+.title-slide {
+    background:
+        radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.2), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.2), transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.15), transparent 60%),
+        var(--bg);
+}
+
+.title-slide h1 {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+}
+
+.title-slide .subtitle {
+    font-size: 1.5rem;
+    color: var(--text-dim);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.title-slide .equation {
+    margin-top: 3rem;
+    font-size: 2rem;
+    padding: 1.5rem 3rem;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    display: inline-block;
+}
+
+h2 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin-bottom: 2rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+h3 {
+    font-size: 1.8rem;
+    margin: 2rem 0 1rem;
+    color: var(--accent-2);
+}
+
+p {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.definition {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.1));
+    border-left: 5px solid var(--accent);
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    font-size: 1.3rem;
+    text-align: left;
+}
+
+.property {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    transition: all 0.3s;
+}
+
+.property:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.2);
+}
+
+.property .name {
+    color: var(--accent-3);
+    font-weight: 700;
+    font-size: 1.2rem;
+    min-width: 150px;
+}
+
+.property .formula {
+    font-size: 1.4rem;
+    flex: 1;
+}
+
+.example {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid var(--accent-3);
+    padding: 1.2rem 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    font-size: 1.15rem;
+    text-align: left;
+}
+
+.physics-app {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(239, 68, 68, 0.1));
+    border: 2px solid rgba(168, 85, 247, 0.4);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.physics-app h3 {
+    color: var(--purple);
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+.physics-app .formula {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.problem {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.problem .q {
+    font-weight: 600;
+    color: var(--accent-2);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.difficulty {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.easy { background: rgba(16, 185, 129, 0.3); color: var(--accent-3); }
+.medium { background: rgba(245, 158, 11, 0.3); color: var(--accent); }
+.hard { background: rgba(239, 68, 68, 0.3); color: var(--danger); }
+
+.answer-btn {
+    background: linear-gradient(135deg, var(--accent-2), var(--purple));
+    color: white;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 0.8rem;
+    transition: all 0.3s;
+}
+
+.answer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.answer {
+    display: none;
+    margin-top: 1.2rem;
+    padding: 1.5rem;
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid var(--accent-3);
+    border-radius: 8px;
+}
+
+.answer.show {
+    display: block;
+}
+
+.nav-dots {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.nav-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.nav-dot.active {
+    background: var(--accent);
+    transform: scale(1.5);
+    box-shadow: 0 0 15px var(--accent);
+}
+
+.nav-arrows {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2rem;
+    z-index: 1000;
+}
+
+.nav-arrow {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid var(--border);
+    color: var(--text);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.nav-arrow:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0,0,0,0.6);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    z-index: 1000;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.1rem;
+}
+
+th {
+    background: var(--bg-soft);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+tr:last-child td { border-bottom: none; }
+
+.cheat-sheet {
+    background: linear-gradient(135deg, var(--card), var(--bg-soft));
+    border: 3px solid var(--accent);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: left;
+}
+
+.cheat-sheet h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.cheat-sheet ul {
+    list-style: none;
+    padding: 0;
+}
+
+.cheat-sheet li {
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 1.15rem;
+}
+
+.cheat-sheet li:last-child { border-bottom: none; }
+
+@media (max-width: 768px) {
+    .slide { padding: 1.5rem; }
+    .nav-dots { right: 1rem; }
+    .property { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="slide-counter">
+    <span id="currentSlide">1</span> / <span id="totalSlides">11</span>
+</div>
+
+<div class="nav-dots" id="navDots"></div>
+
+<div class="nav-arrows">
+    <button class="nav-arrow" id="prevBtn" onclick="prevSlide()">←</button>
+    <button class="nav-arrow" id="nextBtn" onclick="nextSlide()">→</button>
+</div>
+
+<div class="presentation" id="presentation">
+
+<div class="slide title-slide active">
+    <div class="slide-content">
+        <h1>Mastering Logarithms</h1>
+        <p class="subtitle">A complete journey — from the very first definition to the powerful applications you'll meet in Class 11 & 12 Physics</p>
+        <div class="equation">$\log_b(x) = y \iff b^y = x$</div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">1</span> Why Do Logarithms Exist?</h2>
+        <p>Imagine you are a 17th-century astronomer trying to multiply two enormous numbers by hand. Multiplication is slow and error-prone.</p>
+        <p>But what if you could <strong style="color: var(--accent);">turn multiplication into addition</strong>?</p>
+        <p>That's exactly what <strong>John Napier</strong> did in 1614 when he invented logarithms.</p>
+        <div class="definition">
+            <strong>The Big Idea:</strong> A logarithm answers the question — <em>"To what power must I raise this base to get that number?"</em>
+        </div>
+        <p>Today, logarithms appear everywhere: earthquakes, sound, acidity, radioactive decay, and even in how our ears perceive loudness.</p>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">2</span> The Definition</h2>
+        <p>For any positive base $b \neq 1$ and any positive number $x$:</p>
+        <div class="definition" style="font-size: 1.8rem; text-align: center;">
+            $\log_b(x) = y \quad \Longleftrightarrow \quad b^y = x$
+        </div>
+        <h3>Worked Examples</h3>
+        <div class="example">
+            $\log_2(8) = 3$ &nbsp; because &nbsp; $2^3 = 8$
+        </div>
+        <div class="example">
+            $\log_3(81) = 4$ &nbsp; because &nbsp; $3^4 = 81$
+        </div>
+        <div class="example">
+            $\log_5\!\left(\frac{1}{25}\right) = -2$ &nbsp; because &nbsp; $5^{-2} = \frac{1}{25}$
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">3</span> Two Golden Rules</h2>
+        <div class="property">
+            <span class="name">Rule 1</span>
+            <span class="formula">$\log_b(b) = 1$ &nbsp; because &nbsp; $b^1 = b$</span>
+        </div>
+        <div class="property">
+            <span class="name">Rule 2</span>
+            <span class="formula">$\log_b(1) = 0$ &nbsp; because &nbsp; $b^0 = 1$</span>
+        </div>
+        <div class="definition" style="margin-top: 2rem;">
+            <strong>⚠️ Important:</strong> The base $b$ must be positive and $b \neq 1$. The argument $x$ must be strictly positive.
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">4</span> Fundamental Properties</h2>
+        <div class="property">
+            <span class="name">Product</span>
+            <span class="formula">$\log_b(xy) = \log_b(x) + \log_b(y)$</span>
+        </div>
+        <div class="property">
+            <span class="name">Quotient</span>
+            <span class="formula">$\log_b\!\left(\dfrac{x}{y}\right) = \log_b(x) - \log_b(y)$</span>
+        </div>
+        <div class="property">
+            <span class="name">Power</span>
+            <span class="formula">$\log_b(x^n) = n\,\log_b(x)$</span>
+        </div>
+        <div class="property">
+            <span class="name">Change of Base</span>
+            <span class="formula">$\log_b(x) = \dfrac{\log_k(x)}{\log_k(b)}$</span>
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">5</span> Common Log & Natural Log</h2>
+        <div class="grid-2">
+            <div style="background: var(--card); padding: 2rem; border-radius: 12px; border: 2px solid var(--accent-2);">
+                <h3 style="color: var(--accent-2);">Common Log</h3>
+                <p style="font-size: 1.5rem; margin: 1rem 0;">$\log_{10}(x)$ or $\log(x)$</p>
+                <p>Base 10 — used in engineering and older physics books</p>
+            </div>
+            <div style="background: var(--card); padding: 2rem; border-radius: 12px; border: 2px solid var(--purple);">
+                <h3 style="color: var(--purple);">Natural Log</h3>
+                <p style="font-size: 1.5rem; margin: 1rem 0;">$\ln(x) = \log_e(x)$</p>
+                <p>Base $e \approx 2.718$ — appears everywhere in physics!</p>
+            </div>
+        </div>
+        <table>
+            <tr><th>Expression</th><th>Value</th></tr>
+            <tr><td>$\ln(2)$</td><td>≈ 0.693</td></tr>
+            <tr><td>$\ln(10)$</td><td>≈ 2.303</td></tr>
+            <tr><td>$\log_{10}(2)$</td><td>≈ 0.3010</td></tr>
+        </table>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">6</span> Logarithms in Physics</h2>
+        <div class="physics-app">
+            <h3>🔬 Radioactive Decay</h3>
+            <p>The number of undecayed nuclei at time $t$:</p>
+            <div class="formula">$N(t) = N_0 \, e^{-\lambda t}$</div>
+            <p>The <strong>half-life</strong> $T_{1/2}$:</p>
+            <div class="formula">$T_{1/2} = \dfrac{\ln 2}{\lambda} \approx \dfrac{0.693}{\lambda}$</div>
+        </div>
+        <div class="physics-app">
+            <h3>🔊 Sound Intensity & Decibels</h3>
+            <div class="formula">$\beta = 10 \log_{10}\!\left(\dfrac{I}{I_0}\right)$</div>
+            <p>If intensity increases by 100×, sound level increases by 20 dB</p>
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">7</span> More Physics Applications</h2>
+        <div class="physics-app">
+            <h3>⚡ RC Circuit Discharge</h3>
+            <div class="formula">$V(t) = V_0 \, e^{-t/RC}$</div>
+            <p>Time to drop to fraction $f$: $t = -RC \cdot \ln(f)$</p>
+        </div>
+        <div class="physics-app">
+            <h3>🌡️ Newton's Law of Cooling</h3>
+            <div class="formula">$T(t) = T_s + (T_0 - T_s)\,e^{-kt}$</div>
+            <p>Solving for time: $t = -\dfrac{1}{k}\ln\!\left(\dfrac{T - T_s}{T_0 - T_s}\right)$</p>
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">8</span> Practice Problems</h2>
+        <div class="problem">
+            <div class="q">Q1. Evaluate $\log_3(27) + \log_3(9) - \log_3(1)$. <span class="difficulty easy">Easy</span></div>
+            <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+            <div class="answer">
+                $\log_3(27) = 3$, $\log_3(9) = 2$, $\log_3(1) = 0$.<br>
+                Sum = $3 + 2 - 0 = \boxed{5}$
+            </div>
+        </div>
+        <div class="problem">
+            <div class="q">Q2. If $\log_{10}(2) = 0.3010$, find $\log_{10}(5)$. <span class="difficulty easy">Easy</span></div>
+            <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+            <div class="answer">
+                $\log_{10}(5) = \log_{10}\!\left(\frac{10}{2}\right) = 1 - 0.3010 = \boxed{0.6990}$
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">9</span> Physics Problems</h2>
+        <div class="problem">
+            <div class="q">Q3. Half-life is 5 years. What fraction remains after 20 years? <span class="difficulty medium">Medium</span></div>
+            <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+            <div class="answer">
+                Number of half-lives = $20/5 = 4$.<br>
+                Fraction = $\left(\frac{1}{2}\right)^4 = \boxed{\frac{1}{16}} \approx 6.25\%$
+            </div>
+        </div>
+        <div class="problem">
+            <div class="q">Q4. By how many dB does sound level increase if intensity becomes 1000× greater? <span class="difficulty medium">Medium</span></div>
+            <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+            <div class="answer">
+                $\Delta\beta = 10\log_{10}(1000) = 10 \times 3 = \boxed{30 \text{ dB}}$
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide">
+    <div class="slide-content">
+        <h2><span class="num">10</span> Quick-Reference Cheat Sheet</h2>
+        <div class="cheat-sheet">
+            <h3>📌 Core Identities</h3>
+            <ul>
+                <li>$\log_b(b^x) = x$ &nbsp; and &nbsp; $b^{\log_b x} = x$</li>
+                <li>$\log_b(1) = 0$ &nbsp; and &nbsp; $\log_b(b) = 1$</li>
+                <li>$\log_b(xy) = \log_b x + \log_b y$</li>
+                <li>$\log_b(x/y) = \log_b x - \log_b y$</li>
+                <li>$\log_b(x^n) = n\log_b x$</li>
+            </ul>
+            <h3>📌 Physics Formulas</h3>
+            <ul>
+                <li><strong>Radioactive decay:</strong> $N = N_0 e^{-\lambda t}$, &nbsp; $T_{1/2} = \dfrac{0.693}{\lambda}$</li>
+                <li><strong>Decibels:</strong> $\beta = 10\log_{10}(I/I_0)$</li>
+                <li><strong>RC discharge:</strong> $V = V_0 e^{-t/RC}$</li>
+                <li><strong>Newton cooling:</strong> $T = T_s + (T_0 - T_s)e^{-kt}$</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+
+const navDots = document.getElementById('navDots');
+for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    navDots.appendChild(dot);
+}
+
+document.getElementById('totalSlides').textContent = totalSlides;
+
+function updateSlide() {
+    slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index === currentSlide) {
+            slide.classList.add('active');
+        }
+    });
+
+    document.querySelectorAll('.nav-dot').forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+    });
+
+    document.getElementById('currentSlide').textContent = currentSlide + 1;
+    document.getElementById('prevBtn').disabled = currentSlide === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+}
+
+function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+    }
+}
+
+function prevSlide() {
+    if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+    }
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    updateSlide();
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+    }
+});
+
+function toggleAnswer(btn) {
+    const answer = btn.nextElementSibling;
+    answer.classList.toggle('show');
+    btn.textContent = answer.classList.contains('show') ? 'Hide Solution' : 'Show Solution';
+}
+
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const swipeThreshold = 50;
+    if (touchEndX < touchStartX - swipeThreshold) nextSlide();
+    if (touchEndX > touchStartX + swipeThreshold) prevSlide();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ]
+        });
+    }
+});
+
+updateSlide();
+</script>
+
+</body>
+</html>

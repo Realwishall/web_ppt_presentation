@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Newton's Corpuscular Theory of Light — Interactive Physics Lab</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Three.js r128 + OrbitControls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<style>
+  :root {
+    --bg-obsidian-1: #07090e;
+    --bg-obsidian-2: #0d111a;
+    --glass: rgba(17, 24, 39, 0.65);
+    --glass-strong: rgba(17, 24, 39, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-strong: rgba(255, 255, 255, 0.14);
+    --cyan: #00f0ff;
+    --cyan-soft: rgba(0, 240, 255, 0.15);
+    --violet: #a855f7;
+    --violet-soft: rgba(168, 85, 247, 0.15);
+    --emerald: #10b981;
+    --emerald-soft: rgba(16, 185, 129, 0.15);
+    --crimson: #f43f5e;
+    --crimson-soft: rgba(244, 63, 94, 0.15);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245, 158, 11, 0.15);
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 30% 20%, #0d111a 0%, #07090e 60%, #050709 100%);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, .heading {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  code, .formula, .mono {
+    font-family: 'Fira Code', 'SF Mono', monospace;
+  }
+
+  /* ===== Ambient Dust Background ===== */
+  #ambient-dust {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  /* ===== Custom Cursor Glow ===== */
+  #cursor-glow {
+    position: fixed;
+    width: 400px; height: 400px;
+    pointer-events: none;
+    z-index: 1;
+    background: radial-gradient(circle, rgba(0,240,255,0.08) 0%, rgba(168,85,247,0.04) 30%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+    mix-blend-mode: screen;
+  }
+
+  /* ===== Top HUD ===== */
+  .hud-top {
+    position: fixed;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .hud-top .title-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(0,240,255,0.5);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .hud-top .divider {
+    width: 1px; height: 18px;
+    background: var(--glass-border-strong);
+  }
+
+  /* ===== Main Stage ===== */
+  #stage {
+    position: relative;
+    width: 100%; height: 100vh;
+    z-index: 2;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 80px 40px 140px 40px;
+    display: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,240,255,0.3) transparent;
+  }
+
+  .slide.active { display: flex; flex-direction: column; }
+
+  .slide::-webkit-scrollbar { width: 6px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--cyan), var(--violet));
+    border-radius: 3px;
+  }
+
+  .slide-inner {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slide-header {
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .slide-number {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 999px;
+    background: var(--cyan-soft);
+    margin-bottom: 12px;
+    text-shadow: 0 0 8px rgba(0,240,255,0.6);
+  }
+
+  .slide-title {
+    font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff 0%, #a855f7 50%, #00f0ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+  }
+
+  .slide-subtitle {
+    margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 720px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  /* ===== Glass Panels ===== */
+  .glass-panel {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(0,240,255,0.05), transparent 60%);
+    pointer-events: none;
+  }
+
+  .glass-panel.glow-cyan { box-shadow: 0 0 40px rgba(0,240,255,0.15), 0 8px 40px rgba(0,0,0,0.3); border-color: rgba(0,240,255,0.2); }
+  .glass-panel.glow-violet { box-shadow: 0 0 40px rgba(168,85,247,0.15), 0 8px 40px rgba(0,0,0,0.3); border-color: rgba(168,85,247,0.2); }
+  .glass-panel.glow-emerald { box-shadow: 0 0 40px rgba(16,185,129,0.15), 0 8px 40px rgba(0,0,0,0.3); border-color: rgba(16,185,129,0.2); }
+  .glass-panel.glow-crimson { box-shadow: 0 0 40px rgba(244,63,94,0.15), 0 8px 40px rgba(0,0,0,0.3); border-color: rgba(244,63,94,0.2); }
+
+  .canvas-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #0d111a 0%, #050709 100%);
+    position: relative;
+    border: 1px solid var(--glass-border);
+  }
+
+  .canvas-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+
+  /* ===== Controls ===== */
+  .control-hud {
+    margin-top: 20px;
+    backdrop-filter: blur(16px);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .control-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .control-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+    min-width: 44px;
+    text-align: right;
+    text-shadow: 0 0 8px rgba(0,240,255,0.5);
+  }
+
+  /* Custom Slider */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(0,240,255,0.5);
+    cursor: grab;
+    border: 2px solid #fff;
+    transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan);
+    cursor: grab;
+    border: 2px solid #fff;
+  }
+
+  /* Color Buttons */
+  .color-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+  }
+  .color-btn:hover { transform: translateY(-2px); }
+  .color-btn.active {
+    border-color: #fff;
+    transform: translateY(-2px) scale(1.05);
+  }
+  .color-btn.red { background: linear-gradient(135deg, #ff4444, #aa0000); box-shadow: 0 0 16px rgba(255,68,68,0.5); }
+  .color-btn.yellow { background: linear-gradient(135deg, #ffd944, #ff9500); box-shadow: 0 0 16px rgba(255,217,68,0.5); }
+  .color-btn.green { background: linear-gradient(135deg, #44ff88, #00aa44); box-shadow: 0 0 16px rgba(68,255,136,0.5); }
+  .color-btn.violet { background: linear-gradient(135deg, #aa44ff, #6600aa); box-shadow: 0 0 16px rgba(170,68,255,0.5); }
+  .color-btn.cyan { background: linear-gradient(135deg, #44ddff, #0088aa); box-shadow: 0 0 16px rgba(68,221,255,0.5); }
+
+  /* Toggle Switch */
+  .toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    gap: 10px;
+    transition: all 0.3s;
+  }
+  .toggle-switch .track {
+    width: 44px; height: 24px;
+    border-radius: 12px;
+    background: var(--crimson);
+    position: relative;
+    transition: background 0.3s;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .toggle-switch .track::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .toggle-switch.active .track { background: var(--emerald); }
+  .toggle-switch.active .track::after { transform: translateX(20px); }
+  .toggle-switch .label-text { font-size: 13px; font-weight: 500; }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border-strong);
+    background: var(--glass);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(8px);
+  }
+  .btn:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,240,255,0.3);
+    transform: translateY(-1px);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(168,85,247,0.2));
+    border-color: var(--cyan);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(0,240,255,0.35), rgba(168,85,247,0.35));
+  }
+
+  /* ===== Bottom HUD ===== */
+  .hud-bottom {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .step-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .step-dot:hover { background: rgba(255,255,255,0.4); transform: scale(1.3); }
+  .step-dot.active {
+    width: 28px; border-radius: 4px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .progress-bar {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    height: 2px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .nav-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border-strong);
+    background: var(--glass);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+  }
+  .nav-btn:hover:not(:disabled) {
+    border-color: var(--cyan);
+    box-shadow: 0 0 16px rgba(0,240,255,0.4);
+    transform: scale(1.08);
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .slide-counter {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 44px;
+    text-align: center;
+  }
+
+  /* ===== Content Blocks ===== */
+  .insight-card {
+    padding: 16px 20px;
+    background: rgba(0,240,255,0.05);
+    border-left: 3px solid var(--cyan);
+    border-radius: 8px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .insight-card .icon { color: var(--cyan); margin-right: 8px; }
+
+  .formula-block {
+    background: rgba(17,24,39,0.8);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    margin: 12px 0;
+    color: var(--cyan);
+    text-shadow: 0 0 8px rgba(0,240,255,0.3);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag-success { background: var(--emerald-soft); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
+  .tag-fail { background: var(--crimson-soft); color: var(--crimson); border: 1px solid rgba(244,63,94,0.3); }
+  .tag-pending { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+
+  /* ===== Slide 5: Comparison Grid ===== */
+  .grid-comparison {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .compare-card {
+    padding: 24px;
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .compare-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--emerald);
+  }
+  .compare-card.fail::before { background: var(--crimson); }
+  .compare-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--glass-border-strong);
+  }
+  .compare-card.success:hover { box-shadow: 0 8px 32px rgba(16,185,129,0.2); }
+  .compare-card.fail:hover { box-shadow: 0 8px 32px rgba(244,63,94,0.2); }
+  .compare-card h4 {
+    font-size: 17px;
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+  }
+  .compare-card p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ===== Slide 6: Notebook ===== */
+  #notebook-slide .slide-inner {
+    max-width: 900px;
+  }
+
+  .notebook {
+    background: linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.95) 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+    background-image:
+      linear-gradient(180deg, transparent 31px, rgba(0,240,255,0.08) 32px),
+      linear-gradient(90deg, transparent calc(60px - 1px), rgba(244,63,94,0.15) calc(60px - 1px));
+    background-size: 100% 32px, 100% 100%;
+    background-position: 0 12px, 0 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .notebook::before {
+    content: '';
+    position: absolute;
+    top: 20px; bottom: 20px;
+    left: 58px;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, rgba(244,63,94,0.3), transparent);
+  }
+
+  .notebook h2 {
+    font-size: 28px;
+    margin: 0 0 6px 0;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .notebook .note-sub {
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .notebook h3 {
+    font-size: 18px;
+    color: var(--cyan);
+    margin: 28px 0 12px 0;
+    text-shadow: 0 0 12px rgba(0,240,255,0.3);
+  }
+
+  .notebook h3:first-of-type { margin-top: 0; }
+
+  .notebook p, .notebook li {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-primary);
+  }
+
+  .notebook ol, .notebook ul { padding-left: 20px; margin: 8px 0; }
+  .notebook li { margin-bottom: 4px; }
+
+  .notebook .note-formula {
+    font-family: 'Fira Code', monospace;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 4px 2px;
+    font-size: 13px;
+  }
+  .notebook .note-formula.correct {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--emerald);
+  }
+  .notebook .note-formula.wrong {
+    background: rgba(244,63,94,0.1);
+    border: 1px solid rgba(244,63,94,0.3);
+    color: var(--crimson);
+    text-decoration: line-through;
+  }
+
+  .notebook-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* ===== Angle Indicator ===== */
+  .angle-display {
+    font-family: 'Fira Code', monospace;
+    font-size: 16px;
+    padding: 8px 16px;
+    background: rgba(0,240,255,0.1);
+    border: 1px solid rgba(0,240,255,0.3);
+    border-radius: 10px;
+    color: var(--cyan);
+    text-shadow: 0 0 8px rgba(0,240,255,0.5);
+  }
+
+  /* ===== Print Styles ===== */
+  @media print {
+    body {
+      background: #fff !important;
+      color: #000 !important;
+      overflow: visible !important;
+    }
+    #ambient-dust, #cursor-glow, .hud-top, .hud-bottom,
+    .notebook-toolbar, #stage > .slide:not(#notebook-slide),
+    .slide-header .slide-number { display: none !important; }
+    #stage > .slide { display: flex !important; padding: 20px !important; }
+    #notebook-slide { position: static !important; height: auto !important; }
+    .notebook {
+      background: #fff !important;
+      background-image:
+        linear-gradient(180deg, transparent 31px, #ccc 32px),
+        linear-gradient(90deg, transparent calc(60px - 1px), #ccc calc(60px - 1px)) !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 20px !important;
+    }
+    .notebook::before { background: #ccc !important; }
+    .notebook h2, .notebook h3 {
+      -webkit-text-fill-color: #000 !important;
+      color: #000 !important;
+      text-shadow: none !important;
+    }
+    .notebook p, .notebook li { color: #000 !important; }
+    .note-formula.correct { background: #e0ffe0 !important; color: #006400 !important; }
+    .note-formula.wrong { background: #ffe0e0 !important; color: #8b0000 !important; }
+    @page { margin: 1cm; }
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .slide { padding: 70px 16px 120px 16px; }
+    .glass-panel { padding: 18px; }
+    .control-hud { padding: 12px 14px; gap: 12px; }
+    .hud-top { padding: 6px 14px; gap: 10px; }
+    .hud-top .title-badge { font-size: 11px; }
+    .hud-bottom { padding: 8px 14px; gap: 12px; width: calc(100% - 32px); max-width: 420px; }
+    .nav-btn { width: 36px; height: 36px; }
+    .notebook { padding: 20px 20px 20px 70px; }
+    .slide-title { font-size: 1.5rem; }
+  }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    top: 80px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 12px 24px;
+    background: var(--emerald);
+    color: #000;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+    transition: all 0.3s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body>
+
+<canvas id="ambient-dust"></canvas>
+<div id="cursor-glow"></div>
+
+<!-- Top HUD -->
+<div class="hud-top">
+  <span class="title-badge" data-i18n="lab">⚛ Physics Lab</span>
+  <div class="divider"></div>
+  <span id="current-slide-title" style="font-size: 13px; color: var(--text-primary); font-weight: 500;">The Core Hypothesis</span>
+  <div class="divider"></div>
+  <span id="progress-text" style="font-family: 'Fira Code', monospace; font-size: 12px; color: var(--violet);">01 / 06</span>
+</div>
+
+<!-- Main Stage -->
+<div id="stage">
+
+  <!-- ============ SLIDE 1: Core Hypothesis ============ -->
+  <section class="slide active" data-slide="0">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">01 — HYPOTHESIS</span>
+        <h1 class="slide-title">The Core Hypothesis</h1>
+        <p class="slide-subtitle">In 1675, Sir Isaac Newton proposed that light is not a wave — but a stream of weightless, perfectly elastic particles called <strong style="color: var(--cyan)">Corpuscles</strong> ejected at immense velocity from luminous bodies.</p>
+      </div>
+
+      <div class="glass-panel glow-cyan" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="canvas-container" id="slide1-canvas-wrap" style="flex: 1; min-height: 320px;">
+          <canvas id="slide1-canvas"></canvas>
+        </div>
+
+        <div class="control-hud">
+          <div class="control-group">
+            <span class="control-label">Emission Velocity</span>
+            <input type="range" id="s1-velocity" min="0.5" max="4" step="0.1" value="1.5">
+            <span class="control-value" id="s1-velocity-val">1.5×</span>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Particle Density</span>
+            <input type="range" id="s1-density" min="100" max="800" step="50" value="400">
+            <span class="control-value" id="s1-density-val">400</span>
+          </div>
+          <div class="control-group" style="flex: 0;">
+            <span class="control-label" style="color: var(--text-muted)">Drag to orbit · Scroll to zoom</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-card" style="margin-top: 16px;">
+        <span class="icon">💡</span>
+        <strong>Key idea:</strong> Each corpuscle travels in an absolutely straight line through empty space. The brighter the source, the more corpuscles are emitted per second.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2: Rectilinear Propagation & Colors ============ -->
+  <section class="slide" data-slide="1">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">02 — PROPAGATION</span>
+        <h1 class="slide-title">Straight Lines & The Mystery of Color</h1>
+        <p class="slide-subtitle">Enormous velocity + inertia = perfectly straight trajectories → sharp geometric shadows. Newton proposed each color corresponds to a different corpuscle size.</p>
+      </div>
+
+      <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="canvas-container" id="slide2-canvas-wrap" style="flex: 1; min-height: 320px;">
+          <canvas id="slide2-canvas"></canvas>
+        </div>
+
+        <div class="control-hud">
+          <div class="control-group" style="flex: 0;">
+            <span class="control-label">Corpuscle Size</span>
+            <button class="color-btn red" data-color="red" title="Red — Largest"></button>
+            <button class="color-btn yellow active" data-color="yellow" title="Yellow"></button>
+            <button class="color-btn green" data-color="green" title="Green"></button>
+            <button class="color-btn cyan" data-color="cyan" title="Cyan"></button>
+            <button class="color-btn violet" data-color="violet" title="Violet — Smallest"></button>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Beam Intensity</span>
+            <input type="range" id="s2-intensity" min="10" max="80" step="5" value="40">
+            <span class="control-value" id="s2-intensity-val">40</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-card" style="margin-top: 16px;">
+        <span class="icon">🎨</span>
+        <strong>Newton's color rule:</strong> Red corpuscles are the largest; violet corpuscles are the smallest. Try clicking the color buttons — watch the corpuscles resize.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 3: Reflection ============ -->
+  <section class="slide" data-slide="2">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">03 — REFLECTION</span>
+        <h1 class="slide-title">The Elastic Collision</h1>
+        <p class="slide-subtitle">Reflection is modeled as corpuscles undergoing a 100% elastic rebound from a smooth impenetrable surface — identical to microscopic billiard balls obeying <span class="formula" style="color: var(--cyan);">∠i = ∠r</span>.</p>
+      </div>
+
+      <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="canvas-container" id="slide3-canvas-wrap" style="flex: 1; min-height: 320px;">
+          <canvas id="slide3-canvas"></canvas>
+        </div>
+
+        <div class="control-hud">
+          <div class="control-group">
+            <span class="control-label">Angle of Incidence</span>
+            <input type="range" id="s3-angle" min="10" max="80" step="1" value="45">
+            <span class="angle-display" id="s3-angle-val">45°</span>
+          </div>
+          <div class="control-group" style="flex: 0;">
+            <span class="angle-display" id="s3-reflection-val">∠r = 45°</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-card" style="margin-top: 16px;">
+        <span class="icon">🎯</span>
+        <strong>Law of reflection:</strong> The angle of incidence equals the angle of reflection. Drag the slider to tilt the incoming beam — the rebound follows symmetrically.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 4: Refraction ============ -->
+  <section class="slide" data-slide="3">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">04 — REFRACTION</span>
+        <h1 class="slide-title">Newton's Fatal Prediction</h1>
+        <p class="slide-subtitle">Newton argued an attractive perpendicular force pulls corpuscles into denser media, accelerating the normal component. This required light to travel <strong style="color: var(--crimson)">faster</strong> in water than in air — a fatal mistake.</p>
+      </div>
+
+      <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="canvas-container" id="slide4-canvas-wrap" style="flex: 1; min-height: 340px;">
+          <canvas id="slide4-canvas"></canvas>
+        </div>
+
+        <div class="control-hud">
+          <div class="control-group">
+            <span class="control-label">Incidence Angle</span>
+            <input type="range" id="s4-angle" min="10" max="80" step="1" value="40">
+            <span class="angle-display" id="s4-angle-val">40°</span>
+          </div>
+
+          <div class="control-group" style="flex: 0;">
+            <div class="toggle-switch" id="s4-toggle">
+              <div class="track"></div>
+              <span class="label-text">Newton's Model (v<sub>water</sub> &gt; v<sub>air</sub>)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-card" style="margin-top: 16px;">
+        <span class="icon">⚠️</span>
+        <strong>Toggle the switch:</strong> Newton's model (red) predicts light speeds up in water. The wave theory (green) correctly predicts it slows down — verified by Foucault in 1850.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 5: Downfall ============ -->
+  <section class="slide" data-slide="4">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">05 — DOWNFALL</span>
+        <h1 class="slide-title">Why Corpuscular Theory Collapsed</h1>
+        <p class="slide-subtitle">The theory was ultimately replaced by Wave Theory (Huygens, Young, Fresnel) due to phenomena that particles simply cannot explain.</p>
+      </div>
+
+      <div class="grid-comparison">
+        <div class="compare-card success">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>✅ Rectilinear Propagation</h4>
+            <span class="tag tag-success">Explained</span>
+          </div>
+          <p>Corpuscles travel in straight lines, producing sharp shadows (umbra and penumbra) from opaque obstacles — perfectly consistent.</p>
+        </div>
+
+        <div class="compare-card success">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>✅ Reflection & Snell's Law</h4>
+            <span class="tag tag-success">Explained</span>
+          </div>
+          <p>Elastic rebound gives ∠i = ∠r. An attractive normal force at the interface produces bending, matching Snell's law geometrically.</p>
+        </div>
+
+        <div class="compare-card fail">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>❌ Interference & Diffraction</h4>
+            <span class="tag tag-fail">Failed</span>
+          </div>
+          <p>Young's double-slit experiment produces fringes. Particles cannot cancel each other to create dark bands — waves can, via destructive interference.</p>
+        </div>
+
+        <div class="compare-card fail">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>❌ Polarization</h4>
+            <span class="tag tag-fail">Failed</span>
+          </div>
+          <p>Only transverse waves can be polarized. A scalar particle has no orientation, so the theory cannot explain polarizing crystals like tourmaline.</p>
+        </div>
+
+        <div class="compare-card fail">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>❌ Partial Reflection & Refraction</h4>
+            <span class="tag tag-fail">Failed</span>
+          </div>
+          <p>At a glass surface, some light reflects and some refracts simultaneously. Newton could not explain why identical corpuscles behave differently.</p>
+        </div>
+
+        <div class="compare-card fail">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <h4>❌ Speed of Light in Media</h4>
+            <span class="tag tag-fail">Failed</span>
+          </div>
+          <p>Foucault's 1850 experiment proved v<sub>water</sub> &lt; v<sub>air</sub>, the opposite of Newton's prediction. The theory collapsed on its own terms.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 6: Notebook ============ -->
+  <section class="slide" id="notebook-slide" data-slide="5">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <span class="slide-number">06 — REVISION</span>
+        <h1 class="slide-title">Exam Revision Notebook</h1>
+        <p class="slide-subtitle">Copy these structured notes directly into your physics notebook. Perfect for revision before exams.</p>
+      </div>
+
+      <div class="notebook-toolbar">
+        <button class="btn btn-primary" id="btn-copy">
+          <i data-lucide="copy"></i> Copy to Clipboard
+        </button>
+        <button class="btn btn-primary" id="btn-print">
+          <i data-lucide="printer"></i> Print / Save as PDF
+        </button>
+        <button class="btn" id="btn-download">
+          <i data-lucide="download"></i> Download TXT
+        </button>
+      </div>
+
+      <div class="notebook" id="notebook-content">
+        <h2>Newton's Corpuscular Theory of Light</h2>
+        <div class="note-sub">// Proposed 1675 · Published in "Opticks" 1704 · Replaced by Wave Theory ~1800</div>
+
+        <h3>1. Definition</h3>
+        <p>Sir Isaac Newton proposed that light consists of tiny, weightless, perfectly elastic particles called <strong>corpuscles</strong>, emitted at enormous speeds from luminous bodies and traveling in straight lines through empty space.</p>
+
+        <h3>2. The Four Golden Postulates</h3>
+        <ol>
+          <li><strong>Particle nature:</strong> Light is composed of infinitesimally small, massless (or nearly massless), perfectly elastic corpuscles.</li>
+          <li><strong>Rectilinear motion:</strong> Corpuscles travel in perfectly straight lines due to their enormous velocity and inertia.</li>
+          <li><strong>Color = size:</strong> Different colors of light correspond to corpuscles of different sizes and masses (red = largest, violet = smallest).</li>
+          <li><strong>Vacuum propagation:</strong> Corpuscles travel through vacuum and empty space without requiring any medium — unlike sound.</li>
+        </ol>
+
+        <h3>3. Successes of the Theory</h3>
+        <ul>
+          <li><strong>Sharp shadows:</strong> Explains the umbra and penumbra formed by opaque objects (rectilinear propagation).</li>
+          <li><strong>Law of reflection:</strong> Elastic rebound off a smooth surface gives ∠i = ∠r, just like a bouncing ball.</li>
+          <li><strong>Snell's law of refraction:</strong> An attractive perpendicular force at the interface bends the path toward the normal — geometrically consistent with n₁ sin θ₁ = n₂ sin θ₂.</li>
+        </ul>
+
+        <h3>4. The Fatal Error — Speed of Light</h3>
+        <p>Newton's derivation of Snell's law required the corpuscle to <em>accelerate</em> when entering a denser medium. Therefore he predicted:</p>
+        <div style="margin: 12px 0;">
+          <span class="note-formula wrong">Newton: v<sub>denser</sub> &gt; v<sub>rarer</sub></span>
+          <span class="note-formula correct">Foucault (1850): v<sub>denser</sub> &lt; v<sub>rarer</sub></span>
+        </div>
+        <p>Foucault's rotating-mirror experiment measured v<sub>water</sub> ≈ 2.25 × 10⁸ m/s, confirming the wave theory and falsifying the corpuscular prediction.</p>
+
+        <h3>5. Why the Theory Failed — Key Exam Points</h3>
+        <ul>
+          <li><strong>Interference:</strong> Young's double-slit experiment shows fringes — corpuscles cannot interfere destructively to produce dark bands.</li>
+          <li><strong>Diffraction:</strong> Light bends around obstacles and through narrow slits — particles travel in straight lines.</li>
+          <li><strong>Polarization:</strong> Only transverse waves can be polarized. Corpuscles have no transverse character.</li>
+          <li><strong>Simultaneous reflection & refraction:</strong> At a glass surface, some light reflects and some refracts at the same time. The theory cannot explain why identical corpuscles make different choices.</li>
+          <li><strong>Speed measurement:</strong> Foucault (1850) proved v<sub>water</sub> &lt; v<sub>air</sub>, directly contradicting Newton's prediction.</li>
+        </ul>
+
+        <h3>6. Historical Verdict</h3>
+        <p>Despite being elegant and geometrically consistent with many optical phenomena, the Corpuscular Theory was superseded by <strong>Huygens' Wave Theory</strong>, later refined by Fresnel and Maxwell, and ultimately by <strong>Einstein's photon</strong> (quantum theory, 1905) which reconciled both wave and particle behaviors through wave-particle duality.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Bottom HUD -->
+<div class="hud-bottom">
+  <button class="nav-btn" id="btn-prev" title="Previous">
+    <i data-lucide="chevron-left"></i>
+  </button>
+
+  <div class="step-dots" id="step-dots"></div>
+
+  <span class="slide-counter" id="slide-counter">1 / 6</span>
+
+  <button class="nav-btn" id="btn-next" title="Next">
+    <i data-lucide="chevron-right"></i>
+  </button>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width: 16.67%"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Copied to clipboard ✓</div>
+
+<script>
+/* ============================================================
+   CORE APPLICATION STATE
+   ============================================================ */
+const App = {
+  currentSlide: 0,
+  totalSlides: 6,
+  slideTitles: [
+    'The Core Hypothesis',
+    'Rectilinear Propagation & Colors',
+    'The Elastic Reflection',
+    'Newton\'s Fatal Prediction',
+    'The Downfall',
+    'Exam Revision Notebook'
+  ],
+  animFrames: {}, // id -> rAF id
+  canvases: {},   // id -> {canvas, ctx, ...}
+  active: {},     // id -> boolean (is this simulation currently animating)
+  isNavigating: false
+};
+
+/* ============================================================
+   AMBIENT DUST BACKGROUND
+   ============================================================ */
+(function initAmbientDust() {
+  const canvas = document.getElementById('ambient-dust');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const NUM = 80;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < NUM; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      alpha: Math.random() * 0.5 + 0.2,
+      hue: Math.random() < 0.5 ? 180 : 270
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 90%, 70%, ${p.alpha})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ============================================================
+   CURSOR GLOW
+   ============================================================ */
+(function initCursorGlow() {
+  const glow = document.getElementById('cursor-glow');
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+  function tick() {
+    cx += (tx - cx) * 0.1;
+    cy += (ty - cy) * 0.1;
+    glow.style.left = cx + 'px';
+    glow.style.top = cy + 'px';
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function initNavigation() {
+  const dotsContainer = document.getElementById('step-dots');
+  for (let i = 0; i < App.totalSlides; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i));
+    dotsContainer.appendChild(dot);
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', () => goToSlide(App.currentSlide - 1));
+  document.getElementById('btn-next').addEventListener('click', () => goToSlide(App.currentSlide + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') goToSlide(App.currentSlide + 1);
+    if (e.key === 'ArrowLeft') goToSlide(App.currentSlide - 1);
+  });
+}
+
+function goToSlide(index) {
+  if (App.isNavigating) return;
+  if (index < 0 || index >= App.totalSlides || index === App.currentSlide) return;
+  App.isNavigating = true;
+
+  const slides = document.querySelectorAll('.slide');
+  const oldSlide = slides[App.currentSlide];
+  const newSlide = slides[index];
+  const direction = index > App.currentSlide ? 1 : -1;
+
+  // Pause old slide animation
+  const oldSimId = Object.keys(App.canvases).find(k => App.canvases[k].slideIndex === App.currentSlide);
+  if (oldSimId) App.active[oldSimId] = false;
+
+  // Transition
+  gsap.to(oldSlide, {
+    opacity: 0, x: -40 * direction, scale: 0.98,
+    duration: 0.4, ease: 'power2.inOut',
+    onComplete: () => {
+      oldSlide.classList.remove('active');
+      oldSlide.style.transform = '';
+      oldSlide.style.opacity = '';
+    }
+  });
+
+  newSlide.classList.add('active');
+  gsap.fromTo(newSlide,
+    { opacity: 0, x: 40 * direction, scale: 0.98 },
+    {
+      opacity: 1, x: 0, scale: 1,
+      duration: 0.5, ease: 'power2.out',
+      onComplete: () => {
+        App.currentSlide = index;
+        updateHUD();
+        startSlideSimulation(index);
+        App.isNavigating = false;
+      }
+    }
+  );
+
+  App.currentSlide = index;
+  updateHUD();
+}
+
+function updateHUD() {
+  document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === App.currentSlide));
+  document.getElementById('slide-counter').textContent = `${App.currentSlide + 1} / ${App.totalSlides}`;
+  document.getElementById('progress-text').textContent = `0${App.currentSlide + 1} / 0${App.totalSlides}`;
+  document.getElementById('progress-fill').style.width = `${((App.currentSlide + 1) / App.totalSlides) * 100}%`;
+  document.getElementById('current-slide-title').textContent = App.slideTitles[App.currentSlide];
+  document.getElementById('btn-prev').disabled = App.currentSlide === 0;
+  document.getElementById('btn-next').disabled = App.currentSlide === App.totalSlides - 1;
+}
+
+/* ============================================================
+   CANVAS UTILITY
+   ============================================================ */
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  resize();
+  const ro = new ResizeObserver(resize);
+  ro.observe(canvas.parentElement);
+
+  return { canvas, ctx, get w() { return canvas.width / (window.devicePixelRatio || 1); }, get h() { return canvas.height / (window.devicePixelRatio || 1); } };
+}
+
+function startAnimationLoop(id, drawFn) {
+  App.active[id] = true;
+  function loop() {
+    if (!App.active[id]) return;
+    drawFn();
+    App.animFrames[id] = requestAnimationFrame(loop);
+  }
+  App.animFrames[id] = requestAnimationFrame(loop);
+}
+
+function stopAnimation(id) {
+  App.active[id] = false;
+  if (App.animFrames[id]) cancelAnimationFrame(App.animFrames[id]);
+}
+
+/* ============================================================
+   SLIDE 1: THREE.JS CORPUSCLE EMITTER
+   ============================================================ */
+function initSlide1() {
+  const container = document.getElementById('slide1-canvas-wrap');
+  const canvas = document.getElementById('slide1-canvas');
+  const c = setupCanvas('slide1-canvas');
+
+  // Three.js scene
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x050709, 0.08);
+
+  const camera = new THREE.PerspectiveCamera(60, c.w / c.h, 0.1, 1000);
+  camera.position.set(0, 0, 12);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(c.w, c.h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x050709, 0);
+
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.5;
+  controls.minDistance = 5;
+  controls.maxDistance = 30;
+
+  // Central emitter sphere
+  const emitterGeo = new THREE.SphereGeometry(0.6, 32, 32);
+  const emitterMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.9 });
+  const emitter = new THREE.Mesh(emitterGeo, emitterMat);
+  scene.add(emitter);
+
+  // Emitter halo
+  const haloGeo = new THREE.SphereGeometry(0.9, 32, 32);
+  const haloMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.15, side: THREE.BackSide });
+  const halo = new THREE.Mesh(haloGeo, haloMat);
+  scene.add(halo);
+
+  // Point light from emitter
+  const light = new THREE.PointLight(0x00f0ff, 2, 20);
+  scene.add(light);
+
+  // Ambient
+  scene.add(new THREE.AmbientLight(0x1a1a2e, 0.5));
+
+  // Particle system
+  const MAX_PARTICLES = 800;
+  const positions = new Float32Array(MAX_PARTICLES * 3);
+  const velocities = new Float32Array(MAX_PARTICLES * 3);
+  const lifetimes = new Float32Array(MAX_PARTICLES);
+  const sizes = new Float32Array(MAX_PARTICLES);
+  const alphas = new Float32Array(MAX_PARTICLES);
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('alpha', new THREE.BufferAttribute(alphas, 1));
+
+  // Shader material for particles
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(0x00f0ff) }
+    },
+    vertexShader: `
+      attribute float size;
+      attribute float alpha;
+      varying float vAlpha;
+      void main() {
+        vAlpha = alpha;
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = size * (200.0 / -mvPos.z);
+        gl_Position = projectionMatrix * mvPos;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 color;
+      varying float vAlpha;
+      void main() {
+        vec2 uv = gl_PointCoord - 0.5;
+        float d = length(uv);
+        if (d > 0.5) discard;
+        float intensity = smoothstep(0.5, 0.0, d);
+        gl_FragColor = vec4(color, vAlpha * intensity);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
+
+  // State
+  const state = { velocity: 1.5, density: 400 };
+  let spawnAccumulator = 0;
+
+  function spawnParticle(i) {
+    // random direction
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const speed = state.velocity * (0.8 + Math.random() * 0.4);
+    positions[i * 3] = 0;
+    positions[i * 3 + 1] = 0;
+    positions[i * 3 + 2] = 0;
+    velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * speed * 0.05;
+    velocities[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * speed * 0.05;
+    velocities[i * 3 + 2] = Math.cos(phi) * speed * 0.05;
+    lifetimes[i] = 1.0;
+    sizes[i] = 0.15 + Math.random() * 0.2;
+    alphas[i] = 1.0;
+  }
+
+  // Initialize particles
+  for (let i = 0; i < MAX_PARTICLES; i++) {
+    lifetimes[i] = 0;
+  }
+
+  function draw() {
+    // Spawn new particles
+    const spawnRate = state.density * 0.15;
+    spawnAccumulator += spawnRate / 60;
+    while (spawnAccumulator >= 1) {
+      spawnAccumulator -= 1;
+      // Find dead particle
+      for (let i = 0; i < MAX_PARTICLES; i++) {
+        if (lifetimes[i] <= 0) {
+          spawnParticle(i);
+          break;
+        }
+      }
+    }
+
+    // Update particles
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      if (lifetimes[i] > 0) {
+        positions[i * 3] += velocities[i * 3];
+        positions[i * 3 + 1] += velocities[i * 3 + 1];
+        positions[i * 3 + 2] += velocities[i * 3 + 2];
+        lifetimes[i] -= 0.008;
+        alphas[i] = Math.max(0, lifetimes[i]);
+        if (lifetimes[i] <= 0) {
+          positions[i * 3] = 0; positions[i * 3 + 1] = 0; positions[i * 3 + 2] = 0;
+        }
+      }
+    }
+
+    geo.attributes.position.needsUpdate = true;
+    geo.attributes.alpha.needsUpdate = true;
+
+    // Pulse emitter
+    const t = Date.now() * 0.001;
+    emitter.scale.setScalar(1 + Math.sin(t * 3) * 0.05);
+    halo.scale.setScalar(1 + Math.sin(t * 2) * 0.1);
+    haloMat.opacity = 0.1 + Math.sin(t * 2) * 0.05;
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // Controls
+  document.getElementById('s1-velocity').addEventListener('input', e => {
+    state.velocity = parseFloat(e.target.value);
+    document.getElementById('s1-velocity-val').textContent = state.velocity.toFixed(1) + '×';
+  });
+  document.getElementById('s1-density').addEventListener('input', e => {
+    state.density = parseInt(e.target.value);
+    document.getElementById('s1-density-val').textContent = state.density;
+  });
+
+  // Resize handler
+  const ro = new ResizeObserver(() => {
+    const rect = container.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    renderer.setSize(rect.width, rect.height);
+    renderer.setPixelRatio(dpr);
+    camera.aspect = rect.width / rect.height;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(container);
+
+  App.canvases['slide1'] = { slideIndex: 0, draw };
+  App.active['slide1'] = true;
+  startAnimationLoop('slide1', draw);
+}
+
+/* ============================================================
+   SLIDE 2: RECTILINEAR PROPAGATION & COLORS
+   ============================================================ */
+function initSlide2() {
+  const c = setupCanvas('slide2-canvas');
+  const canvas = c.canvas;
+  const ctx = c.ctx;
+
+  const colors = {
+    red:    { fill: '#ff4444', glow: 'rgba(255,68,68,0.7)',  size: 4.5 },
+    yellow: { fill: '#ffd944', glow: 'rgba(255,217,68,0.7)', size: 3.5 },
+    green:  { fill: '#44ff88', glow: 'rgba(68,255,136,0.7)', size: 2.8 },
+    cyan:   { fill: '#44ddff', glow: 'rgba(68,221,255,0.7)', size: 2.2 },
+    violet: { fill: '#aa44ff', glow: 'rgba(170,68,255,0.7)', size: 1.6 }
+  };
+
+  const state = {
+    currentColor: 'yellow',
+    intensity: 40,
+    particles: []
+  };
+
+  // Obstacle
+  const obstacle = { x: 0.45, y: 0.3, w: 0.08, h: 0.4 }; // relative coords
+
+  function spawnParticle() {
+    const emitterX = c.w * 0.08;
+    const emitterY = c.h / 2;
+    const spread = c.h * 0.4;
+    const targetY = emitterY + (Math.random() - 0.5) * spread * 2;
+    const speed = 3 + Math.random() * 2;
+    const dx = c.w - emitterX;
+    const dy = targetY - emitterY;
+    const mag = Math.sqrt(dx * dx + dy * dy);
+    state.particles.push({
+      x: emitterX, y: emitterY,
+      vx: (dx / mag) * speed,
+      vy: (dy / mag) * speed,
+      age: 0,
+      color: state.currentColor
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, c.w, c.h);
+
+    // Background grid
+    ctx.strokeStyle = 'rgba(0,240,255,0.04)';
+    ctx.lineWidth = 1;
+    const gridSize = 30;
+    for (let x = 0; x < c.w; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.h); ctx.stroke();
+    }
+    for (let y = 0; y < c.h; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.w, y); ctx.stroke();
+    }
+
+    // Emitter
+    const emX = c.w * 0.08, emY = c.h / 2;
+    ctx.fillStyle = '#00f0ff';
+    ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(emX, emY, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '11px "Space Grotesk"';
+    ctx.fillText('SOURCE', emX - 20, emY + 25);
+
+    // Obstacle (rectangular block)
+    const obsX = obstacle.x * c.w, obsY = obstacle.y * c.h;
+    const obsW = obstacle.w * c.w, obsH = obstacle.h * c.h;
+    const grad = ctx.createLinearGradient(obsX, obsY, obsX, obsY + obsH);
+    grad.addColorStop(0, 'rgba(244,63,94,0.3)');
+    grad.addColorStop(1, 'rgba(244,63,94,0.6)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(obsX, obsY, obsW, obsH);
+    ctx.strokeStyle = 'rgba(244,63,94,0.8)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(obsX, obsY, obsW, obsH);
+
+    ctx.fillStyle = 'rgba(244,63,94,0.8)';
+    ctx.font = 'bold 12px "Space Grotesk"';
+    ctx.fillText('OBSTACLE', obsX, obsY - 8);
+
+    // Screen
+    const screenX = c.w * 0.9;
+    ctx.fillStyle = 'rgba(168,85,247,0.15)';
+    ctx.fillRect(screenX - 4, c.h * 0.1, 8, c.h * 0.8);
+    ctx.strokeStyle = 'rgba(168,85,247,0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(screenX - 4, c.h * 0.1, 8, c.h * 0.8);
+
+    ctx.fillStyle = 'rgba(168,85,247,0.8)';
+    ctx.font = 'bold 12px "Space Grotesk"';
+    ctx.fillText('SCREEN', screenX - 20, c.h * 0.08);
+
+    // Draw shadow prediction (umbra) on screen
+    const shadowTop = Math.max(obsY, emY + ((obsY - emY) / (obsX - emX)) * (screenX - emX));
+    const shadowBot = Math.min(obsY + obsH, emY + ((obsY + obsH - emY) / (obsX - emX)) * (screenX - emX));
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(screenX - 2, shadowTop, 4, shadowBot - shadowTop);
+
+    // Spawn particles
+    if (Math.random() < state.intensity / 200) spawnParticle();
+
+    // Update & draw particles
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+      const p = state.particles[i];
+      p.x += p.vx; p.y += p.vy; p.age++;
+
+      // Check collision with obstacle (axis-aligned rect)
+      if (p.x >= obsX && p.x <= obsX + obsW && p.y >= obsY && p.y <= obsY + obsH) {
+        // Bounce back (absorbed for shadow purposes)
+        state.particles.splice(i, 1);
+        continue;
+      }
+
+      // Check screen hit
+      if (p.x >= screenX - 4) {
+        // Mark impact on screen
+        ctx.fillStyle = colors[p.color].fill;
+        ctx.shadowColor = colors[p.color].glow;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(screenX - 4, p.y - 1, 8, 2);
+        ctx.shadowBlur = 0;
+        state.particles.splice(i, 1);
+        continue;
+      }
+
+      // Out of bounds
+      if (p.x > c.w || p.x < 0 || p.y < 0 || p.y > c.h) {
+        state.particles.splice(i, 1);
+        continue;
+      }
+
+      // Draw particle
+      const sz = colors[p.color].size;
+      ctx.fillStyle = colors[p.color].fill;
+      ctx.shadowColor = colors[p.color].glow;
+      ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, Math.PI * 2); ctx.fill();
+
+      // Trail
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = colors[p.color].glow.replace('0.7', '0.25');
+      ctx.lineWidth = sz * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.vx * 4, p.y - p.vy * 4);
+      ctx.stroke();
+    }
+
+    // Limit particles
+    if (state.particles.length > 500) state.particles.splice(0, state.particles.length - 500);
+
+    // Labels
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '11px "Fira Code"';
+    ctx.fillText('UMBRA (geometric shadow)', screenX + 12, (shadowTop + shadowBot) / 2);
+  }
+
+  // Controls
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.currentColor = btn.dataset.color;
+    });
+  });
+
+  document.getElementById('s2-intensity').addEventListener('input', e => {
+    state.intensity = parseInt(e.target.value);
+    document.getElementById('s2-intensity-val').textContent = state.intensity;
+  });
+
+  App.canvases['slide2'] = { slideIndex: 1, draw };
+}
+
+/* ============================================================
+   SLIDE 3: REFLECTION (ELASTIC COLLISION)
+   ============================================================ */
+function initSlide3() {
+  const c = setupCanvas('slide3-canvas');
+  const canvas = c.canvas;
+  const ctx = c.ctx;
+
+  const state = {
+    angle: 45, // degrees, angle of incidence from normal
+    particles: []
+  };
+
+  function spawnParticle() {
+    const mirrorY = c.h * 0.75;
+    const cx = c.w / 2;
+    const rad = state.angle * Math.PI / 180;
+
+    // Incoming from upper-left
+    const incomingDir = { x: Math.sin(rad), y: Math.cos(rad) };
+    const startDist = c.h * 0.8;
+    const startX = cx - incomingDir.x * startDist;
+    const startY = mirrorY - incomingDir.y * startDist;
+
+    state.particles.push({
+      x: startX, y: startY,
+      vx: incomingDir.x * 3.5,
+      vy: incomingDir.y * 3.5,
+      phase: 'in', // 'in' or 'out'
+      age: 0,
+      trail: []
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, c.w, c.h);
+
+    // Background
+    ctx.fillStyle = 'rgba(10,15,25,0.3)';
+    ctx.fillRect(0, 0, c.w, c.h);
+
+    const mirrorY = c.h * 0.75;
+    const cx = c.w / 2;
+    const rad = state.angle * Math.PI / 180;
+
+    // Mirror surface
+    const mirrorGrad = ctx.createLinearGradient(0, mirrorY, 0, mirrorY + 30);
+    mirrorGrad.addColorStop(0, 'rgba(168,85,247,0.6)');
+    mirrorGrad.addColorStop(1, 'rgba(168,85,247,0)');
+    ctx.fillStyle = mirrorGrad;
+    ctx.fillRect(0, mirrorY, c.w, 30);
+
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.moveTo(0, mirrorY); ctx.lineTo(c.w, mirrorY); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(168,85,247,0.8)';
+    ctx.font = 'bold 12px "Space Grotesk"';
+    ctx.fillText('MIRROR', 20, mirrorY + 20);
+
+    // Normal line (vertical dashed)
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cx, mirrorY - c.h * 0.6);
+    ctx.lineTo(cx, mirrorY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '11px "Fira Code"';
+    ctx.fillText('NORMAL', cx + 6, mirrorY - c.h * 0.55);
+
+    // Draw angle arcs
+    // Incident angle arc
+    ctx.strokeStyle = 'rgba(0,240,255,0.6)';
+    ctx.lineWidth = 2;
+    const arcR = 50;
+    ctx.beginPath();
+    // Arc from normal (up, -PI/2) to incoming ray
+    const incomingAngle = -Math.PI / 2 - rad;
+    const normalAngle = -Math.PI / 2;
+    ctx.arc(cx, mirrorY, arcR, incomingAngle, normalAngle);
+    ctx.stroke();
+
+    // Reflection angle arc
+    ctx.strokeStyle = 'rgba(16,185,129,0.6)';
+    const reflectionAngle = -Math.PI / 2 + rad;
+    ctx.beginPath();
+    ctx.arc(cx, mirrorY, arcR, normalAngle, reflectionAngle);
+    ctx.stroke();
+
+    // Labels for angles
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = 'bold 13px "Fira Code"';
+    const labelR = arcR + 15;
+    const iLabelAngle = -Math.PI / 2 - rad / 2;
+    ctx.fillText(`i = ${state.angle}°`, cx + Math.cos(iLabelAngle) * labelR - 10, mirrorY + Math.sin(iLabelAngle) * labelR);
+
+    ctx.fillStyle = '#10b981';
+    const rLabelAngle = -Math.PI / 2 + rad / 2;
+    ctx.fillText(`r = ${state.angle}°`, cx + Math.cos(rLabelAngle) * labelR - 10, mirrorY + Math.sin(rLabelAngle) * labelR);
+
+    // Spawn
+    if (Math.random() < 0.25) spawnParticle();
+
+    // Update particles
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+      const p = state.particles[i];
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > 12) p.trail.shift();
+
+      p.x += p.vx; p.y += p.vy; p.age++;
+
+      // Hit mirror
+      if (p.phase === 'in' && p.y >= mirrorY) {
+        // Reflect: vy flips sign (elastic), vx preserved
+        p.y = mirrorY;
+        p.vy = -p.vy;
+        p.phase = 'out';
+      }
+
+      // Draw trail
+      for (let t = 0; t < p.trail.length; t++) {
+        const alpha = t / p.trail.length;
+        ctx.fillStyle = `rgba(0,240,255,${alpha * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(p.trail[t].x, p.trail[t].y, 2 * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw particle
+      ctx.fillStyle = '#00f0ff';
+      ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Remove if out
+      if (p.x < -20 || p.x > c.w + 20 || p.y < -20 || p.y > c.h + 20 || p.age > 400) {
+        state.particles.splice(i, 1);
+      }
+    }
+
+    // Title overlay
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '12px "Space Grotesk"';
+    ctx.fillText('ELASTIC REBOUND · ∠i = ∠r', 20, 30);
+  }
+
+  // Controls
+  document.getElementById('s3-angle').addEventListener('input', e => {
+    state.angle = parseInt(e.target.value);
+    document.getElementById('s3-angle-val').textContent = state.angle + '°';
+    document.getElementById('s3-reflection-val').textContent = `∠r = ${state.angle}°`;
+  });
+
+  App.canvases['slide3'] = { slideIndex: 2, draw };
+}
+
+/* ============================================================
+   SLIDE 4: REFRACTION (NEWTON vs WAVE)
+   ============================================================ */
+function initSlide4() {
+  const c = setupCanvas('slide4-canvas');
+  const canvas = c.canvas;
+  const ctx = c.ctx;
+
+  const state = {
+    angle: 40,
+    newtonModel: true // true = Newton's (v_water > v_air), false = Wave (v_water < v_air)
+  };
+
+  const nAir = 1.0;
+  const nWater = 1.33;
+
+  let particles = [];
+
+  function spawnParticle() {
+    const interfaceY = c.h * 0.45;
+    const cx = c.w / 2;
+    const rad = state.angle * Math.PI / 180;
+
+    const startX = cx - Math.sin(rad) * c.h * 0.6;
+    const startY = interfaceY - Math.cos(rad) * c.h * 0.6;
+
+    // Compute refracted angle
+    let theta2Rad;
+    let vAir, vWater;
+
+    if (state.newtonModel) {
+      // Newton: vWater > vAir → use n1*sin(θ1) = n2*sin(θ2) with v proportional to n (inverted)
+      // He still predicted bending toward normal, so θ2 = arcsin(n1/n2 * sin(θ1))
+      // But velocity increases in water
+      theta2Rad = Math.asin((nAir / nWater) * Math.sin(rad));
+      vAir = 3.0;
+      vWater = 3.0 * 1.4; // faster in water
+    } else {
+      // Wave: vWater < vAir
+      theta2Rad = Math.asin((nAir / nWater) * Math.sin(rad));
+      vAir = 3.0;
+      vWater = 3.0 / 1.4; // slower in water
+    }
+
+    const vInX = Math.sin(rad) * vAir;
+    const vInY = Math.cos(rad) * vAir;
+
+    particles.push({
+      x: startX, y: startY,
+      vx: vInX, vy: vInY,
+      vWaterX: Math.sin(theta2Rad) * vWater,
+      vWaterY: Math.cos(theta2Rad) * vWater,
+      inWater: false,
+      trail: [],
+      age: 0,
+      newtonModel: state.newtonModel
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, c.w, c.h);
+
+    const interfaceY = c.h * 0.45;
+    const cx = c.w / 2;
+
+    // Air region (top)
+    const airGrad = ctx.createLinearGradient(0, 0, 0, interfaceY);
+    airGrad.addColorStop(0, 'rgba(20,30,50,0.4)');
+    airGrad.addColorStop(1, 'rgba(10,20,40,0.6)');
+    ctx.fillStyle = airGrad;
+    ctx.fillRect(0, 0, c.w, interfaceY);
+
+    // Water region (bottom)
+    const waterGrad = ctx.createLinearGradient(0, interfaceY, 0, c.h);
+    waterGrad.addColorStop(0, 'rgba(0,60,120,0.5)');
+    waterGrad.addColorStop(1, 'rgba(0,30,80,0.7)');
+    ctx.fillStyle = waterGrad;
+    ctx.fillRect(0, interfaceY, c.w, c.h - interfaceY);
+
+    // Water caustics
+    for (let i = 0; i < 5; i++) {
+      const t = Date.now() * 0.0003 + i;
+      const x = (Math.sin(t) * 0.5 + 0.5) * c.w;
+      ctx.fillStyle = `rgba(0,240,255,${0.02 + Math.sin(t * 2) * 0.01})`;
+      ctx.beginPath();
+      ctx.arc(x, interfaceY + 20 + i * 30, 100, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Interface line
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, interfaceY); ctx.lineTo(c.w, interfaceY); ctx.stroke();
+
+    // Normal line
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, 20);
+    ctx.lineTo(cx, c.h - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Region labels
+    ctx.font = 'bold 14px "Space Grotesk"';
+    ctx.fillStyle = 'rgba(0,240,255,0.7)';
+    ctx.fillText('AIR (rare) · n = 1.00', 20, 30);
+    ctx.fillStyle = 'rgba(0,150,255,0.8)';
+    ctx.fillText('WATER (dense) · n = 1.33', 20, interfaceY + 30);
+
+    // Model indicator
+    ctx.font = 'bold 13px "Fira Code"';
+    if (state.newtonModel) {
+      ctx.fillStyle = '#f43f5e';
+      ctx.fillText(`NEWTON: v_water > v_air  (${(3.0 * 1.4).toFixed(1)} > 3.0)`, c.w - 280, 30);
+    } else {
+      ctx.fillStyle = '#10b981';
+      ctx.fillText(`WAVE: v_water < v_air  (${(3.0 / 1.4).toFixed(2)} < 3.0) ✓`, c.w - 280, 30);
+    }
+
+    // Draw predicted paths
+    const rad = state.angle * Math.PI / 180;
+    let theta2Rad;
+    if (state.newtonModel) {
+      theta2Rad = Math.asin((nAir / nWater) * Math.sin(rad));
+    } else {
+      theta2Rad = Math.asin((nAir / nWater) * Math.sin(rad));
+    }
+
+    // Incident ray (from top to interface)
+    const incStartX = cx - Math.sin(rad) * c.h * 0.6;
+    const incStartY = interfaceY - Math.cos(rad) * c.h * 0.6;
+    ctx.strokeStyle = 'rgba(0,240,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.moveTo(incStartX, incStartY); ctx.lineTo(cx, interfaceY); ctx.stroke();
+
+    // Refracted ray
+    const refEndX = cx + Math.sin(theta2Rad) * c.h * 0.6;
+    const refEndY = interfaceY + Math.cos(theta2Rad) * c.h * 0.6;
+    ctx.beginPath(); ctx.moveTo(cx, interfaceY); ctx.lineTo(refEndX, refEndY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Angle arcs
+    ctx.strokeStyle = 'rgba(0,240,255,0.6)';
+    ctx.lineWidth = 2;
+    const arcR = 50;
+    ctx.beginPath();
+    ctx.arc(cx, interfaceY, arcR, -Math.PI / 2 - rad, -Math.PI / 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(16,185,129,0.6)';
+    ctx.beginPath();
+    ctx.arc(cx, interfaceY, arcR, Math.PI / 2 - theta2Rad, Math.PI / 2);
+    ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 12px "Fira Code"';
+    ctx.fillStyle = '#00f0ff';
+    const t2Deg = (theta2Rad * 180 / Math.PI).toFixed(1);
+    ctx.fillText(`θ₁ = ${state.angle}°`, cx - 80, interfaceY - 30);
+    ctx.fillStyle = '#10b981';
+    ctx.fillText(`θ₂ = ${t2Deg}°`, cx + 20, interfaceY + 40);
+
+    // Spawn particles
+    if (Math.random() < 0.3) spawnParticle();
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > 15) p.trail.shift();
+
+      p.x += p.vx; p.y += p.vy; p.age++;
+
+      // Cross interface
+      if (!p.inWater && p.y >= interfaceY) {
+        p.y = interfaceY;
+        p.vx = p.vWaterX;
+        p.vy = p.vWaterY;
+        p.inWater = true;
+      }
+
+      // Draw trail
+      for (let t = 0; t < p.trail.length; t++) {
+        const alpha = t / p.trail.length;
+        const color = p.inWater ? `rgba(16,185,129,${alpha * 0.5})` : `rgba(0,240,255,${alpha * 0.5})`;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.trail[t].x, p.trail[t].y, 2 * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw particle (size changes based on speed for visual effect)
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      const size = 2 + speed * 0.3;
+      ctx.fillStyle = p.inWater ? '#10b981' : '#00f0ff';
+      ctx.shadowColor = p.inWater ? '#10b981' : '#00f0ff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Remove if out
+      if (p.x < -20 || p.x > c.w + 20 || p.y > c.h + 20 || p.age > 600) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  // Controls
+  document.getElementById('s4-angle').addEventListener('input', e => {
+    state.angle = parseInt(e.target.value);
+    document.getElementById('s4-angle-val').textContent = state.angle + '°';
+  });
+
+  const toggle = document.getElementById('s4-toggle');
+  toggle.addEventListener('click', () => {
+    state.newtonModel = !state.newtonModel;
+    toggle.classList.toggle('active', !state.newtonModel);
+    toggle.querySelector('.label-text').innerHTML = state.newtonModel
+      ? "Newton's Model (v<sub>water</sub> &gt; v<sub>air</sub>)"
+      : 'Wave Reality (v<sub>water</sub> &lt; v<sub>air</sub>)';
+    particles = [];
+  });
+  // Set initial state
+  toggle.classList.add('active');
+
+  App.canvases['slide4'] = { slideIndex: 3, draw };
+}
+
+/* ============================================================
+   SLIDE 6: NOTEBOOK (Copy / Print / Download)
+   ============================================================ */
+function initSlide6() {
+  const notebookEl = document.getElementById('notebook-content');
+
+  function getPlainText() {
+    return `NEWTON'S CORPUSCULAR THEORY OF LIGHT
+Proposed 1675 · Published in "Opticks" 1704 · Replaced by Wave Theory ~1800
+
+=========================================
+1. DEFINITION
+=========================================
+Sir Isaac Newton proposed that light consists of tiny, weightless, perfectly elastic particles called CORPUSCLES, emitted at enormous speeds from luminous bodies and traveling in straight lines through empty space.
+
+=========================================
+2. THE FOUR GOLDEN POSTULATES
+=========================================
+1. Particle nature: Light is composed of infinitesimally small, massless (or nearly massless), perfectly elastic corpuscles.
+2. Rectilinear motion: Corpuscles travel in perfectly straight lines due to their enormous velocity and inertia.
+3. Color = size: Different colors correspond to corpuscles of different sizes and masses (red = largest, violet = smallest).
+4. Vacuum propagation: Corpuscles travel through vacuum and empty space without requiring any medium.
+
+=========================================
+3. SUCCESSES OF THE THEORY
+=========================================
+- Sharp shadows: Explains umbra and penumbra from opaque objects.
+- Law of reflection: Elastic rebound gives ∠i = ∠r.
+- Snell's law of refraction: Attractive perpendicular force bends path toward normal.
+
+=========================================
+4. THE FATAL ERROR - SPEED OF LIGHT
+=========================================
+Newton predicted:   v_denser > v_rarer    (WRONG)
+Foucault (1850):   v_denser < v_rarer    (CORRECT)
+
+Foucault's rotating-mirror experiment measured v_water ≈ 2.25 × 10^8 m/s, confirming wave theory.
+
+=========================================
+5. WHY THE THEORY FAILED - KEY EXAM POINTS
+=========================================
+- Interference: Young's double-slit fringes. Corpuscles cannot interfere destructively.
+- Diffraction: Light bends around obstacles. Particles travel in straight lines.
+- Polarization: Only transverse waves can be polarized. Corpuscles have no transverse character.
+- Partial reflection & refraction: Cannot explain why identical corpuscles make different choices.
+- Speed measurement: Foucault proved v_water < v_air, contradicting Newton.
+
+=========================================
+6. HISTORICAL VERDICT
+=========================================
+The Corpuscular Theory was superseded by Huygens' Wave Theory, later refined by Fresnel and Maxwell, and ultimately by Einstein's photon (1905) which reconciled both behaviors through wave-particle duality.
+`;
+  }
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(getPlainText());
+      showToast('Notes copied to clipboard ✓');
+    } catch (e) {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = getPlainText();
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Notes copied ✓');
+    }
+  });
+
+  document.getElementById('btn-print').addEventListener('click', () => {
+    window.print();
+  });
+
+  document.getElementById('btn-download').addEventListener('click', () => {
+    const blob = new Blob([getPlainText()], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'newton-corpuscular-theory-notes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('TXT file downloaded ✓');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ============================================================
+   SIMULATION MANAGER
+   ============================================================ */
+function startSlideSimulation(slideIndex) {
+  // Stop all
+  Object.keys(App.canvases).forEach(id => {
+    App.active[id] = false;
+  });
+
+  // Start the right one
+  const matchId = Object.keys(App.canvases).find(id => App.canvases[id].slideIndex === slideIndex);
+  if (matchId && App.canvases[matchId].draw) {
+    startAnimationLoop(matchId, App.canvases[matchId].draw);
+  }
+}
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+function init() {
+  initNavigation();
+  initSlide1();
+  initSlide2();
+  initSlide3();
+  initSlide4();
+  initSlide6();
+
+  // Start slide 0
+  startSlideSimulation(0);
+
+  // Lucide icons
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
+  updateHUD();
+
+  // Entrance animation
+  gsap.from('.hud-top', { y: -50, opacity: 0, duration: 0.6, ease: 'power3.out' });
+  gsap.from('.hud-bottom', { y: 50, opacity: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+}
+
+// Wait for fonts & DOM
+if (document.fonts) {
+  document.fonts.ready.then(init);
+} else {
+  window.addEventListener('load', init);
+}
+</script>
+
+</body>
+</html>

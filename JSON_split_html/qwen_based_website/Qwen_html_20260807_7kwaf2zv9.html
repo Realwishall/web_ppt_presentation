@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross Product Lab — a⃗×b⃗ vs b⃗×a⃗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b16; --panel:rgba(11,18,34,.9); --line:rgba(126,150,205,.18);
+  --ink:#e9eef8; --mut:#8ea0bf;
+  --ca:#ffb454;   /* vector a  */
+  --cb:#45c4ff;   /* vector b  */
+  --cx:#ff5d8f;   /* a×b       */
+  --cy:#7be38b;   /* b×a       */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'IBM Plex Sans',sans-serif; overflow-x:hidden;
+}
+::selection{background:var(--cx);color:#12060b}
+
+/* ---------- header ---------- */
+header{
+  position:fixed;inset:0 0 auto 0;z-index:50;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;border-bottom:1px solid var(--line);
+  background:rgba(7,11,22,.72);backdrop-filter:blur(8px);
+}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Bricolage Grotesque';font-weight:800;letter-spacing:.04em;font-size:15px}
+.brand svg{display:block}
+.brand small{color:var(--mut);font-family:'JetBrains Mono';font-weight:400;font-size:10px;letter-spacing:.18em;margin-left:2px}
+header nav{display:flex;gap:20px}
+header nav a{color:var(--mut);text-decoration:none;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;transition:color .2s}
+header nav a:hover{color:var(--ca)}
+
+/* ---------- stage ---------- */
+#stage{position:relative;height:100vh;min-height:560px;overflow:hidden;cursor:grab}
+#stage:active{cursor:grabbing}
+#stage canvas{position:absolute;inset:0}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.16;pointer-events:none;animation:drift 14s ease-in-out infinite alternate}
+.glow.g1{width:520px;height:520px;background:var(--ca);top:-140px;left:-120px}
+.glow.g2{width:620px;height:620px;background:var(--cb);bottom:-200px;right:-140px;animation-delay:-7s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,40px) scale(1.12)}}
+
+.hud{position:absolute;z-index:5;pointer-events:none}
+.hud > *{pointer-events:auto}
+
+/* headline — the equation itself */
+.title{top:86px;left:28px;max-width:640px;pointer-events:none}
+.title h1{
+  font-family:'Bricolage Grotesque';font-weight:800;
+  font-size:clamp(30px,4.6vw,54px);line-height:1.05;letter-spacing:-.01em;
+  text-shadow:0 4px 40px rgba(0,0,0,.6);
+}
+.title .va{color:var(--ca);font-style:italic;font-family:Georgia,serif}
+.title .vb{color:var(--cb);font-style:italic;font-family:Georgia,serif}
+.title .neg{color:var(--cx)}
+.title p{margin-top:12px;color:var(--mut);font-size:15px;max-width:460px;line-height:1.55}
+.title p b{color:var(--ink);font-weight:600}
+
+/* generic panel */
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 14px 44px rgba(0,0,0,.45);padding:16px;
+}
+.panel h3{
+  font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.24em;
+  color:var(--mut);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.panel h3::before{content:'';width:16px;height:2px;background:var(--cx)}
+
+/* controls */
+.controls{top:86px;right:22px;width:242px}
+.swap-btn{
+  width:100%;padding:12px;border:none;border-radius:9px;cursor:pointer;
+  font-family:'Bricolage Grotesque';font-weight:800;font-size:15px;letter-spacing:.02em;color:#101527;
+  background:linear-gradient(100deg,var(--ca),var(--cx) 52%,var(--cb));
+  transition:transform .15s,box-shadow .15s;
+}
+.swap-btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(255,93,143,.35)}
+.swap-btn:active{transform:translateY(0)}
+.subhead{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.2em;color:var(--mut);margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-family:'JetBrains Mono';font-size:11px;color:var(--ink);cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;
+  padding:6px 9px;transition:all .15s;
+}
+.chip:hover{transform:translateY(-2px);border-color:var(--ca);color:var(--ca)}
+.switch{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:13px;cursor:pointer;user-select:none}
+.switch .dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:8px}
+.switch input{display:none}
+.switch .track{width:32px;height:17px;border-radius:20px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex:none}
+.switch .track::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#94a3c0;transition:all .2s}
+.switch input:checked + .track{background:rgba(123,227,139,.35)}
+.switch input:checked + .track::after{left:17px;background:var(--cy)}
+.tip{margin-top:14px;font-size:11.5px;color:var(--mut);line-height:1.5;border-top:1px dashed var(--line);padding-top:10px}
+.tip kbd{font-family:'JetBrains Mono';border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:10px}
+
+/* live readout */
+.readout{left:22px;bottom:22px;min-width:330px}
+.live{width:7px;height:7px;border-radius:50%;background:var(--cy);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(123,227,139,.5)}50%{opacity:.5;box-shadow:0 0 0 6px rgba(123,227,139,0)}}
+.readout table{font-family:'JetBrains Mono';font-size:13px;border-collapse:collapse;width:100%}
+.readout td{padding:2.5px 0;white-space:nowrap}
+.readout td:first-child{padding-right:14px;font-weight:700}
+.readout .foot{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-family:'JetBrains Mono';font-size:11.5px;color:var(--mut)}
+#zeroFlag{display:none;margin-top:8px;font-family:'JetBrains Mono';font-size:11px;color:var(--cx);border:1px solid rgba(255,93,143,.4);border-radius:6px;padding:5px 8px}
+
+/* hint + right hand */
+.hint{left:50%;bottom:20px;transform:translateX(-50%);pointer-events:none;
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;color:var(--mut);
+  background:rgba(11,18,34,.7);border:1px solid var(--line);border-radius:20px;padding:7px 16px}
+.hand{right:22px;bottom:22px;width:242px;display:flex;gap:12px;align-items:center}
+.hand p{font-size:11.5px;color:var(--mut);line-height:1.5}
+.hand p b{color:var(--ink)}
+.hand svg{flex:none;animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- lesson ---------- */
+#why{padding:110px 24px 60px;background:linear-gradient(180deg,var(--bg) 0%,#0a1120 100%)}
+.wrap{max-width:1000px;margin:0 auto}
+.kicker{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.3em;color:var(--cx);margin-bottom:14px}
+#why h2{font-family:'Bricolage Grotesque';font-weight:800;font-size:clamp(30px,4vw,46px);margin-bottom:64px;max-width:640px;line-height:1.1}
+.step{display:grid;grid-template-columns:130px 1fr;gap:8px;margin-bottom:58px;align-items:start}
+.step:nth-child(odd){padding-left:56px}
+.step .num{
+  font-family:'Bricolage Grotesque';font-weight:800;font-size:88px;line-height:.9;
+  color:transparent;-webkit-text-stroke:1.5px rgba(142,160,191,.55);
+}
+.step h4{font-family:'Bricolage Grotesque';font-weight:600;font-size:21px;margin-bottom:10px}
+.step p{color:var(--mut);line-height:1.7;font-size:15px;max-width:560px}
+.step .m{font-family:Georgia,serif;font-style:italic}
+.step .m.a{color:var(--ca)} .step .m.b{color:var(--cb)} .step .m.x{color:var(--cx)} .step .m.y{color:var(--cy)}
+
+.detbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:34px;margin:20px 0 70px;overflow-x:auto}
+.detflow{display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:14px}
+.matrix{display:grid;grid-template-columns:repeat(3,minmax(46px,auto));gap:4px 18px;padding:12px 18px;position:relative}
+.matrix::before,.matrix::after{content:'';position:absolute;top:0;bottom:0;width:9px;border:2px solid var(--mut)}
+.matrix::before{left:0;border-right:none}
+.matrix::after{right:0;border-left:none}
+.matrix .ra{color:var(--ca)} .matrix .rb{color:var(--cb)} .matrix .rk{color:var(--ink)}
+.detflow .arrow{color:var(--mut);font-size:20px}
+.detnote{margin-top:22px;color:var(--mut);font-size:14px;line-height:1.7;max-width:640px}
+.detnote b{color:var(--cx)}
+
+.takeaway{
+  border:1px solid var(--line);border-radius:16px;padding:56px 30px;text-align:center;
+  animation:glowpulse 4s ease-in-out infinite;
+}
+@keyframes glowpulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,93,143,.08),0 0 40px rgba(69,196,255,.06)}
+  50%{box-shadow:0 0 70px rgba(255,93,143,.18),0 0 70px rgba(69,196,255,.12)}
+}
+.takeaway .big{font-family:'Bricolage Grotesque';font-weight:800;font-size:clamp(26px,4.5vw,48px)}
+.takeaway .big .va{color:var(--ca);font-family:Georgia;font-style:italic}
+.takeaway .big .vb{color:var(--cb);font-family:Georgia;font-style:italic}
+.takeaway p{margin-top:14px;color:var(--mut);font-size:15px}
+footer{text-align:center;padding:34px;color:var(--mut);font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em}
+
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease;transition-delay:var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+
+@media(max-width:980px){
+  .title{top:70px;left:16px;right:200px}
+  .controls{width:196px;right:12px;top:70px;padding:12px}
+  .readout{left:12px;bottom:12px;min-width:0;padding:12px}
+  .readout table{font-size:11px}
+  .hint,.hand{display:none}
+  .step:nth-child(odd){padding-left:0}
+}
+@media(max-width:600px){
+  header nav{display:none}
+  .title{right:16px}
+  .title p{display:none}
+  .controls{top:auto;bottom:12px;right:12px;width:170px}
+  .readout{bottom:auto;top:150px}
+  .step{grid-template-columns:1fr}
+  .step .num{font-size:56px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 22 22"><path d="M3 19 L19 3" stroke="#ffb454" stroke-width="3.4" stroke-linecap="round"/><path d="M3 3 L19 19" stroke="#45c4ff" stroke-width="3.4" stroke-linecap="round"/></svg>
+    CROSS·LAB <small>VECTOR PLAYGROUND</small>
+  </div>
+  <nav>
+    <a href="#stage">Playground</a>
+    <a href="#why">Why it flips</a>
+  </nav>
+</header>
+
+<!-- ══════════ 3D STAGE ══════════ -->
+<div id="stage">
+  <div class="glow g1"></div><div class="glow g2"></div>
+
+  <div class="hud title">
+    <h1><span class="va">a</span> × <span class="vb">b</span> <span class="neg">= −</span> <span class="vb">b</span> × <span class="va">a</span></h1>
+    <p>The cross product is <b>anti-commutative</b>: swap the order of the vectors and the result points <b>exactly the other way</b>. Drag the glowing tips — or swap the order — and watch.</p>
+  </div>
+
+  <div class="hud panel controls">
+    <h3>CONTROLS</h3>
+    <button class="swap-btn" id="btnSwap">⇄ &nbsp;Swap a and b</button>
+    <div class="subhead">PRESETS</div>
+    <div class="chips">
+      <button class="chip" data-p="ij">î × ĵ</button>
+      <button class="chip" data-p="tilt">Tilted</button>
+      <button class="chip" data-p="steep">Steep</button>
+      <button class="chip" data-p="par">Parallel ⇒ 0</button>
+    </div>
+    <div class="subhead">SHOW</div>
+    <label class="switch"><span><span class="dot" style="background:var(--cx)"></span>a × b</span><input type="checkbox" id="tgAxB" checked><span class="track"></span></label>
+    <label class="switch"><span><span class="dot" style="background:var(--cy)"></span>b × a</span><input type="checkbox" id="tgBxA" checked><span class="track"></span></label>
+    <label class="switch"><span><span class="dot" style="background:#dfe7ff"></span>rotation arc</span><input type="checkbox" id="tgArc" checked><span class="track"></span></label>
+    <label class="switch"><span><span class="dot" style="background:#8fb3ff"></span>area sheet</span><input type="checkbox" id="tgArea" checked><span class="track"></span></label>
+    <label class="switch"><span><span class="dot" style="background:var(--mut)"></span>labels</span><input type="checkbox" id="tgLab" checked><span class="track"></span></label>
+    <div class="tip">Grab the <b>glowing tips</b> to move a vector. Drag empty space to orbit, scroll to zoom, press <kbd>S</kbd> to swap.</div>
+  </div>
+
+  <div class="hud panel readout">
+    <h3><span class="live"></span>LIVE RESULT</h3>
+    <table>
+      <tr><td style="color:var(--ca)">a</td><td id="rA"></td></tr>
+      <tr><td style="color:var(--cb)">b</td><td id="rB"></td></tr>
+      <tr><td style="color:var(--cx)">a×b</td><td id="rAxB"></td></tr>
+      <tr><td style="color:var(--cy)">b×a</td><td id="rBxA"></td></tr>
+    </table>
+    <div class="foot">|a×b| = <span id="rMag" style="color:var(--ink)">—</span> &nbsp;·&nbsp; angle between products = <span id="rAng" style="color:var(--ink)">—</span></div>
+    <div id="zeroFlag">⚠ ZERO VECTOR — the vectors are (nearly) parallel, so there is no direction.</div>
+  </div>
+
+  <div class="hud hint">drag tips ✦ drag space to orbit ✦ scroll to zoom ✦ S swaps</div>
+
+  <div class="hud panel hand">
+    <svg width="46" height="46" viewBox="0 0 46 46">
+      <path d="M23 6 A17 17 0 1 1 8.5 14" fill="none" stroke="#ff5d8f" stroke-width="2.6" stroke-dasharray="4 4" stroke-linecap="round"/>
+      <path d="M4 17 L8.5 13 L12 18" fill="none" stroke="#ff5d8f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="23" cy="23" r="3.4" fill="#ffb454"/>
+    </svg>
+    <p><b>Right-hand rule:</b> curl your fingers from the <b>first</b> vector toward the <b>second</b> — your thumb gives the product. Reverse the order, reverse the curl, the thumb flips.</p>
+  </div>
+</div>
+
+<!-- ══════════ LESSON ══════════ -->
+<section id="why">
+  <div class="wrap">
+    <div class="kicker reveal">THE REASONING</div>
+    <h2 class="reveal" style="--d:.08s">Why does swapping the order flip the direction?</h2>
+
+    <div class="step reveal" style="--d:.1s">
+      <div class="num">01</div>
+      <div><h4>Two vectors in, one vector out</h4>
+      <p>The cross product of <span class="m a">a</span> and <span class="m b">b</span> produces a new vector <b>perpendicular to both</b> — it sticks out of the plane they span. Its length equals the area of that parallelogram (the shaded sheet in the scene). So far, nothing depends on order…</p></div>
+    </div>
+
+    <div class="step reveal" style="--d:.1s">
+      <div class="num">02</div>
+      <div><h4>…but the direction is decided by the right hand</h4>
+      <p>Of the two perpendicular directions, nature picks one using the <b>right-hand rule</b>: curl your fingers from the <em>first</em> vector toward the <em>second</em>; your thumb is the answer. If you swap the order, the curl runs the opposite way around the plane — so the thumb points <b>exactly opposite</b>.</p></div>
+    </div>
+
+    <div class="step reveal" style="--d:.1s">
+      <div class="num">03</div>
+      <div><h4>Same length, opposite sign</h4>
+      <p>That's why <span class="m x">a×b</span> and <span class="m y">b×a</span> always have <b>equal magnitude</b> and an angle of <b>180°</b> between them — verify it live in the readout. Edge case: if the vectors are parallel, the area is zero and both products collapse into the <b>zero vector</b>, which has no direction at all (try the “Parallel” preset).</p></div>
+    </div>
+
+    <div class="step reveal" style="--d:.1s">
+      <div class="num">04</div>
+      <div><h4>The algebra agrees</h4>
+      <p>Written as a determinant, swapping the order of the vectors means swapping two rows — and swapping two rows of a determinant <b>negates it</b>:</p></div>
+    </div>
+
+    <div class="detbox reveal">
+      <div class="detflow">
+        <div class="matrix">
+          <span class="rk">i</span><span class="rk">j</span><span class="rk">k</span>
+          <span class="ra">a₁</span><span class="ra">a₂</span><span class="ra">a₃</span>
+          <span class="rb">b₁</span><span class="rb">b₂</span><span class="rb">b₃</span>
+        </div>
+        <div class="arrow">— swap rows ⇄ —</div>
+        <div class="matrix">
+          <span class="rk">i</span><span class="rk">j</span><span class="rk">k</span>
+          <span class="rb">b₁</span><span class="rb">b₂</span><span class="rb">b₃</span>
+          <span class="ra">a₁</span><span class="ra">a₂</span><span class="ra">a₃</span>
+        </div>
+        <div class="arrow">= −(first)</div>
+      </div>
+      <p class="detnote">So <b>b×a = −(a×b)</b>. The cross product is <b>anti-commutative</b>: order doesn't just matter — reversing the order reverses the answer.</p>
+    </div>
+
+    <div class="takeaway reveal">
+      <div class="big"><span class="va">a</span> × <span class="vb">b</span> &nbsp;=&nbsp; − ( <span class="vb">b</span> × <span class="va">a</span> )</div>
+      <p>Same magnitude. Opposite direction. Every time.</p>
+    </div>
+  </div>
+</section>
+
+<footer>THREE.JS r128 · DRAG · SWAP · OBSERVE · 180°</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+if(!window.THREE) return;
+const stage = document.getElementById('stage');
+
+/* ---------- palette ---------- */
+const CA=0xffb454, CB=0x45c4ff, CX=0xff5d8f, CY=0x7be38b;
+
+/* ---------- renderer / scene / camera ---------- */
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(46,1,0.1,100);
+
+scene.add(new THREE.HemisphereLight(0xbdd0ff,0x0a0f1e,0.9));
+const dl=new THREE.DirectionalLight(0xffffff,0.85); dl.position.set(6,10,5); scene.add(dl);
+const pl=new THREE.PointLight(0x45c4ff,0.5,40); pl.position.set(-8,4,-8); scene.add(pl);
+
+/* grid + axes */
+const grid=new THREE.GridHelper(12,24,0x2b3a5e,0x182238);
+grid.material.transparent=true; grid.material.opacity=.55; scene.add(grid);
+(function axes(){
+  const g=new THREE.BufferGeometry(), p=[-6,0,0,6,0,0, 0,-6,0,0,6,0, 0,0,-6,0,0,6];
+  g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+  scene.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x3a4a72,transparent:true,opacity:.6})));
+})();
+
+/* star dust */
+(function dust(){
+  const n=260, pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const r=12+Math.random()*9, t=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+    pos[i*3]=r*Math.sin(ph)*Math.cos(t); pos[i*3+1]=r*Math.cos(ph)*.7; pos[i*3+2]=r*Math.sin(ph)*Math.sin(t);
+  }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const pts=new THREE.Points(g,new THREE.PointsMaterial({color:0x51648f,size:.07,transparent:true,opacity:.8}));
+  pts.name='dust'; scene.add(pts);
+})();
+
+/* ---------- arrow builder ---------- */
+const Y=new THREE.Vector3(0,1,0), HEAD=0.45;
+function makeArrow(color,em){
+  const mat=new THREE.MeshStandardMaterial({color,roughness:.35,metalness:.15,emissive:color,emissiveIntensity:em});
+  const g=new THREE.Group();
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,1,16),mat);
+  const head=new THREE.Mesh(new THREE.ConeGeometry(.155,HEAD,20),mat);
+  shaft.frustumCulled=head.frustumCulled=false;
+  g.add(shaft,head); g.userData={shaft,head,mat}; scene.add(g); return g;
+}
+function setArrow(g,v){
+  const len=v.length();
+  if(len<0.06){g.visible=false;return;}
+  g.visible=true;
+  const s=Math.max(.02,len-HEAD);
+  g.userData.shaft.scale.set(1,s,1); g.userData.shaft.position.y=s/2;
+  g.userData.head.position.y=s+HEAD/2;
+  g.quaternion.setFromUnitVectors(Y,v.clone().normalize());
+}
+const arA=makeArrow(CA,.3), arB=makeArrow(CB,.3), arAxB=makeArrow(CX,.5), arBxA=makeArrow(CY,.5);
+
+/* draggable tip handles */
+function makeHandle(color){
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(.15,20,20),
+    new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.7}));
+  const pick=new THREE.Mesh(new THREE.SphereGeometry(.42,10,10),
+    new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+  scene.add(dot,pick); return {dot,pick,hover:0};
+}
+const hA=makeHandle(CA), hB=makeHandle(CB);
+
+/* ---------- text sprites ---------- */
+function makeLabel(text,color,withArrow){
+  const c=document.createElement('canvas'); c.width=300; c.height=150;
+  const x=c.getContext('2d');
+  x.font='italic 700 74px Georgia, serif'; x.textAlign='center'; x.textBaseline='alphabetic';
+  x.shadowColor='rgba(0,0,0,.85)'; x.shadowBlur=10;
+  x.fillStyle=color;
+  const baseY=withArrow?112:96, w=x.measureText(text).width;
+  x.fillText(text,150,baseY);
+  if(withArrow){
+    x.strokeStyle=color; x.lineWidth=7; x.lineCap='round';
+    x.beginPath(); x.moveTo(150-w/2,42); x.lineTo(150+w/2-16,42); x.stroke();
+    x.beginPath(); x.moveTo(150+w/2,42); x.lineTo(150+w/2-20,30); x.lineTo(150+w/2-20,54); x.closePath();
+    x.fillStyle=color; x.fill();
+  }
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));
+  sp.renderOrder=20; scene.add(sp); return sp;
+}
+function labelScale(sp,w){sp.scale.set(w,w/2,1);}
+const labA=makeLabel('a','#ffb454',true);   labelScale(labA,1.1);
+const labB=makeLabel('b','#45c4ff',true);   labelScale(labB,1.1);
+const labX=makeLabel('a×b','#ff5d8f',true); labelScale(labX,1.9);
+const labY=makeLabel('b×a','#7be38b',true); labelScale(labY,1.9);
+const lab0=makeLabel('0','#ff5d8f',false);  labelScale(lab0,1.0); lab0.visible=false;
+[['x',6.5,0,0],['y',0,6.5,0],['z',0,0,6.5]].forEach(([t,px,py,pz])=>{
+  const s=makeLabel(t,'#5d6f96',false); labelScale(s,.8); s.position.set(px,py,pz); scene.add(s);
+});
+
+/* ---------- rotation arc (first → second vector) ---------- */
+const ARC_N=48;
+const arcGeo=new THREE.BufferGeometry();
+arcGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(ARC_N*3),3));
+const arc=new THREE.Line(arcGeo,new THREE.LineBasicMaterial({color:0xe8eeff,transparent:true,opacity:.85}));
+arc.frustumCulled=false; scene.add(arc);
+const arcHead=new THREE.Mesh(new THREE.ConeGeometry(.09,.28,14),
+  new THREE.MeshBasicMaterial({color:0xe8eeff})); arcHead.frustumCulled=false; scene.add(arcHead);
+
+/* ---------- area sheet ---------- */
+const areaGeo=new THREE.BufferGeometry();
+areaGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(12),3));
+areaGeo.setIndex([0,1,2,0,2,3]);
+const area=new THREE.Mesh(areaGeo,new THREE.MeshBasicMaterial({color:0x8fb3ff,transparent:true,opacity:.10,side:THREE.DoubleSide,depthWrite:false}));
+area.frustumCulled=false; scene.add(area);
+const areaLineGeo=new THREE.BufferGeometry();
+areaLineGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(12),3));
+const areaLine=new THREE.LineLoop(areaLineGeo,new THREE.LineBasicMaterial({color:0x8fb3ff,transparent:true,opacity:.3}));
+areaLine.frustumCulled=false; scene.add(areaLine);
+
+/* ---------- state ---------- */
+const tgt={a:new THREE.Vector3(2.4,.8,.6), b:new THREE.Vector3(.8,2.2,1.2)};
+const cur={a:tgt.a.clone(), b:tgt.b.clone()};
+let pulse=0, lastInteract=performance.now(), drag=null, mode=null, hoverPick=null;
+const sph={theta:.75,phi:1.12,r:19,tr:9.6};
+
+const PRESETS={
+  ij:   {a:[1,0,0],   b:[0,1,0]},
+  tilt: {a:[2.2,.6,.3],b:[.4,2,1.4]},
+  steep:{a:[1,2.4,.8], b:[2.2,-.6,1.6]},
+  par:  {a:[1.2,1.2,1.2],b:[2,2,2]}
+};
+
+/* ---------- camera ---------- */
+const look=new THREE.Vector3(0,.55,0);
+function placeCamera(){
+  sph.r+=(sph.tr-sph.r)*.08;
+  camera.position.set(
+    sph.r*Math.sin(sph.phi)*Math.sin(sph.theta),
+    sph.r*Math.cos(sph.phi),
+    sph.r*Math.sin(sph.phi)*Math.cos(sph.theta));
+  camera.lookAt(look);
+}
+
+/* ---------- picking / interaction ---------- */
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), dragPlane=new THREE.Plane(), camDir=new THREE.Vector3();
+function setNDC(e){
+  const rc=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-rc.left)/rc.width)*2-1;
+  ndc.y=-((e.clientY-rc.top)/rc.height)*2+1;
+}
+function pickHandle(e){
+  setNDC(e); ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects([hA.pick,hB.pick]);
+  if(!hits.length) return null;
+  return hits[0].object===hA.pick?'a':'b';
+}
+let lastX=0,lastY=0;
+stage.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.panel,button,a,label')) return;
+  lastInteract=performance.now();
+  const h=pickHandle(e);
+  if(h){drag=h;mode='vec';stage.style.cursor='grabbing';}
+  else{mode='orbit';stage.style.cursor='grabbing';}
+  lastX=e.clientX;lastY=e.clientY;
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove',e=>{
+  lastInteract=performance.now();
+  if(mode==='orbit'){
+    sph.theta-=(e.clientX-lastX)*.005;
+    sph.phi=Math.min(2.6,Math.max(.22,sph.phi-(e.clientY-lastY)*.005));
+    lastX=e.clientX;lastY=e.clientY;
+  }else if(mode==='vec'&&drag){
+    setNDC(e); ray.setFromCamera(ndc,camera);
+    camera.getWorldDirection(camDir);
+    dragPlane.setFromNormalAndCoplanarPoint(camDir,new THREE.Vector3(0,0,0));
+    const pt=new THREE.Vector3();
+    if(ray.ray.intersectPlane(dragPlane,pt)){
+      let l=pt.length();
+      if(l>.001){ if(l>4.5)pt.multiplyScalar(4.5/l); else if(l<.35)pt.multiplyScalar(.35/l); }
+      tgt[drag].copy(pt);
+    }
+  }else{
+    hoverPick=pickHandle(e);
+    stage.style.cursor=hoverPick?'grab':'grab';
+  }
+});
+addEventListener('pointerup',()=>{mode=null;drag=null;stage.style.cursor='grab';});
+stage.addEventListener('wheel',e=>{
+  e.preventDefault(); lastInteract=performance.now();
+  sph.tr=Math.min(18,Math.max(5.5,sph.tr*Math.exp(e.deltaY*.0012)));
+},{passive:false});
+
+/* ---------- UI wiring ---------- */
+function swap(){
+  const t=tgt.a.clone(); tgt.a.copy(tgt.b); tgt.b.copy(t);
+  pulse=1; lastInteract=performance.now();
+}
+document.getElementById('btnSwap').addEventListener('click',swap);
+addEventListener('keydown',e=>{if(e.key.toLowerCase()==='s'&&!e.metaKey&&!e.ctrlKey)swap();});
+document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
+  const p=PRESETS[ch.dataset.p];
+  tgt.a.set(...p.a); tgt.b.set(...p.b); pulse=.7; lastInteract=performance.now();
+}));
+const tg=id=>document.getElementById(id);
+const flags={axb:true,bxa:true,arc:true,area:true,lab:true};
+tg('tgAxB').onchange=e=>flags.axb=e.target.checked;
+tg('tgBxA').onchange=e=>flags.bxa=e.target.checked;
+tg('tgArc').onchange=e=>flags.arc=e.target.checked;
+tg('tgArea').onchange=e=>flags.area=e.target.checked;
+tg('tgLab').onchange=e=>flags.lab=e.target.checked;
+
+/* ---------- readout ---------- */
+const $=id=>document.getElementById(id);
+function fmt(v){let s=v.toFixed(2); if(s==='-0.00')s='0.00'; return s.replace('-','−');}
+function vecStr(v){return `( ${fmt(v.x)}, ${fmt(v.y)}, ${fmt(v.z)} )`;}
+let lastTxt='';
+function updateReadout(axb){
+  const txt=[cur.a.toArray(),cur.b.toArray(),axb.toArray()].join();
+  if(txt===lastTxt) return; lastTxt=txt;
+  $('rA').textContent=vecStr(cur.a);
+  $('rB').textContent=vecStr(cur.b);
+  $('rAxB').textContent=vecStr(axb);
+  $('rBxA').textContent=vecStr(axb.clone().negate());
+  const m=axb.length();
+  $('rMag').textContent=fmt(m);
+  $('rAng').textContent=m>.05?'180.0°':'—';
+  $('zeroFlag').style.display=m>.05?'none':'block';
+}
+
+/* ---------- resize ---------- */
+function resize(){
+  const w=stage.clientWidth,h=stage.clientHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize); resize();
+
+/* ---------- main loop ---------- */
+const clock=new THREE.Clock();
+const _aU=new THREE.Vector3(),_bU=new THREE.Vector3(),_q=new THREE.Quaternion(),_qt=new THREE.Quaternion(),_d=new THREE.Vector3(),_p1=new THREE.Vector3(),_p2=new THREE.Vector3(),_tan=new THREE.Vector3();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+
+  /* idle drift */
+  if(performance.now()-lastInteract>4000) sph.theta+=.0007;
+  placeCamera();
+  const dust=scene.getObjectByName('dust'); if(dust)dust.rotation.y+=.00025;
+
+  /* ease vectors toward targets (snappier while dragging) */
+  const k=1-Math.exp(-dt*(drag?16:7));
+  cur.a.lerp(tgt.a,k); cur.b.lerp(tgt.b,k);
+
+  /* main arrows + handles */
+  setArrow(arA,cur.a); setArrow(arB,cur.b);
+  [[hA,cur.a],[hB,cur.b]].forEach(([h,v],i)=>{
+    h.dot.position.copy(v); h.pick.position.copy(v);
+    const want=(hoverPick===(i?'b':'a'))?1:0;
+    h.hover+=(want-h.hover)*.2;
+    const s=(1+.07*Math.sin(t*3+i*2))*(1+.35*h.hover);
+    h.dot.scale.setScalar(s);
+  });
+
+  /* cross products */
+  const axb=new THREE.Vector3().crossVectors(cur.a,cur.b);
+  const mag=axb.length();
+  if(mag<.06){
+    arAxB.visible=false; arBxA.visible=false;
+    labX.visible=labY.visible=false;
+    lab0.visible=flags.lab; lab0.position.set(0,1.1,0);
+  }else{
+    lab0.visible=false;
+    setArrow(arAxB,axb); setArrow(arBxA,axb.clone().negate());
+    arAxB.visible=flags.axb; arBxA.visible=flags.bxa;
+    labX.visible=flags.axb; labY.visible=flags.bxa;
+    if(flags.axb)labX.position.copy(axb.clone().normalize().multiplyScalar(axb.length()+.55));
+    if(flags.bxa)labY.position.copy(axb.clone().normalize().multiplyScalar(-(axb.length()+.55)));
+  }
+  pulse*=.94;
+  arAxB.userData.mat.emissiveIntensity=.5+pulse;
+  arBxA.userData.mat.emissiveIntensity=.5+pulse;
+
+  /* labels */
+  labA.visible=labB.visible=flags.lab;
+  labA.position.copy(cur.a.clone().multiplyScalar(1.18));
+  labB.position.copy(cur.b.clone().multiplyScalar(1.18));
+
+  /* rotation arc a→b */
+  _aU.copy(cur.a).normalize(); _bU.copy(cur.b).normalize();
+  const ang=_aU.angleTo(_bU);
+  const showArc=flags.arc&&ang>.14&&ang<Math.PI-.14;
+  arc.visible=arcHead.visible=showArc;
+  if(showArc){
+    const r=Math.min(1.6,Math.max(.75,.5*Math.min(cur.a.length(),cur.b.length())));
+    _q.setFromUnitVectors(_aU,_bU);
+    const pos=arcGeo.attributes.position.array;
+    for(let i=0;i<ARC_N;i++){
+      _qt.identity().slerp(_q,i/(ARC_N-1));
+      _d.copy(_aU).applyQuaternion(_qt).multiplyScalar(r);
+      pos[i*3]=_d.x;pos[i*3+1]=_d.y;pos[i*3+2]=_d.z;
+      if(i===ARC_N-2)_p1.copy(_d); if(i===ARC_N-1)_p2.copy(_d);
+    }
+    arcGeo.attributes.position.needsUpdate=true;
+    arcHead.position.copy(_p2);
+    _tan.copy(_p2).sub(_p1).normalize();
+    arcHead.quaternion.setFromUnitVectors(Y,_tan);
+  }
+
+  /* area sheet */
+  area.visible=areaLine.visible=flags.area;
+  if(flags.area){
+    const P=areaGeo.attributes.position.array, Q=areaLineGeo.attributes.position.array;
+    const ab=_d.copy(cur.a).add(cur.b);
+    // O, a, a+b, b
+    P.set([0,0,0, cur.a.x,cur.a.y,cur.a.z, ab.x,ab.y,ab.z, cur.b.x,cur.b.y,cur.b.z]);
+    Q.set([cur.a.x,cur.a.y,cur.a.z, ab.x,ab.y,ab.z, cur.b.x,cur.b.y,cur.b.z, 0,0,0]);
+    areaGeo.attributes.position.needsUpdate=true;
+    areaLineGeo.attributes.position.needsUpdate=true;
+  }
+
+  updateReadout(axb);
+  renderer.render(scene,camera);
+}
+animate();
+
+/* ---------- scroll reveal ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+}),{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+})();
+</script>
+</body>
+</html>

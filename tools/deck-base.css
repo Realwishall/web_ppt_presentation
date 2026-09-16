@@ -325,6 +325,203 @@ body{background:var(--bg-body);font-family:var(--font-ui);color:var(--ink);
 @media (prefers-reduced-motion:reduce){
   #bg svg.motif-element .accum,#bg svg.motif-element .walk,
   #bg svg.motif-element .grow{animation:none}}
+/* Chapter motif "calculus" — the differentiation chapter, whose whole content
+   is one event: a second point sliding down a curve onto a first, so that the
+   chord it makes becomes the tangent. Low-left a fan of chords runs from the
+   fixed point P out to points that get closer and closer, and the brightness
+   walks DOWN the fan (far chord first) so the eye arrives at the gold tangent
+   the way the limit does. Low-right the same curve's crest and trough carry a
+   flat bar each, and those deliberately do NOT move: dy/dx = 0 is a statement
+   about a point, and a tangent bar that drifted would read as a slope that is
+   changing (same reasoning as the gravity motif's graph). CSS only, no script,
+   flattened in @media print and under prefers-reduced-motion. Texture, never
+   information (rules 11, 20).                                                */
+#bg svg.motif-calculus{opacity:.60}
+#bg svg.motif-calculus .chase path{animation:lf-cal-chord 13s ease-in-out infinite}
+#bg svg.motif-calculus .chase path:nth-child(2){animation-delay:1.3s}
+#bg svg.motif-calculus .chase path:nth-child(3){animation-delay:2.6s}
+#bg svg.motif-calculus .chase path:nth-child(4){animation-delay:3.9s}
+@keyframes lf-cal-chord{0%  {opacity:.5}
+                        6%  {opacity:1}
+                        24% {opacity:.5}
+                        100%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-calculus .chase path{animation:none}}
+/* Chapter motif "percent" — the percentage board. The hundred stands still,
+   because it is the reference the percentage is taken against, and a reference
+   that drifted would contradict every board in front of it. What moves is the
+   (n-1) part arriving on its end and dying back: "20% more" is a piece added
+   to a whole, and adding is the event. It grows about its LEFT edge, so it
+   comes out of the hundred rather than closing in on it. The hundred squares
+   low-right never move — percent is per hundred is a definition, not an event.
+   CSS only, no script, flattened in @media print and under
+   prefers-reduced-motion.                                                    */
+#bg svg.motif-percent{opacity:.58}
+#bg svg.motif-percent .grow{transform-box:view-box;transform-origin:568px 728px;
+    animation:lf-pc-grow 21s ease-in-out infinite}
+@keyframes lf-pc-grow{0%  {transform:scaleX(.02);opacity:0}
+                      14% {transform:scaleX(1);opacity:1}
+                      72% {transform:scaleX(1);opacity:1}
+                      100%{transform:scaleX(.02);opacity:0}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-percent .grow{animation:none}}
+/* Chapter motif "ratio" — dividing a whole in a given ratio. The divider walks
+   along a bar of FIXED total length and the two parts trade length as it goes,
+   so what the backdrop states is the invariance the technique rests on: the
+   sum never changes, only the cut. The unit ticks under the bar stay put,
+   because a+b is the count the divider lands on and a moving scale would make
+   the cut unreadable. Low-right the beam rocks and settles — the same
+   statement read as a comparison. The three animations share one 24 s period
+   so the cut and the balance agree; unrelated periods would show a bar split
+   one way while the beam claimed another. CSS only, no script, flattened in
+   @media print and under prefers-reduced-motion.                             */
+#bg svg.motif-ratio{opacity:.58}
+#bg svg.motif-ratio .divide{animation:lf-rt-cut 24s ease-in-out infinite alternate}
+#bg svg.motif-ratio .part-a{transform-box:view-box;transform-origin:118px 712px;
+    animation:lf-rt-a 24s ease-in-out infinite alternate}
+#bg svg.motif-ratio .part-b{transform-box:view-box;transform-origin:714px 712px;
+    animation:lf-rt-b 24s ease-in-out infinite alternate}
+#bg svg.motif-ratio .beam{transform-box:view-box;transform-origin:1265px 690px;
+    animation:lf-rt-beam 24s ease-in-out infinite alternate}
+@keyframes lf-rt-cut {from{transform:translateX(0)}   to{transform:translateX(210px)}}
+@keyframes lf-rt-a   {from{transform:scaleX(1)}       to{transform:scaleX(1.875)}}
+@keyframes lf-rt-b   {from{transform:scaleX(1)}       to{transform:scaleX(.41)}}
+@keyframes lf-rt-beam{from{transform:rotate(3.4deg)}  to{transform:rotate(-3.4deg)}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-ratio .divide,#bg svg.motif-ratio .part-a,
+  #bg svg.motif-ratio .part-b,#bg svg.motif-ratio .beam{animation:none}}
+/* Chapter motif "proportion" — making a relation between two cases. The pair
+   of markers rides one curve TOGETHER on a single period, because the whole
+   claim is that the two cases obey one law: two markers on unrelated periods
+   would be two independent points, which is precisely what a proportionality
+   is not. The curve itself and the similar figures low-right are at rest —
+   they are the law and the shape, not the event, and a curve that drifted
+   would read as a relation that is changing. CSS only, no script, flattened in
+   @media print and under prefers-reduced-motion.                             */
+#bg svg.motif-proportion{opacity:.60}
+#bg svg.motif-proportion .ride{transform-box:view-box;transform-origin:126px 846px;
+    animation:lf-pp-ride 27s ease-in-out infinite alternate}
+@keyframes lf-pp-ride{from{transform:scale(.62);opacity:.55}
+                      to  {transform:scale(1);  opacity:1}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-proportion .ride{animation:none}}
+/* Chapter motif "ntimes" — the multiplier method. The light walks the chain
+   link by link and the bar under it climbs in DISCRETE jumps, because n-times
+   is a product taken in stages: a bar that eased between the values would say
+   the quantity passes through everything in between, which is exactly what
+   this method does not claim. The boxes, the arrowheads and the power ladder
+   low-right are drawn at rest and complete, so the road still reads with every
+   animation off. CSS only, no script, flattened in @media print and under
+   prefers-reduced-motion.                                                    */
+#bg svg.motif-ntimes{opacity:.58}
+#bg svg.motif-ntimes .walk path{animation:lf-nt-link 18s ease-in-out infinite}
+#bg svg.motif-ntimes .walk path:nth-child(2){animation-delay:3s}
+#bg svg.motif-ntimes .stair rect{animation:lf-nt-step 18s steps(1,end) infinite}
+#bg svg.motif-ntimes .stair rect:nth-child(2){animation-delay:2.4s}
+#bg svg.motif-ntimes .stair rect:nth-child(3){animation-delay:4.8s}
+#bg svg.motif-ntimes .stair rect:nth-child(4){animation-delay:7.2s}
+#bg svg.motif-ntimes .stair rect:nth-child(5){animation-delay:9.6s}
+@keyframes lf-nt-link{0%  {opacity:.35}
+                      8%  {opacity:1}
+                      36% {opacity:.35}
+                      100%{opacity:.35}}
+@keyframes lf-nt-step{0%  {opacity:.18}
+                      14% {opacity:1}
+                      66% {opacity:.45}
+                      100%{opacity:.18}}
+@media (prefers-reduced-motion:reduce){
+  #bg svg.motif-ntimes .walk path,#bg svg.motif-ntimes .stair rect{animation:none}}
+/* Chapter motif "delta" — the small-change method, whose whole content is the
+   word SMALL. The sliver on the block's edge thins across the cycle and the
+   block never moves, because dZ/Z = a dx/x + b dy/y is exact only in that
+   limit and the quantity is what the change is measured against. It thins
+   about its LEFT edge so it collapses back onto the body it was taken from.
+   The sum low-right is at rest: three heights standing in an identity, and a
+   total that grew would read as a quantity still settling. CSS only, no
+   script, flattened in @media print and under prefers-reduced-motion.        */
+#bg svg.motif-delta{opacity:.58}
+#bg svg.motif-delta .thin{transform-box:view-box;transform-origin:590px 700px;
+    animation:lf-dl-thin 23s ease-in-out infinite}
+@keyframes lf-dl-thin{0%  {transform:scaleX(1);  opacity:1}
+                      55% {transform:scaleX(.16);opacity:.72}
+                      70% {transform:scaleX(.16);opacity:.72}
+                      100%{transform:scaleX(1);  opacity:1}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-delta .thin{animation:none}}
+/* Chapter motif "series" — A.P. against G.P. The light walks the two ladders
+   TOGETHER, one index per beat, so the room reads the same term number off
+   both: the arithmetic bar has had d added five times, the geometric one has
+   been doubled four. The jump is discrete (steps(1,end)) because a sequence
+   has terms and not a continuum — a bar that eased between them would say the
+   quantity passes through everything in between, which is exactly what a
+   progression does not claim. The two pale rules through the tops, and the
+   bouncing-ball apexes low-right, never move: they are the law and the
+   worked G.P., not the event. CSS only, no script, flattened in @media print
+   and under prefers-reduced-motion.                                          */
+#bg svg.motif-series{opacity:.58}
+#bg svg.motif-series .rung{animation:lf-sr-step 20s steps(1,end) infinite}
+#bg svg.motif-series .rung:nth-child(2){animation-delay:2.6s}
+#bg svg.motif-series .rung:nth-child(3){animation-delay:5.2s}
+#bg svg.motif-series .rung:nth-child(4){animation-delay:7.8s}
+#bg svg.motif-series .rung:nth-child(5){animation-delay:10.4s}
+@keyframes lf-sr-step{0%  {opacity:.30}
+                      12% {opacity:1}
+                      52% {opacity:.55}
+                      100%{opacity:.30}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-series .rung{animation:none}}
+/* Chapter motif "variation" — directly, linearly, exponentially. The four
+   intervals along x are equal and the light walks them one at a time, because
+   "after the next 2 s" is a step: each beat is one whole interval and the
+   level it lands on is half the one before. The curve, the ruled halvings and
+   the three laws low-right are all at rest — they are the law, and a law that
+   drifted would read as a measurement changing. CSS only, no script,
+   flattened in @media print and under prefers-reduced-motion.                */
+#bg svg.motif-variation{opacity:.58}
+#bg svg.motif-variation .walk rect{animation:lf-vr-step 19s steps(1,end) infinite}
+#bg svg.motif-variation .walk rect:nth-child(2){animation-delay:2.8s}
+#bg svg.motif-variation .walk rect:nth-child(3){animation-delay:5.6s}
+#bg svg.motif-variation .walk rect:nth-child(4){animation-delay:8.4s}
+@keyframes lf-vr-step{0%  {opacity:0}
+                      10% {opacity:1}
+                      40% {opacity:.35}
+                      100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-variation .walk rect{animation:none}}
+/* Chapter motif "log" — one even step up there is one doubling down here. The
+   two markers of a pair light on the SAME beat, because that pairing is the
+   whole of the logarithm; markers on unrelated periods would be two unrelated
+   facts. The scales, their tie lines, the curve and the dashed wall at x = 0
+   are at rest: the wall is the NOTE the source slide ends on, and a wall that
+   moved would be a domain that is changing. CSS only, no script, flattened in
+   @media print and under prefers-reduced-motion.                             */
+#bg svg.motif-log{opacity:.58}
+#bg svg.motif-log .pair circle{fill:#f5c542;fill-opacity:.22}
+#bg svg.motif-log .pair{animation:lf-lg-step 22s steps(1,end) infinite}
+#bg svg.motif-log .pair:nth-child(2){animation-delay:2.8s}
+#bg svg.motif-log .pair:nth-child(3){animation-delay:5.6s}
+#bg svg.motif-log .pair:nth-child(4){animation-delay:8.4s}
+#bg svg.motif-log .pair:nth-child(5){animation-delay:11.2s}
+@keyframes lf-lg-step{0%  {opacity:.18}
+                      11% {opacity:1}
+                      46% {opacity:.40}
+                      100%{opacity:.18}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-log .pair{animation:none}}
+/* Chapter motif "binomial" — (1+x)^n ~ 1+nx, and the whole of it is the word
+   SMALL. Each error bar is the true height of the gap at its own x, drawn
+   complete and at rest; the light walks OUTWARD along them, so what the room
+   watches is the approximation failing, one value of x at a time. The walk is
+   discrete because each bar is one x, not a sweep. The two curves, the wedge
+   between them and Pascal's rows low-right never move. CSS only, no script,
+   flattened in @media print and under prefers-reduced-motion.                */
+#bg svg.motif-binomial{opacity:.58}
+#bg svg.motif-binomial .err{stroke-opacity:.10;
+    animation:lf-bn-step 21s steps(1,end) infinite}
+#bg svg.motif-binomial .err:nth-child(2){animation-delay:2.2s}
+#bg svg.motif-binomial .err:nth-child(3){animation-delay:4.4s}
+#bg svg.motif-binomial .err:nth-child(4){animation-delay:6.6s}
+#bg svg.motif-binomial .err:nth-child(5){animation-delay:8.8s}
+#bg svg.motif-binomial .err:nth-child(6){animation-delay:11s}
+@keyframes lf-bn-step{0%  {stroke-opacity:.10}
+                      9%  {stroke-opacity:.55}
+                      42% {stroke-opacity:.20}
+                      100%{stroke-opacity:.10}}
+@media (prefers-reduced-motion:reduce){#bg svg.motif-binomial .err{animation:none}}
 /* The WebGL companion to the "inertia" motif — a persistent canvas of slowly
    turning wireframe bodies (ring, disc, rod, shell) drifting in depth behind
    every slide. It is a sibling of .page (rule 1), it sits *under* the motif
@@ -418,6 +615,27 @@ p{margin:0;font-size:var(--fs-body);line-height:1.5;color:var(--ink)}
    disappears and the title reads with a hole in it. Give it a real colour. */
 h1.title .strike{-webkit-text-fill-color:var(--sub);color:var(--sub);
          background:none;opacity:.72;text-decoration-color:var(--sub)}
+/* A whole WORKING LINE the source crosses out — a false start the teacher
+   scribbles over and replaces, which is a different thing from a struck word
+   inside a sentence. `.strike` cannot do it: browsers do not paint
+   text-decoration through a <math> element, so a struck equation comes out
+   merely grey and the class reads it as a dimmed step rather than as a line
+   that was abandoned. `.eq.struck` draws a real rule across the run with a
+   pseudo-element instead, and mutes the colour underneath it. Like `.strike`
+   the correction is the teaching point, so it is pure CSS and it prints. */
+.eq.struck{position:relative;color:var(--muted)}
+.eq.struck:after{content:"";position:absolute;left:-.12em;right:-.12em;top:50%;
+         height:.075em;border-radius:99px;background:currentColor;opacity:.9;
+         pointer-events:none}
+/* The blank a recap slide leaves in the middle of a sentence — "First
+   differentiation give ______ of curve". The sentence is the label and stays
+   visible; the word is the answer and is the `.step`, so term and definition
+   never arrive together (rule 17). The rule under it is drawn whether or not
+   the word has been revealed, so the gap holds its own width and nothing on
+   the line reflows when the answer lands. Gold, because it is the answer. */
+.fill   {display:inline-block;min-width:7ch;padding:0 .5ch;text-align:center;
+         color:var(--gold);font-weight:700;
+         border-bottom:.28vmin solid rgba(245,197,66,.42)}
 
 /* -------------------------------------------------------------- layouts --- */
 .two-col   {display:grid;grid-template-columns:1fr 1fr;gap:5vmin;margin-top:1vmin}
@@ -1270,6 +1488,29 @@ svg.gph text tspan.sub,svg.dgm text tspan.sub{font-size:.68em}
   #bg svg.motif-element .grow{animation:none!important;transform:none!important}
   #bg svg.motif-solid .strain,#bg svg.motif-solid .pull{
     animation:none!important;transform:none!important}
+  #bg svg.motif-calculus{opacity:.22!important}
+  #bg svg.motif-calculus .chase path{animation:none!important;opacity:1!important}
+  #bg svg.motif-percent{opacity:.22!important}
+  #bg svg.motif-percent .grow{animation:none!important;transform:none!important;opacity:1!important}
+  #bg svg.motif-ratio{opacity:.22!important}
+  #bg svg.motif-ratio .divide,#bg svg.motif-ratio .part-a,
+  #bg svg.motif-ratio .part-b,#bg svg.motif-ratio .beam{
+    animation:none!important;transform:none!important}
+  #bg svg.motif-proportion{opacity:.22!important}
+  #bg svg.motif-proportion .ride{animation:none!important;transform:none!important;opacity:1!important}
+  #bg svg.motif-ntimes{opacity:.22!important}
+  #bg svg.motif-ntimes .walk path,#bg svg.motif-ntimes .stair rect{
+    animation:none!important;opacity:1!important}
+  #bg svg.motif-delta{opacity:.22!important}
+  #bg svg.motif-delta .thin{animation:none!important;transform:none!important;opacity:1!important}
+  #bg svg.motif-series{opacity:.22!important}
+  #bg svg.motif-series .rung{animation:none!important;opacity:1!important}
+  #bg svg.motif-variation{opacity:.22!important}
+  #bg svg.motif-variation .walk rect{animation:none!important;opacity:1!important}
+  #bg svg.motif-log{opacity:.22!important}
+  #bg svg.motif-log .pair{animation:none!important;opacity:1!important}
+  #bg svg.motif-binomial{opacity:.22!important}
+  #bg svg.motif-binomial .err{animation:none!important;stroke-opacity:.28!important}
   /* the translation/rotation pair prints as two identical rods — the caption
      under each is what carries the difference on paper */
   svg.dgm .mv-slide,svg.dgm .mv-spin{animation:none!important;transform:none!important}

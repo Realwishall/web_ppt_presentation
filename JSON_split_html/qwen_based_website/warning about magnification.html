@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Aperture Size Matters — Slide 13</title>
+<meta name="description" content="Magnification alone does not make a good instrument. Light gathering ∝ D², resolution ∝ 1/D — and the aperture is what the sky cares about.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+============================================================ */
+:root{
+  --bg:#0B0E14; --bg-2:#0E121A;
+  --panel:#121722; --panel-2:#161C29;
+  --line:#2A2F38; --line-soft:#1E2430;
+  --text:#E9EDF5; --text-dim:#A0A7B4; --text-faint:#69717F;
+  --amber:#F6A83C; --amber-soft:rgba(246,168,60,.13);
+  --cyan:#63CFE8;  --cyan-soft:rgba(99,207,232,.11);
+  --green:#4FD598; --green-soft:rgba(79,213,152,.12);
+  --red:#FF6B7A;   --red-soft:rgba(255,107,122,.12);
+  --font-display:'Bricolage Grotesque',Georgia,serif;
+  --font-body:'Instrument Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --wrap:min(1180px,92vw);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--font-body); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+::selection{background:rgba(246,168,60,.35); color:#fff}
+
+/* layered ambient background */
+#bg-stars{position:fixed; inset:0; z-index:0; pointer-events:none}
+body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(1100px 700px at 12% -8%, rgba(38,52,84,.38), transparent 60%),
+    radial-gradient(900px 640px at 105% 108%, rgba(120,72,20,.16), transparent 60%),
+    radial-gradient(140% 100% at 50% 50%, transparent 55%, rgba(4,6,10,.55));
+}
+.site{position:relative; z-index:1}
+
+#scroll-progress{
+  position:fixed; top:0; left:0; right:0; height:2px; z-index:60;
+  background:linear-gradient(90deg,var(--amber),var(--cyan));
+  transform-origin:0 50%; transform:scaleX(0); pointer-events:none;
+}
+.skip-link{position:absolute; left:-999px; top:8px; z-index:99; background:var(--amber); color:#111; padding:8px 14px; font-family:var(--font-mono); font-size:12px; border-radius:6px}
+.skip-link:focus{left:8px}
+
+.wrap{width:var(--wrap); margin:0 auto}
+.mono{font-family:var(--font-mono)}
+.hl-amber{color:var(--amber); font-style:normal}
+.hl-cyan{color:var(--cyan); font-style:normal}
+i{font-style:normal}
+
+/* ============================================================
+   MASTHEAD
+============================================================ */
+.masthead{border-bottom:1px solid var(--line-soft)}
+.masthead .wrap{
+  display:flex; justify-content:space-between; align-items:center; gap:16px;
+  padding:16px 0; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--text-dim);
+}
+.masthead .brand{display:flex; align-items:center; gap:10px; color:var(--text)}
+.masthead .brand svg{width:16px; height:16px; color:var(--amber)}
+.masthead .slide-no{color:var(--amber)}
+
+/* ============================================================
+   SECTION HEADERS
+============================================================ */
+section{padding:88px 0}
+.sec-head{display:flex; gap:22px; align-items:flex-start; margin-bottom:42px}
+.sec-index{
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.1em;
+  color:var(--amber); border:1px solid rgba(246,168,60,.45);
+  padding:7px 10px; border-radius:6px; margin-top:6px; flex:none;
+  background:var(--amber-soft);
+}
+.sec-kicker{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--text-faint); margin-bottom:8px;
+}
+.sec-head h2{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(28px,4vw,42px); line-height:1.05; letter-spacing:-.01em;
+}
+.sec-lead{max-width:68ch; color:var(--text-dim); font-size:17px; margin:-24px 0 40px}
+.sec-lead strong{color:var(--text)}
+
+/* ============================================================
+   PANELS + CHIPS
+============================================================ */
+.panel{
+  position:relative; background:linear-gradient(180deg,#151B28,#111621);
+  border:1px solid var(--line); border-radius:12px;
+}
+.panel.ticked::before,.panel.ticked::after{content:''; position:absolute; width:14px; height:14px; pointer-events:none}
+.panel.ticked::before{top:-1px; left:-1px; border-top:2px solid var(--amber); border-left:2px solid var(--amber); border-top-left-radius:12px}
+.panel.ticked::after{bottom:-1px; right:-1px; border-bottom:2px solid var(--amber); border-right:2px solid var(--amber); border-bottom-right-radius:12px}
+.panel.ticked.cyan::before{border-color:var(--cyan)}
+.panel.ticked.cyan::after{border-color:var(--cyan)}
+
+.chip{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.12em;
+  text-transform:uppercase; padding:7px 13px; border-radius:999px;
+  border:1px solid var(--line); color:var(--text-dim); background:rgba(11,14,20,.55);
+}
+.chip svg{width:13px; height:13px}
+.chip.amber{color:var(--amber); border-color:rgba(246,168,60,.4); background:var(--amber-soft)}
+.chip.cyan{color:var(--cyan); border-color:rgba(99,207,232,.4); background:var(--cyan-soft)}
+
+/* ============================================================
+   HERO
+============================================================ */
+#hero{padding:84px 0 76px}
+.hero-grid{display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:56px; align-items:center}
+.hero-kicker{margin-bottom:26px}
+#hero h1{
+  font-family:var(--font-display); font-weight:800;
+  font-size:clamp(46px,7.2vw,86px); line-height:.98; letter-spacing:-.018em;
+  margin-bottom:26px;
+}
+#hero h1 em{font-style:normal; color:var(--amber)}
+.hero-thesis{font-size:clamp(17px,1.6vw,20px); color:var(--text-dim); max-width:56ch; margin-bottom:20px}
+.hero-thesis strong{color:var(--text); font-weight:600}
+.hero-note{font-size:15px; color:var(--text-faint); max-width:52ch; border-left:2px solid var(--line); padding-left:16px}
+.hero-note .frac{font-family:var(--font-mono); color:var(--text-dim)}
+
+.hero-fig{padding:30px 26px 24px; text-align:center}
+.hero-fig svg{width:100%; max-width:300px; height:auto; display:block; margin:0 auto}
+.hero-fig .orbit{transform-origin:150px 150px; animation:orbit 70s linear infinite}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.hero-fig figcaption{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase; margin-top:14px}
+.hero-chips{display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap}
+.d2-txt{font-family:var(--font-mono); font-size:11px; fill:var(--text-dim)}
+
+/* ============================================================
+   TWO POWERS
+============================================================ */
+.powers-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px}
+.power-card{padding:36px 34px 30px; overflow:hidden; transition:transform .24s ease, border-color .24s ease, box-shadow .24s ease}
+.power-card::before{content:''; position:absolute; top:0; left:0; right:0; height:3px}
+.power-card.light::before{background:linear-gradient(90deg,var(--amber),transparent 70%)}
+.power-card.resolve::before{background:linear-gradient(90deg,var(--cyan),transparent 70%)}
+.power-card:hover{transform:translateY(-4px)}
+.power-card.light:hover{border-color:rgba(246,168,60,.5); box-shadow:0 24px 48px -24px rgba(246,168,60,.35)}
+.power-card.resolve:hover{border-color:rgba(99,207,232,.5); box-shadow:0 24px 48px -24px rgba(99,207,232,.35)}
+.power-top{display:flex; align-items:center; gap:14px; margin-bottom:22px}
+.power-icon{
+  width:44px; height:44px; border-radius:9px; display:grid; place-items:center; flex:none;
+}
+.power-icon svg{width:21px; height:21px}
+.light .power-icon{background:var(--amber-soft); color:var(--amber); border:1px solid rgba(246,168,60,.35)}
+.resolve .power-icon{background:var(--cyan-soft); color:var(--cyan); border:1px solid rgba(99,207,232,.35)}
+.power-tag{font-family:var(--font-mono); font-size:10px; letter-spacing:.26em; color:var(--text-faint); text-transform:uppercase}
+.power-card h3{font-family:var(--font-display); font-size:25px; font-weight:700; line-height:1.1}
+.formula{margin:6px 0 18px; font-size:20px}
+.light .formula{color:var(--amber)}
+.resolve .formula{color:var(--cyan)}
+.formula .katex-display{margin:14px 0}
+.formula + .formula{margin-top:-4px; font-size:17px}
+.power-reading{color:var(--text-dim); font-size:15.5px; margin-bottom:24px}
+.power-reading strong{color:var(--text)}
+.power-viz{border-top:1px dashed var(--line); padding-top:20px}
+.area-row{display:flex; align-items:flex-end; gap:18px}
+.area-sq{background:rgba(246,168,60,.20); border:1px solid rgba(246,168,60,.65); border-radius:2px}
+.area-sq small{display:block; font-family:var(--font-mono); font-size:10px; color:var(--amber); text-align:center; transform:translateY(16px)}
+.pair-demo{display:flex; gap:34px; align-items:center}
+.pair-demo .demo{display:flex; align-items:center; gap:10px}
+.pair-demo .blob{width:40px; height:22px; position:relative; filter:blur(3px)}
+.pair-demo .blob i{position:absolute; top:0; width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle,#FFF6E6 0%,rgba(255,233,200,.55) 45%,transparent 72%)}
+.pair-demo .blob i:first-child{left:4px}.pair-demo .blob i:last-child{left:16px}
+.pair-demo .apart i:first-child{left:0}.pair-demo .apart i:last-child{left:20px}
+.pair-demo .lbl{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint)}
+
+/* ============================================================
+   SIMULATOR
+============================================================ */
+.sim-panel{padding:26px}
+.sim-top{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px}
+.sim-title{display:flex; align-items:center; gap:12px}
+.sim-title svg{width:19px; height:19px; color:var(--amber)}
+.sim-title h3{font-family:var(--font-display); font-size:21px; font-weight:700}
+.verdict{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:.14em;
+  padding:11px 20px; border-radius:8px; border:1px solid;
+  transition:background .24s ease, color .24s ease, border-color .24s ease;
+  will-change:transform;
+}
+.verdict .dot{width:9px; height:9px; border-radius:50%; background:currentColor; transition:box-shadow .24s ease}
+.verdict.is-resolved{color:var(--green); border-color:rgba(79,213,152,.55); background:var(--green-soft)}
+.verdict.is-resolved .dot{box-shadow:0 0 0 4px rgba(79,213,152,.15), 0 0 12px rgba(79,213,152,.8)}
+.verdict.is-not{color:var(--red); border-color:rgba(255,107,122,.55); background:var(--red-soft)}
+.verdict.is-not .dot{box-shadow:0 0 0 4px rgba(255,107,122,.14)}
+
+.eyepiece{
+  position:relative; border:1px solid var(--line); border-radius:10px;
+  overflow:hidden; background:#05070C; aspect-ratio:16/9;
+}
+.eyepiece canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.scope-tag{
+  position:absolute; font-family:var(--font-mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:rgba(160,167,180,.75); pointer-events:none;
+  background:rgba(5,7,12,.55); padding:5px 9px; border-radius:4px; border:1px solid rgba(42,47,56,.7);
+}
+.scope-tag.tl{top:12px; left:12px}
+.scope-tag.tr{top:12px; right:12px}
+
+.readouts{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:16px 0;
+}
+.readout{padding:14px 18px; background:rgba(11,14,20,.4)}
+.readout + .readout{border-left:1px solid var(--line)}
+.readout .lbl{font-family:var(--font-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-faint)}
+.readout .val{font-family:var(--font-mono); font-size:22px; font-weight:700; margin-top:3px; font-variant-numeric:tabular-nums}
+.readout.d .val{color:var(--text)} .readout.theta .val{color:var(--cyan)}
+.readout.sep .val{color:var(--text)} .readout.gain .val{color:var(--amber)}
+.readout .unit{font-size:12px; color:var(--text-faint); font-weight:400; margin-left:3px}
+
+.sim-controls{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:18px}
+.control{background:rgba(11,14,20,.4); border:1px solid var(--line); border-radius:10px; padding:18px 20px 14px}
+.control-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px}
+.control-head label{font-size:14px; font-weight:600; color:var(--text)}
+.control-head output{font-family:var(--font-mono); font-size:19px; font-weight:700; font-variant-numeric:tabular-nums}
+.control.d-ctl output{color:var(--amber)} .control.sep-ctl output{color:var(--cyan)}
+.control .bounds{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--text-faint); margin-top:4px}
+
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:26px; background:transparent; cursor:pointer; --fill:20%}
+input[type=range]::-webkit-slider-runnable-track{
+  height:4px; border-radius:2px;
+  background:linear-gradient(90deg,var(--accent) var(--fill), var(--line) var(--fill));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:18px; height:18px; border-radius:50%; margin-top:-7px;
+  background:#E9EDF5; border:3px solid var(--accent);
+  box-shadow:0 0 0 0 rgba(255,255,255,0); transition:box-shadow .2s ease, transform .2s ease;
+}
+input[type=range]:hover::-webkit-slider-thumb,
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 7px var(--accent-glow); transform:scale(1.08)}
+input[type=range]::-moz-range-track{height:4px; border-radius:2px; background:var(--line)}
+input[type=range]::-moz-range-progress{height:4px; border-radius:2px; background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; background:#E9EDF5; border:3px solid var(--accent)}
+.d-ctl input{--accent:var(--amber); --accent-glow:rgba(246,168,60,.18)}
+.sep-ctl input{--accent:var(--cyan); --accent-glow:rgba(99,207,232,.18)}
+
+.presets{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.presets .lbl{font-family:var(--font-mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-faint); margin-right:4px}
+.preset{
+  font-family:var(--font-mono); font-size:11.5px; color:var(--text-dim);
+  background:transparent; border:1px solid var(--line); border-radius:999px;
+  padding:7px 14px; cursor:pointer; transition:all .2s ease;
+}
+.preset b{color:var(--text); font-weight:700}
+.preset:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-1px)}
+.preset:hover b{color:var(--amber)}
+.preset.active{border-color:var(--amber); background:var(--amber-soft); color:var(--amber)}
+.sim-lead{color:var(--text-dim); font-size:15.5px; margin:18px 2px 0}
+.sim-lead strong{color:var(--text)}
+.eye-note{font-family:var(--font-mono); font-size:11.5px; color:var(--text-faint); margin-top:14px; display:flex; align-items:center; gap:8px}
+.eye-note svg{width:14px; height:14px; color:var(--cyan); flex:none}
+
+/* ============================================================
+   CHARTS
+============================================================ */
+.charts-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px}
+.chart-card{padding:24px}
+.chart-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:6px}
+.chart-head h3{font-family:var(--font-display); font-size:19px; font-weight:700}
+.live-tag{
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--green); border:1px solid rgba(79,213,152,.4); background:var(--green-soft);
+  padding:4px 9px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; flex:none;
+}
+.live-tag::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.chart-caption{font-size:13.5px; color:var(--text-faint); margin-bottom:14px; max-width:52ch}
+.chart-box{position:relative; height:320px}
+
+/* ============================================================
+   EMPTY MAGNIFICATION
+============================================================ */
+.compare{
+  position:relative; aspect-ratio:960/560; border:1px solid var(--line);
+  border-radius:12px; overflow:hidden; background:#05070C;
+  --pos:50%; touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.compare canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.compare-top{position:absolute; inset:0; clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.compare-handle{
+  position:absolute; top:0; bottom:0; left:var(--pos); width:0; z-index:3; cursor:ew-resize; outline:none;
+}
+.compare-handle::before{
+  content:''; position:absolute; top:0; bottom:0; left:-1px; width:2px;
+  background:linear-gradient(180deg,transparent,rgba(233,237,245,.85) 12%,rgba(233,237,245,.85) 88%,transparent);
+}
+.compare-grip{
+  position:absolute; top:50%; left:0; transform:translate(-50%,-50%);
+  width:44px; height:44px; border-radius:50%; background:var(--panel-2);
+  border:1px solid rgba(233,237,245,.4); display:grid; place-items:center;
+  color:var(--text); box-shadow:0 8px 24px rgba(0,0,0,.55);
+  transition:transform .2s ease, border-color .2s ease;
+}
+.compare-grip svg{width:18px; height:18px}
+.compare-handle:hover .compare-grip,.compare-handle:focus-visible .compare-grip{transform:translate(-50%,-50%) scale(1.12); border-color:var(--amber); color:var(--amber)}
+.compare-tag{
+  position:absolute; bottom:14px; z-index:2; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:.1em; padding:7px 12px; border-radius:6px; pointer-events:none;
+  background:rgba(5,7,12,.7); border:1px solid var(--line);
+}
+.compare-tag.low{left:14px; color:var(--green)}
+.compare-tag.high{right:14px; color:var(--red)}
+.compare-hint{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); margin-top:14px; display:flex; align-items:center; gap:8px}
+.compare-hint svg{width:14px; height:14px}
+
+/* ============================================================
+   EYE LINK
+============================================================ */
+.eye-panel{display:grid; grid-template-columns:230px 1fr; gap:40px; padding:40px; align-items:center}
+.eye-svg{width:100%; max-width:210px; display:block; margin:0 auto}
+.pupil-g{transform-origin:110px 110px; animation:breathe 5.5s ease-in-out infinite alternate}
+@keyframes breathe{from{transform:scale(.46)}to{transform:scale(1)}}
+.eye-body h3{font-family:var(--font-display); font-size:clamp(22px,2.6vw,30px); font-weight:700; margin-bottom:14px}
+.eye-body p{color:var(--text-dim); font-size:16.5px; max-width:62ch}
+.eye-body p strong{color:var(--text)}
+.module-link{
+  display:inline-flex; align-items:center; gap:8px; margin-top:22px;
+  font-family:var(--font-mono); font-size:13px; letter-spacing:.06em;
+  color:var(--cyan); text-decoration:none; border:1px solid rgba(99,207,232,.4);
+  padding:11px 18px; border-radius:8px; background:var(--cyan-soft);
+  transition:all .2s ease;
+}
+.module-link svg{width:15px; height:15px; transition:transform .2s ease}
+.module-link:hover{border-color:var(--cyan); transform:translateY(-2px)}
+.module-link:hover svg{transform:translateX(4px)}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer{border-top:1px solid var(--line-soft); padding:34px 0 46px}
+footer .wrap{display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; color:var(--text-faint); line-height:1.9}
+footer b{color:var(--text-dim); font-weight:500}
+
+/* focus */
+:focus-visible{outline:2px solid var(--amber); outline-offset:3px; border-radius:4px}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width:960px){
+  section{padding:64px 0}
+  .hero-grid,.powers-grid,.charts-grid{grid-template-columns:1fr}
+  .sim-controls{grid-template-columns:1fr}
+  .readouts{grid-template-columns:repeat(2,1fr)}
+  .readout:nth-child(3){border-left:none}
+  .readout:nth-child(n+3){border-top:1px solid var(--line)}
+  .eye-panel{grid-template-columns:1fr; gap:24px; padding:30px}
+  .chart-box{height:280px}
+  .sec-head{gap:14px}
+}
+@media (max-width:520px){
+  .eyepiece{aspect-ratio:4/3}
+  .readouts{grid-template-columns:1fr 1fr}
+  .readout .val{font-size:18px}
+}
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#simulator">Skip to the simulator</a>
+<canvas id="bg-stars" aria-hidden="true"></canvas>
+<div id="scroll-progress" aria-hidden="true"></div>
+
+<div class="site">
+
+  <!-- ═══ MASTHEAD ═══ -->
+  <header class="masthead">
+    <div class="wrap">
+      <span class="brand"><i data-lucide="aperture"></i><span data-bind="meta.course"></span></span>
+      <span><span data-bind="meta.module"></span> · <span class="slide-no" data-bind="meta.slide"></span></span>
+    </div>
+  </header>
+
+  <main id="main">
+
+  <!-- ═══ HERO ═══ -->
+  <section id="hero">
+    <div class="wrap hero-grid">
+      <div data-reveal>
+        <div class="hero-kicker">
+          <span class="chip amber"><i data-lucide="alert-triangle"></i><span data-bind="hero.kicker"></span></span>
+        </div>
+        <h1 data-bind-html="hero.title"></h1>
+        <p class="hero-thesis" data-bind-html="hero.thesis"></p>
+        <p class="hero-note" data-bind-html="hero.note"></p>
+      </div>
+      <figure class="hero-fig panel ticked" data-reveal data-delay="0.12">
+        <svg viewBox="0 0 300 300" role="img" aria-label="Concentric apertures of diameter D, 2D and 4D with collecting areas 1, 4 and 16">
+          <g class="orbit"><circle cx="150" cy="150" r="140" fill="none" stroke="rgba(99,207,232,.25)" stroke-width="1" stroke-dasharray="2 9"/></g>
+          <circle cx="150" cy="150" r="128" fill="rgba(246,168,60,.05)" stroke="rgba(246,168,60,.32)" stroke-width="1" stroke-dasharray="5 6"/>
+          <circle cx="150" cy="150" r="64"  fill="rgba(246,168,60,.11)" stroke="rgba(246,168,60,.55)" stroke-width="1.4" stroke-dasharray="5 6"/>
+          <circle cx="150" cy="150" r="32"  fill="rgba(246,168,60,.26)" stroke="var(--amber)" stroke-width="2"/>
+          <text class="d2-txt" x="150" y="155" text-anchor="middle" fill="#F6A83C">×1</text>
+          <text class="d2-txt" x="150" y="97"  text-anchor="middle">×4</text>
+          <text class="d2-txt" x="150" y="33"  text-anchor="middle">×16</text>
+          <text class="d2-txt" x="222" y="155">D</text>
+          <text class="d2-txt" x="252" y="155" fill="#63CFE8">θ↓</text>
+        </svg>
+        <figcaption data-bind="hero.figCaption"></figcaption>
+        <div class="hero-chips">
+          <span class="chip amber" data-bind="hero.chips.0"></span>
+          <span class="chip cyan" data-bind="hero.chips.1"></span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ═══ TWO POWERS ═══ -->
+  <section id="two-powers">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <span class="sec-index">01</span>
+        <div><p class="sec-kicker" data-bind="powers.kicker"></p><h2 data-bind="powers.title"></h2></div>
+      </header>
+      <div class="powers-grid">
+        <article class="power-card light panel" data-reveal>
+          <div class="power-top">
+            <span class="power-icon"><i data-lucide="sun"></i></span>
+            <div><p class="power-tag" data-bind="powers.light.tag"></p><h3 data-bind="powers.light.title"></h3></div>
+          </div>
+          <div class="formula"><span class="math" data-tex-key="powers.light.formulaTex" data-display="true">L ∝ D²</span></div>
+          <p class="power-reading" data-bind-html="powers.light.reading"></p>
+          <div class="power-viz">
+            <div class="area-row">
+              <span class="area-sq" style="width:14px;height:14px"><small>×1</small></span>
+              <span class="area-sq" style="width:28px;height:28px"><small>×4</small></span>
+              <span class="area-sq" style="width:56px;height:56px"><small>×16</small></span>
+            </div>
+          </div>
+        </article>
+        <article class="power-card resolve panel" data-reveal data-delay="0.1">
+          <div class="power-top">
+            <span class="power-icon"><i data-lucide="focus"></i></span>
+            <div><p class="power-tag" data-bind="powers.resolve.tag"></p><h3 data-bind="powers.resolve.title"></h3></div>
+          </div>
+          <div class="formula"><span class="math" data-tex-key="powers.resolve.formulaTex" data-display="true">θ_min = 1.22 λ / D</span></div>
+          <div class="formula"><span class="math" data-tex-key="powers.resolve.secondTex" data-display="true">1/θ_min = D / 1.22 λ</span></div>
+          <p class="power-reading" data-bind-html="powers.resolve.reading"></p>
+          <div class="power-viz">
+            <div class="pair-demo">
+              <span class="demo"><span class="blob"><i></i><i></i></span><span class="lbl">θ &lt; θ_min — merged</span></span>
+              <span class="demo"><span class="blob apart"><i></i><i></i></span><span class="lbl">θ ≥ θ_min — resolved</span></span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SIMULATOR ═══ -->
+  <section id="simulator">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <span class="sec-index">02</span>
+        <div><p class="sec-kicker" data-bind="sim.kicker"></p><h2 data-bind="sim.title"></h2></div>
+      </header>
+
+      <div class="sim-panel panel ticked" data-reveal>
+        <div class="sim-top">
+          <div class="sim-title"><i data-lucide="telescope"></i><h3 data-bind="sim.panelTitle"></h3></div>
+          <div class="verdict is-not" id="verdict" role="status" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span><span id="verdict-text">NOT RESOLVED</span>
+          </div>
+        </div>
+
+        <div class="eyepiece" id="eyepiece">
+          <canvas id="sim-canvas" role="img" aria-label="Simulated telescope view of a double star. The diffraction discs shrink as aperture grows and merge when the separation falls below the Rayleigh limit."></canvas>
+          <span class="scope-tag tl" data-bind="sim.tagLeft"></span>
+          <span class="scope-tag tr" data-bind="sim.tagRight"></span>
+        </div>
+
+        <div class="readouts" aria-hidden="true">
+          <div class="readout d"><div class="lbl">Aperture D</div><div class="val"><span id="ro-d">60</span><span class="unit">mm</span></div></div>
+          <div class="readout theta"><div class="lbl">Limit θ_min</div><div class="val"><span id="ro-theta">2.31</span><span class="unit">″</span></div></div>
+          <div class="readout sep"><div class="lbl">Separation Δθ</div><div class="val"><span id="ro-sep">1.50</span><span class="unit">″</span></div></div>
+          <div class="readout gain"><div class="lbl">Light vs 10 mm</div><div class="val"><span id="ro-gain">×36</span></div></div>
+        </div>
+
+        <div class="sim-controls">
+          <div class="control d-ctl">
+            <div class="control-head"><label for="slider-d" data-bind="sim.dLabel"></label><output for="slider-d" id="out-d">60 mm</output></div>
+            <input type="range" id="slider-d" min="10" max="500" step="5" value="60" aria-label="Aperture diameter in millimetres">
+            <div class="bounds"><span>10 mm</span><span>500 mm</span></div>
+          </div>
+          <div class="control sep-ctl">
+            <div class="control-head"><label for="slider-sep" data-bind="sim.sepLabel"></label><output for="slider-sep" id="out-sep">1.50″</output></div>
+            <input type="range" id="slider-sep" min="0.2" max="8" step="0.05" value="1.5" aria-label="Star separation in arcseconds">
+            <div class="bounds"><span>0.2″</span><span>8″</span></div>
+          </div>
+        </div>
+
+        <div class="presets" id="presets" role="group" aria-label="Aperture presets">
+          <span class="lbl">Jump to</span>
+        </div>
+
+        <p class="sim-lead" data-bind-html="sim.lead"></p>
+        <p class="eye-note"><i data-lucide="eye"></i><span data-bind="sim.eyeNote"></span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CHARTS ═══ -->
+  <section id="charts">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <span class="sec-index">03</span>
+        <div><p class="sec-kicker" data-bind="charts.kicker"></p><h2 data-bind="charts.title"></h2></div>
+      </header>
+      <div class="charts-grid">
+        <article class="chart-card panel ticked" data-reveal>
+          <div class="chart-head"><h3 data-bind="charts.a.title"></h3><span class="live-tag">Follows slider</span></div>
+          <p class="chart-caption" data-bind="charts.a.caption"></p>
+          <div class="chart-box"><canvas id="chart-light" role="img" aria-label="Chart of relative light gathering versus aperture, a quadratic curve annotated at 2× and 4× aperture"></canvas></div>
+        </article>
+        <article class="chart-card panel ticked cyan" data-reveal data-delay="0.1">
+          <div class="chart-head"><h3 data-bind="charts.b.title"></h3><span class="live-tag">Follows slider</span></div>
+          <p class="chart-caption" data-bind="charts.b.caption"></p>
+          <div class="chart-box"><canvas id="chart-res" role="img" aria-label="Chart of the Rayleigh limit of resolution versus aperture, a hyperbola on logarithmic axes with the eye's pupil marked"></canvas></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ EMPTY MAGNIFICATION ═══ -->
+  <section id="empty-magnification">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <span class="sec-index">04</span>
+        <div><p class="sec-kicker" data-bind="empty.kicker"></p><h2 data-bind="empty.title"></h2></div>
+      </header>
+      <p class="sec-lead" data-bind-html="empty.lead" data-reveal></p>
+
+      <div class="compare panel" id="compare" style="--pos:50%" data-reveal>
+        <canvas id="mag-high" width="960" height="560" aria-hidden="true"></canvas>
+        <div class="compare-top"><canvas id="mag-low" width="960" height="560" aria-hidden="true"></canvas></div>
+        <span class="compare-tag low">m = 40× · D = 60 mm</span>
+        <span class="compare-tag high">m = 240× · D = 60 mm</span>
+        <div class="compare-handle" id="compare-handle" role="slider" tabindex="0"
+             aria-label="Comparison divider between low and high magnification views"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <span class="compare-grip"><i data-lucide="move-horizontal"></i></span>
+        </div>
+      </div>
+      <p class="compare-hint" data-reveal><i data-lucide="mouse-pointer-2"></i><span data-bind="empty.hint"></span></p>
+    </div>
+  </section>
+
+  <!-- ═══ EYE LINK ═══ -->
+  <section id="eye-link">
+    <div class="wrap">
+      <div class="eye-panel panel ticked" data-reveal>
+        <svg class="eye-svg" viewBox="0 0 220 220" role="img" aria-label="Animated iris: the pupil dilates between 2 and 8 millimetres">
+          <defs>
+            <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="30%" stop-color="#33465E"/><stop offset="78%" stop-color="#1B2534"/><stop offset="100%" stop-color="#10161F"/>
+            </radialGradient>
+          </defs>
+          <circle cx="110" cy="110" r="104" fill="none" stroke="var(--line)" stroke-width="1" id="iris-ticks"/>
+          <circle cx="110" cy="110" r="96" fill="url(#irisGrad)" stroke="#3A4A60" stroke-width="1.5"/>
+          <g id="iris-spokes"></g>
+          <g class="pupil-g">
+            <circle cx="110" cy="110" r="34" fill="#04060A"/>
+            <circle cx="99" cy="99" r="5" fill="rgba(233,237,245,.4)"/>
+          </g>
+          <text x="110" y="216" text-anchor="middle" class="d2-txt" fill="#69717F">2 mm ⟷ 8 mm</text>
+        </svg>
+        <div class="eye-body">
+          <p class="sec-kicker" data-bind="eye.kicker"></p>
+          <h3 data-bind="eye.title"></h3>
+          <p data-bind-html="eye.body"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="wrap">
+      <span data-bind="footer.source"></span>
+      <span data-bind="footer.constants"></span>
+      <span data-bind="footer.build"></span>
+    </div>
+  </footer>
+
+</div><!-- /.site -->
+
+<noscript><p style="padding:20px;font-family:monospace">This page needs JavaScript for the simulator and charts.</p></noscript>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.294.0/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/canvas-confetti.min.js"></script>
+
+<script>
+'use strict';
+/* ============================================================
+   PHYSICS CONSTANTS — single named block, units in comments
+============================================================ */
+const PHYSICS = Object.freeze({
+  LAMBDA_NM : 550,    // wavelength of observed light, nanometres (mid-visible green)
+  RAYLEIGH_K: 1.22,   // Rayleigh constant for a circular aperture (first Airy zero / π)
+  D_MIN_MM  : 10,     // aperture slider lower bound, millimetres
+  D_MAX_MM  : 500,    // aperture slider upper bound, millimetres
+  SEP_MIN_AS: 0.2,    // star-separation slider lower bound, arcseconds
+  SEP_MAX_AS: 8.0,    // star-separation slider upper bound, arcseconds
+  PUPIL_MIN_MM: 2,    // human pupil range (bright light), millimetres
+  PUPIL_MAX_MM: 8,    // human pupil range (dark adapted), millimetres
+  PUPIL_REF_MM: 7,    // reference dark-adapted pupil used for annotations, millimetres
+});
+const RAD2AS = 206264.806; // arcseconds per radian
+
+/* Pure physics — no canvas / DOM access */
+function limitOfResolution(D_mm){
+  // Rayleigh limit θ_min = 1.22 λ / D, returned in RADIANS. D in mm.
+  const lambda_mm = PHYSICS.LAMBDA_NM * 1e-6; // nm → mm
+  return PHYSICS.RAYLEIGH_K * lambda_mm / D_mm;
+}
+function lightGatheringRatio(D_mm, D_ref_mm){
+  // Relative light grasp ∝ collecting area ∝ D². Dimensionless ratio.
+  return Math.pow(D_mm / D_ref_mm, 2);
+}
+function toArcsec(rad){ return rad * RAD2AS; }
+
+/* ============================================================
+   ▼▼▼  CONTENT  ▼▼▼
+   All lecturer-facing copy lives in this ONE object so the
+   wording can be swapped for the lecturer's own notes.
+   (Slide 13 in the source deck was title-only; the text below
+   follows the standard treatment of the topic.)
+============================================================ */
+const SLIDE_CONTENT = {
+  meta: {
+    course: 'OPT-201 · Optical Instruments',
+    module: 'Module 3 · Telescopes',
+    slide : 'Slide 13',
+  },
+  hero: {
+    kicker: 'A warning before we chase magnification',
+    title : 'Warning: Size of <em>Aperture</em>',
+    thesis: 'Magnification alone does not make a good instrument. Push <i>m</i> higher with ever shorter eyepieces and all you enlarge is the blur. What actually sets the limit is the <strong>aperture</strong> — the diameter <strong>D</strong> of the objective lens or mirror.',
+    note  : '<i>m = f<sub>o</sub> ⁄ f<sub>e</sub></i> is easy to raise — just swap in a shorter eyepiece. But <span class="frac">D</span> is fixed the moment the glass is ground, and <span class="frac">D</span> is what the sky actually cares about.',
+    figCaption: 'Collecting area grows with the square of the diameter',
+    chips : ['Light ∝ D²', 'θ_min ∝ 1 ⁄ D'],
+  },
+  powers: {
+    kicker: 'The two powers of D',
+    title : 'Aperture buys exactly two things',
+    light: {
+      tag:'Photons', title:'Light-Gathering Power',
+      formulaTex:'\\mathcal{L} \\;\\propto\\; D^{2}',
+      reading:'Collected light scales with the <strong>area</strong> of the aperture. Double <i>D</i> and you catch <strong>four times</strong> the photons — that, not magnification, is why faint stars appear at all.',
+    },
+    resolve: {
+      tag:'Detail', title:'Resolving Power',
+      formulaTex:'\\theta_{\\min} \\;=\\; \\dfrac{1.22\\,\\lambda}{D}',
+      secondTex:'\\dfrac{1}{\\theta_{\\min}} \\;=\\; \\dfrac{D}{1.22\\,\\lambda}',
+      reading:'<strong>θ_min</strong> is the smallest angular separation at which two close objects can still be seen as two (Rayleigh criterion). Larger <i>D</i> → smaller θ_min → <strong>finer detail</strong>.',
+    },
+  },
+  sim: {
+    kicker:'The centrepiece',
+    title :'Put D to the test',
+    panelTitle:'Aperture Simulator — a double star',
+    tagLeft:'Simulated field',
+    tagRight:'λ = 550 nm',
+    dLabel:'Aperture D',
+    sepLabel:'Separation Δθ',
+    lead:'Open the aperture and the diffraction discs shrink and brighten; squeeze the separation and they merge into one blob. <strong>That merge — not the magnification — is the whole lesson.</strong>',
+    eyeNote:'For scale: a dark-adapted pupil (D = {{pupilRef}} mm) has θ_min ≈ {{eye7}}″ — below this simulator\'s floor.',
+    verdictResolved:'RESOLVED',
+    verdictNot:'NOT RESOLVED',
+    presets:[
+      {name:'Binoculars',   d:50},
+      {name:'Refractor',    d:102},
+      {name:'SCT',          d:203},
+      {name:'Dobsonian',    d:356},
+      {name:'Observatory',  d:500},
+    ],
+  },
+  charts: {
+    kicker:'Follow the slider',
+    title :'Two curves that rule the instrument',
+    a:{
+      title:'Light gathering vs D',
+      caption:'Quadratic: 2× the aperture gives 4× the light, 4× gives 16×. The amber marker tracks the simulator slider.',
+      xLabel:'Aperture D (mm)', yLabel:'Relative brightness (×10 mm)',
+    },
+    b:{
+      title:'Limit of resolution θ_min vs D',
+      caption:'The 1/D hyperbola on log axes — every doubling of D halves θ_min. Dashed line: the {{pupilRef}} mm pupil\'s own diffraction limit.',
+      xLabel:'Aperture D (mm)', yLabel:'θ_min (arcsec)',
+    },
+  },
+  empty: {
+    kicker:'The trap',
+    title :'Empty Magnification',
+    lead:'Same <strong>60 mm aperture</strong>, same star field. Left: <span class="hl-cyan">m = 40×</span> — comfortable. Right: <span class="hl-amber">m = 240×</span> — the blur has grown six times and <strong>not one new detail</strong> has appeared. Two telescopes at equal <i>m</i> but different <i>D</i> are not equivalent.',
+    hint:'Drag the divider — or focus it and use ← → keys. Notice the field of view shrinking too: higher m shows you more of less.',
+  },
+  eye: {
+    kicker:'Full circle',
+    title :'Same physics, {{pupilRange}}',
+    body:'Your eye runs the same equations. The <strong>pupil</strong> is the aperture; the <strong>iris</strong> is the stop that varies it — about 2 mm in daylight, 8 mm under a dark sky. At 8 mm the eye gathers <strong>{{eyeGain}}×</strong> more light than at 2 mm, and its own diffraction limit at 550 nm is roughly <strong>{{eyeTheta}}″</strong>.',
+    linkLabel:'Module 2 · The Eye as an Instrument',
+  },
+  footer: {
+    source:'<b>Source:</b> deck slide 13 (title-only). Wording follows the standard treatment and lives in one data object — SLIDE_CONTENT — for easy swapping.',
+    constants:'<b>Constants:</b> λ = 550 nm · k = 1.22 (Rayleigh) · θ_min = 1.22λ/D',
+    build:'Single self-contained HTML file · no build step',
+  },
+};
+/* ============================================================
+   ▲▲▲  END CONTENT  ▲▲▲
+============================================================ */
+
+/* ---- computed tokens injected into the copy above ---- */
+const COMPUTED = {
+  pupilRef  : String(PHYSICS.PUPIL_REF_MM),
+  pupilRange: `${PHYSICS.PUPIL_MIN_MM}–${PHYSICS.PUPIL_MAX_MM} mm`,
+  eyeGain   : String(Math.round(lightGatheringRatio(PHYSICS.PUPIL_MAX_MM, PHYSICS.PUPIL_MIN_MM))),
+  eyeTheta  : toArcsec(limitOfResolution(PHYSICS.PUPIL_MAX_MM)).toFixed(0),
+  eye7      : toArcsec(limitOfResolution(PHYSICS.PUPIL_REF_MM)).toFixed(1),
+};
+
+/* ---- tiny helpers ---- */
+const $  = (s, r=document) => r.querySelector(s);
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const DPR_CAP = 2; // canvas devicePixelRatio cap, per spec
+function getPath(obj, path){ return path.split('.').reduce((o,k)=> (o==null?o:o[k]), obj); }
+function fillTokens(s){ return typeof s==='string' ? s.replace(/\{\{(\w+)\}\}/g,(_,k)=> COMPUTED[k] ?? `{{${k}}}`) : s; }
+function mulberry32(seed){ return function(){ let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t>>>15, t|1); t ^= t + Math.imul(t ^ t>>>7, t|61); return ((t ^ t>>>14)>>>0)/4294967296; }; }
+
+/* ---- content binding (runs before anything measures the DOM) ---- */
+(function bindContent(){
+  document.querySelectorAll('[data-bind]').forEach(el=>{
+    const v = getPath(SLIDE_CONTENT, el.dataset.bind);
+    if (v!=null) el.textContent = fillTokens(String(v));
+  });
+  document.querySelectorAll('[data-bind-html]').forEach(el=>{
+    const v = getPath(SLIDE_CONTENT, el.dataset.bindHtml);
+    if (v!=null) el.innerHTML = fillTokens(String(v));
+  });
+  document.querySelectorAll('.footer span, footer span').forEach(()=>{}); // footer uses data-bind above
+  document.querySelectorAll('[data-tex-key]').forEach(el=>{
+    const tex = getPath(SLIDE_CONTENT, el.dataset.texKey);
+    if (tex && window.katex){
+      try{ katex.render(tex, el, {displayMode: el.dataset.display==='true', throwOnError:false}); }catch(e){}
+    }
+  });
+  // eye module link (placeholder href back to Module 2)
+  const eyeP = $('.eye-body p:last-of-type');
+  if (eyeP){
+    const a = document.createElement('a');
+    a.href = '#module-2'; a.className = 'module-link'; a.title = 'Placeholder link to Module 2';
+    a.innerHTML = `${SLIDE_CONTENT.eye.linkLabel} <i data-lucide="arrow-right"></i>`;
+    eyeP.insertAdjacentElement('afterend', a);
+  }
+})();
+
+if (window.lucide) lucide.createIcons();
+
+/* ============================================================
+   AMBIENT STARFIELD (page background — decorative)
+============================================================ */
+(function ambient(){
+  const cv = $('#bg-stars'), ctx = cv.getContext('2d');
+  const rng = mulberry32(7);
+  const stars = Array.from({length:150}, () => ({
+    x:rng(), y:rng(), r:.3 + rng()*1.1,
+    a:.08 + rng()*.42, sp:.15 + rng()*.6, ph:rng()*Math.PI*2,
+    c: rng()<.12 ? '246,168,60' : rng()<.24 ? '99,207,232' : '233,237,245',
+  }));
+  let W=0,H=0,raf=0;
+  function size(){
+    const dpr = Math.min(window.devicePixelRatio||1, DPR_CAP);
+    W = innerWidth; H = innerHeight;
+    cv.width = W*dpr; cv.height = H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function paint(t){
+    ctx.clearRect(0,0,W,H);
+    for (const s of stars){
+      const tw = REDUCED ? 1 : (0.62 + 0.38*Math.sin(t*0.001*s.sp + s.ph));
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${s.c},${(s.a*tw).toFixed(3)})`;
+      ctx.arc(s.x*W, s.y*H, s.r, 0, 6.2832);
+      ctx.fill();
+    }
+  }
+  function loop(t){ paint(t); raf = requestAnimationFrame(loop); }
+  size();
+  if (REDUCED){ paint(0); } else { raf = requestAnimationFrame(loop); }
+  window.addEventListener('resize', ()=>{ size(); if (REDUCED) paint(0); });
+  document.addEventListener('visibilitychange', ()=>{
+    if (REDUCED) return;
+    if (document.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(loop);
+  });
+})();
+
+/* ============================================================
+   SHARED STATE
+============================================================ */
+const state = { D: 60, sep: 1.5, resolved: false };
+const FIELD_AS = 26; // simulated field width across the canvas, arcseconds
+
+/* ============================================================
+   APERTURE SIMULATOR (canvas)
+============================================================ */
+const sim = (() => {
+  const wrap   = $('#eyepiece');
+  const canvas = $('#sim-canvas');
+  const ctx    = canvas.getContext('2d');
+  let cssW = 0, cssH = 0;
+
+  // static background field stars (unit coordinates)
+  const rng = mulberry32(42);
+  const bgStars = Array.from({length:110}, () => ({
+    x:rng(), y:rng(), r:.35 + rng()*.95, a:.12 + rng()*.5,
+    c: rng()<.15 ? '255,214,170' : rng()<.3 ? '178,216,255' : '226,232,244',
+  }));
+
+  function sizeCanvas(){
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const dpr = Math.min(window.devicePixelRatio||1, DPR_CAP);
+    canvas.width  = Math.round(r.width  * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cssW = r.width; cssH = r.height;
+  }
+
+  function starDisc(x, y, R, peak){
+    // Airy-like radial gradient: bright core, dip, faint first ring — cheap but convincing
+    const g = ctx.createRadialGradient(x,y,0,x,y,R);
+    g.addColorStop(0.00, `rgba(255,246,228,${peak})`);
+    g.addColorStop(0.30, `rgba(255,240,214,${peak*0.62})`);
+    g.addColorStop(0.50, `rgba(255,233,200,${peak*0.20})`);
+    g.addColorStop(0.64, `rgba(255,233,200,${peak*0.30})`);
+    g.addColorStop(0.80, `rgba(255,233,200,${peak*0.07})`);
+    g.addColorStop(1.00, 'rgba(255,233,200,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,R,0,6.2832); ctx.fill();
+  }
+
+  function draw(){
+    if (!cssW) return;
+    const W = cssW, H = cssH;
+    const thetaAs = toArcsec(limitOfResolution(state.D));
+    const pxAs = W / FIELD_AS;
+    const maxRatio = lightGatheringRatio(PHYSICS.D_MAX_MM, PHYSICS.D_MIN_MM);
+    const ratio    = lightGatheringRatio(state.D, PHYSICS.D_MIN_MM);
+    const bFactor  = Math.pow(ratio / maxRatio, 0.3);   // perceptual brightness 0..1
+    const peak     = 0.16 + 0.84 * bFactor;
+
+    // deep field
+    ctx.fillStyle = '#05070C'; ctx.fillRect(0,0,W,H);
+    const neb = ctx.createRadialGradient(W*.32,H*.34,0, W*.32,H*.34, W*.75);
+    neb.addColorStop(0,'rgba(34,44,70,.34)'); neb.addColorStop(1,'rgba(34,44,70,0)');
+    ctx.fillStyle = neb; ctx.fillRect(0,0,W,H);
+
+    // faint field stars brighten with aperture too
+    for (const s of bgStars){
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${s.c},${(s.a*(0.3+0.7*bFactor)).toFixed(3)})`;
+      ctx.arc(s.x*W, s.y*H, s.r*(0.8+0.4*bFactor), 0, 6.2832);
+      ctx.fill();
+    }
+
+    // the double star — additive blend so the merge reads as one blob
+    const cx = W/2, cy = H/2, dx = (state.sep/2) * pxAs;
+    const R = Math.max(1.5, thetaAs * pxAs);
+    ctx.globalCompositeOperation = 'lighter';
+    starDisc(cx-dx, cy, R, peak);
+    starDisc(cx+dx, cy, R, peak);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // separation indicator
+    ctx.save();
+    ctx.strokeStyle = 'rgba(160,167,180,.4)'; ctx.setLineDash([4,5]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx-dx, cy); ctx.lineTo(cx+dx, cy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '11px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(200,207,219,.85)';
+    ctx.fillText(`Δθ = ${state.sep.toFixed(2)}″`, cx, cy - Math.min(R, 90) - 12);
+    ctx.restore();
+
+    // circular eyepiece vignette
+    const vig = ctx.createRadialGradient(cx,cy, Math.min(W,H)*0.30, cx,cy, Math.max(W,H)*0.72);
+    vig.addColorStop(0,'rgba(4,6,10,0)'); vig.addColorStop(1,'rgba(4,6,10,.9)');
+    ctx.fillStyle = vig; ctx.fillRect(0,0,W,H);
+
+    // reticle crosshair
+    ctx.strokeStyle = 'rgba(160,167,180,.07)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0,cy); ctx.lineTo(cx-R*0.5,cy); ctx.moveTo(cx+R*0.5,cy); ctx.lineTo(W,cy);
+    ctx.moveTo(cx,0); ctx.lineTo(cx,H);
+    ctx.stroke();
+
+    // 5″ scale bar
+    const bar = 5*pxAs, by = H-24;
+    ctx.strokeStyle = 'rgba(200,207,219,.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(20,by); ctx.lineTo(20+bar,by);
+    ctx.moveTo(20,by-4); ctx.lineTo(20,by+4);
+    ctx.moveTo(20+bar,by-4); ctx.lineTo(20+bar,by+4);
+    ctx.stroke();
+    ctx.font = '10px "JetBrains Mono", monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(200,207,219,.6)';
+    ctx.fillText('5″', 24+bar, by+3);
+    ctx.textAlign = 'right';
+    ctx.fillText(`θ_min = ${thetaAs.toFixed(2)}″`, W-16, by+3);
+  }
+
+  // the most common bug in canvas builds — handle resize properly
+  const ro = new ResizeObserver(() => { sizeCanvas(); draw(); });
+  ro.observe(wrap);
+  sizeCanvas();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+
+  return { draw, sizeCanvas };
+})();
+
+/* ---- readouts / verdict / confetti ---- */
+const verdictEl = $('#verdict'), verdictText = $('#verdict-text');
+let confettiDone = false;
+try { confettiDone = sessionStorage.getItem('apertureConfetti') === '1'; } catch(e){}
+
+function maybeCelebrate(){
+  if (confettiDone || REDUCED || typeof confetti !== 'function') return;
+  confettiDone = true;
+  try { sessionStorage.setItem('apertureConfetti','1'); } catch(e){}
+  const r = verdictEl.getBoundingClientRect();
+  confetti({
+    particleCount: 40, spread: 55, scalar: .85, ticks: 150, gravity: 1,
+    origin: { x:(r.left + r.width/2)/innerWidth, y:(r.top + r.height/2)/innerHeight },
+    colors: ['#F6A83C','#63CFE8','#E9EDF5','#4FD598','#8B93A7'],
+    disableForReducedMotion: true,
+  });
+}
+function pulseVerdict(){
+  if (REDUCED || !window.gsap) return;
+  gsap.fromTo(verdictEl, {scale:1}, {scale:1.06, duration:0.12, ease:'power2.out',
+    yoyo:true, repeat:1, clearProps:'transform'}); // 2 × 120 ms = 240 ms pulse
+}
+function updateReadouts(){
+  const thetaAs = toArcsec(limitOfResolution(state.D));
+  $('#ro-d').textContent     = state.D;
+  $('#ro-theta').textContent = thetaAs.toFixed(2);
+  $('#ro-sep').textContent   = state.sep.toFixed(2);
+  $('#ro-gain').textContent  = '×' + lightGatheringRatio(state.D, PHYSICS.D_MIN_MM).toLocaleString();
+  $('#out-d').textContent    = state.D + ' mm';
+  $('#out-sep').textContent  = state.sep.toFixed(2) + '″';
+}
+function updateVerdict(){
+  const thetaAs  = toArcsec(limitOfResolution(state.D));
+  const resolved = state.sep >= thetaAs - 1e-9;
+  if (resolved === state.resolved) return;
+  state.resolved = resolved;
+  verdictEl.classList.toggle('is-resolved', resolved);
+  verdictEl.classList.toggle('is-not', !resolved);
+  verdictText.textContent = resolved ? SLIDE_CONTENT.sim.verdictResolved : SLIDE_CONTENT.sim.verdictNot;
+  pulseVerdict();
+  if (resolved) maybeCelebrate();   // fires once per session, first resolution only
+}
+
+/* ---- controls ---- */
+const sliderD = $('#slider-d'), sliderSep = $('#slider-sep');
+function fillRange(input){
+  const pct = (input.value - input.min) / (input.max - input.min) * 100;
+  input.style.setProperty('--fill', pct + '%');
+}
+function refresh(){
+  sim.draw(); updateReadouts(); updateVerdict(); updateChartMarkers();
+}
+sliderD.addEventListener('input', () => { state.D = +sliderD.value; fillRange(sliderD); refresh(); });
+sliderSep.addEventListener('input', () => { state.sep = +sliderSep.value; fillRange(sliderSep); refresh(); });
+
+const presetsWrap = $('#presets');
+SLIDE_CONTENT.sim.presets.forEach(p => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'preset';
+  b.innerHTML = `${p.name} <b>${p.d} mm</b>`;
+  b.addEventListener('click', () => {
+    state.D = p.d; sliderD.value = p.d; fillRange(sliderD);
+    presetsWrap.querySelectorAll('.preset').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    refresh();
+  });
+  presetsWrap.appendChild(b);
+});
+fillRange(sliderD); fillRange(sliderSep);
+
+/* ============================================================
+   CHARTS (Chart.js 4) — same D as the simulator
+============================================================ */
+let chartA = null, chartB = null;
+const eyeLineAs = toArcsec(limitOfResolution(PHYSICS.PUPIL_REF_MM));
+function updateChartMarkers(){
+  const D = state.D;
+  if (chartA){
+    chartA.data.datasets[2].data = [{x:D, y:lightGatheringRatio(D, PHYSICS.D_MIN_MM)}];
+    chartA.data.datasets[1].data = chartA.data.datasets[2].data;
+    chartA.update();
+  }
+  if (chartB){
+    const pt = [{x:D, y:toArcsec(limitOfResolution(D))}];
+    chartB.data.datasets[2].data = pt;
+    chartB.data.datasets[1].data = pt;
+    chartB.update();
+  }
+}
+(function buildCharts(){
+  if (!window.Chart) return;
+  Chart.defaults.color = '#A0A7B4';                 // ticks, per spec
+  Chart.defaults.borderColor = '#2A2F38';           // grid, per spec
+  Chart.defaults.font.family = "'JetBrains Mono', ui-monospace, monospace";
+  Chart.defaults.font.size = 11;
+  const ANIM = { duration: REDUCED ? 0 : 250, easing: 'easeOutQuart' };
+  const tooltipBase = {
+    backgroundColor:'#161C29', borderColor:'#2A2F38', borderWidth:1,
+    titleColor:'#E9EDF5', bodyColor:'#A0A7B4', padding:10, displayColors:false,
+    titleFont:{family:"'JetBrains Mono', monospace", size:11},
+    bodyFont:{family:"'JetBrains Mono', monospace", size:11},
+  };
+  const axis = (title) => ({
+    grid:{color:'#2A2F38'}, border:{color:'#2A2F38'},
+    ticks:{color:'#A0A7B4', maxTicksLimit:7},
+    title:{display:true, text:title, color:'#69717F', font:{size:10.5}},
+  });
+  const Ds = Array.from({length:50}, (_,i) => PHYSICS.D_MIN_MM + i*(PHYSICS.D_MAX_MM-PHYSICS.D_MIN_MM)/49);
+
+  /* (a) Light gathering — quadratic, annotated at 2× and 4× aperture */
+  const annotA = { id:'annotA', afterDatasetsDraw(c){
+    const {ctx, scales:{x,y}} = c; ctx.save();
+    ctx.font = '10px "JetBrains Mono", monospace';
+    [{d:20, t:'2× D → ×4 light', dy:14},{d:40, t:'4× D → ×16 light', dy:-12}].forEach(p=>{
+      const X = x.getPixelForValue(p.d), Y = y.getPixelForValue(lightGatheringRatio(p.d, PHYSICS.D_MIN_MM));
+      ctx.strokeStyle = 'rgba(246,168,60,.85)'; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(X,Y,8,0,6.2832); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#C9CFDB'; ctx.textAlign = 'left';
+      ctx.fillText(p.t, X+13, Y+p.dy);
+    });
+    ctx.restore();
+  }};
+  chartA = new Chart($('#chart-light'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'Relative brightness', data:Ds.map(d=>({x:d, y:lightGatheringRatio(d, PHYSICS.D_MIN_MM)})),
+        borderColor:'#F6A83C', borderWidth:2, pointRadius:0, fill:true, tension:0,
+        backgroundColor:(c)=>{ const {ctx,chartArea}=c.chart; if(!chartArea) return 'rgba(246,168,60,.08)';
+          const g=ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+          g.addColorStop(0,'rgba(246,168,60,.22)'); g.addColorStop(1,'rgba(246,168,60,0)'); return g; } },
+      { label:'halo', data:[], pointRadius:12, pointHoverRadius:12, backgroundColor:'rgba(246,168,60,.18)', pointStyle:'circle' },
+      { label:'current D', data:[{x:state.D, y:lightGatheringRatio(state.D, PHYSICS.D_MIN_MM)}],
+        pointRadius:5.5, pointHoverRadius:6.5, backgroundColor:'#F6A83C', borderColor:'#0B0E14', borderWidth:2, pointStyle:'circle' },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:ANIM,
+      plugins:{ legend:{display:false}, tooltip:{...tooltipBase,
+        callbacks:{ title:i=>`D = ${i[0].parsed.x.toFixed(0)} mm`, label:i=>`×${i.parsed.y.toFixed(0)} light` } } },
+      scales:{ x:{type:'linear', min:PHYSICS.D_MIN_MM, max:PHYSICS.D_MAX_MM, ...axis(SLIDE_CONTENT.charts.a.xLabel)},
+               y:{min:0, suggestedMax:2600, ...axis(SLIDE_CONTENT.charts.a.yLabel)} },
+      interaction:{mode:'nearest', intersect:false},
+    },
+    plugins:[annotA],
+  });
+
+  /* (b) θ_min vs D — 1/D hyperbola on log axes, eye pupil marked */
+  const eyeLineB = { id:'eyeLineB', beforeDatasetsDraw(c){
+    const {ctx, scales:{x,y}, chartArea} = c;
+    const Y = y.getPixelForValue(eyeLineAs);
+    if (Y < chartArea.top || Y > chartArea.bottom) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(99,207,232,.55)'; ctx.setLineDash([5,5]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(chartArea.left, Y); ctx.lineTo(chartArea.right, Y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '10px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(99,207,232,.9)';
+    ctx.textAlign = 'right';
+    ctx.fillText(`eye · ${PHYSICS.PUPIL_REF_MM} mm pupil ≈ ${eyeLineAs.toFixed(1)}″`, chartArea.right - 6, Y - 7);
+    ctx.restore();
+  }};
+  chartB = new Chart($('#chart-res'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'θ_min', data:Ds.map(d=>({x:d, y:toArcsec(limitOfResolution(d))})),
+        borderColor:'#63CFE8', borderWidth:2, pointRadius:0, fill:true, tension:0,
+        backgroundColor:(c)=>{ const {ctx,chartArea}=c.chart; if(!chartArea) return 'rgba(99,207,232,.06)';
+          const g=ctx.createLinearGradient(0,chartArea.bottom,0,chartArea.top);
+          g.addColorStop(0,'rgba(99,207,232,.16)'); g.addColorStop(1,'rgba(99,207,232,0)'); return g; } },
+      { label:'halo', data:[], pointRadius:12, pointHoverRadius:12, backgroundColor:'rgba(99,207,232,.16)', pointStyle:'circle' },
+      { label:'current D', data:[{x:state.D, y:toArcsec(limitOfResolution(state.D))}],
+        pointRadius:5.5, pointHoverRadius:6.5, backgroundColor:'#63CFE8', borderColor:'#0B0E14', borderWidth:2, pointStyle:'circle' },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:ANIM,
+      plugins:{ legend:{display:false}, tooltip:{...tooltipBase,
+        callbacks:{ title:i=>`D = ${i[0].parsed.x.toFixed(0)} mm`, label:i=>`θ_min = ${i.parsed.y.toFixed(2)}″` } } },
+      scales:{ x:{type:'linear', min:PHYSICS.D_MIN_MM, max:PHYSICS.D_MAX_MM, ...axis(SLIDE_CONTENT.charts.b.xLabel)},
+               y:{type:'logarithmic', min:0.2, max:30, ...axis(SLIDE_CONTENT.charts.b.yLabel),
+                  ticks:{color:'#A0A7B4', callback(v){ return [0.2,0.5,1,2,5,10,20].includes(+v) ? (v<1?(+v).toFixed(1):v) : null; }} } },
+      interaction:{mode:'nearest', intersect:false},
+    },
+    plugins:[eyeLineB],
+  });
+})();
+
+/* ============================================================
+   EMPTY MAGNIFICATION — before/after compare
+============================================================ */
+(function emptyMag(){
+  // one star list, painted at two image scales: blur ∝ m, surface brightness fixed
+  const rng = mulberry32(13);
+  const stars = Array.from({length:130}, () => ({
+    x:(rng()*2-1)*520, y:(rng()*2-1)*320,   // arcsec offsets from field centre
+    s:.5 + rng()*.9, a:.3 + rng()*.6,
+    c: rng()<.16 ? '255,224,180' : rng()<.32 ? '190,222,255' : '236,240,248',
+  }));
+  // close pairs — unresolved points at low m, fat merged blobs at high m
+  [[7,-3,3.2],[-46,24,5.0],[30,60,4.2]].forEach(([bx,by,sep])=>{
+    stars.push({x:bx-sep/2, y:by, s:1.25, a:.95, c:'255,240,214'});
+    stars.push({x:bx+sep/2, y:by, s:1.25, a:.95, c:'255,240,214'});
+  });
+  const SIGMA_AS = 2.1; // blur radius of the 60 mm aperture, arcseconds
+
+  function paint(id, pxPerArcsec){
+    const cv = $(id), ctx = cv.getContext('2d'), w = cv.width, h = cv.height;
+    const cx = w/2, cy = h/2;
+    ctx.fillStyle = '#05070C'; ctx.fillRect(0,0,w,h);
+    const neb = ctx.createRadialGradient(cx*.8,cy*.8,0, cx*.8,cy*.8, w*.7);
+    neb.addColorStop(0,'rgba(32,42,66,.30)'); neb.addColorStop(1,'rgba(32,42,66,0)');
+    ctx.fillStyle = neb; ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const st of stars){
+      const px = cx + st.x*pxPerArcsec, py = cy + st.y*pxPerArcsec;
+      const R = SIGMA_AS * st.s * pxPerArcsec;
+      if (px < -R*2 || px > w+R*2 || py < -R*2 || py > h+R*2) continue;
+      const g = ctx.createRadialGradient(px,py,0,px,py,R);
+      g.addColorStop(0, `rgba(${st.c},${st.a})`);
+      g.addColorStop(.55, `rgba(${st.c},${st.a*0.35})`);
+      g.addColorStop(1, `rgba(${st.c},0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px,py,R,0,6.2832); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  paint('#mag-low', 0.95);   // m = 40×  — crisp points
+  paint('#mag-high', 5.7);   // m = 240× — same blur, six times bigger
+
+  // draggable divider (clip-path + pointer events)
+  const wrap = $('#compare'), handle = $('#compare-handle');
+  let pos = 50, dragging = false;
+  function setPos(p){
+    pos = clamp(p, 3, 97);
+    wrap.style.setProperty('--pos', pos + '%');
+    handle.setAttribute('aria-valuenow', Math.round(pos));
+  }
+  handle.addEventListener('pointerdown', e => { dragging = true; handle.setPointerCapture(e.pointerId); e.preventDefault(); });
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const r = wrap.getBoundingClientRect();
+    setPos((e.clientX - r.left) / r.width * 100);
+  });
+  ['pointerup','pointercancel'].forEach(ev => handle.addEventListener(ev, () => dragging = false));
+  handle.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 10 : 3;
+    if (e.key === 'ArrowLeft')  { setPos(pos - step); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { setPos(pos + step); e.preventDefault(); }
+    if (e.key === 'Home') { setPos(3);  e.preventDefault(); }
+    if (e.key === 'End')  { setPos(97); e.preventDefault(); }
+  });
+})();
+
+/* ============================================================
+   IRIS SPOKES + TICKS (decorative SVG detail for the eye panel)
+============================================================ */
+(function iris(){
+  const NS = 'http://www.w3.org/2000/svg';
+  const spokes = $('#iris-spokes');
+  if (!spokes) return;
+  for (let i = 0; i < 28; i++){
+    const a = i/28 * Math.PI*2;
+    const l = document.createElementNS(NS,'line');
+    const r1 = 40 + (i%2)*4, r2 = 92 - (i%3)*3;
+    l.setAttribute('x1', 110 + Math.cos(a)*r1); l.setAttribute('y1', 110 + Math.sin(a)*r1);
+    l.setAttribute('x2', 110 + Math.cos(a)*r2); l.setAttribute('y2', 110 + Math.sin(a)*r2);
+    l.setAttribute('stroke', 'rgba(130,160,195,.22)'); l.setAttribute('stroke-width','1.4');
+    spokes.appendChild(l);
+  }
+})();
+
+/* ============================================================
+   SCROLL ENTRANCES + PROGRESS BAR
+============================================================ */
+(function motion(){
+  // scroll progress
+  const bar = $('#scroll-progress');
+  let ticking = false;
+  function prog(){
+    const h = document.documentElement;
+    const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.transform = `scaleX(${p})`;
+    ticking = false;
+  }
+  addEventListener('scroll', () => { if (!ticking){ requestAnimationFrame(prog); ticking = true; } }, {passive:true});
+  prog();
+
+  // section fade-ups
+  if (!window.gsap) return;
+  gsap.registerPlugin(ScrollTrigger);
+  if (REDUCED) return; // leave everything visible, no animation
+  document.querySelectorAll('[data-reveal]').forEach(el => {
+    gsap.from(el, {
+      y: 28, autoAlpha: 0, duration: .85, ease: 'power3.out',
+      delay: parseFloat(el.dataset.delay || 0),
+      scrollTrigger: { trigger: el, start: 'top 86%', once: true },
+    });
+  });
+})();
+
+/* ---- first paint of the simulator ---- */
+sim.draw();
+updateReadouts();
+state.resolved = state.sep >= toArcsec(limitOfResolution(state.D)) - 1e-9; // set silently, no pulse/confetti on load
+verdictEl.classList.toggle('is-resolved', state.resolved);
+verdictEl.classList.toggle('is-not', !state.resolved);
+verdictText.textContent = state.resolved ? SLIDE_CONTENT.sim.verdictResolved : SLIDE_CONTENT.sim.verdictNot;
+</script>
+</body>
+</html>

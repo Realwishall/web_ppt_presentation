@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastering Logarithms — From Basics to Physics</title>
+
+<!-- KaTeX for beautiful math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+        ]
+    });"></script>
+
+<style>
+:root {
+    --bg: #0f1419;
+    --bg-soft: #1a2028;
+    --card: #1f2731;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #f59e0b;
+    --accent-2: #3b82f6;
+    --accent-3: #10b981;
+    --danger: #ef4444;
+    --purple: #a855f7;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+/* Hero */
+.hero {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.15), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.15), transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.1), transparent 60%),
+        var(--bg);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: 'log';
+    position: absolute;
+    font-size: 30rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.02);
+    font-family: 'Georgia', serif;
+    z-index: 0;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.hero .subtitle {
+    font-size: 1.3rem;
+    color: var(--text-dim);
+    max-width: 700px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero .equation {
+    margin-top: 2rem;
+    font-size: 1.8rem;
+    padding: 1rem 2rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
+}
+
+/* Navigation */
+nav {
+    position: sticky;
+    top: 0;
+    background: rgba(15, 20, 25, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    padding: 1rem 2rem;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    margin: 0 1rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    display: inline-block;
+}
+
+nav a:hover { color: var(--accent); }
+
+/* Main content */
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+section {
+    margin: 4rem 0;
+    scroll-margin-top: 80px;
+}
+
+h2 {
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+h3 {
+    font-size: 1.4rem;
+    margin: 1.5rem 0 0.8rem;
+    color: var(--accent-2);
+}
+
+h4 {
+    font-size: 1.15rem;
+    margin: 1rem 0 0.5rem;
+    color: var(--purple);
+}
+
+p { margin-bottom: 1rem; }
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.2rem 0;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.definition {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(59, 130, 246, 0.05));
+    border-left: 4px solid var(--accent);
+    padding: 1.2rem 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.property {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin: 0.8rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.property .name {
+    color: var(--accent-3);
+    font-weight: 600;
+    min-width: 120px;
+}
+
+.property .formula {
+    font-size: 1.15rem;
+    flex: 1;
+}
+
+.example {
+    background: rgba(16, 185, 129, 0.08);
+    border-left: 3px solid var(--accent-3);
+    padding: 1rem 1.2rem;
+    border-radius: 6px;
+    margin: 0.8rem 0;
+}
+
+.example::before {
+    content: '📝 Example: ';
+    font-weight: 700;
+    color: var(--accent-3);
+}
+
+.physics-app {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(239, 68, 68, 0.05));
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.2rem 0;
+}
+
+.physics-app h4 {
+    color: var(--purple);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.problem {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin: 1rem 0;
+}
+
+.problem .q {
+    font-weight: 600;
+    color: var(--accent-2);
+    margin-bottom: 0.5rem;
+}
+
+.problem .difficulty {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.easy { background: rgba(16, 185, 129, 0.2); color: var(--accent-3); }
+.medium { background: rgba(245, 158, 11, 0.2); color: var(--accent); }
+.hard { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+.answer-btn {
+    background: linear-gradient(135deg, var(--accent-2), var(--purple));
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.answer-btn:hover { transform: scale(1.05); }
+
+.answer {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.08);
+    border-left: 3px solid var(--accent-3);
+    border-radius: 6px;
+}
+
+.answer.show { display: block; animation: fadeIn 0.3s; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--card);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background: var(--bg-soft);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+tr:last-child td { border-bottom: none; }
+
+.cheat-sheet {
+    background: linear-gradient(135deg, var(--card), var(--bg-soft));
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.cheat-sheet ul {
+    list-style: none;
+    padding: 0;
+}
+
+.cheat-sheet li {
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.cheat-sheet li:last-child { border-bottom: none; }
+
+footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    margin-top: 4rem;
+}
+
+/* Calculator */
+.calc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.calc input {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 120px;
+    margin: 0.3rem;
+}
+
+.calc button {
+    background: var(--accent-2);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 0.3rem;
+}
+
+.calc .result {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: var(--bg-soft);
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+@media (max-width: 600px) {
+    main { padding: 1rem; }
+    h2 { font-size: 1.6rem; }
+    .property { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>Mastering Logarithms</h1>
+    <p class="subtitle">A complete journey — from the very first definition to the powerful applications you'll meet in Class 11 & 12 Physics.</p>
+    <div class="equation">$\log_b(x) = y \iff b^y = x$</div>
+</div>
+
+<nav>
+    <a href="#intro">Introduction</a>
+    <a href="#basics">Basics</a>
+    <a href="#properties">Properties</a>
+    <a href="#types">Types</a>
+    <a href="#graphs">Graphs</a>
+    <a href="#physics">Physics</a>
+    <a href="#problems">Problems</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+</nav>
+
+<main>
+
+<!-- SECTION 1: INTRODUCTION -->
+<section id="intro">
+    <h2><span class="num">1</span> Why Do Logarithms Exist?</h2>
+    <p>Imagine you are a 17th-century astronomer trying to multiply two enormous numbers by hand. Multiplication is slow and error-prone. But what if you could <em>turn multiplication into addition</em>?</p>
+    <p>That's exactly what <strong>John Napier</strong> did in 1614 when he invented logarithms. The word itself comes from Greek: <em>logos</em> (ratio) + <em>arithmos</em> (number).</p>
+    <div class="definition">
+        <strong>The Big Idea:</strong> A logarithm answers the question — <em>"To what power must I raise this base to get that number?"</em>
+    </div>
+    <p>Today, logarithms appear everywhere: measuring earthquakes (Richter scale), sound (decibels), acidity (pH), radioactive decay, capacitor discharge, and even in the way our ears perceive loudness. They are the bridge between the <em>multiplicative</em> world and the <em>additive</em> world.</p>
+</section>
+
+<!-- SECTION 2: BASICS -->
+<section id="basics">
+    <h2><span class="num">2</span> The Definition</h2>
+    <p>For any positive base $b \neq 1$ and any positive number $x$, the <strong>logarithm of $x$ to base $b$</strong> is the exponent $y$ such that:</p>
+    <div class="definition" style="text-align:center; font-size:1.3rem;">
+        $\log_b(x) = y \quad \Longleftrightarrow \quad b^y = x$
+    </div>
+
+    <h3>Reading the notation</h3>
+    <p>In $\log_b(x)$:</p>
+    <ul style="margin-left:2rem; margin-bottom:1rem;">
+        <li>$b$ is called the <strong>base</strong></li>
+        <li>$x$ is called the <strong>argument</strong> (must be positive!)</li>
+        <li>The whole expression gives you the <strong>exponent</strong></li>
+    </ul>
+
+    <h3>Worked Examples</h3>
+    <div class="example">
+        $\log_2(8) = ?$ &nbsp; → &nbsp; We ask: $2^? = 8$. Since $2^3 = 8$, the answer is $\boxed{3}$.
+    </div>
+    <div class="example">
+        $\log_3(81) = ?$ &nbsp; → &nbsp; $3^? = 81$. Since $3^4 = 81$, the answer is $\boxed{4}$.
+    </div>
+    <div class="example">
+        $\log_5\!\left(\frac{1}{25}\right) = ?$ &nbsp; → &nbsp; $5^? = \frac{1}{25} = 5^{-2}$, so the answer is $\boxed{-2}$.
+    </div>
+    <div class="example">
+        $\log_{10}(1000) = ?$ &nbsp; → &nbsp; $10^? = 1000 = 10^3$, so the answer is $\boxed{3}$.
+    </div>
+
+    <h3>Two Golden Rules (memorize these!)</h3>
+    <div class="property">
+        <span class="name">Rule 1</span>
+        <span class="formula">$\log_b(b) = 1$ &nbsp; because &nbsp; $b^1 = b$</span>
+    </div>
+    <div class="property">
+        <span class="name">Rule 2</span>
+        <span class="formula">$\log_b(1) = 0$ &nbsp; because &nbsp; $b^0 = 1$</span>
+    </div>
+
+    <div class="card">
+        <h4>⚠️ Important Restrictions</h4>
+        <ul style="margin-left:1.5rem;">
+            <li>The <strong>base</strong> $b$ must be positive and $b \neq 1$.</li>
+            <li>The <strong>argument</strong> $x$ must be strictly positive ($x > 0$).</li>
+            <li>$\log_b(0)$ is <strong>undefined</strong>.</li>
+            <li>$\log_b(\text{negative})$ is <strong>undefined</strong> (in real numbers).</li>
+        </ul>
+    </div>
+</section>
+
+<!-- SECTION 3: PROPERTIES -->
+<section id="properties">
+    <h2><span class="num">3</span> The Fundamental Properties</h2>
+    <p>These are the workhorses of every logarithmic calculation. Learn them, practice them, love them.</p>
+
+    <div class="property">
+        <span class="name">Product Rule</span>
+        <span class="formula">$\log_b(xy) = \log_b(x) + \log_b(y)$</span>
+    </div>
+    <p style="margin-left:1rem;"><em>Log of a product = sum of logs.</em> This is the property that made Napier famous — it turns multiplication into addition!</p>
+
+    <div class="property">
+        <span class="name">Quotient Rule</span>
+        <span class="formula">$\log_b\!\left(\dfrac{x}{y}\right) = \log_b(x) - \log_b(y)$</span>
+    </div>
+    <p style="margin-left:1rem;"><em>Log of a quotient = difference of logs.</em></p>
+
+    <div class="property">
+        <span class="name">Power Rule</span>
+        <span class="formula">$\log_b(x^n) = n\,\log_b(x)$</span>
+    </div>
+    <p style="margin-left:1rem;"><em>Exponents come out front as multipliers.</em> Extremely useful in physics!</p>
+
+    <div class="property">
+        <span class="name">Change of Base</span>
+        <span class="formula">$\log_b(x) = \dfrac{\log_k(x)}{\log_k(b)}$</span>
+    </div>
+    <p style="margin-left:1rem;">Convert any log to any other base. Usually we convert to base 10 or base $e$ for calculator use.</p>
+
+    <div class="property">
+        <span class="name">Reciprocal</span>
+        <span class="formula">$\log_b(x) = \dfrac{1}{\log_x(b)}$</span>
+    </div>
+
+    <div class="property">
+        <span class="name">Base Switch</span>
+        <span class="formula">$b^{\log_b(x)} = x$ &nbsp; and &nbsp; $\log_b(b^x) = x$</span>
+    </div>
+
+    <h3>Putting them together — a worked simplification</h3>
+    <div class="example">
+        Simplify $\log_2(8) + \log_2(4) - \log_2(2)$.<br>
+        Using the rules: $= \log_2\!\left(\dfrac{8 \times 4}{2}\right) = \log_2(16) = \boxed{4}$.
+    </div>
+    <div class="example">
+        If $\log_{10}(2) = 0.3010$, find $\log_{10}(8)$.<br>
+        $\log_{10}(8) = \log_{10}(2^3) = 3\log_{10}(2) = 3 \times 0.3010 = \boxed{0.9030}$.
+    </div>
+</section>
+
+<!-- SECTION 4: TYPES -->
+<section id="types">
+    <h2><span class="num">4</span> Common Log & Natural Log</h2>
+
+    <h3>Common Logarithm — base 10</h3>
+    <p>Written as $\log_{10}(x)$ or simply $\log(x)$ in many textbooks (especially in engineering and older physics books).</p>
+    <div class="example">
+        $\log_{10}(100) = 2$, &nbsp; $\log_{10}(0.001) = -3$, &nbsp; $\log_{10}(\sqrt{10}) = 0.5$.
+    </div>
+
+    <h3>Natural Logarithm — base $e$</h3>
+    <p>Written as $\log_e(x)$ or $\ln(x)$. The base $e \approx 2.71828$ is one of the most important numbers in mathematics. It arises naturally whenever something grows or decays continuously.</p>
+    <div class="definition">
+        The number $e$ is defined as $e = \lim_{n\to\infty}\left(1 + \frac{1}{n}\right)^n \approx 2.71828$.
+    </div>
+    <p>In <strong>Class 11 & 12 Physics</strong>, you will see $\ln$ everywhere — in radioactive decay, capacitor discharge, Newton's law of cooling, and more. Get comfortable with it!</p>
+
+    <h3>Useful numerical values to remember</h3>
+    <table>
+        <tr><th>Expression</th><th>Value</th></tr>
+        <tr><td>$\ln(2)$</td><td>≈ 0.693</td></tr>
+        <tr><td>$\ln(10)$</td><td>≈ 2.303</td></tr>
+        <tr><td>$\log_{10}(2)$</td><td>≈ 0.3010</td></tr>
+        <tr><td>$\log_{10}(e)$</td><td>≈ 0.4343</td></tr>
+    </table>
+
+    <div class="card">
+        <h4>🔗 Conversion between ln and log₁₀</h4>
+        <p>$\ln(x) = 2.303 \times \log_{10}(x)$ &nbsp; and &nbsp; $\log_{10}(x) = 0.4343 \times \ln(x)$</p>
+        <p>This factor $2.303$ shows up constantly in physics numericals!</p>
+    </div>
+
+    <!-- Interactive calculator -->
+    <div class="calc">
+        <h4>🧮 Try the Log Calculator</h4>
+        <p>Enter a number and see its common and natural logarithms:</p>
+        <input type="number" id="calcInput" value="100" step="any" min="0.0001">
+        <button onclick="computeLog()">Compute</button>
+        <div class="result" id="calcResult">log₁₀(100) = 2 &nbsp; | &nbsp; ln(100) = 4.605</div>
+    </div>
+</section>
+
+<!-- SECTION 5: GRAPHS -->
+<section id="graphs">
+    <h2><span class="num">5</span> The Logarithmic Function — Shape & Behavior</h2>
+    <p>The function $f(x) = \log_b(x)$ is the <strong>inverse</strong> of the exponential function $g(x) = b^x$. Their graphs are mirror images across the line $y = x$.</p>
+
+    <h3>Key features of $y = \log_b(x)$</h3>
+    <div class="card">
+        <ul style="margin-left:1.5rem;">
+            <li><strong>Domain:</strong> $(0, \infty)$ — only positive inputs</li>
+            <li><strong>Range:</strong> $(-\infty, \infty)$ — all real outputs</li>
+            <li><strong>x-intercept:</strong> $(1, 0)$ — because $\log_b(1) = 0$</li>
+            <li><strong>Vertical asymptote:</strong> $x = 0$ (the y-axis)</li>
+            <li>If $b > 1$: the function is <em>increasing</em> (slowly!)</li>
+            <li>If $0 < b < 1$: the function is <em>decreasing</em></li>
+        </ul>
+    </div>
+
+    <h3>Why does it grow so slowly?</h3>
+    <p>Logarithmic growth is the <em>slowest</em> kind of unbounded growth. To go from $\log_{10}(x) = 1$ to $\log_{10}(x) = 6$, $x$ has to grow from 10 to 1,000,000! This is why logarithms are perfect for compressing huge ranges — like earthquake energies or sound intensities — into small, manageable numbers.</p>
+</section>
+
+<!-- SECTION 6: PHYSICS APPLICATIONS -->
+<section id="physics">
+    <h2><span class="num">6</span> Logarithms in Class 11 & 12 Physics</h2>
+    <p>This is where everything comes together. Almost every "exponential" phenomenon in physics uses logarithms when we want to solve for time, ratios, or orders of magnitude.</p>
+
+    <div class="physics-app">
+        <h4>🔬 6.1 — Radioactive Decay (Class 12)</h4>
+        <p>The number of undecayed nuclei at time $t$:</p>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$N(t) = N_0 \, e^{-\lambda t}$</div>
+        <p>where $\lambda$ is the <strong>decay constant</strong>. Taking natural log of both sides:</p>
+        <div style="text-align:center; margin:0.8rem 0;">$\ln\!\left(\dfrac{N}{N_0}\right) = -\lambda t$</div>
+        <p>The <strong>half-life</strong> $T_{1/2}$ is the time for the sample to reduce to half:</p>
+        <div style="text-align:center; font-size:1.15rem; margin:0.8rem 0;">$T_{1/2} = \dfrac{\ln 2}{\lambda} \approx \dfrac{0.693}{\lambda}$</div>
+        <p>This formula appears in nearly every board exam!</p>
+    </div>
+
+    <div class="physics-app">
+        <h4>🔊 6.2 — Sound Intensity & Decibels</h4>
+        <p>The <strong>sound level</strong> $\beta$ in decibels (dB) is defined as:</p>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$\beta = 10 \log_{10}\!\left(\dfrac{I}{I_0}\right)$</div>
+        <p>where $I_0 = 10^{-12}\,\text{W/m}^2$ is the threshold of hearing.</p>
+        <p><em>Example:</em> If intensity increases by a factor of 100, the sound level increases by $10\log_{10}(100) = 20$ dB.</p>
+    </div>
+
+    <div class="physics-app">
+        <h4>🧪 6.3 — pH Scale (Chemistry crossover)</h4>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$\text{pH} = -\log_{10}[\text{H}^+]$</div>
+        <p>A solution with $[\text{H}^+] = 10^{-4}$ M has pH = 4 (acidic). Each unit change in pH means a <em>tenfold</em> change in hydrogen ion concentration.</p>
+    </div>
+
+    <div class="physics-app">
+        <h4>🌍 6.4 — Richter Scale (Earthquakes)</h4>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$M = \log_{10}\!\left(\dfrac{A}{A_0}\right)$</div>
+        <p>An earthquake of magnitude 6 is <strong>10 times</strong> stronger in amplitude (and about 31.6 times more energetic) than one of magnitude 5.</p>
+    </div>
+
+    <div class="physics-app">
+        <h4>⚡ 6.5 — RC Circuit Discharge (Class 12)</h4>
+        <p>When a charged capacitor discharges through a resistor, the voltage decays as:</p>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$V(t) = V_0 \, e^{-t/RC}$</div>
+        <p>The time constant $\tau = RC$. To find the time for the voltage to drop to a fraction $f$ of its initial value:</p>
+        <div style="text-align:center; margin:0.8rem 0;">$t = -RC \cdot \ln(f)$</div>
+    </div>
+
+    <div class="physics-app">
+        <h4>🌡️ 6.6 — Newton's Law of Cooling (Class 11)</h4>
+        <p>The temperature of a body cooling in a surrounding at temperature $T_s$:</p>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$T(t) = T_s + (T_0 - T_s)\,e^{-kt}$</div>
+        <p>Solving for time:</p>
+        <div style="text-align:center; margin:0.8rem 0;">$t = -\dfrac{1}{k}\ln\!\left(\dfrac{T - T_s}{T_0 - T_s}\right)$</div>
+    </div>
+
+    <div class="physics-app">
+        <h4>💡 6.7 — Beer-Lambert Law (Absorption of Light)</h4>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$I = I_0 \, e^{-\mu x} \quad \Longrightarrow \quad x = -\dfrac{1}{\mu}\ln\!\left(\dfrac{I}{I_0}\right)$</div>
+        <p>Used to find how deep light penetrates a material.</p>
+    </div>
+
+    <div class="physics-app">
+        <h4>📈 6.8 — Arrhenius Equation (Reaction Rates / Thermionics)</h4>
+        <div style="text-align:center; font-size:1.2rem; margin:0.8rem 0;">$k = A\,e^{-E_a/(RT)} \quad \Longrightarrow \quad \ln k = \ln A - \dfrac{E_a}{RT}$</div>
+        <p>Taking logs converts the exponential into a straight line — perfect for plotting and finding activation energy.</p>
+    </div>
+</section>
+
+<!-- SECTION 7: PROBLEMS -->
+<section id="problems">
+    <h2><span class="num">7</span> Practice Problems</h2>
+    <p>Try each problem first. Click <em>"Show Solution"</em> when you're ready.</p>
+
+    <div class="problem">
+        <div class="q">Q1. Evaluate $\log_3(27) + \log_3(9) - \log_3(1)$. <span class="difficulty easy">Easy</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $\log_3(27) = 3$, $\log_3(9) = 2$, $\log_3(1) = 0$.<br>
+            Sum = $3 + 2 - 0 = \boxed{5}$.<br>
+            Alternatively: $\log_3\!\left(\frac{27 \times 9}{1}\right) = \log_3(243) = \log_3(3^5) = 5$. ✓
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q2. If $\log_{10}(2) = 0.3010$, find $\log_{10}(5)$. <span class="difficulty easy">Easy</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $\log_{10}(5) = \log_{10}\!\left(\frac{10}{2}\right) = \log_{10}(10) - \log_{10}(2) = 1 - 0.3010 = \boxed{0.6990}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q3. Solve for $x$: $\log_2(x) + \log_2(x-2) = 3$. <span class="difficulty medium">Medium</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            Combine: $\log_2(x(x-2)) = 3 \Rightarrow x(x-2) = 2^3 = 8$.<br>
+            $x^2 - 2x - 8 = 0 \Rightarrow (x-4)(x+2) = 0$.<br>
+            $x = 4$ or $x = -2$. But $x > 0$ and $x - 2 > 0$, so $x > 2$.<br>
+            Therefore $x = \boxed{4}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q4. A radioactive sample has a half-life of 5 years. What fraction remains after 20 years? <span class="difficulty medium">Medium</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            Number of half-lives = $20/5 = 4$.<br>
+            Fraction remaining = $\left(\frac{1}{2}\right)^4 = \boxed{\frac{1}{16}} \approx 6.25\%$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q5. The decay constant of a substance is $\lambda = 0.01\,\text{day}^{-1}$. Find its half-life. <span class="difficulty medium">Medium</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $T_{1/2} = \dfrac{\ln 2}{\lambda} = \dfrac{0.693}{0.01} = \boxed{69.3 \text{ days}}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q6. By how many decibels does the sound level increase if the intensity becomes 1000 times greater? <span class="difficulty medium">Medium</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $\Delta\beta = 10\log_{10}\!\left(\frac{1000\,I}{I}\right) = 10\log_{10}(1000) = 10 \times 3 = \boxed{30 \text{ dB}}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q7. A capacitor discharges through a resistor with time constant $\tau = RC = 2\,\text{s}$. How long until the voltage drops to 10% of its initial value? <span class="difficulty hard">Hard</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $V = V_0 e^{-t/\tau}$. Set $V/V_0 = 0.1$:<br>
+            $0.1 = e^{-t/2} \Rightarrow \ln(0.1) = -t/2 \Rightarrow t = -2\ln(0.1)$.<br>
+            $\ln(0.1) = -\ln(10) \approx -2.303$.<br>
+            $t = 2 \times 2.303 = \boxed{4.606 \text{ s}}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q8. A body cools from 80°C to 50°C in 10 minutes in a room at 20°C. Using Newton's law of cooling, find the cooling constant $k$. <span class="difficulty hard">Hard</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $T(t) = T_s + (T_0 - T_s)e^{-kt}$.<br>
+            $50 = 20 + (80-20)e^{-10k} \Rightarrow 30 = 60\,e^{-10k}$.<br>
+            $e^{-10k} = 0.5 \Rightarrow -10k = \ln(0.5) = -0.693$.<br>
+            $k = \boxed{0.0693 \text{ min}^{-1}}$.
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q9. An earthquake of magnitude 7 releases how many times more energy than one of magnitude 5? (Use: Energy $\propto 10^{1.5M}$.) <span class="difficulty hard">Hard</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            $\dfrac{E_7}{E_5} = \dfrac{10^{1.5 \times 7}}{10^{1.5 \times 5}} = 10^{1.5(7-5)} = 10^{3} = \boxed{1000}$.<br>
+            A magnitude-7 quake releases about <strong>1000 times</strong> more energy than a magnitude-5 quake!
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="q">Q10. Prove that $\log_a(b) \cdot \log_b(c) \cdot \log_c(a) = 1$. <span class="difficulty hard">Hard</span></div>
+        <button class="answer-btn" onclick="toggleAnswer(this)">Show Solution</button>
+        <div class="answer">
+            Using the change-of-base formula with natural logs:<br>
+            $\log_a(b) = \dfrac{\ln b}{\ln a},\quad \log_b(c) = \dfrac{\ln c}{\ln b},\quad \log_c(a) = \dfrac{\ln a}{\ln c}$.<br>
+            Product = $\dfrac{\ln b}{\ln a} \cdot \dfrac{\ln c}{\ln b} \cdot \dfrac{\ln a}{\ln c} = \boxed{1}$. ∎
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 8: CHEAT SHEET -->
+<section id="cheatsheet">
+    <h2><span class="num">8</span> Quick-Reference Cheat Sheet</h2>
+    <div class="cheat-sheet">
+        <h4>📌 Core Identities</h4>
+        <ul>
+            <li>$\log_b(b^x) = x$ &nbsp; and &nbsp; $b^{\log_b x} = x$</li>
+            <li>$\log_b(1) = 0$ &nbsp; and &nbsp; $\log_b(b) = 1$</li>
+            <li>$\log_b(xy) = \log_b x + \log_b y$</li>
+            <li>$\log_b(x/y) = \log_b x - \log_b y$</li>
+            <li>$\log_b(x^n) = n\log_b x$</li>
+            <li>$\log_b x = \dfrac{\ln x}{\ln b}$</li>
+        </ul>
+        <h4 style="margin-top:1rem;">📌 Key Values</h4>
+        <ul>
+            <li>$\ln 2 \approx 0.693$ &nbsp; | &nbsp; $\ln 10 \approx 2.303$</li>
+            <li>$\log_{10} 2 \approx 0.3010$ &nbsp; | &nbsp; $\log_{10} e \approx 0.4343$</li>
+        </ul>
+        <h4 style="margin-top:1rem;">📌 Physics Formulas</h4>
+        <ul>
+            <li><strong>Radioactive decay:</strong> $N = N_0 e^{-\lambda t}$, &nbsp; $T_{1/2} = \dfrac{0.693}{\lambda}$</li>
+            <li><strong>Decibels:</strong> $\beta = 10\log_{10}(I/I_0)$</li>
+            <li><strong>pH:</strong> $\text{pH} = -\log_{10}[\text{H}^+]$</li>
+            <li><strong>RC discharge:</strong> $V = V_0 e^{-t/RC}$</li>
+            <li><strong>Newton cooling:</strong> $T = T_s + (T_0 - T_s)e^{-kt}$</li>
+        </ul>
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <p>📘 <strong>Mastering Logarithms</strong> — A teaching resource for Class 11 & 12 students.</p>
+    <p style="margin-top:0.5rem; font-size:0.9rem;">Math is the language of the universe. Logarithms are its most poetic dialect.</p>
+</footer>
+
+<script>
+function toggleAnswer(btn) {
+    const ans = btn.nextElementSibling;
+    ans.classList.toggle('show');
+    btn.textContent = ans.classList.contains('show') ? 'Hide Solution' : 'Show Solution';
+}
+
+function computeLog() {
+    const x = parseFloat(document.getElementById('calcInput').value);
+    const result = document.getElementById('calcResult');
+    if (isNaN(x) || x <= 0) {
+        result.textContent = '⚠️ Please enter a positive number.';
+        result.style.color = '#ef4444';
+        return;
+    }
+    const log10 = Math.log10(x);
+    const ln = Math.log(x);
+    result.style.color = '#f59e0b';
+    result.innerHTML = `log₁₀(${x}) = ${log10.toFixed(6)} &nbsp; | &nbsp; ln(${x}) = ${ln.toFixed(6)}`;
+}
+</script>
+
+</body>
+</html>
